@@ -11,6 +11,8 @@ import { UsersByBarometer } from "./components/UsersByBarometer";
 import { Login } from "./components/auth/login";
 import Page from "./app/dashboard/page";
 import { SignUp } from "./components/auth/signup";
+import { PieChart, PieCharter } from "./components/PieChart";
+import { BaroChart } from "./components/BigBaroChart";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem("authToken"));
@@ -110,10 +112,11 @@ function App() {
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <WeeklyReflections />
+                  <div className="flex w-full gap-4">
                     <AllUsers />
-                    <UsersByBarometer />
+                    <div className="">
+                      <BaroChart />
+                    </div>
                   </div>
                 </ProtectedRoute>
               }

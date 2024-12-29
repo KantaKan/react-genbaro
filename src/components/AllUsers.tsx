@@ -1,14 +1,16 @@
-import React from 'react';
-import { useQuery } from 'react-query';
-import { getAllUsers } from '../lib/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import React from "react";
+import { useQuery } from "react-query";
+import { getAllUsers } from "../lib/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export function AllUsers() {
-  const { data: users, isLoading, error } = useQuery('allUsers', getAllUsers);
+  const { data: response, isLoading, error } = useQuery("allUsers", getAllUsers);
 
   if (isLoading) return <div>Loading users...</div>;
   if (error) return <div>Error loading users</div>;
+
+  const users = response?.data; // Access the `data` property here
 
   return (
     <Card>
@@ -21,15 +23,15 @@ export function AllUsers() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Reflections Count</TableHead>
+              <TableHead>Reflections</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {users?.map((user) => (
               <TableRow key={user._id}>
-                <TableCell>{user.name}</TableCell>
+                <TableCell>{user.first_name}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.reflections.length}</TableCell>
+                <TableCell>{user.reflections?.length || 0}</TableCell> {/* Safe check */}
               </TableRow>
             ))}
           </TableBody>
@@ -38,4 +40,3 @@ export function AllUsers() {
     </Card>
   );
 }
-
