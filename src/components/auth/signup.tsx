@@ -1,0 +1,161 @@
+"use client";
+
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Icons } from "@/components/ui/icons";
+import { Link } from "react-router-dom"; // Import Link from react-router-dom
+
+// Update the cohortNumber field to accept a string
+const formSchema = z.object({
+  firstName: z.string().min(2, {
+    message: "First name must be at least 2 characters.",
+  }),
+  lastName: z.string().min(2, {
+    message: "Last name must be at least 2 characters.",
+  }),
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }),
+  password: z.string().min(8, {
+    message: "Password must be at least 8 characters long.",
+  }),
+  cohortNumber: z.string().regex(/^\d+$/, {
+    message: "Cohort number must be a valid number.",
+  }), // Cohort number must be a string that is numeric
+});
+
+interface SignUpProps {
+  onSignUp: (first_name: string, last_name: string, email: string, password: string, cohortNumber: string) => void;
+}
+
+export function SignUp({ onSignUp }: SignUpProps) {
+  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      email: "",
+      password: "",
+      cohort_number: "",
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      onSignUp(values.firstName, values.lastName, values.email, values.password, values.cohortNumber);
+    }, 1000);
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-black p-4">
+      <div className="w-full max-w-sm space-y-6">
+        <div className="space-y-2 text-center text-white">
+          <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
+          <p className="text-sm text-gray-400">Enter your information to get started</p>
+        </div>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {/* First Name */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-white" htmlFor="firstName">
+              First Name
+            </label>
+            <Input id="firstName" placeholder="John" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-400" {...form.register("firstName")} />
+            {form.formState.errors.firstName && <p className="text-sm text-red-500">{form.formState.errors.firstName.message}</p>}
+          </div>
+
+          {/* Last Name */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-white" htmlFor="lastName">
+              Last Name
+            </label>
+            <Input id="lastName" placeholder="Doe" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-400" {...form.register("lastName")} />
+            {form.formState.errors.lastName && <p className="text-sm text-red-500">{form.formState.errors.lastName.message}</p>}
+          </div>
+
+          {/* Email */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-white" htmlFor="email">
+              Email
+            </label>
+            <Input id="email" placeholder="m@example.com" type="email" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-400" {...form.register("email")} />
+            {form.formState.errors.email && <p className="text-sm text-red-500">{form.formState.errors.email.message}</p>}
+          </div>
+
+          {/* Password */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-white" htmlFor="password">
+              Password
+            </label>
+            <Input id="password" type="password" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-400" {...form.register("password")} />
+            {form.formState.errors.password && <p className="text-sm text-red-500">{form.formState.errors.password.message}</p>}
+          </div>
+
+          {/* Cohort Number */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-white" htmlFor="cohortNumber">
+              Cohort Number
+            </label>
+            <Input
+              id="cohortNumber"
+              type="text" // Change input type to text to accept string
+              disabled={isLoading}
+              className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-400"
+              {...form.register("cohortNumber")}
+            />
+            {form.formState.errors.cohortNumber && <p className="text-sm text-red-500">{form.formState.errors.cohortNumber.message}</p>}
+          </div>
+
+          <Button type="submit" disabled={isLoading} className="w-full bg-white text-black hover:bg-zinc-100">
+            {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
+            Sign Up
+          </Button>
+        </form>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-zinc-800" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-black px-2 text-zinc-400">Or continue with</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <Button variant="outline" type="button" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800 hover:text-white">
+            <Icons.apple className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" type="button" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800 hover:text-white">
+            <Icons.google className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" type="button" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800 hover:text-white">
+            <Icons.gitHub className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="text-center text-sm text-zinc-400">
+          Already have an account?{" "}
+          <Link to="/login" className="underline hover:text-white">
+            Login
+          </Link>
+        </div>
+        <div className="text-center text-xs text-zinc-400">
+          By clicking continue, you agree to our{" "}
+          <Link to="/terms" className="underline hover:text-white">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link to="/privacy" className="underline hover:text-white">
+            Privacy Policy
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
