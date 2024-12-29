@@ -17,11 +17,9 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Check authentication state on app load
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (token) {
-      // Verify token with the backend to ensure it's valid
       axios
         .get("/api/verify-token", { headers: { Authorization: `Bearer ${token}` } })
         .then(() => setIsAuthenticated(true))
@@ -47,13 +45,11 @@ function App() {
       }
 
       const data = await response.json();
-      console.log("Login response data:", data); // Log the response to check the structure
 
-      if (data && data.data && data.data.token) {
-        // Accessing the token correctly
-        localStorage.setItem("authToken", data.data.token); // Save token
-        setIsAuthenticated(true); // Set auth state
-        navigate("/dashboard"); // Redirect to dashboard after login
+      if (data?.data?.token) {
+        localStorage.setItem("authToken", data.data.token);
+        setIsAuthenticated(true);
+        navigate("/dashboard");
       } else {
         throw new Error("No token in response");
       }
@@ -66,15 +62,9 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     setIsAuthenticated(false);
-    navigate("/login"); // Redirect to login page after logout
+    navigate("/login");
   };
 
-  // ProtectedRoute component to guard routes
-  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    return isAuthenticated ? children : <Navigate to="/login" replace />;
-  };
-
-  // Handle SignUp logic
   const handleSignUp = async (first_name: string, last_name: string, email: string, password: string, cohort_number: number) => {
     try {
       const response = await axios.post("http://127.0.0.1:3000/register", {
@@ -86,44 +76,36 @@ function App() {
       });
 
       if (response.status === 201 && response.data.token) {
-        // If registration is successful and we get a token, store it
         localStorage.setItem("authToken", response.data.token);
         setIsAuthenticated(true);
         setError(null);
-        navigate("/dashboard"); // Redirect to dashboard after successful sign-up
+        navigate("/dashboard");
       } else {
         throw new Error("Invalid response from server");
       }
     } catch (err: any) {
-      // Handle errors such as validation errors or server issues
       setError(err.response?.data?.message || "Sign-up failed. Please try again.");
     }
   };
 
-  // Conditional rendering based on authentication state
-  if (!isAuthenticated) {
-    return (
-      <div>
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        <Routes>
-          <Route path="/" element={<Login onLogin={handleLogin} />} />
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="/signup" element={<SignUp onSignUp={handleSignUp} />} />
-        </Routes>
-      </div>
-    );
-  }
+  // ProtectedRoute component to guard routes
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    return isAuthenticated ? children : <Navigate to="/login" replace />;
+  };
 
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        {error && <p style={{ color: "red" }}>{error}</p>}
         <Page>
-          <button onClick={handleLogout} className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded">
-            Logout
-          </button>
+          {isAuthenticated && (
+            <button onClick={handleLogout} className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded">
+              Logout
+            </button>
+          )}
           <Routes>
-            <Route path="/signup" element={<SignUp onSignUp={handleSignUp} />} />
-            {/* <Route path="/" element={<Navigate to="/dashboard" replace />} /> */}
+            <Route path="/login" element={!isAuthenticated ? <Login onLogin={handleLogin} /> : <Navigate to="/dashboard" replace />} />
+            <Route path="/signup" element={!isAuthenticated ? <SignUp onSignUp={handleSignUp} /> : <Navigate to="/dashboard" replace />} />
             <Route
               path="/dashboard"
               element={
@@ -136,6 +118,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Page>
