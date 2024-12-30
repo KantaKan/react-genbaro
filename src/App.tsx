@@ -13,6 +13,7 @@ import Page from "./app/dashboard/page";
 import { SignUp } from "./components/auth/signup";
 import { PieChart, PieCharter } from "./components/PieChart";
 import { BaroChart } from "./components/BigBaroChart";
+import FeedbackForm from "./component/FeedbackFrom";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem("authToken"));
@@ -116,6 +117,7 @@ function App() {
                     <AllUsers />
                     <div className="">
                       <BaroChart />
+                      <FeedbackForm />
                     </div>
                   </div>
                 </ProtectedRoute>
