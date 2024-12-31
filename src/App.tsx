@@ -127,46 +127,42 @@ function AppContent() {
             <span className="block sm:inline"> {error}</span>
           </div>
         )}
-        <Page>
-          <Routes>
-            <Route path="/login" element={!isAuthenticated ? <Login onLogin={handleLogin} /> : <Navigate to="/" replace />} />
+        <Routes>
+          <Route path="/login" element={!isAuthenticated ? <Login onLogin={handleLogin} /> : <Navigate to="/" replace />} />
+          <Route path="/signup" element={!isAuthenticated ? <SignUp onSignUp={handleSignUp} /> : <Navigate to="/" replace />} />
 
-            <Route path="/signup" element={!isAuthenticated ? <SignUp onSignUp={handleSignUp} /> : <Navigate to="/" replace />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/learner"
-              element={
-                <ProtectedRoute allowedRoles={["learner"]}>
-                  <div className="flex flex-col gap-8 p-6">
-                    <h1 className="text-3xl font-bold">Learner Dashboard</h1>
-                    <div className="grid md:grid-cols-2 gap-8">
-                      <div>
-                        <FeedbackForm />
-                      </div>
-                      <div>
-                        <h2 className="text-3xl font-semibold mb-4">Your Reflections</h2>
-                        <ReflectionsTable reflections={reflections} />
-                      </div>
+          <Route
+            path="/learner"
+            element={
+              <ProtectedRoute allowedRoles={["learner"]}>
+                <div className="flex flex-col gap-8 p-6">
+                  <h1 className="text-3xl font-bold">Learner Dashboard</h1>
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div>
+                      <FeedbackForm />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-semibold mb-4">Your Reflections</h2>
+                      <ReflectionsTable reflections={reflections} />
                     </div>
                   </div>
-                </ProtectedRoute>
-              }
-            />
+                </div>
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/" element={<Navigate to={isAuthenticated ? (userRole === "learner" ? "/learner" : "/admin") : "/login"} replace />} />
-
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Page>
+          <Route path="/" element={<Navigate to={isAuthenticated ? (userRole === "learner" ? "/learner" : "/admin") : "/login"} replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </ThemeProvider>
     </QueryClientProvider>
   );
