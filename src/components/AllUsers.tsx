@@ -17,25 +17,27 @@ export function AllUsers() {
       <CardHeader>
         <CardTitle>All Users</CardTitle>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Reflections</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users?.map((user) => (
-              <TableRow key={user._id}>
-                <TableCell>{user.first_name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.reflections?.length || 0}</TableCell> {/* Safe check */}
+      <CardContent className="overflow-hidden">
+        <div className="max-h-[400px] overflow-y-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Reflections</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {users?.map((user) => (
+                <TableRow key={user._id}>
+                  <TableCell>{user.first_name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.reflections?.length || 0}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );

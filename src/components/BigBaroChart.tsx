@@ -7,15 +7,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const chartData = [
-  { date: "2024-04-01", "Comfort Zone": 8, "Panic Zone": 7, "Stretch Zone - Enjoying the Challenges": 10, "Stretch Zone - Overwhelmed": 7 },
-  { date: "2024-04-02", "Comfort Zone": 6, "Panic Zone": 9, "Stretch Zone - Enjoying the Challenges": 8, "Stretch Zone - Overwhelmed": 5 },
-  { date: "2024-04-03", "Comfort Zone": 9, "Panic Zone": 8, "Stretch Zone - Enjoying the Challenges": 7, "Stretch Zone - Overwhelmed": 6 },
-  { date: "2024-04-04", "Comfort Zone": 7, "Panic Zone": 6, "Stretch Zone - Enjoying the Challenges": 8, "Stretch Zone - Overwhelmed": 9 },
-  // Add more data for the remaining dates in the same format...
-];
+// Function to generate random data for a single day
+const generateDayData = (date: string) => ({
+  date,
+  "Comfort Zone": Math.floor(Math.random() * 10) + 1,
+  "Panic Zone": Math.floor(Math.random() * 10) + 1,
+  "Stretch Zone - Enjoying the Challenges": Math.floor(Math.random() * 10) + 1,
+  "Stretch Zone - Overwhelmed": Math.floor(Math.random() * 10) + 1,
+});
 
-const chartConfig = {
+// Generate 90 days of data
+const generateChartData = () => {
+  const data = [];
+  const endDate = new Date();
+  for (let i = 89; i >= 0; i--) {
+    const date = new Date(endDate);
+    date.setDate(date.getDate() - i);
+    data.push(generateDayData(date.toISOString().split("T")[0]));
+  }
+  return data;
+};
+
+const chartData = generateChartData();
+
+const chartConfig: ChartConfig = {
   "Comfort Zone": {
     label: "Comfort Zone",
     color: "hsl(var(--chart-1))",
@@ -32,34 +47,25 @@ const chartConfig = {
     label: "Stretch Zone - Overwhelmed",
     color: "hsl(var(--chart-4))",
   },
-} satisfies ChartConfig;
+};
 
 export function BaroChart() {
   const [timeRange, setTimeRange] = React.useState("90d");
 
-  const filteredData = chartData.filter((item) => {
-    const date = new Date(item.date);
-    const referenceDate = new Date("2024-06-30");
-    let daysToSubtract = 90;
-    if (timeRange === "30d") {
-      daysToSubtract = 30;
-    } else if (timeRange === "7d") {
-      daysToSubtract = 7;
-    }
-    const startDate = new Date(referenceDate);
-    startDate.setDate(startDate.getDate() - daysToSubtract);
-    return date >= startDate;
-  });
+  const filteredData = React.useMemo(() => {
+    const daysToShow = timeRange === "90d" ? 90 : timeRange === "30d" ? 30 : 7;
+    return chartData.slice(-daysToShow);
+  }, [timeRange]);
 
   return (
     <Card>
       <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
         <div className="grid flex-1 gap-1 text-center sm:text-left">
           <CardTitle>Reflection Zones - Interactive</CardTitle>
-          <CardDescription>Showing daily reflection zones for the last 3 months</CardDescription>
+          <CardDescription>Showing daily reflection zones for the last {timeRange === "90d" ? "3 months" : timeRange === "30d" ? "30 days" : "7 days"}</CardDescription>
         </div>
         <Select value={timeRange} onValueChange={setTimeRange}>
-          <SelectTrigger className="w-[160px] rounded-lg sm:ml-auto" aria-label="Select a value">
+          <SelectTrigger className="w-[160px] rounded-lg sm:ml-auto" aria-label="Select a time range">
             <SelectValue placeholder="Last 3 months" />
           </SelectTrigger>
           <SelectContent className="rounded-xl">
@@ -79,22 +85,12 @@ export function BaroChart() {
         <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
           <AreaChart data={filteredData}>
             <defs>
-              <linearGradient id="fillComfortZone" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-comfort-zone)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-comfort-zone)" stopOpacity={0.1} />
-              </linearGradient>
-              <linearGradient id="fillPanicZone" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-panic-zone)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-panic-zone)" stopOpacity={0.1} />
-              </linearGradient>
-              <linearGradient id="fillStretchZoneEnjoying" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-stretch-zone-enjoying)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-stretch-zone-enjoying)" stopOpacity={0.1} />
-              </linearGradient>
-              <linearGradient id="fillStretchZoneOverwhelmed" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-stretch-zone-overwhelmed)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-stretch-zone-overwhelmed)" stopOpacity={0.1} />
-              </linearGradient>
+              {Object.entries(chartConfig).map(([key, value]) => (
+                <linearGradient key={key} id={`fill${key.replace(/\s+/g, "")}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={value.color} stopOpacity={0.8} />
+                  <stop offset="95%" stopColor={value.color} stopOpacity={0.1} />
+                </linearGradient>
+              ))}
             </defs>
             <CartesianGrid vertical={false} />
             <XAxis
@@ -125,10 +121,11 @@ export function BaroChart() {
                 />
               }
             />
-            <Area dataKey="Stretch Zone - Enjoying the Challenges" type="natural" fill="url(#fillStretchZoneEnjoying)" stroke="var(--color-stretch-zone-enjoying)" stackId="a" />
-            <Area dataKey="Stretch Zone - Overwhelmed" type="natural" fill="url(#fillStretchZoneOverwhelmed)" stroke="var(--color-stretch-zone-overwhelmed)" stackId="a" />
-            <Area dataKey="Panic Zone" type="natural" fill="url(#fillPanicZone)" stroke="var(--color-panic-zone)" stackId="a" />
-            <Area dataKey="Comfort Zone" type="natural" fill="url(#fillComfortZone)" stroke="var(--color-comfort-zone)" stackId="a" />
+            {Object.keys(chartConfig)
+              .reverse()
+              .map((key) => (
+                <Area key={key} dataKey={key} type="natural" fill={`url(#fill${key.replace(/\s+/g, "")})`} stroke={chartConfig[key].color} stackId="a" />
+              ))}
             <ChartLegend content={<ChartLegendContent />} />
           </AreaChart>
         </ChartContainer>
