@@ -30,7 +30,7 @@ export function NavUser() {
                 <AvatarFallback className="rounded-lg">Pic</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{userData?.first_nam || "User"}</span>
+                <span className="truncate font-semibold">{userData?.first_name || "User"}</span>
                 <span className="truncate text-xs">{userData?.email || ""}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
