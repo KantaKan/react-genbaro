@@ -1,10 +1,10 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { WeeklyReflection, User } from "../types";
 
 // Retrieve the token from localStorage (or sessionStorage, depending on your setup)
 const getAuthToken = () => localStorage.getItem("authToken");
 
-const api = axios.create({
+export const api = axios.create({
   baseURL: "http://127.0.0.1:3000/", // Adjust this if your API has a different base URL
 });
 

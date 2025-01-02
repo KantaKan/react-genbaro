@@ -1,7 +1,6 @@
 import "./App.css";
 import { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { QueryClientProvider } from "react-query";
 import { queryClient } from "./lib/queryClient";
 import { ThemeProvider } from "./components/theme-provider";
@@ -15,6 +14,10 @@ import { GenMateChart } from "./components/PieChart";
 import { ReflectionsTable } from "./components/ReflectionsTable";
 import { mockReflections } from "./mockData/reflections";
 import { AuthProvider, useAuth } from "./AuthContext";
+import Page from "./app/dashboard/page";
+import UserDataProvider from "./UserDataContext";
+import axios from "axios";
+import { api } from "./lib/api";
 
 function AdminDashboard() {
   useEffect(() => {
@@ -71,15 +74,6 @@ function AppContent() {
   const navigate = useNavigate();
   const [reflections, setReflections] = useState(mockReflections);
 
-  useEffect(() => {
-    console.log("AppContent - Current Auth State:", {
-      isAuthenticated,
-      userRole,
-      error,
-      currentPath: window.location.pathname,
-    });
-  }, [isAuthenticated, userRole, error]);
-
   const handleLogin = async (email: string, password: string) => {
     try {
       console.log("Attempting login...");
@@ -91,9 +85,9 @@ function AppContent() {
     }
   };
 
-  const handleSignUp = async (first_name: string, last_name: string, email: string, password: string, cohort_number: number) => {
+  const handleSignUp = async (first_name: string, last_name: string, email: string, password: string, cohort_number: string) => {
     try {
-      const response = await axios.post("http://127.0.0.1:3000/register", {
+      const response = await api.post("register", {
         first_name,
         last_name,
         email,
@@ -123,6 +117,7 @@ function AppContent() {
             <span className="block sm:inline"> {error}</span>
           </div>
         )}
+
         <Routes>
           <Route path="/login" element={!isAuthenticated ? <Login onLogin={handleLogin} /> : <Navigate to="/" replace />} />
           <Route path="/signup" element={!isAuthenticated ? <SignUp onSignUp={handleSignUp} /> : <Navigate to="/" replace />} />
@@ -130,9 +125,11 @@ function AppContent() {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <AdminDashboard />
-              </ProtectedRoute>
+              <Page>
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              </Page>
             }
           />
 
@@ -140,18 +137,20 @@ function AppContent() {
             path="/learner"
             element={
               <ProtectedRoute allowedRoles={["learner"]}>
-                <div className="flex flex-col gap-8 p-6">
-                  <h1 className="text-3xl font-bold">Learner Dashboard</h1>
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <div>
-                      <FeedbackForm />
-                    </div>
-                    <div>
-                      <h2 className="text-3xl font-semibold mb-4">Your Reflections</h2>
-                      <ReflectionsTable reflections={reflections} />
+                <Page>
+                  <div className="flex flex-col gap-8 p-6">
+                    <h1 className="text-3xl font-bold">Learner Dashboard</h1>
+                    <div className="grid md:grid-cols-2 gap-8">
+                      <div>
+                        <FeedbackForm />
+                      </div>
+                      <div>
+                        <h2 className="text-3xl font-semibold mb-4">Your Reflections</h2>
+                        <ReflectionsTable reflections={reflections} />
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Page>
               </ProtectedRoute>
             }
           />
@@ -167,7 +166,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <UserDataProvider>
+        <AppContent />
+      </UserDataProvider>
     </AuthProvider>
   );
 }

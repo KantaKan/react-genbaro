@@ -11,10 +11,10 @@ import { Link } from "react-router-dom"; // Import Link from react-router-dom
 
 // Update the cohortNumber field to accept a string
 const formSchema = z.object({
-  firstName: z.string().min(2, {
+  first_name: z.string().min(2, {
     message: "First name must be at least 2 characters.",
   }),
-  lastName: z.string().min(2, {
+  last_name: z.string().min(2, {
     message: "Last name must be at least 2 characters.",
   }),
   email: z.string().email({
@@ -23,13 +23,13 @@ const formSchema = z.object({
   password: z.string().min(8, {
     message: "Password must be at least 8 characters long.",
   }),
-  cohortNumber: z.string().regex(/^\d+$/, {
+  cohort_number: z.string().regex(/^\d+$/, {
     message: "Cohort number must be a valid number.",
   }), // Cohort number must be a string that is numeric
 });
 
 interface SignUpProps {
-  onSignUp: (first_name: string, last_name: string, email: string, password: string, cohortNumber: string) => void;
+  onSignUp: (first_name: string, last_name: string, email: string, password: string, cohort_number: string) => void;
 }
 
 export function SignUp({ onSignUp }: SignUpProps) {
@@ -49,7 +49,7 @@ export function SignUp({ onSignUp }: SignUpProps) {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      onSignUp(values.firstName, values.lastName, values.email, values.password, values.cohortNumber);
+      onSignUp(values.first_name, values.last_name, values.email, values.password, values.cohort_number);
     }, 1000);
   }
 
@@ -63,20 +63,20 @@ export function SignUp({ onSignUp }: SignUpProps) {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {/* First Name */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-white" htmlFor="firstName">
+            <label className="text-sm font-medium text-white" htmlFor="first_name">
               First Name
             </label>
-            <Input id="firstName" placeholder="John" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-400" {...form.register("firstName")} />
-            {form.formState.errors.firstName && <p className="text-sm text-red-500">{form.formState.errors.firstName.message}</p>}
+            <Input id="first_name" placeholder="John" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-400" {...form.register("first_name")} />
+            {form.formState.errors.first_name && <p className="text-sm text-red-500">{form.formState.errors.first_name.message}</p>}
           </div>
 
           {/* Last Name */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-white" htmlFor="lastName">
+            <label className="text-sm font-medium text-white" htmlFor="last_name">
               Last Name
             </label>
-            <Input id="lastName" placeholder="Doe" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-400" {...form.register("lastName")} />
-            {form.formState.errors.lastName && <p className="text-sm text-red-500">{form.formState.errors.lastName.message}</p>}
+            <Input id="last_name" placeholder="Doe" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-400" {...form.register("last_name")} />
+            {form.formState.errors.last_name && <p className="text-sm text-red-500">{form.formState.errors.last_name.message}</p>}
           </div>
 
           {/* Email */}
@@ -107,9 +107,9 @@ export function SignUp({ onSignUp }: SignUpProps) {
               type="text" // Change input type to text to accept string
               disabled={isLoading}
               className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-400"
-              {...form.register("cohortNumber")}
+              {...form.register("cohort_number")}
             />
-            {form.formState.errors.cohortNumber && <p className="text-sm text-red-500">{form.formState.errors.cohortNumber.message}</p>}
+            {form.formState.errors.cohort_number && <p className="text-sm text-red-500">{form.formState.errors.cohort_number.message}</p>}
           </div>
 
           <Button type="submit" disabled={isLoading} className="w-full bg-white text-black hover:bg-zinc-100">

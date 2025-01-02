@@ -1,11 +1,12 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import axios from "axios";
+import { api } from "./lib/api";
 
 type AuthContextType = {
   isAuthenticated: boolean;
   userRole: string | null;
   error: string | null;
-  loading: boolean; // Add loading state
+  loading: boolean;
   login: (email: string, password: string) => Promise<string>;
   logout: () => void;
 };
@@ -13,7 +14,9 @@ type AuthContextType = {
 type VerifyTokenResponse = {
   status: string;
   message: string;
-  role: string;
+  data: {
+    role: string;
+  };
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -22,39 +25,44 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem("authToken"));
   const [userRole, setUserRole] = useState<string | null>(() => localStorage.getItem("userRole"));
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true); // Track loading state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      axios
-        .get<VerifyTokenResponse>("/api/verify-token", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((response) => {
+    const verifyToken = async () => {
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        try {
+          const response = await api.get<VerifyTokenResponse>("/api/verify-token", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
           if (response.data.status === "success") {
-            const role = response.data?.role || "learner"; // Default to "learner" if no role is found
-            console.log("Token verification successful:", response.data);
+            const role = response.data.data.role || "";
+            if (!role || role === "invalidRole") {
+              throw new Error("Invalid role in response");
+            }
+
             setIsAuthenticated(true);
             setUserRole(role);
-            localStorage.setItem("userRole", role); // Store the role in localStorage
+            localStorage.setItem("userRole", role);
           } else {
-            throw new Error("Invalid role in response");
+            throw new Error("Token verification failed: Invalid status in response");
           }
-        })
-        .catch((error) => {
+        } catch (error) {
           console.error("Token verification failed:", error);
           localStorage.removeItem("authToken");
           localStorage.removeItem("userRole");
           setIsAuthenticated(false);
           setUserRole(null);
-        })
-        .finally(() => {
-          setLoading(false); // Set loading to false after the request completes
-        });
-    } else {
-      setLoading(false); // If no token is found, stop loading immediately
-    }
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    verifyToken();
   }, []);
 
   const login = async (email: string, password: string): Promise<string> => {
@@ -72,16 +80,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       const data = await response.json();
-      console.log("Login response:", data);
 
       if (data?.data?.token) {
-        const role = data.data.role || "learner"; // Set role to "learner" if empty
+        const role = data.data.role || "learner";
         localStorage.setItem("authToken", data.data.token);
         localStorage.setItem("userRole", role);
         setIsAuthenticated(true);
         setUserRole(role);
         setError(null);
-        return role; // Return the role
+        return role;
       } else {
         throw new Error("No token in response");
       }
@@ -104,7 +111,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isAuthenticated,
     userRole,
     error,
-    loading, // Include loading state
+    loading,
     login,
     logout,
   };
