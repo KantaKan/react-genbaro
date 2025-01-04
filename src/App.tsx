@@ -16,7 +16,7 @@ import { mockReflections } from "./mockData/reflections";
 import { AuthProvider, useAuth } from "./AuthContext";
 import Page from "./app/dashboard/page";
 import UserDataProvider from "./UserDataContext";
-import axios from "axios";
+
 import { api } from "./lib/api";
 
 function AdminDashboard() {
