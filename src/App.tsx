@@ -18,6 +18,7 @@ import Page from "./app/dashboard/page";
 import UserDataProvider from "./UserDataContext";
 
 import { api } from "./lib/api";
+import ReflectionsTableWithModal from "./components/reflections-table-with-modal";
 
 function AdminDashboard() {
   useEffect(() => {
@@ -140,15 +141,7 @@ function AppContent() {
                 <Page>
                   <div className="flex flex-col gap-8 p-6">
                     <h1 className="text-3xl font-bold">Learner Dashboard</h1>
-                    <div className="grid md:grid-cols-2 gap-8">
-                      <div>
-                        <FeedbackForm />
-                      </div>
-                      <div>
-                        <h2 className="text-3xl font-semibold mb-4">Your Reflections</h2>
-                        <ReflectionsTable reflections={reflections} />
-                      </div>
-                    </div>
+                    <ReflectionsTableWithModal />
                   </div>
                 </Page>
               </ProtectedRoute>

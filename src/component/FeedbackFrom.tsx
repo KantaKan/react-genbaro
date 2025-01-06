@@ -127,6 +127,7 @@ export default function FeedbackForm() {
       setSelectedDate(new Date());
     } catch (error) {
       toast.error("Failed to submit feedback");
+      console.log(error);
     } finally {
       setIsSubmitting(false);
     }
