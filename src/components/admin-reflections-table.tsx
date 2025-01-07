@@ -1,67 +1,43 @@
-import React, { useState, useMemo, useEffect } from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import FeedbackForm from "./feedback-form";
-import { useUserData } from "@/UserDataContext";
 import { api } from "@/lib/api";
-
-// Types
-interface TechSession {
-  session_name: string[];
-  happy: string;
-  improve: string;
-}
-
-interface NonTechSession {
-  session_name: string[];
-  happy: string;
-  improve: string;
-}
-
-interface ReflectionData {
-  barometer: string;
-  tech_sessions: TechSession;
-  non_tech_sessions: NonTechSession;
-}
 
 interface Reflection {
   _id: string;
   user_id: string;
-  first_name: string;
-  last_name: string;
-  jsd_number: string;
-  date: string;
-  reflection: ReflectionData;
+  FirstName: string;
+  LastName: string;
+  JsdNumber: string;
+  Date: string;
+  Reflection: {
+    Barometer: string;
+    TechSessions?: {
+      SessionName?: string[] | null;
+      Happy?: string;
+      Improve?: string;
+    };
+    NonTechSessions?: {
+      SessionName?: string[] | null;
+      Happy?: string;
+      Improve?: string;
+    };
+  };
 }
 
 const reflectionZones = [
-  {
-    id: "comfort",
-    label: "Comfort Zone",
-    color: "text-emerald-700",
-    bgColor: "bg-emerald-100",
-  },
-  {
-    id: "stretch-enjoying",
-    label: "Stretch zone - Enjoying the challenges",
-    color: "text-amber-700",
-    bgColor: "bg-amber-100",
-  },
-  {
-    id: "stretch-overwhelmed",
-    label: "Stretch zone - Overwhelmed",
-    color: "text-orange-700",
-    bgColor: "bg-orange-100",
-  },
-  {
-    id: "panic",
-    label: "Panic Zone",
-    color: "text-rose-700",
-    bgColor: "bg-rose-100",
-  },
+  { id: "comfort", label: "Comfort Zone", color: "text-emerald-700", bgColor: "bg-emerald-100" },
+  { id: "stretch-enjoying", label: "Stretch zone - Enjoying the challenges", color: "text-amber-700", bgColor: "bg-amber-100" },
+  { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", color: "text-orange-700", bgColor: "bg-orange-100" },
+  { id: "panic", label: "Panic Zone", color: "text-rose-700", bgColor: "bg-rose-100" },
 ];
 
 const getColorForBarometer = (barometer: string) => {
@@ -69,48 +45,76 @@ const getColorForBarometer = (barometer: string) => {
   return zone ? `${zone.color} ${zone.bgColor}` : "";
 };
 
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime()) || date.getFullYear() === 1) {
+    return "No date";
+  }
+  return date.toLocaleDateString();
+};
+
 export default function AdminReflectionsTable() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: "ascending" | "descending";
-  }>({
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "ascending" | "descending" }>({
     key: "date",
     direction: "descending",
   });
-
-  const { userData, loading, error, refreshUserData } = useUserData();
   const [reflections, setReflections] = useState<Reflection[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const itemsPerPage = 15;
 
   useEffect(() => {
     const fetchReflections = async () => {
+      setIsLoading(true);
       try {
-        const response = await api.get("/admin/reflections");
-        if (response.data.success) {
+        const response = await api.get(`/admin/reflections?page=${currentPage}&limit=${itemsPerPage}`);
+        if (response.data.success && Array.isArray(response.data.data)) {
           setReflections(response.data.data);
+          setTotalPages(Math.ceil(response.data.total / itemsPerPage));
+        } else {
+          setReflections([]);
+          setTotalPages(1);
         }
       } catch (error) {
         console.error("Error fetching reflections:", error);
+        setReflections([]);
+        setTotalPages(1);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchReflections();
-  }, []);
+  }, [currentPage]);
 
   const toggleColumn = (columnId: string) => {
     setHiddenColumns((prev) => (prev.includes(columnId) ? prev.filter((id) => id !== columnId) : [...prev, columnId]));
   };
 
-  const sortedReflections = useMemo(() => {
+  const sortedReflections = React.useMemo(() => {
     const sortableReflections = [...reflections];
     sortableReflections.sort((a, b) => {
       const extractValue = (item: Reflection, key: string) => {
-        if (key === "date") return new Date(item.date).getTime();
-        if (key === "first_name" || key === "last_name" || key === "jsd_number") return item[key as keyof Reflection] || "";
-        if (key.startsWith("tech_sessions")) return item.reflection.tech_sessions[key.split(".")[1] as keyof TechSession] || "";
-        if (key.startsWith("non_tech_sessions")) return item.reflection.non_tech_sessions[key.split(".")[1] as keyof NonTechSession] || "";
-        return item.reflection[key as keyof ReflectionData] || "";
+        if (key === "Date") {
+          const date = new Date(item[key]);
+          return isNaN(date.getTime()) || date.getFullYear() === 1 ? new Date(0).getTime() : date.getTime();
+        }
+        if (key === "FirstName" || key === "LastName" || key === "JsdNumber") {
+          return item[key] || "";
+        }
+        if (key.startsWith("TechSessions")) {
+          const techSessions = item.Reflection?.TechSessions || {};
+          return techSessions[key.split(".")[1] as keyof typeof techSessions] || "";
+        }
+        if (key.startsWith("NonTechSessions")) {
+          const nonTechSessions = item.Reflection?.NonTechSessions || {};
+          return nonTechSessions[key.split(".")[1] as keyof typeof nonTechSessions] || "";
+        }
+        return item.Reflection?.[key as keyof typeof item.Reflection] || "";
       };
 
       const aValue = extractValue(a, sortConfig.key);
@@ -136,7 +140,6 @@ export default function AdminReflectionsTable() {
       if (response.data) {
         setReflections((prev) => [...prev, newReflection]);
         setIsDialogOpen(false);
-        await refreshUserData();
       }
     } catch (error) {
       console.error("Error posting reflection:", error);
@@ -144,8 +147,13 @@ export default function AdminReflectionsTable() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  const handleRowClick = (userId: string) => {
+    navigate(`/user/${userId}`);
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto py-10">
@@ -166,9 +174,9 @@ export default function AdminReflectionsTable() {
         </DropdownMenu>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            {/* <Button>
               <Plus className="mr-2 h-4 w-4" /> Add Reflection
-            </Button>
+            </Button> */}
           </DialogTrigger>
           <DialogContent className="sm:max-w-[70vw] w-[70vw] h-[70vh] overflow-y-auto">
             <FeedbackForm onSubmit={handleSubmit} onSuccess={() => setIsDialogOpen(false)} />
@@ -180,33 +188,33 @@ export default function AdminReflectionsTable() {
           <TableRow>
             {!hiddenColumns.includes("First Name") && (
               <TableHead>
-                <Button variant="ghost" onClick={() => requestSort("first_name")}>
+                <Button variant="ghost" onClick={() => requestSort("FirstName")}>
                   First Name
-                  {sortConfig.key === "first_name" && (sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />)}
+                  {sortConfig.key === "FirstName" && (sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />)}
                 </Button>
               </TableHead>
             )}
             {!hiddenColumns.includes("Last Name") && (
               <TableHead>
-                <Button variant="ghost" onClick={() => requestSort("last_name")}>
+                <Button variant="ghost" onClick={() => requestSort("LastName")}>
                   Last Name
-                  {sortConfig.key === "last_name" && (sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />)}
+                  {sortConfig.key === "LastName" && (sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />)}
                 </Button>
               </TableHead>
             )}
             {!hiddenColumns.includes("JSD Number") && (
               <TableHead>
-                <Button variant="ghost" onClick={() => requestSort("jsd_number")}>
+                <Button variant="ghost" onClick={() => requestSort("JsdNumber")}>
                   JSD Number
-                  {sortConfig.key === "jsd_number" && (sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />)}
+                  {sortConfig.key === "JsdNumber" && (sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />)}
                 </Button>
               </TableHead>
             )}
             {!hiddenColumns.includes("Date") && (
               <TableHead>
-                <Button variant="ghost" onClick={() => requestSort("date")}>
+                <Button variant="ghost" onClick={() => requestSort("Date")}>
                   Date
-                  {sortConfig.key === "date" && (sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />)}
+                  {sortConfig.key === "Date" && (sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />)}
                 </Button>
               </TableHead>
             )}
@@ -218,21 +226,38 @@ export default function AdminReflectionsTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedReflections.map((reflection, index) => (
-            <TableRow key={`${reflection._id}-${index}`}>
-              {!hiddenColumns.includes("First Name") && <TableCell>{reflection.first_name}</TableCell>}
-              {!hiddenColumns.includes("Last Name") && <TableCell>{reflection.last_name}</TableCell>}
-              {!hiddenColumns.includes("JSD Number") && <TableCell>{reflection.jsd_number}</TableCell>}
-              {!hiddenColumns.includes("Date") && <TableCell>{new Date(reflection.date).toLocaleDateString()}</TableCell>}
-              {!hiddenColumns.includes("Tech Happy") && <TableCell>{reflection.reflection.tech_sessions.happy}</TableCell>}
-              {!hiddenColumns.includes("Tech Improve") && <TableCell>{reflection.reflection.tech_sessions.improve}</TableCell>}
-              {!hiddenColumns.includes("Non-Tech Happy") && <TableCell>{reflection.reflection.non_tech_sessions.happy}</TableCell>}
-              {!hiddenColumns.includes("Non-Tech Improve") && <TableCell>{reflection.reflection.non_tech_sessions.improve}</TableCell>}
-              {!hiddenColumns.includes("Barometer") && <TableCell className={getColorForBarometer(reflection.reflection.barometer)}>{reflection.reflection.barometer}</TableCell>}
+          {sortedReflections.map((reflection) => (
+            <TableRow key={reflection._id} onClick={() => handleRowClick(reflection.user_id)} className="cursor-pointer hover:bg-gray-100">
+              {!hiddenColumns.includes("First Name") && <TableCell>{reflection.FirstName}</TableCell>}
+              {!hiddenColumns.includes("Last Name") && <TableCell>{reflection.LastName}</TableCell>}
+              {!hiddenColumns.includes("JSD Number") && <TableCell>{reflection.JsdNumber}</TableCell>}
+              {!hiddenColumns.includes("Date") && <TableCell>{formatDate(reflection.Date)}</TableCell>}
+              {!hiddenColumns.includes("Tech Happy") && <TableCell>{reflection.Reflection?.TechSessions?.Happy || ""}</TableCell>}
+              {!hiddenColumns.includes("Tech Improve") && <TableCell>{reflection.Reflection?.TechSessions?.Improve || ""}</TableCell>}
+              {!hiddenColumns.includes("Non-Tech Happy") && <TableCell>{reflection.Reflection?.NonTechSessions?.Happy || ""}</TableCell>}
+              {!hiddenColumns.includes("Non-Tech Improve") && <TableCell>{reflection.Reflection?.NonTechSessions?.Improve || ""}</TableCell>}
+              {!hiddenColumns.includes("Barometer") && <TableCell className={getColorForBarometer(reflection.Reflection?.Barometer || "")}>{reflection.Reflection?.Barometer || ""}</TableCell>}
             </TableRow>
           ))}
         </TableBody>
       </Table>
+      <Pagination className="mt-4">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} />
+          </PaginationItem>
+          {[...Array(totalPages)].map((_, i) => (
+            <PaginationItem key={i}>
+              <PaginationLink onClick={() => setCurrentPage(i + 1)} isActive={currentPage === i + 1}>
+                {i + 1}
+              </PaginationLink>
+            </PaginationItem>
+          ))}
+          <PaginationItem>
+            <PaginationNext onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     </div>
   );
 }
