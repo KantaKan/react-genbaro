@@ -2,35 +2,14 @@
 
 import * as React from "react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { useQuery } from "react-query";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getBarometerData } from "@/lib/api";
 
-// Function to generate random data for a single day
-const generateDayData = (date: string) => ({
-  date,
-  "Comfort Zone": Math.floor(Math.random() * 10) + 1,
-  "Panic Zone": Math.floor(Math.random() * 10) + 1,
-  "Stretch Zone - Enjoying the Challenges": Math.floor(Math.random() * 10) + 1,
-  "Stretch Zone - Overwhelmed": Math.floor(Math.random() * 10) + 1,
-});
-
-// Generate 90 days of data
-const generateChartData = () => {
-  const data = [];
-  const endDate = new Date();
-  for (let i = 89; i >= 0; i--) {
-    const date = new Date(endDate);
-    date.setDate(date.getDate() - i);
-    data.push(generateDayData(date.toISOString().split("T")[0]));
-  }
-  return data;
-};
-
-const chartData = generateChartData();
-
-const chartConfig: ChartConfig = {
+const chartConfig = {
   "Comfort Zone": {
     label: "Comfort Zone",
     color: "hsl(var(--chart-1))",
@@ -49,13 +28,42 @@ const chartConfig: ChartConfig = {
   },
 };
 
-export function BaroChart() {
+export function BaroChart({ userId }) {
   const [timeRange, setTimeRange] = React.useState("90d");
 
-  const filteredData = React.useMemo(() => {
-    const daysToShow = timeRange === "90d" ? 90 : timeRange === "30d" ? 30 : 7;
-    return chartData.slice(-daysToShow);
-  }, [timeRange]);
+  const {
+    data: rawChartData,
+    isLoading,
+    error,
+  } = useQuery(["barometerData", timeRange], () => getBarometerData(timeRange), {
+    refetchOnWindowFocus: false,
+  });
+
+  // Sort the data by date
+  const chartData = React.useMemo(() => {
+    if (!rawChartData) return [];
+    return [...rawChartData].sort((a, b) => new Date(a.date) - new Date(b.date));
+  }, [rawChartData]);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-[400px]">
+          <div className="text-red-500">Error loading reflection data</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -83,7 +91,7 @@ export function BaroChart() {
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
-          <AreaChart data={filteredData}>
+          <AreaChart data={chartData}>
             <defs>
               {Object.entries(chartConfig).map(([key, value]) => (
                 <linearGradient key={key} id={`fill${key.replace(/\s+/g, "")}`} x1="0" y1="0" x2="0" y2="1">
@@ -101,6 +109,9 @@ export function BaroChart() {
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value);
+                if (isNaN(date.getTime())) {
+                  return "Invalid Date";
+                }
                 return date.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
@@ -112,7 +123,11 @@ export function BaroChart() {
               content={
                 <ChartTooltipContent
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("en-US", {
+                    const date = new Date(value);
+                    if (isNaN(date.getTime())) {
+                      return "Invalid Date";
+                    }
+                    return date.toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                     });
@@ -133,3 +148,5 @@ export function BaroChart() {
     </Card>
   );
 }
+
+export default BaroChart;

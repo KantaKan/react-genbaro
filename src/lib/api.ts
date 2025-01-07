@@ -40,3 +40,8 @@ export const createReflection = async (userId: string, reflectionData: CreateRef
   const response = await api.post(`/${userId}/reflections`, reflectionData);
   return response.data;
 };
+
+export const getBarometerData = async (timeRange: string): Promise<BarometerData[]> => {
+  const response = await api.get<BarometerData[]>(`admin/reflections/chartday?timeRange=${timeRange}`);
+  return response.data;
+};

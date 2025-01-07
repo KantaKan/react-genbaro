@@ -5,14 +5,7 @@ import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-const chartData = [
-  { month: "EOW", desktop: 38 },
-  { month: "Mon", desktop: 39 },
-  { month: "Tue", desktop: 37 },
-  { month: "Wed", desktop: 36 },
-  { month: "Thu", desktop: 35 },
-  { month: "Fri", desktop: 34 },
-];
+const chartData = [];
 
 const chartConfig = {
   desktop: {

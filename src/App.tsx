@@ -8,10 +8,10 @@ import { AllUsers } from "./components/AllUsers";
 import { Login } from "./components/auth/login";
 import { SignUp } from "./components/auth/signup";
 import { BaroChart } from "./components/BigBaroChart";
-import FeedbackForm from "./component/FeedbackFrom";
+
 import { FillChart } from "./components/FillChart";
 import { GenMateChart } from "./components/PieChart";
-import { ReflectionsTable } from "./components/ReflectionsTable";
+
 import { mockReflections } from "./mockData/reflections";
 import { AuthProvider, useAuth } from "./AuthContext";
 import Page from "./app/dashboard/page";
@@ -19,7 +19,7 @@ import UserDataProvider from "./UserDataContext";
 
 import { api } from "./lib/api";
 import ReflectionsTableWithModal from "./components/reflections-table-with-modal";
-import AdminReflectionsTable from "./components/admin-reflections-table";
+
 import { AdminTablePage } from "./components/AdminTablePage";
 
 function AdminDashboard() {
@@ -72,7 +72,6 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
 function AppContent() {
   const { isAuthenticated, userRole, error, login } = useAuth();
   const navigate = useNavigate();
-  const [reflections, setReflections] = useState(mockReflections);
 
   const handleLogin = async (email: string, password: string) => {
     try {
