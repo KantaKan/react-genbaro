@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useMemo, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -8,9 +6,9 @@ import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import FeedbackForm from "./feedback-form";
 import { useUserData } from "@/UserDataContext";
-import { api } from "../lib/api"; // Import the API functions
+import { api } from "@/lib/api";
 
-// Define data types
+// Types
 interface TechSession {
   happy: string;
   improve: string;
@@ -28,13 +26,11 @@ interface ReflectionData {
 }
 
 interface Reflection {
-  day: string;
   user_id: string;
   date: string;
   reflection: ReflectionData;
 }
 
-// Reflection zones with styles
 const reflectionZones = [
   {
     id: "comfort",
@@ -44,13 +40,13 @@ const reflectionZones = [
   },
   {
     id: "stretch-enjoying",
-    label: "Stretch zone- enjoying the challenges",
+    label: "Stretch zone - Enjoying the challenges",
     color: "text-yellow-600",
     bgColor: "bg-yellow-100",
   },
   {
     id: "stretch-overwhelmed",
-    label: "Stretch zone- overwhelmed",
+    label: "Stretch zone - Overwhelmed",
     color: "text-orange-600",
     bgColor: "bg-orange-100",
   },
@@ -67,7 +63,8 @@ const getColorForBarometer = (barometer: string) => {
   return zone ? `${zone.color} ${zone.bgColor}` : "";
 };
 
-export default function ReflectionsTableWithModal() {
+export default function ReflectionsTable() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
   const [sortConfig, setSortConfig] = useState<{
     key: string;
@@ -77,7 +74,7 @@ export default function ReflectionsTableWithModal() {
     direction: "descending",
   });
 
-  const { userData, loading, error } = useUserData();
+  const { userData, loading, error, refreshUserData } = useUserData();
   const [reflections, setReflections] = useState<Reflection[]>([]);
 
   useEffect(() => {
@@ -95,9 +92,9 @@ export default function ReflectionsTableWithModal() {
     sortableReflections.sort((a, b) => {
       const extractValue = (item: Reflection, key: string) => {
         if (key === "date") return new Date(item.date).getTime();
-        if (key.startsWith("tech_sessions")) return item.reflection.tech_sessions[key.split(".")[1]] || "";
-        if (key.startsWith("non_tech_sessions")) return item.reflection.non_tech_sessions[key.split(".")[1]] || "";
-        return item.reflection[key] || "";
+        if (key.startsWith("tech_sessions")) return item.reflection.tech_sessions[key.split(".")[1] as keyof TechSession] || "";
+        if (key.startsWith("non_tech_sessions")) return item.reflection.non_tech_sessions[key.split(".")[1] as keyof NonTechSession] || "";
+        return item.reflection[key as keyof ReflectionData] || "";
       };
 
       const aValue = extractValue(a, sortConfig.key);
@@ -117,24 +114,17 @@ export default function ReflectionsTableWithModal() {
     }));
   };
 
-  const addReflection = (newReflection: Reflection) => {
-    setReflections((prev) => [...prev, newReflection]);
-  };
-
   const handleSubmit = async (newReflection: Reflection) => {
     try {
-      const payload = {
-        user_id: newReflection.user_id,
-        date: newReflection.date,
-        reflection: newReflection.reflection,
-      };
-
-      const response = await api.post(`users/${newReflection.user_id}/reflections`, payload);
-      console.log("Reflection added successfully", response.data);
-
-      setReflections((prev) => [...prev, newReflection]);
+      const response = await api.post(`users/${newReflection.user_id}/reflections`, newReflection);
+      if (response.data) {
+        setReflections((prev) => [...prev, newReflection]);
+        setIsDialogOpen(false);
+        await refreshUserData();
+      }
     } catch (error) {
       console.error("Error posting reflection:", error);
+      throw error;
     }
   };
 
@@ -158,14 +148,14 @@ export default function ReflectionsTableWithModal() {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <Dialog>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" /> Add Reflection
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[70vw] w-[70vw] h-[70vh] overflow-y-auto">
-            <FeedbackForm onSubmit={handleSubmit} />
+            <FeedbackForm onSubmit={handleSubmit} onSuccess={() => setIsDialogOpen(false)} />
           </DialogContent>
         </Dialog>
       </div>
@@ -189,13 +179,13 @@ export default function ReflectionsTableWithModal() {
         </TableHeader>
         <TableBody>
           {sortedReflections.map((reflection, index) => (
-            <TableRow key={`${reflection.user_id}-${reflection.date}-${index}`} className={getColorForBarometer(reflection.reflection.barometer)}>
+            <TableRow key={`${reflection.user_id}-${reflection.date}-${index}`}>
               {!hiddenColumns.includes("Date") && <TableCell>{new Date(reflection.date).toLocaleDateString()}</TableCell>}
               {!hiddenColumns.includes("Tech Happy") && <TableCell>{reflection.reflection.tech_sessions.happy}</TableCell>}
               {!hiddenColumns.includes("Tech Improve") && <TableCell>{reflection.reflection.tech_sessions.improve}</TableCell>}
               {!hiddenColumns.includes("Non-Tech Happy") && <TableCell>{reflection.reflection.non_tech_sessions.happy}</TableCell>}
               {!hiddenColumns.includes("Non-Tech Improve") && <TableCell>{reflection.reflection.non_tech_sessions.improve}</TableCell>}
-              {!hiddenColumns.includes("Barometer") && <TableCell>{reflection.reflection.barometer}</TableCell>}
+              {!hiddenColumns.includes("Barometer") && <TableCell className={getColorForBarometer(reflection.reflection.barometer)}>{reflection.reflection.barometer}</TableCell>}
             </TableRow>
           ))}
         </TableBody>

@@ -13,11 +13,23 @@ export function NavUser() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const { userData, loading, error, userId } = useUserData();
-  console.log(userData);
+
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading user data</div>;
+  }
+
+  // Destructuring userData to access data properties
+  const { data } = userData || {};
+  const { first_name, email, avatar } = data || {};
 
   return (
     <SidebarMenu>
@@ -26,12 +38,12 @@ export function NavUser() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={userData?.avatar || ""} alt={userData?.first_name || "User"} />
-                <AvatarFallback className="rounded-lg">Pic</AvatarFallback>
+                <AvatarImage src={avatar || ""} alt={first_name || "User"} />
+                <AvatarFallback className="rounded-lg">😁</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{userData?.first_name || "User"}</span>
-                <span className="truncate text-xs">{userData?.email || ""}</span>
+                <span className="truncate font-semibold">{first_name || "User"}</span>
+                <span className="truncate text-xs">{email || ""}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -40,12 +52,12 @@ export function NavUser() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={userData?.avatar || ""} alt={userData?.first_name || "User"} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarImage src={avatar || ""} alt={first_name || "User"} />
+                  <AvatarFallback className="rounded-lg">🥰</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{userData?.first_name || "User"}</span>
-                  <span className="truncate text-xs">{userData?.email || ""}</span>
+                  <span className="truncate font-semibold">{first_name || "User"}</span>
+                  <span className="truncate text-xs">{email || ""}</span>
                 </div>
               </div>
             </DropdownMenuLabel>

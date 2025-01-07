@@ -92,13 +92,13 @@ export default function FeedbackForm({ onSubmit, onSuccess }: FeedbackFormProps)
     },
     {
       id: "stretch-enjoying",
-      label: "Stretch zone- enjoying the challenges",
+      label: "Stretch zone - Enjoying the challenges",
       color: "text-yellow-600",
       bgColor: "bg-yellow-100",
     },
     {
       id: "stretch-overwhelmed",
-      label: "Stretch zone- overwhelmed",
+      label: "Stretch zone - Overwhelmed",
       color: "text-orange-600",
       bgColor: "bg-orange-100",
     },
