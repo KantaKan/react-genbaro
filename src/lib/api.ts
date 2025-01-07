@@ -1,5 +1,4 @@
 import axios, { AxiosError } from "axios";
-import { WeeklyReflection, User } from "../types";
 
 // Retrieve the token from localStorage (or sessionStorage, depending on your setup)
 const getAuthToken = () => localStorage.getItem("authToken");
@@ -33,5 +32,11 @@ export const getAllUsers = async (): Promise<User[]> => {
 
 export const getUsersByBarometer = async (barometer: string): Promise<User[]> => {
   const response = await api.get<User[]>(`admin/users/barometer/${barometer}`);
+  return response.data;
+};
+
+// POST reflection API
+export const createReflection = async (userId: string, reflectionData: CreateReflectionPayload) => {
+  const response = await api.post(`/${userId}/reflections`, reflectionData);
   return response.data;
 };

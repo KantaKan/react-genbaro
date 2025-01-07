@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import axios, { AxiosError } from "axios";
 import { api } from "./lib/api";
-import * as jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 // Types
 interface TechSession {
@@ -16,15 +15,17 @@ interface NonTechSession {
   improve: string;
 }
 
+interface ReflectionData {
+  barometer: string;
+  tech_sessions: TechSession;
+  non_tech_sessions: NonTechSession;
+}
+
 interface Reflection {
   day: string;
   user_id: string;
   date: string;
-  reflection: {
-    tech_sessions: TechSession;
-    non_tech_sessions: NonTechSession;
-    barometer: string;
-  };
+  reflection: ReflectionData;
 }
 
 interface UserData {
@@ -33,8 +34,13 @@ interface UserData {
   last_name: string;
   email: string;
   cohort_number: number;
-  reflections: Reflection[];
+  jsd_number: string;
   role: string;
+  reflections: Reflection[];
+}
+
+interface JWTPayload {
+  id: string;
 }
 
 interface UserDataContextType {
@@ -44,12 +50,11 @@ interface UserDataContextType {
   refetchUserData: () => Promise<void>;
 }
 
-// Context
 const UserDataContext = createContext<UserDataContextType | undefined>(undefined);
 
 const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchUserData = async () => {
@@ -57,72 +62,73 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
       setLoading(true);
       setError(null);
 
-      // Retrieve the token from localStorage using the correct key 'authToken'
       const token = localStorage.getItem("authToken");
-
       if (!token) {
-        throw new Error("No token found in localStorage");
+        throw new Error("Authentication required");
       }
 
-      // Decode the token to get the payload
-      const decodedToken: any = jwt_decode(token);
+      const decodedToken = jwtDecode<JWTPayload>(token);
+      console.log("Fetching data for user ID:", decodedToken.id);
 
-      // Extract the id from the decoded token
-      const id = decodedToken.id;
+      const response = await api.get<UserData>(`/users/${decodedToken.id}`);
+      console.log("API Response:", response.data);
 
-      // Fetch user data using the extracted id
-      const response = await api.get<UserData>(`/users/${id}`);
-      setUserData(response.data); // Update state with fetched data
-    } catch (err) {
-      const error = err as AxiosError;
-      setError(error.response?.data?.message || error.message || "An error occurred while fetching user data");
+      if (!response.data) {
+        throw new Error("No user data received");
+      }
+
+      setUserData(response.data);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      setError(error instanceof Error ? error.message : "Failed to fetch user data");
+      setUserData(null);
     } finally {
-      setLoading(false); // Set loading to false once the API call is done
+      setLoading(false);
     }
   };
 
   const refetchUserData = async () => {
-    setLoading(true); // Make sure loading is set to true before refetch
     await fetchUserData();
   };
 
   useEffect(() => {
-    fetchUserData(); // Initial data fetch when the component mounts
+    fetchUserData();
   }, []);
 
-  // Optional: Add request interceptor for authentication
+  // Set up request interceptor for auth
   useEffect(() => {
     const requestInterceptor = api.interceptors.request.use(
       (config) => {
-        // Get token from localStorage or wherever you store it
-        const token = localStorage.getItem("authToken"); // Ensure correct key is used here
-        if (token) {
+        const token = localStorage.getItem("authToken");
+        if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
       },
-      (error) => {
+      (error) => Promise.reject(error)
+    );
+
+    const responseInterceptor = api.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error.response?.status === 401) {
+          localStorage.removeItem("authToken");
+          setUserData(null);
+          setError("Session expired. Please log in again.");
+        }
         return Promise.reject(error);
       }
     );
 
-    // Cleanup interceptor on unmount
     return () => {
       api.interceptors.request.eject(requestInterceptor);
+      api.interceptors.response.eject(responseInterceptor);
     };
   }, []);
 
-  const value = {
-    userData,
-    loading,
-    error,
-    refetchUserData,
-  };
-
-  return <UserDataContext.Provider value={value}>{children}</UserDataContext.Provider>;
+  return <UserDataContext.Provider value={{ userData, loading, error, refetchUserData }}>{children}</UserDataContext.Provider>;
 };
 
-// Custom hook for using the context
 export const useUserData = () => {
   const context = useContext(UserDataContext);
   if (context === undefined) {
