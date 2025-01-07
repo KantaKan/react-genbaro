@@ -1,6 +1,6 @@
 import "./App.css";
 import { useState, useEffect } from "react";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, Link } from "react-router-dom";
 import { QueryClientProvider } from "react-query";
 import { queryClient } from "./lib/queryClient";
 import { ThemeProvider } from "./components/theme-provider";
@@ -19,15 +19,18 @@ import UserDataProvider from "./UserDataContext";
 
 import { api } from "./lib/api";
 import ReflectionsTableWithModal from "./components/reflections-table-with-modal";
+import AdminReflectionsTable from "./components/admin-reflections-table";
+import { AdminTablePage } from "./components/AdminTablePage";
 
 function AdminDashboard() {
-  useEffect(() => {
-    console.log("AdminDashboard component mounted");
-  }, []);
-
   return (
     <div className="flex flex-col gap-2 overflow-hidden p-6">
       <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+      <nav className="mb-4">
+        <Link to="/admin/table" className="text-blue-500 hover:text-blue-700">
+          View Admin Reflections Table
+        </Link>
+      </nav>
       <div className="flex-1 h-1/2 mb-6">
         <BaroChart />
       </div>
@@ -52,10 +55,6 @@ function AdminDashboard() {
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles: string[] }) {
   const { isAuthenticated, userRole } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    console.log("ProtectedRoute - Auth State:", { isAuthenticated, userRole, allowedRoles });
-  }, [isAuthenticated, userRole, allowedRoles]);
 
   if (!isAuthenticated) {
     console.log("Not authenticated, redirecting to login");
@@ -129,6 +128,17 @@ function AppContent() {
               <Page>
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminDashboard />
+                </ProtectedRoute>
+              </Page>
+            }
+          />
+
+          <Route
+            path="/admin/table"
+            element={
+              <Page>
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminTablePage />
                 </ProtectedRoute>
               </Page>
             }

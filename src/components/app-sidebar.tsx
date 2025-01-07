@@ -29,8 +29,12 @@ const data = {
       isActive: true,
       items: [
         {
-          title: "Dashboard",
-          url: "Dashboard",
+          title: "AllUserReflections",
+          url: "/admin/table",
+        },
+        {
+          title: "AdminPanel",
+          url: "/admin",
         },
       ],
     },
