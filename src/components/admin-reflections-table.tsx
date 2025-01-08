@@ -148,7 +148,7 @@ export default function AdminReflectionsTable() {
   };
 
   const handleRowClick = (userId: string) => {
-    navigate(`/user/${userId}`);
+    navigate(`/admin/table/${userId}`);
   };
 
   if (isLoading) {

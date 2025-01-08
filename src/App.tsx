@@ -21,6 +21,7 @@ import { api } from "./lib/api";
 import ReflectionsTableWithModal from "./components/reflections-table-with-modal";
 
 import { AdminTablePage } from "./components/AdminTablePage";
+import UserReflections from "./components/users-reflectiontable";
 
 function AdminDashboard() {
   return (
@@ -36,15 +37,15 @@ function AdminDashboard() {
       </div>
       <div className="flex gap-4 h-full overflow-hidden">
         <div className="w-1/3">
-          <h2 className="text-xl font-semibold mb-4">Fill Rate</h2>
+          <h2 className="text-xl font-semibold mb-4"> WIP</h2>
           <FillChart />
         </div>
         <div className="w-1/3">
-          <h2 className="text-xl font-semibold mb-4">General Metrics</h2>
+          <h2 className="text-xl font-semibold mb-4"> WIP</h2>
           <GenMateChart />
         </div>
         <div className="w-1/3">
-          <h2 className="text-xl font-semibold mb-4">User List</h2>
+          <h2 className="text-xl font-semibold mb-4"> WIP</h2>
           <AllUsers />
         </div>
       </div>
@@ -138,6 +139,16 @@ function AppContent() {
               <Page>
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminTablePage />
+                </ProtectedRoute>
+              </Page>
+            }
+          />
+          <Route
+            path="/admin/table/:id"
+            element={
+              <Page>
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <UserReflections />
                 </ProtectedRoute>
               </Page>
             }
