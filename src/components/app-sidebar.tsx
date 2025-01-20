@@ -4,7 +4,7 @@ import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "@/components/ui/sidebar";
-import { useAuth } from "../AuthContext"; // Adjust the import path as needed
+import { useAuth } from "../AuthContext";
 
 const teams = [
   {
