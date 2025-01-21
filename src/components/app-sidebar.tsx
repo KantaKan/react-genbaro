@@ -43,11 +43,11 @@ const navigationConfig = {
       items: [
         {
           title: "My Reflections",
-          url: "/reflections",
+          url: "/learner",
         },
         {
           title: "Learning Materials",
-          url: "/materials",
+          url: "/learner",
         },
       ],
     },
@@ -58,11 +58,11 @@ const navigationConfig = {
       items: [
         {
           title: "Current Tasks",
-          url: "/assignments/current",
+          url: "/learner",
         },
         {
           title: "Completed Work",
-          url: "/assignments/completed",
+          url: "/learner",
         },
       ],
     },
