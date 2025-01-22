@@ -7,26 +7,32 @@ import { ArrowLeft } from "lucide-react";
 import { api } from "@/lib/api";
 
 interface Reflection {
-  _id: string;
+  day: string;
   user_id: string;
-  FirstName: string;
-  LastName: string;
-  JsdNumber: string;
-  Date: string;
-  id: string;
-  Reflection: {
-    Barometer: string;
-    TechSessions?: {
-      SessionName?: string[] | null;
-      Happy?: string;
-      Improve?: string;
+  date: string;
+  reflection: {
+    barometer: string;
+    tech_sessions: {
+      session_name: string[];
+      happy: string;
+      improve: string;
     };
-    NonTechSessions?: {
-      SessionName?: string[] | null;
-      Happy?: string;
-      Improve?: string;
+    non_tech_sessions: {
+      session_name: string[];
+      happy: string;
+      improve: string;
     };
   };
+}
+
+interface User {
+  cohort_number: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  jsd_number: string;
+  role: string;
+  _id: string;
 }
 
 const reflectionZones = [
@@ -53,6 +59,7 @@ export default function UserReflections() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [reflections, setReflections] = useState<Reflection[]>([]);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,11 +73,10 @@ export default function UserReflections() {
 
       setIsLoading(true);
       try {
-        // Using the same endpoint structure as your admin table
-        const response = await api.get(`users/${id}/reflections`);
-        if (response.data.success && Array.isArray(response.data.data)) {
-          setReflections(response.data.data);
-          console.log(response);
+        const response = await api.get(`/admin/userreflections/${id}`);
+        if (response.data.data.reflections) {
+          setReflections(response.data.data.reflections);
+          setUser(response.data.data.user);
         } else {
           setError("No reflections found");
         }
@@ -104,30 +110,32 @@ export default function UserReflections() {
     );
   }
 
-  const userDetails = reflections[0] || null;
-
   return (
     <div className="container mx-auto py-10">
       <Button onClick={handleBack} variant="outline" className="mb-4">
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to All Reflections
       </Button>
 
-      {userDetails && (
+      {user && (
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Student Details</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <div>
                 <p className="font-semibold">Name</p>
                 <p>
-                  {userDetails.FirstName} {userDetails.LastName}
+                  {user.first_name} {user.last_name}
                 </p>
               </div>
               <div>
                 <p className="font-semibold">JSD Number</p>
-                <p>{userDetails.JsdNumber}</p>
+                <p>{user.jsd_number}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Cohort</p>
+                <p>{user.cohort_number}</p>
               </div>
               <div>
                 <p className="font-semibold">Total Reflections</p>
@@ -142,8 +150,10 @@ export default function UserReflections() {
         <TableHeader>
           <TableRow>
             <TableHead>Date</TableHead>
+            <TableHead>Tech Sessions</TableHead>
             <TableHead>Tech Happy</TableHead>
             <TableHead>Tech Improve</TableHead>
+            <TableHead>Non-Tech Sessions</TableHead>
             <TableHead>Non-Tech Happy</TableHead>
             <TableHead>Non-Tech Improve</TableHead>
             <TableHead>Barometer</TableHead>
@@ -151,13 +161,15 @@ export default function UserReflections() {
         </TableHeader>
         <TableBody>
           {reflections.map((reflection) => (
-            <TableRow key={reflection._id}>
-              <TableCell>{formatDate(reflection.Date)}</TableCell>
-              <TableCell>{reflection.Reflection?.TechSessions?.Happy || ""}</TableCell>
-              <TableCell>{reflection.Reflection?.TechSessions?.Improve || ""}</TableCell>
-              <TableCell>{reflection.Reflection?.NonTechSessions?.Happy || ""}</TableCell>
-              <TableCell>{reflection.Reflection?.NonTechSessions?.Improve || ""}</TableCell>
-              <TableCell className={getColorForBarometer(reflection.Reflection?.Barometer || "")}>{reflection.Reflection?.Barometer || ""}</TableCell>
+            <TableRow key={reflection.date}>
+              <TableCell>{formatDate(reflection.date)}</TableCell>
+              <TableCell>{reflection.reflection.tech_sessions?.session_name?.join(", ") || ""}</TableCell>
+              <TableCell>{reflection.reflection.tech_sessions?.happy || ""}</TableCell>
+              <TableCell>{reflection.reflection.tech_sessions?.improve || ""}</TableCell>
+              <TableCell>{reflection.reflection.non_tech_sessions?.session_name?.join(", ") || ""}</TableCell>
+              <TableCell>{reflection.reflection.non_tech_sessions?.happy || ""}</TableCell>
+              <TableCell>{reflection.reflection.non_tech_sessions?.improve || ""}</TableCell>
+              <TableCell className={getColorForBarometer(reflection.reflection.barometer)}>{reflection.reflection.barometer}</TableCell>
             </TableRow>
           ))}
         </TableBody>
