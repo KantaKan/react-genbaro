@@ -180,9 +180,7 @@ export default function AdminReflectionsTable() {
           </DropdownMenuContent>
         </DropdownMenu>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline">Add Reflection</Button>
-          </DialogTrigger>
+          <DialogTrigger asChild>{/* <Button variant="outline">Add Reflection</Button> */}</DialogTrigger>
           <DialogContent className="sm:max-w-[70vw] w-[70vw] h-[70vh] overflow-y-auto">
             <FeedbackForm onSubmit={handleSubmit} onSuccess={() => setIsDialogOpen(false)} />
           </DialogContent>
