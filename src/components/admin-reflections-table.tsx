@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import FeedbackForm from "./feedback-form";
 import { api } from "@/lib/api";
@@ -58,10 +58,11 @@ export default function AdminReflectionsTable() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "ascending" | "descending" }>({
-    key: "date",
+    key: "Date",
     direction: "descending",
   });
-  const [reflections, setReflections] = useState<Reflection[]>([]);
+  const [originalReflections, setOriginalReflections] = useState<Reflection[]>([]);
+  const [displayedReflections, setDisplayedReflections] = useState<Reflection[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,16 +75,18 @@ export default function AdminReflectionsTable() {
       try {
         const response = await api.get(`/admin/reflections?page=${currentPage}&limit=${itemsPerPage}`);
         if (response.data.success && Array.isArray(response.data.data)) {
-          setReflections(response.data.data);
-          console.log(response.data.data);
+          setOriginalReflections(response.data.data);
+          setDisplayedReflections(response.data.data);
           setTotalPages(Math.ceil(response.data.total / itemsPerPage));
         } else {
-          setReflections([]);
+          setOriginalReflections([]);
+          setDisplayedReflections([]);
           setTotalPages(1);
         }
       } catch (error) {
         console.error("Error fetching reflections:", error);
-        setReflections([]);
+        setOriginalReflections([]);
+        setDisplayedReflections([]);
         setTotalPages(1);
       } finally {
         setIsLoading(false);
@@ -97,50 +100,52 @@ export default function AdminReflectionsTable() {
     setHiddenColumns((prev) => (prev.includes(columnId) ? prev.filter((id) => id !== columnId) : [...prev, columnId]));
   };
 
-  const sortedReflections = React.useMemo(() => {
-    const sortableReflections = [...reflections];
-    sortableReflections.sort((a, b) => {
-      const extractValue = (item: Reflection, key: string) => {
-        if (key === "Date") {
-          const date = new Date(item[key]);
-          return isNaN(date.getTime()) || date.getFullYear() === 1 ? new Date(0).getTime() : date.getTime();
-        }
-        if (key === "FirstName" || key === "LastName" || key === "JsdNumber") {
-          return item[key] || "";
-        }
-        if (key.startsWith("TechSessions")) {
-          const techSessions = item.Reflection?.TechSessions || {};
-          return techSessions[key.split(".")[1] as keyof typeof techSessions] || "";
-        }
-        if (key.startsWith("NonTechSessions")) {
-          const nonTechSessions = item.Reflection?.NonTechSessions || {};
-          return nonTechSessions[key.split(".")[1] as keyof typeof nonTechSessions] || "";
-        }
-        return item.Reflection?.[key as keyof typeof item.Reflection] || "";
-      };
-
-      const aValue = extractValue(a, sortConfig.key);
-      const bValue = extractValue(b, sortConfig.key);
-
-      if (aValue < bValue) return sortConfig.direction === "ascending" ? -1 : 1;
-      if (aValue > bValue) return sortConfig.direction === "ascending" ? 1 : -1;
-      return 0;
-    });
-    return sortableReflections;
-  }, [reflections, sortConfig]);
+  const getValueByKey = (reflection: Reflection, key: string) => {
+    switch (key) {
+      case "Date":
+        return new Date(reflection.Date).getTime();
+      case "FirstName":
+        return reflection.FirstName;
+      case "LastName":
+        return reflection.LastName;
+      case "JsdNumber":
+        return reflection.JsdNumber;
+      case "Barometer":
+        return reflection.Reflection?.Barometer || "";
+      default:
+        return "";
+    }
+  };
 
   const requestSort = (key: string) => {
-    setSortConfig((prev) => ({
-      key,
-      direction: prev.key === key && prev.direction === "ascending" ? "descending" : "ascending",
-    }));
+    setSortConfig((prev) => {
+      const newDirection = prev.key === key && prev.direction === "ascending" ? "descending" : "ascending";
+
+      const sortedReflections = [...originalReflections].sort((a, b) => {
+        const aValue = getValueByKey(a, key);
+        const bValue = getValueByKey(b, key);
+
+        if (aValue < bValue) return newDirection === "ascending" ? -1 : 1;
+        if (aValue > bValue) return newDirection === "ascending" ? 1 : -1;
+        return 0;
+      });
+
+      setDisplayedReflections(sortedReflections);
+
+      return { key, direction: newDirection };
+    });
   };
 
   const handleSubmit = async (newReflection: Reflection) => {
     try {
       const response = await api.post(`users/${newReflection.user_id}/reflections`, newReflection);
       if (response.data) {
-        setReflections((prev) => [...prev, newReflection]);
+        const refreshResponse = await api.get(`/admin/reflections?page=${currentPage}&limit=${itemsPerPage}`);
+        if (refreshResponse.data.success && Array.isArray(refreshResponse.data.data)) {
+          setOriginalReflections(refreshResponse.data.data);
+          setDisplayedReflections(refreshResponse.data.data);
+          setTotalPages(Math.ceil(refreshResponse.data.total / itemsPerPage));
+        }
         setIsDialogOpen(false);
       }
     } catch (error) {
@@ -176,9 +181,7 @@ export default function AdminReflectionsTable() {
         </DropdownMenu>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            {/* <Button>
-              <Plus className="mr-2 h-4 w-4" /> Add Reflection
-            </Button> */}
+            <Button variant="outline">Add Reflection</Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[70vw] w-[70vw] h-[70vh] overflow-y-auto">
             <FeedbackForm onSubmit={handleSubmit} onSuccess={() => setIsDialogOpen(false)} />
@@ -228,7 +231,7 @@ export default function AdminReflectionsTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedReflections.map((reflection) => (
+          {displayedReflections.map((reflection) => (
             <TableRow key={reflection.id} onClick={() => handleRowClick(reflection.id)} className="cursor-pointer hover:bg-gray-100">
               {!hiddenColumns.includes("First Name") && <TableCell>{reflection.FirstName}</TableCell>}
               {!hiddenColumns.includes("Last Name") && <TableCell>{reflection.LastName}</TableCell>}
