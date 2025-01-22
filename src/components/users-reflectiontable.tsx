@@ -13,6 +13,7 @@ interface Reflection {
   LastName: string;
   JsdNumber: string;
   Date: string;
+  id: string;
   Reflection: {
     Barometer: string;
     TechSessions?: {
@@ -66,9 +67,10 @@ export default function UserReflections() {
       setIsLoading(true);
       try {
         // Using the same endpoint structure as your admin table
-        const response = await api.get(`/admin/reflections?userId=${id}`);
+        const response = await api.get(`users/${id}/reflections`);
         if (response.data.success && Array.isArray(response.data.data)) {
           setReflections(response.data.data);
+          console.log(response);
         } else {
           setError("No reflections found");
         }

@@ -18,6 +18,7 @@ interface Reflection {
   LastName: string;
   JsdNumber: string;
   Date: string;
+  id: string;
   Reflection: {
     Barometer: string;
     TechSessions?: {
@@ -74,6 +75,7 @@ export default function AdminReflectionsTable() {
         const response = await api.get(`/admin/reflections?page=${currentPage}&limit=${itemsPerPage}`);
         if (response.data.success && Array.isArray(response.data.data)) {
           setReflections(response.data.data);
+          console.log(response.data.data);
           setTotalPages(Math.ceil(response.data.total / itemsPerPage));
         } else {
           setReflections([]);
@@ -227,7 +229,7 @@ export default function AdminReflectionsTable() {
         </TableHeader>
         <TableBody>
           {sortedReflections.map((reflection) => (
-            <TableRow key={reflection._id} onClick={() => handleRowClick(reflection.user_id)} className="cursor-pointer hover:bg-gray-100">
+            <TableRow key={reflection.id} onClick={() => handleRowClick(reflection.id)} className="cursor-pointer hover:bg-gray-100">
               {!hiddenColumns.includes("First Name") && <TableCell>{reflection.FirstName}</TableCell>}
               {!hiddenColumns.includes("Last Name") && <TableCell>{reflection.LastName}</TableCell>}
               {!hiddenColumns.includes("JSD Number") && <TableCell>{reflection.JsdNumber}</TableCell>}
