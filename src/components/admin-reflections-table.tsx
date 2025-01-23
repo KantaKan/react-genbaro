@@ -67,7 +67,7 @@ export default function AdminReflectionsTable() {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const itemsPerPage = 15;
+  const itemsPerPage = 20;
 
   useEffect(() => {
     const fetchReflections = async () => {
