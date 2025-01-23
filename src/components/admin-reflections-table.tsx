@@ -75,8 +75,24 @@ export default function AdminReflectionsTable() {
       try {
         const response = await api.get(`/admin/reflections?page=${currentPage}&limit=${itemsPerPage}`);
         if (response.data.success && Array.isArray(response.data.data)) {
-          setOriginalReflections(response.data.data);
-          setDisplayedReflections(response.data.data);
+          const fetchedReflections = response.data.data;
+          setOriginalReflections(fetchedReflections);
+
+          // Apply current sorting to new data
+          const sortedReflections = [...fetchedReflections].sort((a, b) => {
+            const aValue = getValueByKey(a, sortConfig.key);
+            const bValue = getValueByKey(b, sortConfig.key);
+
+            if (typeof aValue === "string" && typeof bValue === "string") {
+              return sortConfig.direction === "ascending" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+            }
+
+            if (aValue < bValue) return sortConfig.direction === "ascending" ? -1 : 1;
+            if (aValue > bValue) return sortConfig.direction === "ascending" ? 1 : -1;
+            return 0;
+          });
+
+          setDisplayedReflections(sortedReflections);
           setTotalPages(Math.ceil(response.data.total / itemsPerPage));
         } else {
           setOriginalReflections([]);
@@ -94,7 +110,7 @@ export default function AdminReflectionsTable() {
     };
 
     fetchReflections();
-  }, [currentPage]);
+  }, [currentPage, sortConfig.key, sortConfig.direction]);
 
   const toggleColumn = (columnId: string) => {
     setHiddenColumns((prev) => (prev.includes(columnId) ? prev.filter((id) => id !== columnId) : [...prev, columnId]));
@@ -103,13 +119,13 @@ export default function AdminReflectionsTable() {
   const getValueByKey = (reflection: Reflection, key: string) => {
     switch (key) {
       case "Date":
-        return new Date(reflection.Date).getTime();
+        return new Date(reflection.Date).getTime() || 0;
       case "FirstName":
-        return reflection.FirstName;
+        return reflection.FirstName || "";
       case "LastName":
-        return reflection.LastName;
+        return reflection.LastName || "";
       case "JsdNumber":
-        return reflection.JsdNumber;
+        return reflection.JsdNumber || "";
       case "Barometer":
         return reflection.Reflection?.Barometer || "";
       default:
@@ -121,9 +137,13 @@ export default function AdminReflectionsTable() {
     setSortConfig((prev) => {
       const newDirection = prev.key === key && prev.direction === "ascending" ? "descending" : "ascending";
 
-      const sortedReflections = [...originalReflections].sort((a, b) => {
+      const sortedReflections = [...displayedReflections].sort((a, b) => {
         const aValue = getValueByKey(a, key);
         const bValue = getValueByKey(b, key);
+
+        if (typeof aValue === "string" && typeof bValue === "string") {
+          return newDirection === "ascending" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+        }
 
         if (aValue < bValue) return newDirection === "ascending" ? -1 : 1;
         if (aValue > bValue) return newDirection === "ascending" ? 1 : -1;
