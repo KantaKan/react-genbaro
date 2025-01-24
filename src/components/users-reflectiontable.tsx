@@ -75,7 +75,8 @@ export default function UserReflections() {
       try {
         const response = await api.get(`/admin/userreflections/${id}`);
         if (response.data.data.reflections) {
-          setReflections(response.data.data.reflections);
+          const sortedReflections = response.data.data.reflections.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          setReflections(sortedReflections);
           setUser(response.data.data.user);
         } else {
           setError("No reflections found");
