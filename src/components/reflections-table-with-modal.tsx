@@ -7,6 +7,9 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import FeedbackForm from "./feedback-form";
 import { useUserData } from "@/UserDataContext";
 import { api } from "@/lib/api";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 
 // Types
 interface TechSession {
@@ -121,8 +124,14 @@ export default function ReflectionsTable() {
         setReflections((prev) => [...prev, newReflection]);
         setIsDialogOpen(false);
         await refreshUserData();
+        toast.success("Reflection submitted successfully!");
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        toast.error("You have already submitted a reflection today. Please try again tomorrow.");
+      } else {
+        toast.error("Failed to submit reflection. Please try again later.");
+      }
       console.error("Error posting reflection:", error);
       throw error;
     }
@@ -133,6 +142,7 @@ export default function ReflectionsTable() {
 
   return (
     <div className="container mx-auto py-10">
+      <ToastContainer position="top-right" autoClose={3000} />
       <div className="flex justify-between mb-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
