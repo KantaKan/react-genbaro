@@ -22,3 +22,21 @@ interface UserContextType {
   loading: boolean;
   error: string | null;
 }
+export interface Todo {
+  id: string; // This matches the backend JSON response
+  userId: string; // This will be the ObjectID as string
+  text: string;
+  completed: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTodoInput {
+  text: string;
+  completed: boolean;
+}
+
+export interface UpdateTodoInput {
+  text?: string;
+  completed?: boolean;
+}

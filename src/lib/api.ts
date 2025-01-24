@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-
+import type { Todo, CreateTodoInput, UpdateTodoInput } from "./types";
 // Retrieve the token from localStorage (or sessionStorage, depending on your setup)
 const getAuthToken = () => localStorage.getItem("authToken");
 
@@ -44,4 +44,34 @@ export const createReflection = async (userId: string, reflectionData: CreateRef
 export const getBarometerData = async (timeRange: string): Promise<BarometerData[]> => {
   const response = await api.get<BarometerData[]>(`admin/reflections/chartday?timeRange=${timeRange}`);
   return response.data;
+};
+
+export const todoService = {
+  async getTodos(userId: string): Promise<Todo[]> {
+    console.log("Getting todos for userId:", userId);
+    const response = await api.get<Todo[]>(`/${userId}/todos`);
+    return response.data;
+  },
+
+  async createTodo(userId: string, todoInput: CreateTodoInput): Promise<Todo> {
+    console.log("Creating todo:", {
+      userId,
+      todoInput,
+      url: `/${userId}/todos`,
+    });
+
+    const response = await api.post<Todo>(`/${userId}/todos`, todoInput);
+    return response.data;
+  },
+
+  // Update a todo
+  async updateTodo(userId: string, todoId: string, updateInput: UpdateTodoInput): Promise<Todo> {
+    const response = await api.put<Todo>(`users/${userId}/todos/${todoId}`, updateInput);
+    return response.data;
+  },
+
+  // Delete a todo
+  async deleteTodo(userId: string, todoId: string): Promise<void> {
+    await api.delete(`users/${userId}/todos/${todoId}`);
+  },
 };
