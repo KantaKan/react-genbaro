@@ -75,3 +75,32 @@ export const todoService = {
     await api.delete(`users/${userId}/todos/${todoId}`);
   },
 };
+
+// Define the registration interface
+interface RegistrationData {
+  first_name: string;
+  last_name: string;
+  email: string;
+  password: string;
+  cohort_number: string;
+  jsd_number: string;
+}
+
+export const register = async (userData: RegistrationData) => {
+  try {
+    console.log("Sending registration data:", userData);
+
+    const response = await api.post("/register", userData);
+
+    console.log("Registration response:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("Registration error details:", {
+      data: error.response?.data,
+      status: error.response?.status,
+      headers: error.response?.headers,
+      requestData: userData,
+    });
+    throw error;
+  }
+};

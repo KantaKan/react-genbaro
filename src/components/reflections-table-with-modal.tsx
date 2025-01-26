@@ -123,17 +123,23 @@ export default function ReflectionsTable() {
       if (response.data) {
         setReflections((prev) => [...prev, newReflection]);
         setIsDialogOpen(false);
-        await refreshUserData();
+        if (typeof refreshUserData === "function") {
+          await refreshUserData();
+        }
         toast.success("Reflection submitted successfully!");
       }
     } catch (error: any) {
       if (error.response?.status === 409) {
         toast.error("You have already submitted a reflection today. Please try again tomorrow.");
       } else {
-        toast.error("Failed to submit reflection. Please try again later.");
+        if (!(error instanceof TypeError && error.message.includes("refreshUserData"))) {
+          toast.error("Failed to submit reflection. Please try again later.");
+        }
       }
       console.error("Error posting reflection:", error);
-      throw error;
+      if (!(error instanceof TypeError && error.message.includes("refreshUserData"))) {
+        throw error;
+      }
     }
   };
 

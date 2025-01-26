@@ -23,13 +23,19 @@ const formSchema = z.object({
   password: z.string().min(8, {
     message: "Password must be at least 8 characters long.",
   }),
-  cohort_number: z.string().regex(/^\d+$/, {
-    message: "Cohort number must be a valid number.",
-  }), // Cohort number must be a string that is numeric
+  cohort_number: z
+    .string()
+    .regex(/^\d+$/, {
+      message: "Cohort number must be a valid number.",
+    })
+    .transform((val) => parseInt(val, 10)), // Transform string to integer
+  jsd_number: z.string().regex(/^GEN\d+_\d+$/, {
+    message: "JSD number must be in format GEN{number}_{number}",
+  }),
 });
 
 interface SignUpProps {
-  onSignUp: (first_name: string, last_name: string, email: string, password: string, cohort_number: string) => void;
+  onSignUp: (first_name: string, last_name: string, email: string, password: string, cohort_number: string, jsd_number: string) => void;
 }
 
 export function SignUp({ onSignUp }: SignUpProps) {
@@ -41,7 +47,8 @@ export function SignUp({ onSignUp }: SignUpProps) {
       last_name: "",
       email: "",
       password: "",
-      cohort_number: "",
+      cohort_number: "", // Change default value to empty string
+      jsd_number: "",
     },
   });
 
@@ -49,7 +56,7 @@ export function SignUp({ onSignUp }: SignUpProps) {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      onSignUp(values.first_name, values.last_name, values.email, values.password, values.cohort_number);
+      onSignUp(values.first_name, values.last_name, values.email, values.password, values.cohort_number, values.jsd_number);
     }, 1000);
   }
 
@@ -110,6 +117,15 @@ export function SignUp({ onSignUp }: SignUpProps) {
               {...form.register("cohort_number")}
             />
             {form.formState.errors.cohort_number && <p className="text-sm text-red-500">{form.formState.errors.cohort_number.message}</p>}
+          </div>
+
+          {/* JSD Number */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-white" htmlFor="jsdNumber">
+              JSD Number
+            </label>
+            <Input id="jsdNumber" placeholder="GEN9_17" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-400" {...form.register("jsd_number")} />
+            {form.formState.errors.jsd_number && <p className="text-sm text-red-500">{form.formState.errors.jsd_number.message}</p>}
           </div>
 
           <Button type="submit" disabled={isLoading} className="w-full bg-white text-black hover:bg-zinc-100">

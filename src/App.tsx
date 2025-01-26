@@ -86,7 +86,7 @@ function AppContent() {
     }
   };
 
-  const handleSignUp = async (first_name: string, last_name: string, email: string, password: string, cohort_number: string) => {
+  const handleSignUp = async (first_name: string, last_name: string, email: string, password: string, cohort_number: number, jsd_number: string) => {
     try {
       const response = await api.post("register", {
         first_name,
@@ -94,13 +94,13 @@ function AppContent() {
         email,
         password,
         cohort_number,
+        jsd_number,
       });
 
       console.log("SignUp response:", response.data);
 
       if (response.status === 201 && response.data.token) {
-        await login(email, password);
-        navigate(response.data.role === "learner" ? "/learner" : "/admin");
+        navigate("/login");
       } else {
         throw new Error("Invalid response from server");
       }

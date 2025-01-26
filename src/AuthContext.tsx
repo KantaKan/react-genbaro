@@ -67,23 +67,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (email: string, password: string): Promise<string> => {
     try {
-      const response = await fetch("http://127.0.0.1:3000/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await api.post("/login", { email, password });
 
-      if (!response.ok) {
-        throw new Error("Login failed");
-      }
-
-      const data = await response.json();
-
-      if (data?.data?.token) {
-        const role = data.data.role || "learner";
-        localStorage.setItem("authToken", data.data.token);
+      if (response.data?.data?.token) {
+        const role = response.data.data.role || "learner";
+        localStorage.setItem("authToken", response.data.data.token);
         localStorage.setItem("userRole", role);
         setIsAuthenticated(true);
         setUserRole(role);
