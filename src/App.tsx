@@ -1,7 +1,7 @@
 import "./App.css";
 
 import { Routes, Route, Navigate, useNavigate, Link } from "react-router-dom";
-import { QueryClientProvider } from "react-query";
+import { QueryClientProvider, useQueryClient } from "react-query";
 import { queryClient } from "./lib/queryClient";
 import { ThemeProvider } from "./components/theme-provider";
 import { AllUsers } from "./components/AllUsers";
@@ -68,10 +68,14 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
 function AppContent() {
   const { isAuthenticated, userRole, error, login } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const handleLogin = async (email: string, password: string) => {
     try {
       const role = await login(email, password);
+
+      await queryClient.invalidateQueries("userData");
+      await queryClient.invalidateQueries("userReflections");
 
       navigate(role === "learner" ? "/learner" : "/admin");
     } catch (error) {
