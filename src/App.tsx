@@ -12,7 +12,7 @@ import { FillChart } from "./components/FillChart";
 import { GenMateChart } from "./components/PieChart";
 import { AuthProvider, useAuth } from "./AuthContext";
 import Page from "./app/dashboard/page";
-import UserDataProvider from "./UserDataContext";
+import UserDataProvider, { useUserData } from "./UserDataContext";
 import { api } from "./lib/api";
 import ReflectionsTableWithModal from "./components/reflections-table-with-modal";
 import { AdminTablePage } from "./components/AdminTablePage";
@@ -68,12 +68,11 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
 function AppContent() {
   const { isAuthenticated, userRole, error, login } = useAuth();
   const navigate = useNavigate();
-
+  const { fetchUserData } = useUserData();
   const handleLogin = async (email: string, password: string) => {
     try {
-      console.log("Attempting login...");
       const role = await login(email, password);
-      console.log("Login successful, role:", role);
+      await fetchUserData();
       navigate(role === "learner" ? "/learner" : "/admin");
     } catch (error) {
       console.error("Login error:", error);

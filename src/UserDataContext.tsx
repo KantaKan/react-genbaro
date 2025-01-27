@@ -71,10 +71,8 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
       }
 
       const decodedToken = jwtDecode<JWTPayload>(token);
-      console.log("Fetching data for user ID:", decodedToken.id);
 
       const response = await api.get<UserData>(`/users/${decodedToken.id}`);
-      console.log("API Response:", response.data);
 
       if (!response.data) {
         throw new Error("No user data received");
