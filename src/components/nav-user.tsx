@@ -10,9 +10,15 @@ import { useUserData } from "@/UserDataContext";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
-  const { userData, loading, error, userId, clearUserData } = useUserData();
+  const { userData, loading, error, userId, clearUserData, fetchUserData } = useUserData();
+
+  useEffect(() => {
+    if (user?.uid) {
+      fetchUserData(user.uid);
+    }
+  }, [user, fetchUserData]);
 
   const handleLogout = () => {
     clearUserData();
