@@ -4,7 +4,7 @@ import type { Todo, CreateTodoInput, UpdateTodoInput } from "./types";
 const getAuthToken = () => localStorage.getItem("authToken");
 
 export const api = axios.create({
-  baseURL: "http://127.0.0.1:3000/", // Adjust this if your API has a different base URL
+  baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:3000/", // Fallback to localhost if env var is not set
 });
 
 api.interceptors.request.use(
@@ -44,36 +44,6 @@ export const createReflection = async (userId: string, reflectionData: CreateRef
 export const getBarometerData = async (timeRange: string): Promise<BarometerData[]> => {
   const response = await api.get<BarometerData[]>(`admin/reflections/chartday?timeRange=${timeRange}`);
   return response.data;
-};
-
-export const todoService = {
-  async getTodos(userId: string): Promise<Todo[]> {
-    console.log("Getting todos for userId:", userId);
-    const response = await api.get<Todo[]>(`/${userId}/todos`);
-    return response.data;
-  },
-
-  async createTodo(userId: string, todoInput: CreateTodoInput): Promise<Todo> {
-    console.log("Creating todo:", {
-      userId,
-      todoInput,
-      url: `/${userId}/todos`,
-    });
-
-    const response = await api.post<Todo>(`/${userId}/todos`, todoInput);
-    return response.data;
-  },
-
-  // Update a todo
-  async updateTodo(userId: string, todoId: string, updateInput: UpdateTodoInput): Promise<Todo> {
-    const response = await api.put<Todo>(`users/${userId}/todos/${todoId}`, updateInput);
-    return response.data;
-  },
-
-  // Delete a todo
-  async deleteTodo(userId: string, todoId: string): Promise<void> {
-    await api.delete(`users/${userId}/todos/${todoId}`);
-  },
 };
 
 // Define the registration interface
