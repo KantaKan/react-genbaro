@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { api } from "./lib/api";
 import { jwtDecode } from "jwt-decode";
 
@@ -50,44 +50,49 @@ interface UserDataContextType {
   refetchUserData: () => Promise<void>;
   userId: string;
   clearUserData: () => void;
-  fetchUserData: (uid: string) => Promise<void>;
 }
 
 const UserDataContext = createContext<UserDataContextType | undefined>(undefined);
 
-export function UserDataProvider({ children }) {
+const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
 
-  const fetchUserData = useCallback(async (uid: string) => {
-    if (!uid) return;
-
-    setLoading(true);
-    setError(null);
-
+  const fetchUserData = async () => {
     try {
-      const response = await api.get<UserData>(`/users/${uid}`);
-      const data = response.data;
+      setLoading(true);
+      setError(null);
 
-      if (!data) {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const decodedToken = jwtDecode<JWTPayload>(token);
+      console.log("Fetching data for user ID:", decodedToken.id);
+
+      const response = await api.get<UserData>(`/users/${decodedToken.id}`);
+      console.log("API Response:", response.data);
+
+      if (!response.data) {
         throw new Error("No user data received");
       }
 
-      setUserData(data);
-      setUserId(uid);
-    } catch (err) {
-      console.error("Error fetching user data:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch user data");
+      setUserData(response.data);
+      setUserId(decodedToken.id);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      setError(error instanceof Error ? error.message : "Failed to fetch user data");
       setUserData(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   const refetchUserData = async () => {
-    await fetchUserData(userId);
+    await fetchUserData();
   };
 
   const clearUserData = () => {
@@ -97,8 +102,8 @@ export function UserDataProvider({ children }) {
   };
 
   useEffect(() => {
-    fetchUserData(userId);
-  }, [fetchUserData, userId]);
+    fetchUserData();
+  }, []);
 
   // Set up request interceptor for auth
   useEffect(() => {
@@ -131,18 +136,8 @@ export function UserDataProvider({ children }) {
     };
   }, []);
 
-  const value = {
-    userData,
-    loading,
-    error,
-    refetchUserData,
-    userId,
-    clearUserData,
-    fetchUserData,
-  };
-
-  return <UserDataContext.Provider value={value}>{children}</UserDataContext.Provider>;
-}
+  return <UserDataContext.Provider value={{ userData, loading, error, refetchUserData, userId, clearUserData }}>{children}</UserDataContext.Provider>;
+};
 
 export const useUserData = () => {
   const context = useContext(UserDataContext);
