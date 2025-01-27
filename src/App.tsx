@@ -1,5 +1,5 @@
 import "./App.css";
-import { useState, useEffect } from "react";
+
 import { Routes, Route, Navigate, useNavigate, Link } from "react-router-dom";
 import { QueryClientProvider } from "react-query";
 import { queryClient } from "./lib/queryClient";
@@ -8,21 +8,15 @@ import { AllUsers } from "./components/AllUsers";
 import { Login } from "./components/auth/login";
 import { SignUp } from "./components/auth/signup";
 import { BaroChart } from "./components/BigBaroChart";
-
 import { FillChart } from "./components/FillChart";
 import { GenMateChart } from "./components/PieChart";
-
-import { mockReflections } from "./mockData/reflections";
 import { AuthProvider, useAuth } from "./AuthContext";
 import Page from "./app/dashboard/page";
 import UserDataProvider from "./UserDataContext";
-
 import { api } from "./lib/api";
 import ReflectionsTableWithModal from "./components/reflections-table-with-modal";
-
 import { AdminTablePage } from "./components/AdminTablePage";
 import UserReflections from "./components/users-reflectiontable";
-import TodoList from "./components/TodoList";
 
 function AdminDashboard() {
   return (
