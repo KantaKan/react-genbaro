@@ -8,6 +8,7 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Icons } from "@/components/ui/icons";
+import { useUserData } from "@/UserDataContext";
 
 // Validation schema using Zod
 const formSchema = z.object({
@@ -34,6 +35,7 @@ export function Login({ onLogin }: LoginProps) {
     },
   });
   const navigate = useNavigate(); // To navigate after successful login
+  const { fetchUserData } = useUserData();
 
   // Handle form submission
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -42,7 +44,7 @@ export function Login({ onLogin }: LoginProps) {
 
     try {
       await onLogin(values.email, values.password); // Perform the login API call
-      navigate("/dashboard"); // Navigate to dashboard on success
+      await fetchUserData();
     } catch (error) {
       setErrorMessage("Login failed. Please check your credentials.");
       console.error("Login failed:", error);
