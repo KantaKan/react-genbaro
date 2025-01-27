@@ -48,6 +48,8 @@ interface UserDataContextType {
   loading: boolean;
   error: string | null;
   refetchUserData: () => Promise<void>;
+  userId: string;
+  clearUserData: () => void;
 }
 
 const UserDataContext = createContext<UserDataContextType | undefined>(undefined);
@@ -56,6 +58,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState("");
 
   const fetchUserData = async () => {
     try {
@@ -78,6 +81,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
       }
 
       setUserData(response.data);
+      setUserId(decodedToken.id);
     } catch (error) {
       console.error("Error fetching user data:", error);
       setError(error instanceof Error ? error.message : "Failed to fetch user data");
@@ -89,6 +93,12 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
   const refetchUserData = async () => {
     await fetchUserData();
+  };
+
+  const clearUserData = () => {
+    setUserData(null);
+    setLoading(false);
+    setError(null);
   };
 
   useEffect(() => {
@@ -126,7 +136,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     };
   }, []);
 
-  return <UserDataContext.Provider value={{ userData, loading, error, refetchUserData }}>{children}</UserDataContext.Provider>;
+  return <UserDataContext.Provider value={{ userData, loading, error, refetchUserData, userId, clearUserData }}>{children}</UserDataContext.Provider>;
 };
 
 export const useUserData = () => {

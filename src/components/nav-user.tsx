@@ -12,9 +12,10 @@ export function NavUser() {
   const { isMobile } = useSidebar();
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const { userData, loading, error, userId } = useUserData();
+  const { userData, loading, error, userId, clearUserData } = useUserData();
 
   const handleLogout = () => {
+    clearUserData();
     logout();
     navigate("/login");
   };

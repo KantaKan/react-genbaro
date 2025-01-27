@@ -93,7 +93,7 @@ function AppContent() {
 
       console.log("SignUp response:", response.data);
 
-      if (response.status === 201 && response.data.token) {
+      if (response.data.token) {
         navigate("/login");
       } else {
         throw new Error("Invalid response from server");
