@@ -7,7 +7,7 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Icons } from "@/components/ui/icons";
-import { Link } from "react-router-dom"; // Import Link from react-router-dom
+import { Link, useNavigate } from "react-router-dom"; // Import Link and useNavigate from react-router-dom
 
 // Update the cohortNumber field to accept a string
 const formSchema = z.object({
@@ -51,13 +51,27 @@ export function SignUp({ onSignUp }: SignUpProps) {
       jsd_number: "",
     },
   });
+  const navigate = useNavigate();
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      await onSignUp(
+        values.first_name,
+        values.last_name,
+        values.email,
+        values.password,
+        values.cohort_number,
+        values.jsd_number
+      );
+      
+      // Navigate to login page after successful signup
+      navigate("/login");
+    } catch (error) {
+      console.error("Sign-up error:", error);
+    } finally {
       setIsLoading(false);
-      onSignUp(values.first_name, values.last_name, values.email, values.password, values.cohort_number, values.jsd_number);
-    }, 1000);
+    }
   }
 
   return (
