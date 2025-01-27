@@ -71,11 +71,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (response.data?.data?.token) {
         const role = response.data.data.role || "learner";
-        localStorage.setItem("authToken", response.data.data.token);
+        const token = response.data.data.token;
+
+        // Set token first
+        localStorage.setItem("authToken", token);
         localStorage.setItem("userRole", role);
+
+        // Update auth state
         setIsAuthenticated(true);
         setUserRole(role);
         setError(null);
+
+        // Configure axios with new token
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
         return role;
       } else {
         throw new Error("No token in response");

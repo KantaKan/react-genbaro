@@ -27,6 +27,7 @@ interface LoginProps {
 export function Login({ onLogin }: LoginProps) {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const { refetchUserData } = useUserData();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -43,6 +44,7 @@ export function Login({ onLogin }: LoginProps) {
 
     try {
       await onLogin(values.email, values.password); // Perform the login API call
+      await refetchUserData(); // Add this line to fetch user data after successful login
     } catch (error) {
       setErrorMessage("Login failed. Please check your credentials.");
       console.error("Login failed:", error);
