@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import type { Todo, CreateTodoInput, UpdateTodoInput } from "./types";
+import type { Todo, CreateTodoInput, UpdateTodoInput, WeeklyReflection, User, CreateReflectionPayload, BarometerData } from "./types";
 // Retrieve the token from localStorage (or sessionStorage, depending on your setup)
 const getAuthToken = () => localStorage.getItem("authToken");
 
@@ -36,9 +36,8 @@ export const getUsersByBarometer = async (barometer: string): Promise<User[]> =>
 };
 
 // POST reflection API
-export const createReflection = async (userId: string, reflectionData: CreateReflectionPayload) => {
-  const response = await api.post(`/${userId}/reflections`, reflectionData);
-  return response.data;
+export const createReflection = async (userId: string, reflectionData: CreateReflectionPayload): Promise<void> => {
+  await api.post(`users/${userId}/reflections`, reflectionData);
 };
 
 export const getBarometerData = async (timeRange: string): Promise<BarometerData[]> => {
