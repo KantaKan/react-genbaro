@@ -143,6 +143,13 @@ export default function ReflectionsTable() {
     }
   };
 
+  const hasReflectionToday = (reflections: Reflection[]): boolean => {
+    const today = new Date().toLocaleDateString("en-US"); // Format: "M/D/YYYY"
+    return reflections.some((reflection) => new Date(reflection.date).toLocaleDateString("en-US") === today);
+  };
+
+  const hasReflection = hasReflectionToday(reflections);
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
@@ -166,7 +173,7 @@ export default function ReflectionsTable() {
         </DropdownMenu>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button disabled={hasReflection}>
               <Plus className="mr-2 h-4 w-4" /> Add Reflection
             </Button>
           </DialogTrigger>
@@ -175,6 +182,11 @@ export default function ReflectionsTable() {
           </DialogContent>
         </Dialog>
       </div>
+      {hasReflection && (
+        <div className="text-base mb-2 text-end" style={{ color: "var(--muted-foreground)" }}>
+          You have already submitted a reflection today. 😁
+        </div>
+      )}
       <Table>
         <TableHeader>
           <TableRow>
