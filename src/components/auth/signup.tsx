@@ -56,15 +56,8 @@ export function SignUp({ onSignUp }: SignUpProps) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      await onSignUp(
-        values.first_name,
-        values.last_name,
-        values.email,
-        values.password,
-        values.cohort_number,
-        values.jsd_number
-      );
-      
+      await onSignUp(values.first_name, values.last_name, values.email, values.password, values.cohort_number, values.jsd_number);
+
       // Navigate to login page after successful signup
       navigate("/login");
     } catch (error) {

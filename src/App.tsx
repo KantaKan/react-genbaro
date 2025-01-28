@@ -17,6 +17,7 @@ import { api } from "./lib/api";
 import ReflectionsTableWithModal from "./components/reflections-table-with-modal";
 import { AdminTablePage } from "./components/AdminTablePage";
 import UserReflections from "./components/users-reflectiontable";
+import { AdminUsersPage } from "./pages/admin-users-page";
 
 function AdminDashboard() {
   return (
@@ -144,6 +145,17 @@ function AppContent() {
               <Page>
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <UserReflections />
+                </ProtectedRoute>
+              </Page>
+            }
+          />
+
+          <Route
+            path="/admin/users"
+            element={
+              <Page>
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminUsersPage />
                 </ProtectedRoute>
               </Page>
             }
