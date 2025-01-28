@@ -31,6 +31,10 @@ const navigationConfig = {
           title: "AdminPanel",
           url: "/admin",
         },
+        {
+          title: "All Users",
+          url: "/admin/users",
+        },
       ],
     },
   ],
