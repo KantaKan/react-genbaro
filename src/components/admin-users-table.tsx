@@ -36,16 +36,39 @@ const getColorForBarometer = (barometer: string) => {
   return zone ? `${zone.color} ${zone.bgColor}` : "";
 };
 
+// Define all available columns in their desired order
+const ALL_COLUMNS = ["First Name", "Last Name", "JSD Number", "Email", "Cohort", "Total Reflections", "Last Barometer"] as const;
+
 export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
   const navigate = useNavigate();
-  const [visibleColumns, setVisibleColumns] = useState(["First Name", "Last Name", "JSD Number", "Email", "Cohort", "Total Reflections", "Last Barometer"]);
+  const [visibleColumns, setVisibleColumns] = useState([...ALL_COLUMNS]);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "ascending" | "descending" }>({
     key: "First Name",
     direction: "ascending",
   });
 
   const toggleColumn = (column: string) => {
-    setVisibleColumns((current) => (current.includes(column) ? current.filter((col) => col !== column) : [...current, column]));
+    setVisibleColumns((current) => {
+      if (current.includes(column)) {
+        // Remove the column
+        return current.filter((col) => col !== column);
+      } else {
+        // Add the column back in its original position
+        const newColumns = [...current];
+        const originalIndex = ALL_COLUMNS.indexOf(column as (typeof ALL_COLUMNS)[number]);
+
+        // Find the correct insertion point
+        let insertIndex = 0;
+        for (let i = 0; i < originalIndex; i++) {
+          if (newColumns.includes(ALL_COLUMNS[i])) {
+            insertIndex = newColumns.indexOf(ALL_COLUMNS[i]) + 1;
+          }
+        }
+
+        newColumns.splice(insertIndex, 0, column);
+        return newColumns;
+      }
+    });
   };
 
   const getLastBarometer = (reflections: User["reflections"]) => {
@@ -106,6 +129,17 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
     return <div>Loading...</div>;
   }
 
+  const renderTableCell = (user: User, column: string) => {
+    const value = getValueByKey(user, column);
+    const colorClass = column === "Last Barometer" ? getColorForBarometer(value as string) : "";
+
+    return (
+      <TableCell key={column} className={`text-center ${colorClass}`}>
+        {value || "-"}
+      </TableCell>
+    );
+  };
+
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between mb-4">
@@ -116,7 +150,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {["First Name", "Last Name", "JSD Number", "Email", "Cohort", "Total Reflections", "Last Barometer"].map((column) => (
+            {ALL_COLUMNS.map((column) => (
               <DropdownMenuCheckboxItem key={column} className="capitalize" checked={visibleColumns.includes(column)} onCheckedChange={() => toggleColumn(column)}>
                 {column}
               </DropdownMenuCheckboxItem>
@@ -141,13 +175,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
         <TableBody>
           {sortedUsers.map((user) => (
             <TableRow key={user._id} onClick={() => handleRowClick(user._id)} className="cursor-pointer hover:bg-gray-100">
-              {visibleColumns.includes("First Name") && <TableCell className="text-center">{user.first_name}</TableCell>}
-              {visibleColumns.includes("Last Name") && <TableCell className="text-center">{user.last_name}</TableCell>}
-              {visibleColumns.includes("JSD Number") && <TableCell className="text-center">{user.jsd_number || "-"}</TableCell>}
-              {visibleColumns.includes("Email") && <TableCell className="text-center">{user.email}</TableCell>}
-              {visibleColumns.includes("Cohort") && <TableCell className="text-center">{user.cohort_number || "-"}</TableCell>}
-              {visibleColumns.includes("Total Reflections") && <TableCell className="text-center">{getTotalReflections(user.reflections)}</TableCell>}
-              {visibleColumns.includes("Last Barometer") && <TableCell className={`text-center ${getColorForBarometer(getLastBarometer(user.reflections))}`}>{getLastBarometer(user.reflections)}</TableCell>}
+              {visibleColumns.map((column) => renderTableCell(user, column))}
             </TableRow>
           ))}
         </TableBody>
