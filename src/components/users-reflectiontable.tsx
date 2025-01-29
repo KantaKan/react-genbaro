@@ -93,7 +93,7 @@ export default function UserReflections() {
   }, [id]);
 
   const handleBack = () => {
-    navigate("/admin/table");
+    navigate(-1);
   };
 
   if (isLoading) {
