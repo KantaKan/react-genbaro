@@ -174,7 +174,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
         </TableHeader>
         <TableBody>
           {sortedUsers.map((user) => (
-            <TableRow key={user._id} onClick={() => handleRowClick(user._id)} className="cursor-pointer hover:bg-orange-400">
+            <TableRow key={user._id} onClick={() => handleRowClick(user._id)}>
               {visibleColumns.map((column) => renderTableCell(user, column))}
             </TableRow>
           ))}

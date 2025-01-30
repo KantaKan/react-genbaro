@@ -250,7 +250,7 @@ export default function AdminReflectionsTable() {
         </TableHeader>
         <TableBody>
           {displayedReflections.map((reflection) => (
-            <TableRow key={reflection.id} onClick={() => handleRowClick(reflection.id)} className="cursor-pointer hover:bg-orange-400">
+            <TableRow key={reflection.id} onClick={() => handleRowClick(reflection.id)}>
               {!hiddenColumns.includes("First Name") && <TableCell>{reflection.FirstName}</TableCell>}
               {!hiddenColumns.includes("Last Name") && <TableCell>{reflection.LastName}</TableCell>}
               {!hiddenColumns.includes("JSD Number") && <TableCell>{reflection.JsdNumber}</TableCell>}
