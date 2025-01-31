@@ -128,7 +128,6 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
 
   // New function to handle export
   const handleExport = async () => {
-    console.log("Export button clicked"); // Debug log
     try {
       const response = await fetch("https://mongodbtospreadsheet.onrender.com/export"); // Replace with your actual API endpoint
       const data = await response.json();
