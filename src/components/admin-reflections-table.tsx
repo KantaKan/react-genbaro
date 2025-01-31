@@ -35,10 +35,10 @@ interface Reflection {
 }
 
 const reflectionZones = [
-  { id: "comfort", label: "Comfort Zone", color: "text-green-600", bgColor: "bg-green-200" },
-  { id: "stretch-enjoying", label: "Stretch zone - Enjoying the challenges", color: "text-yellow-600", bgColor: "bg-yellow-200" },
-  { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", color: "text-red-600", bgColor: "bg-red-200" },
-  { id: "panic", label: "Panic Zone", color: "text-purple-600", bgColor: "bg-purple-200" },
+  { id: "comfort", label: "Comfort Zone", bgColor: "bg-green-500" },
+  { id: "stretch-enjoying", label: "Stretch zone - Enjoying the challenges", bgColor: "bg-yellow-500" },
+  { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", bgColor: "bg-red-500" },
+  { id: "panic", label: "Panic Zone", bgColor: "bg-purple-500" },
 ];
 
 const getColorForBarometer = (barometer: string) => {
