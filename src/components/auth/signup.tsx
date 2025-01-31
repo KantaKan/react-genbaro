@@ -32,6 +32,15 @@ const formSchema = z.object({
   jsd_number: z.string().regex(/^GEN\d+_\d+$/, {
     message: "JSD number must be in format GEN{number}_{number}",
   }),
+  project_group: z.string().min(1, {
+    message: "Project group is required.",
+  }),
+  genmate_group: z.string().min(1, {
+    message: "Genmate group is required.",
+  }),
+  zoom_name: z.string().min(1, {
+    message: "Zoom name is required.",
+  }),
 });
 
 interface SignUpProps {
@@ -47,8 +56,11 @@ export function SignUp({ onSignUp }: SignUpProps) {
       last_name: "",
       email: "",
       password: "",
-      cohort_number: "", // Change default value to empty string
+      cohort_number: 0, // Change default value to empty string
       jsd_number: "",
+      project_group: "", // Add default value for project_group
+      genmate_group: "", // Add default value for genmate_group
+      zoom_name: "", // Add default value for zoom_name
     },
   });
   const navigate = useNavigate();
@@ -133,6 +145,33 @@ export function SignUp({ onSignUp }: SignUpProps) {
             </label>
             <Input id="jsdNumber" placeholder="GEN9_17" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-400" {...form.register("jsd_number")} />
             {form.formState.errors.jsd_number && <p className="text-sm text-red-500">{form.formState.errors.jsd_number.message}</p>}
+          </div>
+
+          {/* Project Group */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-white" htmlFor="project_group">
+              Project Group
+            </label>
+            <Input id="project_group" type="text" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-400" {...form.register("project_group")} />
+            {form.formState.errors.project_group && <p className="text-sm text-red-500">{form.formState.errors.project_group.message}</p>}
+          </div>
+
+          {/* Genmate Group */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-white" htmlFor="genmate_group">
+              Genmate Group
+            </label>
+            <Input id="genmate_group" type="text" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-400" {...form.register("genmate_group")} />
+            {form.formState.errors.genmate_group && <p className="text-sm text-red-500">{form.formState.errors.genmate_group.message}</p>}
+          </div>
+
+          {/* Zoom Name */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-white" htmlFor="zoom_name">
+              Zoom Name
+            </label>
+            <Input id="zoom_name" type="text" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-400" {...form.register("zoom_name")} />
+            {form.formState.errors.zoom_name && <p className="text-sm text-red-500">{form.formState.errors.zoom_name.message}</p>}
           </div>
 
           <Button type="submit" disabled={isLoading} className="w-full bg-white text-black hover:bg-zinc-100">

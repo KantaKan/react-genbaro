@@ -81,7 +81,7 @@ function AppContent() {
     }
   };
 
-  const handleSignUp = async (first_name: string, last_name: string, email: string, password: string, cohort_number: number, jsd_number: string) => {
+  const handleSignUp = async (first_name: string, last_name: string, email: string, password: string, cohort_number: number, jsd_number: string, project_group: string, genmate_group: string, zoom_name: string) => {
     try {
       const response = await api.post("register", {
         first_name,
@@ -90,6 +90,9 @@ function AppContent() {
         password,
         cohort_number,
         jsd_number,
+        project_group,
+        genmate_group,
+        zoom_name,
       });
 
       console.log("SignUp response:", response.data);
