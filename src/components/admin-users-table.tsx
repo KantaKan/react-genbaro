@@ -18,6 +18,9 @@ interface User {
       barometer: string;
     };
   }> | null;
+  zoom_name: string;
+  project_group: string;
+  genmate_group: string;
 }
 
 interface AdminUsersTableProps {
@@ -38,13 +41,13 @@ const getColorForBarometer = (barometer: string) => {
 };
 
 // Define all available columns in their desired order
-const ALL_COLUMNS = ["First Name", "Last Name", "JSD Number", "Email", "Cohort", "Total Reflections", "Last Barometer"] as const;
+const ALL_COLUMNS = ["Zoom Name", "Project Group", "Genmate Group", "First Name", "Last Name", "JSD Number", "Email", "Cohort", "Total Reflections", "Last Barometer"] as const;
 
 export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
   const navigate = useNavigate();
   const [visibleColumns, setVisibleColumns] = useState([...ALL_COLUMNS]);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "ascending" | "descending" }>({
-    key: "First Name",
+    key: "Zoom Name",
     direction: "ascending",
   });
 
@@ -87,6 +90,12 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
 
   const getValueByKey = (user: User, key: string) => {
     switch (key) {
+      case "Zoom Name":
+        return user.zoom_name;
+      case "Project Group":
+        return user.project_group;
+      case "Genmate Group":
+        return user.genmate_group;
       case "First Name":
         return user.first_name;
       case "Last Name":
