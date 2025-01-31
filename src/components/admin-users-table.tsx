@@ -29,15 +29,15 @@ interface AdminUsersTableProps {
 }
 
 const reflectionZones = [
-  { id: "comfort", label: "Comfort Zone", color: "text-emerald-700", bgColor: "bg-emerald-100" },
-  { id: "stretch-enjoying", label: "Stretch zone - Enjoying the challenges", color: "text-amber-700", bgColor: "bg-amber-100" },
-  { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", color: "text-orange-700", bgColor: "bg-orange-100" },
-  { id: "panic", label: "Panic Zone", color: "text-rose-700", bgColor: "bg-rose-100" },
+  { id: "comfort", label: "Comfort Zone", bgColor: "bg-green-500" },
+  { id: "stretch-enjoying", label: "Stretch zone - Enjoying the challenges", bgColor: "bg-yellow-500" },
+  { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", bgColor: "bg-red-500" },
+  { id: "panic", label: "Panic Zone", bgColor: "bg-purple-500" },
 ];
 
 const getColorForBarometer = (barometer: string) => {
   const zone = reflectionZones.find((zone) => zone.label === barometer);
-  return zone ? `${zone.color} ${zone.bgColor}` : "";
+  return zone ? `${zone.bgColor}` : "";
 };
 
 // Define all available columns in their desired order

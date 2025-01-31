@@ -35,35 +35,15 @@ interface Reflection {
 }
 
 const reflectionZones = [
-  {
-    id: "comfort",
-    label: "Comfort Zone",
-    color: "text-emerald-600",
-    bgColor: "bg-emerald-100",
-  },
-  {
-    id: "stretch-enjoying",
-    label: "Stretch zone - Enjoying the challenges",
-    color: "text-yellow-600",
-    bgColor: "bg-yellow-100",
-  },
-  {
-    id: "stretch-overwhelmed",
-    label: "Stretch zone - Overwhelmed",
-    color: "text-orange-600",
-    bgColor: "bg-orange-100",
-  },
-  {
-    id: "panic",
-    label: "Panic Zone",
-    color: "text-red-600",
-    bgColor: "bg-red-100",
-  },
+  { id: "comfort", label: "Comfort Zone", bgColor: "bg-green-500" },
+  { id: "stretch-enjoying", label: "Stretch zone - Enjoying the challenges", bgColor: "bg-yellow-500" },
+  { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", bgColor: "bg-red-500" },
+  { id: "panic", label: "Panic Zone", bgColor: "bg-purple-500" },
 ];
 
 const getColorForBarometer = (barometer: string) => {
   const zone = reflectionZones.find((zone) => zone.label === barometer);
-  return zone ? `${zone.color} ${zone.bgColor}` : "";
+  return zone ? `${zone.bgColor}` : "";
 };
 
 export default function ReflectionsTable() {
