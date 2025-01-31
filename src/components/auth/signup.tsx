@@ -44,7 +44,7 @@ const formSchema = z.object({
 });
 
 interface SignUpProps {
-  onSignUp: (first_name: string, last_name: string, email: string, password: string, cohort_number: string, jsd_number: string) => void;
+  onSignUp: (first_name: string, last_name: string, email: string, password: string, cohort_number: number, jsd_number: string, project_group: string, genmate_group: string, zoom_name: string) => void;
 }
 
 export function SignUp({ onSignUp }: SignUpProps) {
@@ -56,7 +56,7 @@ export function SignUp({ onSignUp }: SignUpProps) {
       last_name: "",
       email: "",
       password: "",
-      cohort_number: 0, // Change default value to empty string
+      cohort_number: "", // Change default value to empty string
       jsd_number: "",
       project_group: "", // Add default value for project_group
       genmate_group: "", // Add default value for genmate_group
@@ -68,9 +68,7 @@ export function SignUp({ onSignUp }: SignUpProps) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      await onSignUp(values.first_name, values.last_name, values.email, values.password, values.cohort_number, values.jsd_number);
-
-      // Navigate to login page after successful signup
+      await onSignUp(values.first_name, values.last_name, values.email, values.password, values.cohort_number, values.jsd_number, values.project_group, values.genmate_group, values.zoom_name);
       navigate("/login");
     } catch (error) {
       console.error("Sign-up error:", error);
