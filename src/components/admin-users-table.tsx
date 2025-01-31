@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { toast } from "react-toastify";
 
 interface User {
   _id: string;
@@ -125,6 +126,24 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
     return 0;
   });
 
+  // New function to handle export
+  const handleExport = async () => {
+    console.log("Export button clicked"); // Debug log
+    try {
+      const response = await fetch("https://mongodbtospreadsheet.onrender.com/export"); // Replace with your actual API endpoint
+      const data = await response.json();
+      if (response.ok) {
+        console.log(data);
+        toast.success(data.message); // Show success message
+        window.open(data.link, "_blank"); // Open the link in a new tab
+      } else {
+        toast.error("Failed to export data."); // Show error message
+      }
+    } catch (error) {
+      toast.error("An error occurred while exporting data."); // Show error message
+    }
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -157,6 +176,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+        <Button onClick={handleExport}>Export to Google Sheets</Button>
       </div>
 
       <Table>
