@@ -1,10 +1,3 @@
-interface Reflection {
-  day: string;
-  user_id: string;
-  date: string;
-  reflection: Record<string, any>;
-}
-
 interface UserData {
   _id: string;
   first_name: string;
@@ -39,4 +32,26 @@ export interface CreateTodoInput {
 export interface UpdateTodoInput {
   text?: string;
   completed?: boolean;
+}
+
+export interface TechSession {
+  happy: string;
+  improve: string;
+}
+
+export interface NonTechSession {
+  happy: string;
+  improve: string;
+}
+
+export interface ReflectionData {
+  barometer: string;
+  tech_sessions: TechSession;
+  non_tech_sessions: NonTechSession;
+}
+
+export interface Reflection {
+  user_id: string;
+  date: string;
+  reflection: ReflectionData;
 }
