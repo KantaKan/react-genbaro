@@ -50,6 +50,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
     key: "Zoom Name",
     direction: "ascending",
   });
+  const [isExporting, setIsExporting] = useState(false);
 
   const toggleColumn = (column: string) => {
     setVisibleColumns((current) => {
@@ -137,18 +138,21 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
 
   // New function to handle export
   const handleExport = async () => {
+    setIsExporting(true);
     try {
-      const response = await fetch("https://mongodbtospreadsheet.onrender.com/export"); // Replace with your actual API endpoint
+      const response = await fetch("https://mongodbtospreadsheet.onrender.com/export");
       const data = await response.json();
       if (response.ok) {
         console.log(data);
-        toast.success(data.message); // Show success message
-        window.open(data.link, "_blank"); // Open the link in a new tab
+        toast.success(data.message);
+        window.open(data.link, "_blank");
       } else {
-        toast.error("Failed to export data."); // Show error message
+        toast.error("Failed to export data.");
       }
     } catch (error) {
-      toast.error("An error occurred while exporting data."); // Show error message
+      toast.error("An error occurred while exporting data.");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -184,7 +188,16 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button onClick={handleExport}>Export to Google Sheets</Button>
+        <Button onClick={handleExport} disabled={isExporting}>
+          {isExporting ? (
+            <>
+              <span className="mr-2">Exporting...</span>
+              <span className="animate-spin">⏳</span>
+            </>
+          ) : (
+            "Export to Google Sheets"
+          )}
+        </Button>
       </div>
 
       <Table>
