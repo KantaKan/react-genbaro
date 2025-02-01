@@ -179,7 +179,7 @@ export default function ReflectionsTable() {
       </div>
       {hasReflection && (
         <div className="text-base mb-2 text-end" style={{ color: "var(--muted-foreground)" }}>
-          You have already submitted a reflection today. 😁
+          Great job! You've already reflected today. Come back tomorrow for a new entry. 🌟
         </div>
       )}
       <Table>
