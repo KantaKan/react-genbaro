@@ -151,29 +151,31 @@ export default function ReflectionsTable() {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button disabled={hasReflection}>
-              <Plus className="mr-2 h-4 w-4" /> Add Reflection
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[70vw] w-[70vw] h-[70vh] overflow-y-auto">
-            <FeedbackForm onSubmit={handleSubmit} onSuccess={() => setIsDialogOpen(false)} />
-          </DialogContent>
-        </Dialog>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="ml-2">
-              <HelpCircle className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[800px]">
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold text-center">Learning Barometer Zones</h2>
-              <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Image20250131154257-rneLSfPPvp2MjH9UTaZdxRwrVgd5ey.png" alt="Learning Barometer Zones" className="w-full rounded-lg" />
-            </div>
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button disabled={hasReflection}>
+                <Plus className="mr-2 h-4 w-4" /> Add Reflection
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[70vw] w-[70vw] h-[70vh] overflow-y-auto">
+              <FeedbackForm onSubmit={handleSubmit} onSuccess={() => setIsDialogOpen(false)} />
+            </DialogContent>
+          </Dialog>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <HelpCircle className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[800px]">
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold text-center">Learning Barometer Zones</h2>
+                <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Image20250131154257-rneLSfPPvp2MjH9UTaZdxRwrVgd5ey.png" alt="Learning Barometer Zones" className="w-full rounded-lg" />
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
       {hasReflection && (
         <div className="text-base mb-2 text-end" style={{ color: "var(--muted-foreground)" }}>
