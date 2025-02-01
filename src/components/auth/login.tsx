@@ -108,34 +108,18 @@ export function Login({ onLogin }: LoginProps) {
 
         {/* Social login buttons */}
         <div className="grid grid-cols-3 gap-3">
-          <Button variant="outline" type="button" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800 hover:text-white">
+          <Button variant="outline" type="button" disabled={true} className="bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800 hover:text-white">
             <Icons.apple className="h-4 w-4" />
           </Button>
-          <Button variant="outline" type="button" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800 hover:text-white">
+          <Button variant="outline" type="button" disabled={true} className="bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800 hover:text-white">
             <Icons.google className="h-4 w-4" />
           </Button>
-          <Button variant="outline" type="button" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800 hover:text-white">
+          <Button variant="outline" type="button" disabled={true} className="bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800 hover:text-white">
             <Icons.gitHub className="h-4 w-4" />
           </Button>
         </div>
 
         {/* Links for Sign Up */}
-        <div className="text-center text-sm text-zinc-400">
-          Don&apos;t have an account?{" "}
-          <Link to="/signup" className="underline hover:text-white">
-            Sign up
-          </Link>
-        </div>
-        <div className="text-center text-xs text-zinc-400">
-          By clicking continue, you agree to our{" "}
-          <Link to="/terms" className="underline hover:text-white">
-            Terms of Service
-          </Link>{" "}
-          and{" "}
-          <Link to="/privacy" className="underline hover:text-white">
-            Privacy Policy
-          </Link>
-        </div>
       </div>
     </div>
   );
