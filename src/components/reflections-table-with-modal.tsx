@@ -186,7 +186,12 @@ export default function ReflectionsTable() {
             <DialogContent className="sm:max-w-[800px]">
               <div className="space-y-4">
                 <h2 className="text-xl font-bold text-center">Learning Barometer Zones</h2>
-                <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Image20250131154257-rneLSfPPvp2MjH9UTaZdxRwrVgd5ey.png" alt="Learning Barometer Zones" className="w-full rounded-lg" />
+                <img
+                  src="/baronzone.png
+                "
+                  alt="Learning Barometer Zones"
+                  className="w-full rounded-lg"
+                />
               </div>
             </DialogContent>
           </Dialog>
