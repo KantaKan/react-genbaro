@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, HelpCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import FeedbackForm from "./feedback-form";
 import { useUserData } from "@/UserDataContext";
@@ -159,6 +159,19 @@ export default function ReflectionsTable() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[70vw] w-[70vw] h-[70vh] overflow-y-auto">
             <FeedbackForm onSubmit={handleSubmit} onSuccess={() => setIsDialogOpen(false)} />
+          </DialogContent>
+        </Dialog>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="icon" className="ml-2">
+              <HelpCircle className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[800px]">
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold text-center">Learning Barometer Zones</h2>
+              <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Image20250131154257-rneLSfPPvp2MjH9UTaZdxRwrVgd5ey.png" alt="Learning Barometer Zones" className="w-full rounded-lg" />
+            </div>
           </DialogContent>
         </Dialog>
       </div>
