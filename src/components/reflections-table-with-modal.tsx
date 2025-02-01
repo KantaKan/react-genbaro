@@ -46,6 +46,13 @@ const getColorForBarometer = (barometer: string) => {
   return zone ? `${zone.bgColor}` : "";
 };
 
+const showTodaysReflectionDialog = (reflection: Reflection) => {
+  // Implement a dialog to show today's reflection
+  // You can use the Dialog component from your UI library
+  // This is a placeholder function
+  console.log("Showing today's reflection:", reflection);
+};
+
 export default function ReflectionsTable() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
@@ -178,8 +185,26 @@ export default function ReflectionsTable() {
         </div>
       </div>
       {hasReflection && (
-        <div className="text-base mb-2 text-end" style={{ color: "var(--muted-foreground)" }}>
-          Great job! You've already reflected today. Come back tomorrow for a new entry. 🌟
+        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 rounded-r shadow-md flex items-center justify-between">
+          <div>
+            <p className="font-bold">Daily Reflection Complete! 🎉</p>
+            <p className="text-sm">You've already submitted your reflection for today. Great job staying consistent!</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              // Find today's reflection
+              const todayReflection = reflections.find((r) => new Date(r.date).toDateString() === new Date().toDateString());
+              if (todayReflection) {
+                // Open a dialog to show today's reflection
+                // You'll need to implement this dialog
+                showTodaysReflectionDialog(todayReflection);
+              }
+            }}
+          >
+            View Today's Reflection
+          </Button>
         </div>
       )}
       <Table>
