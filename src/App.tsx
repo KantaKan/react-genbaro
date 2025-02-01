@@ -117,7 +117,7 @@ function AppContent() {
 
         <Routes>
           <Route path="/login" element={!isAuthenticated ? <Login onLogin={handleLogin} /> : <Navigate to="/" replace />} />
-          <Route path="/signup" element={!isAuthenticated ? <SignUp onSignUp={handleSignUp} /> : <Navigate to="/" replace />} />
+          <Route path="/signupxdd" element={!isAuthenticated ? <SignUp onSignUp={handleSignUp} /> : <Navigate to="/" replace />} />
 
           <Route
             path="/admin"
