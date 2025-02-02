@@ -49,27 +49,27 @@ const navigationConfig = {
           title: "My Reflections",
           url: "/learner",
         },
-        {
-          title: "Learning Materials",
-          url: "/learner",
-        },
+        // {
+        //   title: "Learning Materials",
+        //   url: "/learner",
+        // },
       ],
     },
-    {
-      title: "Assignments",
-      url: "/assignments",
-      icon: FileText,
-      items: [
-        {
-          title: "Current Tasks",
-          url: "/learner",
-        },
-        {
-          title: "Completed Work",
-          url: "/learner",
-        },
-      ],
-    },
+    // {
+    //   title: "Assignments",
+    //   url: "/assignments",
+    //   icon: FileText,
+    //   items: [
+    //     {
+    //       title: "Current Tasks",
+    //       url: "/learner",
+    //     },
+    //     {
+    //       title: "Completed Work",
+    //       url: "/learner",
+    //     },
+    //   ],
+    // },
   ],
 };
 
