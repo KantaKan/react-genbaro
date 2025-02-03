@@ -87,26 +87,26 @@ export default function FeedbackForm({ onSubmit, onSuccess }: FeedbackFormProps)
     {
       id: "comfort",
       label: "Comfort Zone",
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-100",
+      color: "text-white",
+      bgColor: "bg-green-500",
     },
     {
       id: "stretch-enjoying",
       label: "Stretch zone - Enjoying the challenges",
-      color: "text-yellow-600",
-      bgColor: "bg-yellow-100",
+      color: "text-white",
+      bgColor: "bg-yellow-500",
     },
     {
       id: "stretch-overwhelmed",
       label: "Stretch zone - Overwhelmed",
-      color: "text-orange-600",
-      bgColor: "bg-orange-100",
+      color: "text-white",
+      bgColor: "bg-red-500",
     },
     {
       id: "panic",
       label: "Panic Zone",
-      color: "text-red-600",
-      bgColor: "bg-red-100",
+      color: "text-white",
+      bgColor: "bg-purple-500",
     },
   ];
 
@@ -216,7 +216,7 @@ export default function FeedbackForm({ onSubmit, onSuccess }: FeedbackFormProps)
                     }}
                   >
                     <RadioGroupItem value={zone.id} id={zone.id} />
-                    <span className={`font-medium ${zone.color}`}>{zone.label}</span>
+                    <span className={`font-medium`}>{zone.label}</span>
                   </Label>
                 ))}
               </RadioGroup>
