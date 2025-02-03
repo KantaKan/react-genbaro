@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { ReflectionPreview } from "./reflection-preview";
+import { AlertDialog, AlertDialogContent, AlertDialogAction, AlertDialogCancel } from "./ui/alert-dialog";
 
 // Types
 interface TechSession {
@@ -54,7 +55,7 @@ const showTodaysReflectionDialog = (reflection: Reflection) => {
   console.log("Showing today's reflection:", reflection);
 };
 
-export default function ReflectionsTable() {
+export default function ReflectionsTableWithModal() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
   const [sortConfig, setSortConfig] = useState<{
@@ -67,6 +68,11 @@ export default function ReflectionsTable() {
 
   const { userData, loading, error, refreshUserData } = useUserData();
   const [reflections, setReflections] = useState<Reflection[]>([]);
+  const [formData, setFormData] = useState<{
+    categoryInputs: Record<string, string>;
+    comfortLevel: string;
+  } | null>(null);
+  const [showCloseWarning, setShowCloseWarning] = useState(false);
 
   useEffect(() => {
     if (userData?.data?.reflections) {
@@ -167,14 +173,31 @@ export default function ReflectionsTable() {
           </DropdownMenuContent>
         </DropdownMenu>
         <div className="flex gap-2">
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog
+            open={isDialogOpen}
+            onOpenChange={(open) => {
+              if (!open && formData) {
+                setShowCloseWarning(true);
+              } else {
+                setIsDialogOpen(open);
+              }
+            }}
+          >
             <DialogTrigger asChild>
               <Button disabled={hasReflection}>
                 <Plus className="mr-2 h-4 w-4" /> Add Reflection
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[70vw] w-[70vw] h-[70vh] overflow-y-auto">
-              <FeedbackForm onSubmit={handleSubmit} onSuccess={() => setIsDialogOpen(false)} />
+              <FeedbackForm
+                initialData={formData}
+                onSubmit={handleSubmit}
+                onChange={setFormData}
+                onSuccess={() => {
+                  setFormData(null);
+                  setIsDialogOpen(false);
+                }}
+              />
             </DialogContent>
           </Dialog>
           <Dialog>
@@ -237,6 +260,33 @@ export default function ReflectionsTable() {
           ))}
         </TableBody>
       </Table>
+      <AlertDialog open={showCloseWarning} onOpenChange={setShowCloseWarning}>
+        <AlertDialogContent>
+          <div className="text-center space-y-4">
+            <h3 className="text-lg font-semibold">Unsaved Changes</h3>
+            <p>You have unsaved changes. Do you want to continue editing or discard changes?</p>
+            <div className="flex justify-end gap-2">
+              <AlertDialogCancel
+                onClick={() => {
+                  setShowCloseWarning(false);
+                  setIsDialogOpen(true);
+                }}
+              >
+                Continue Editing
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  setFormData(null);
+                  setShowCloseWarning(false);
+                  setIsDialogOpen(false);
+                }}
+              >
+                Discard Changes
+              </AlertDialogAction>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

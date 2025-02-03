@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -48,13 +48,23 @@ interface ComfortZone {
 interface FeedbackFormProps {
   onSubmit: (reflection: Reflection) => Promise<void>;
   onSuccess?: () => void;
+  initialData?: {
+    categoryInputs: Record<string, string>;
+    comfortLevel: string;
+  };
+  onChange?: (data: { categoryInputs: Record<string, string>; comfortLevel: string }) => void;
 }
 
-export default function FeedbackForm({ onSubmit, onSuccess }: FeedbackFormProps) {
+export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChange }: FeedbackFormProps) {
   const { userData, loading, error } = useUserData();
-  const [categoryInputs, setCategoryInputs] = useState<Record<string, string>>({});
-  const [comfortLevel, setComfortLevel] = useState("");
+  const [categoryInputs, setCategoryInputs] = useState<Record<string, string>>(initialData?.categoryInputs || {});
+  const [comfortLevel, setComfortLevel] = useState(initialData?.comfortLevel || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Add effect to sync changes
+  useEffect(() => {
+    onChange?.({ categoryInputs, comfortLevel });
+  }, [categoryInputs, comfortLevel, onChange]);
 
   const categories: FeedbackCategory[] = [
     {
