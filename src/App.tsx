@@ -18,6 +18,7 @@ import ReflectionsTableWithModal from "./components/reflections-table-with-modal
 import { AdminTablePage } from "./components/AdminTablePage";
 import UserReflections from "./components/users-reflectiontable";
 import { AdminUsersPage } from "./pages/admin-users-page";
+import EmojiZoneTable from "./components/emoji-zone-table";
 
 function AdminDashboard() {
   return (
@@ -125,6 +126,16 @@ function AppContent() {
               <Page>
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminDashboard />
+                </ProtectedRoute>
+              </Page>
+            }
+          />
+          <Route
+            path="/admin/emoji-zone-table"
+            element={
+              <Page>
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <EmojiZoneTable />
                 </ProtectedRoute>
               </Page>
             }

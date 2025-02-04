@@ -14,8 +14,10 @@ export function formatDate(date: Date): string {
   });
 }
 
-/*************  ✨ Codeium Command ⭐  *************/
-/******  47e2c014-fb9a-4552-9be5-3df4046e33d6  *******/
 export function isSameDay(date1: Date, date2: Date): boolean {
   return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();
+}
+
+export function cd(...classes: (string | undefined)[]) {
+  return classes.filter(Boolean).join(" ");
 }
