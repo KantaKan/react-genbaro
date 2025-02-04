@@ -24,11 +24,11 @@ const navigationConfig = {
       isActive: true,
       items: [
         {
-          title: "AllUserReflections",
+          title: "All Users Reflections",
           url: "/admin/table",
         },
         {
-          title: "AdminPanel",
+          title: "Admin Panel",
           url: "/admin",
         },
         {
