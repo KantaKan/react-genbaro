@@ -112,7 +112,7 @@ export default function EmojiZoneTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="sticky left-0 z-20 w-32 border-r">Day</TableHead>
+              <TableHead className="sticky left-0 z-20 w-96 border-r">Day</TableHead>
               {sortedUsers.map((user) => (
                 <TableHead key={user.zoomname} className="text-center border-r">
                   {user.zoomname}
