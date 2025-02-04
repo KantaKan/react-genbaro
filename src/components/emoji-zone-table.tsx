@@ -1,7 +1,8 @@
-"use client";
-
 import { useState, useEffect } from "react";
-import { cd } from "../lib/utils";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { api } from "../lib/api";
 
 type Zone = "comfort" | "stretch-enjoying" | "stretch-overwhelmed" | "panic" | "no-data";
@@ -35,11 +36,10 @@ const zoneToEmoji: Record<Zone, { emoji: string; className: string }> = zones.re
   return acc;
 }, {} as Record<Zone, { emoji: string; className: string }>);
 
-function EmojiZoneTable() {
+export default function EmojiZoneTable() {
   const [data, setData] = useState<TableData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -70,59 +70,76 @@ function EmojiZoneTable() {
     const bNum = parseInt(b.zoomname.split("_")[0], 10);
     return aNum - bNum;
   });
+
   const allDates = Array.from(new Set(data.flatMap((user) => (user.entries || []).map((entry) => entry.date)))).sort();
   const validDates = allDates.filter((date) => date !== "0001-01-01").sort();
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[200px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-10 w-1/2" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[400px] w-full" />
+        </CardContent>
+      </Card>
     );
   }
 
   if (error) {
-    return <div className="flex items-center justify-center min-h-[200px] text-red-500">Error: {error}</div>;
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
   }
 
   if (!data.length || !validUsers.length) {
-    return <div className="flex items-center justify-center min-h-[200px] text-muted-foreground">No data available</div>;
+    return (
+      <Alert>
+        <AlertDescription>No data available</AlertDescription>
+      </Alert>
+    );
   }
 
   return (
-    <div className="w-full overflow-auto border rounded-lg">
-      <table className="w-full border-collapse text-xs">
-        <thead>
-          <tr className="bg-gray-50">
-            <th className="sticky left-0 z-20 px-2 py-2 font-semibold text-left bg-gray-50 border-b">day</th>
-            {sortedUsers.map((user, index) => (
-              <th key={index} className="px-2 py-2 font-semibold text-center border-b whitespace-nowrap min-w-[100px]">
-                {user.zoomname}
-              </th>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Emoji Zone Tracking</CardTitle>
+      </CardHeader>
+      <CardContent className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="sticky left-0 z-20">Day</TableHead>
+              {sortedUsers.map((user) => (
+                <TableHead key={user.zoomname} className="text-center">
+                  {user.zoomname}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {validDates.map((date) => (
+              <TableRow key={date}>
+                <TableCell className="sticky left-0 z-10 font-medium">{date}</TableCell>
+                {sortedUsers.map((user) => {
+                  const entry = user.entries?.find((e) => e.date === date);
+                  const zoneData = entry ? zoneToEmoji[entry.zone] : zoneToEmoji["no-data"];
+                  return (
+                    <TableCell key={`${date}-${user.zoomname}`} className={`text-center ${zoneData.className}`}>
+                      <span role="img" aria-label={`${entry?.zone || "no-data"} zone`} className="text-lg" title={`${user.zoomname}: ${zones.find((z) => z.id === entry?.zone)?.label || "No Data"}`}>
+                        {zoneData.emoji}
+                      </span>
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {validDates.map((date, rowIndex) => (
-            <tr key={date} className={cd("transition-colors", hoveredRow === rowIndex ? "bg-gray-50" : "bg-white")} onMouseEnter={() => setHoveredRow(rowIndex)} onMouseLeave={() => setHoveredRow(null)}>
-              <td className="sticky left-0 z-10 px-2 py-2 font-medium border-b whitespace-nowrap bg-inherit">{date}</td>
-              {sortedUsers.map((user, colIndex) => {
-                const entry = user.entries?.find((e) => e.date === date);
-                const zoneData = entry ? zoneToEmoji[entry.zone] : zoneToEmoji["no-data"];
-                return (
-                  <td key={`${date}-${colIndex}`} className={cd("px-2 py-2 text-center border-b transition-colors", zoneData.className, hoveredRow === rowIndex ? "bg-opacity-80" : "")}>
-                    <span role="img" aria-label={`${entry?.zone || "no-data"} zone`} className="text-lg" title={`${user.zoomname}: ${zones.find((z) => z.id === entry?.zone)?.label || "No Data"}`}>
-                      {zoneData.emoji}
-                    </span>
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }
-
-export default EmojiZoneTable;
