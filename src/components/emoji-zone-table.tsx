@@ -112,9 +112,9 @@ export default function EmojiZoneTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="sticky left-0 z-20">Day</TableHead>
+              <TableHead className="sticky left-0 z-20 w-32 border-r">Day</TableHead>
               {sortedUsers.map((user) => (
-                <TableHead key={user.zoomname} className="text-center">
+                <TableHead key={user.zoomname} className="text-center border-r">
                   {user.zoomname}
                 </TableHead>
               ))}
@@ -123,12 +123,12 @@ export default function EmojiZoneTable() {
           <TableBody>
             {validDates.map((date) => (
               <TableRow key={date}>
-                <TableCell className="sticky left-0 z-10 font-medium">{date}</TableCell>
+                <TableCell className="sticky left-0 z-10 font-medium w-32 border-r">{date}</TableCell>
                 {sortedUsers.map((user) => {
                   const entry = user.entries?.find((e) => e.date === date);
                   const zoneData = entry ? zoneToEmoji[entry.zone] : zoneToEmoji["no-data"];
                   return (
-                    <TableCell key={`${date}-${user.zoomname}`} className={`text-center ${zoneData.className}`}>
+                    <TableCell key={`${date}-${user.zoomname}`} className={`text-center border-r ${zoneData.className}`}>
                       <span role="img" aria-label={`${entry?.zone || "no-data"} zone`} className="text-lg" title={`${user.zoomname}: ${zones.find((z) => z.id === entry?.zone)?.label || "No Data"}`}>
                         {zoneData.emoji}
                       </span>
