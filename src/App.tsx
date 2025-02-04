@@ -135,7 +135,6 @@ function AppContent() {
             element={
               <Page>
                 <ProtectedRoute allowedRoles={["admin"]}>
-                  <h2 className="text-2xl font-bold">Emoji Zone Table</h2>
                   <EmojiZoneTable />
                 </ProtectedRoute>
               </Page>
