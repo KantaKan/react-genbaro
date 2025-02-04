@@ -35,6 +35,10 @@ const navigationConfig = {
           title: "All Users",
           url: "/admin/users",
         },
+        {
+          title: "Zoomname Table",
+          url: "/admin/emoji-zone-table",
+        },
       ],
     },
   ],
