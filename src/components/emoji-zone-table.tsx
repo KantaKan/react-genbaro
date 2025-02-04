@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { api } from "../lib/api";
 
 type Zone = "comfort" | "stretch-enjoying" | "stretch-overwhelmed" | "panic" | "no-data";
@@ -115,7 +116,14 @@ export default function EmojiZoneTable() {
               <TableHead className="sticky left-0 z-10 w-full min-w-32 h-12 font-medium border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">User Input Day</TableHead>
               {sortedUsers.map((user) => (
                 <TableHead key={user.zoomname} className="w-32 max-w-[85px] h-12 text-center border-r overflow-hidden text-ellipsis whitespace-nowrap">
-                  {user.zoomname}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>{user.zoomname}</TooltipTrigger>
+                      <TooltipContent>
+                        <p>{user.zoomname}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </TableHead>
               ))}
             </TableRow>
