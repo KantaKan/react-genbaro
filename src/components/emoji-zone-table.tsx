@@ -123,7 +123,7 @@ export default function EmojiZoneTable() {
           <TableBody>
             {validDates.map((date) => (
               <TableRow key={date}>
-                <TableCell className="sticky left-0 z-10 w-48 h-12 font-medium border-r bg-white">{date}</TableCell>
+                <TableCell className="sticky left-0 z-10 w-96 h-12 font-medium border-r ">{date}</TableCell>
                 {sortedUsers.map((user) => {
                   const entry = user.entries?.find((e) => e.date === date);
                   const zoneData = entry ? zoneToEmoji[entry.zone] : zoneToEmoji["no-data"];
