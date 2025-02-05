@@ -45,7 +45,7 @@ const reflectionZones = [
   },
   {
     id: "stretch-overwhelmed",
-    label: "Stretch Zone - Overwhelmed",
+    label: "Stretch zone - Overwhelmed",
     bgColor: "bg-orange-500",
     emoji: "😰",
     description: "Feeling stressed, but still learning and growing.",
