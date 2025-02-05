@@ -9,11 +9,41 @@ import { api } from "../lib/api";
 type Zone = "comfort" | "stretch-enjoying" | "stretch-overwhelmed" | "panic" | "no-data";
 
 const zones = [
-  { id: "comfort", label: "Comfort Zone", bgColor: "bg-green-500", emoji: "😊" },
-  { id: "stretch-enjoying", label: "Stretch zone - Enjoying the challenges", bgColor: "bg-yellow-500", emoji: "🤔" },
-  { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", bgColor: "bg-red-500", emoji: "😰" },
-  { id: "panic", label: "Panic Zone", bgColor: "bg-purple-500", emoji: "😱" },
-  { id: "no-data", label: "No Data", bgColor: "bg-gray-200", emoji: "❌" },
+  {
+    id: "comfort",
+    label: "Comfort Zone",
+    bgColor: "bg-green-500",
+    emoji: "😊",
+    description: "Where you feel safe and in control. Tasks are easy and familiar.",
+  },
+  {
+    id: "stretch-enjoying",
+    label: "Stretch Zone - Enjoying the Challenges",
+    bgColor: "bg-yellow-500",
+    emoji: "🤔",
+    description: "Pushing your boundaries, feeling challenged but excited.",
+  },
+  {
+    id: "stretch-overwhelmed",
+    label: "Stretch Zone - Overwhelmed",
+    bgColor: "bg-orange-500",
+    emoji: "😰",
+    description: "Feeling stressed, but still learning and growing.",
+  },
+  {
+    id: "panic",
+    label: "Panic Zone",
+    bgColor: "bg-red-500",
+    emoji: "😱",
+    description: "Feeling extreme stress or fear. Learning is difficult here.",
+  },
+  {
+    id: "no-data",
+    label: "No Data",
+    bgColor: "bg-gray-200",
+    emoji: "❌",
+    description: "Insufficient information to categorize the experience.",
+  },
 ];
 
 interface Entry {

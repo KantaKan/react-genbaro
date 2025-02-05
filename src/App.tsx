@@ -135,7 +135,10 @@ function AppContent() {
             element={
               <Page>
                 <ProtectedRoute allowedRoles={["admin"]}>
-                  <EmojiZoneTable />
+                  <div className="flex flex-col gap-4">
+                    <EmojiZoneTable />
+                    <ComfortZoneCards />
+                  </div>
                 </ProtectedRoute>
               </Page>
             }
