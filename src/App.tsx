@@ -19,6 +19,7 @@ import { AdminTablePage } from "./components/AdminTablePage";
 import UserReflections from "./components/users-reflectiontable";
 import { AdminUsersPage } from "./pages/admin-users-page";
 import EmojiZoneTable from "./components/emoji-zone-table";
+import ComfortZoneCards from "./components/comfort-zone-cards";
 
 function AdminDashboard() {
   return (
