@@ -44,7 +44,7 @@ const reflectionZones = [
   },
   {
     id: "stretch-enjoying",
-    label: "Stretch Zone - Enjoying the Challenges",
+    label: "Stretch Zone - Enjoying the challenges",
     bgColor: "bg-yellow-500",
     emoji: "🤔",
     description: "Pushing your boundaries, feeling challenged but excited.",
