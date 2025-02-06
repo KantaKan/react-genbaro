@@ -52,7 +52,6 @@ export function AdminUsersPage() {
     const fetchUsers = async () => {
       try {
         const response = await api.get<ApiResponse>("/admin/users");
-        console.log("API Response:", response.data); // Debug log
         setUsers(response.data.data);
       } catch (error) {
         console.error("Error fetching users:", error);
