@@ -38,7 +38,7 @@ interface User {
 const reflectionZones = [
   { id: "comfort", label: "Comfort Zone", bgColor: "bg-green-500" },
   { id: "stretch-enjoying", label: "Stretch zone - Enjoying the challenges", bgColor: "bg-yellow-500" },
-  { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", bgColor: "bg-red-500" },
+  { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", bgColor: "bg-orange-500" },
   { id: "panic", label: "Panic Zone", bgColor: "bg-purple-500" },
 ];
 
