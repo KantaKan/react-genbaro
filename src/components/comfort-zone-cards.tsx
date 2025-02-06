@@ -10,14 +10,14 @@ const zones = [
   },
   {
     id: "stretch-enjoying",
-    label: "Stretch Zone - Enjoying the Challenges",
+    label: "Stretch zone - Enjoying the Challenges",
     bgColor: "bg-yellow-500",
     emoji: "🤔",
     description: "Pushing your boundaries, feeling challenged but excited.",
   },
   {
     id: "stretch-overwhelmed",
-    label: "Stretch Zone - Overwhelmed",
+    label: "Stretch zone - Overwhelmed",
     bgColor: "bg-orange-500",
     emoji: "😰",
     description: "Feeling stressed, but still learning and growing.",
