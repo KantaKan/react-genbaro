@@ -174,7 +174,6 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
       const response = await fetch("https://mongodbtospreadsheet.onrender.com/export");
       const data = await response.json();
       if (response.ok) {
-        console.log(data);
         toast.success(data.message);
         window.open(data.link, "_blank");
       } else {
