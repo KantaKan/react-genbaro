@@ -100,6 +100,32 @@ const generateWeekendEntries = (existingEntries: Entry[] | null, allDates: strin
   });
 };
 
+const getDayColor = (dateString: string): string => {
+  const date = new Date(dateString);
+  const day = date.getDay();
+  switch (day) {
+    case 1:
+      return "bg-blue-100 text-blue-800"; // Monday
+    case 2:
+      return "bg-green-100 text-green-800"; // Tuesday
+    case 3:
+      return "bg-yellow-100 text-yellow-800"; // Wednesday
+    case 4:
+      return "bg-orange-100 text-orange-800"; // Thursday
+    case 5:
+      return "bg-red-100 text-red-800"; // Friday
+    default:
+      return "bg-gray-100 text-gray-800"; // Weekend or invalid date
+  }
+};
+
+const getDayName = (dateString: string): string => {
+  const date = new Date(dateString);
+  const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
+  const dayNumber = date.getDate();
+  return `${dayName} ${dayNumber}`;
+};
+
 export default function EmojiZoneTable() {
   const [data, setData] = useState<TableData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -205,7 +231,16 @@ export default function EmojiZoneTable() {
           <TableBody>
             {validDates.map((date) => (
               <TableRow key={date}>
-                <TableCell className="sticky left-0 z-10 w-full min-w-32 h-12 font-medium border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">{date}</TableCell>
+                <TableCell className={`sticky left-0 z-10 w-full min-w-32 h-12 font-medium border-r ${getDayColor(date)}`}>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="w-full text-left">{getDayName(date)}</TooltipTrigger>
+                      <TooltipContent>
+                        <p>{date}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableCell>
                 {sortedUsers.map((user) => {
                   const entry = user.entries?.find((e) => e.date === date);
                   const zoneData = entry ? zoneToEmoji[entry.zone] : zoneToEmoji["no-data"];
