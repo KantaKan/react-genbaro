@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { api } from "../lib/api";
 
-type Zone = "comfort" | "stretch-enjoying" | "stretch-overwhelmed" | "panic" | "no-data";
+type Zone = "comfort" | "stretch-enjoying" | "stretch-overwhelmed" | "panic" | "no-data" | "weekend";
 
 const zones = [
   {
@@ -44,6 +46,13 @@ const zones = [
     emoji: "❌",
     description: "Insufficient information to categorize the experience.",
   },
+  {
+    id: "weekend",
+    label: "Weekend",
+    bgColor: "bg-blue-300",
+    emoji: "🏖️",
+    description: "Weekend day, no data collection.",
+  },
 ];
 
 interface Entry {
@@ -67,6 +76,30 @@ const zoneToEmoji: Record<Zone, { emoji: string; className: string }> = zones.re
   return acc;
 }, {} as Record<Zone, { emoji: string; className: string }>);
 
+const isWeekend = (dateString: string): boolean => {
+  const date = new Date(dateString);
+  return date.getDay() === 0 || date.getDay() === 6; // 0 is Sunday, 6 is Saturday
+};
+
+const formatDate = (date: Date): string => {
+  return date.toISOString().split("T")[0];
+};
+
+const generateWeekendEntries = (existingEntries: Entry[] | null, allDates: string[]): Entry[] => {
+  const entriesMap = new Map(existingEntries?.map((entry) => [entry.date, entry]) || []);
+  const currentDate = formatDate(new Date());
+
+  return allDates.map((date) => {
+    if (entriesMap.has(date)) {
+      return entriesMap.get(date)!;
+    } else if (isWeekend(date) || (date === currentDate && isWeekend(currentDate))) {
+      return { date, zone: "weekend" };
+    } else {
+      return { date, zone: "no-data" };
+    }
+  });
+};
+
 export default function EmojiZoneTable() {
   const [data, setData] = useState<TableData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +116,8 @@ export default function EmojiZoneTable() {
       const response: ApiResponse = axiosResponse.data;
 
       if (response.status === "success") {
-        setData(response.data);
+        const processedData = processData(response.data);
+        setData(processedData);
       } else {
         setError(response.message || "Failed to fetch data");
       }
@@ -95,10 +129,20 @@ export default function EmojiZoneTable() {
     }
   };
 
+  const processData = (rawData: TableData[]): TableData[] => {
+    const currentDate = formatDate(new Date());
+    const allDates = Array.from(new Set([...rawData.flatMap((user) => user.entries?.map((entry) => entry.date) || []), currentDate])).sort();
+
+    return rawData.map((user) => ({
+      ...user,
+      entries: generateWeekendEntries(user.entries, allDates),
+    }));
+  };
+
   const validUsers = data.filter((user) => user.zoomname);
   const sortedUsers = [...validUsers].sort((a, b) => {
-    const aNum = parseInt(a.zoomname.split("_")[0], 10);
-    const bNum = parseInt(b.zoomname.split("_")[0], 10);
+    const aNum = Number.parseInt(a.zoomname.split("_")[0], 10);
+    const bNum = Number.parseInt(b.zoomname.split("_")[0], 10);
     return aNum - bNum;
   });
 
