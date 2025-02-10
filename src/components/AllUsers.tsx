@@ -3,14 +3,28 @@ import { useQuery } from "react-query";
 import { getAllUsers } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import SkeletonLoader from "@/components/ui/SkeletonLoader";
 
 export function AllUsers() {
   const { data: response, isLoading, error } = useQuery("allUsers", getAllUsers);
 
-  if (isLoading) return <div>Loading users...</div>;
+  if (isLoading)
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>All Users</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SkeletonLoader height="30px" className="mb-2" />
+          <SkeletonLoader height="30px" className="mb-2" />
+          <SkeletonLoader height="30px" className="mb-2" />
+        </CardContent>
+      </Card>
+    );
+
   if (error) return <div>Error loading users</div>;
 
-  const users = response?.data; // Access the `data` property here
+  const users = response?.data;
 
   return (
     <Card>

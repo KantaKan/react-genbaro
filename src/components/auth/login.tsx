@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Icons } from "@/components/ui/icons";
 import { useUserData } from "@/UserDataContext";
+import SkeletonLoader from "@/components/ui/SkeletonLoader";
 
 // Validation schema using Zod
 const formSchema = z.object({
@@ -54,6 +55,16 @@ export function Login({ onLogin }: LoginProps) {
   }
 
   // Login handler
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-black p-4">
+        <SkeletonLoader width="300px" height="40px" className="mb-4" />
+        <SkeletonLoader width="300px" height="40px" className="mb-4" />
+        <SkeletonLoader width="300px" height="40px" className="mb-4" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-black p-4">

@@ -16,7 +16,7 @@ const zones = [
     label: "Comfort Zone",
     bgColor: "bg-green-500",
     emoji: "😊",
-    description: "Where you feel safe and in control. Tasks are easy and familiar.",
+    description: "Where you feel safe and in control.  Tasks are easy and familiar.",
   },
   {
     id: "stretch-enjoying",
@@ -37,7 +37,7 @@ const zones = [
     label: "Panic Zone",
     bgColor: "bg-red-500",
     emoji: "😱",
-    description: "Feeling extreme stress or fear. Learning is difficult here.",
+    description: "Feeling extreme stress or fear.  Learning is difficult here.",
   },
   {
     id: "no-data",
@@ -81,8 +81,13 @@ const isWeekend = (dateString: string): boolean => {
   return date.getDay() === 0 || date.getDay() === 6; // 0 is Sunday, 6 is Saturday
 };
 
+//  Consistent Date Formatting
 const formatDate = (date: Date): string => {
-  return date.toISOString().split("T")[0];
+  // Use "yyyy-MM-dd" format for consistency.  toLocaleDateString can have inconsistent results across browsers.
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 };
 
 const generateWeekendEntries = (existingEntries: Entry[] | null, allDates: string[]): Entry[] => {
@@ -92,8 +97,10 @@ const generateWeekendEntries = (existingEntries: Entry[] | null, allDates: strin
   return allDates.map((date) => {
     if (entriesMap.has(date)) {
       return entriesMap.get(date)!;
-    } else if (isWeekend(date) || (date === currentDate && isWeekend(currentDate))) {
+    } else if (isWeekend(date)) {
       return { date, zone: "weekend" };
+    } else if (date > currentDate) {
+      return { date, zone: "no-data" };
     } else {
       return { date, zone: "no-data" };
     }
@@ -119,10 +126,11 @@ const getDayColor = (dateString: string): string => {
   }
 };
 
+//  Consistent Date Display in Table Header
 const getDayName = (dateString: string): string => {
   const date = new Date(dateString);
   const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
-  const dayNumber = date.getDate();
+  const dayNumber = String(date.getDate()).padStart(2, "0"); // Pad with leading zero
   return `${dayName} ${dayNumber}`;
 };
 
@@ -130,6 +138,7 @@ export default function EmojiZoneTable() {
   const [data, setData] = useState<TableData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [allDates, setAllDates] = useState<string[]>([]); // State for all dates
 
   useEffect(() => {
     fetchData();
@@ -142,7 +151,32 @@ export default function EmojiZoneTable() {
       const response: ApiResponse = axiosResponse.data;
 
       if (response.status === "success") {
-        const processedData = processData(response.data);
+        // 1. Find the earliest date in the data.
+        let earliestDate = new Date(); // Start with today
+        if (response.data.length > 0 && response.data[0].entries && response.data[0].entries.length > 0) {
+          earliestDate = new Date(response.data[0].entries[0].date);
+        }
+
+        response.data.forEach((user) => {
+          user.entries?.forEach((entry) => {
+            const entryDate = new Date(entry.date);
+            if (entryDate < earliestDate) {
+              earliestDate = entryDate;
+            }
+          });
+        });
+
+        // 2. Generate a *continuous* range of dates.
+        const currentDate = new Date();
+        const combinedDates: string[] = [];
+        for (let d = earliestDate; d <= currentDate; d.setDate(d.getDate() + 1)) {
+          combinedDates.push(formatDate(new Date(d))); // Use consistent formatting
+        }
+
+        setAllDates(combinedDates);
+
+        // 3. processData *after* setting allDates
+        const processedData = processData(response.data, combinedDates);
         setData(processedData);
       } else {
         setError(response.message || "Failed to fetch data");
@@ -155,10 +189,8 @@ export default function EmojiZoneTable() {
     }
   };
 
-  const processData = (rawData: TableData[]): TableData[] => {
-    const currentDate = formatDate(new Date());
-    const allDates = Array.from(new Set([...rawData.flatMap((user) => user.entries?.map((entry) => entry.date) || []), currentDate])).sort();
-
+  // processData now receives allDates as an argument
+  const processData = (rawData: TableData[], allDates: string[]): TableData[] => {
     return rawData.map((user) => ({
       ...user,
       entries: generateWeekendEntries(user.entries, allDates),
@@ -171,8 +203,6 @@ export default function EmojiZoneTable() {
     const bNum = Number.parseInt(b.zoomname.split("_")[0], 10);
     return aNum - bNum;
   });
-
-  const allDates = Array.from(new Set(data.flatMap((user) => (user.entries || []).map((entry) => entry.date)))).sort();
   const validDates = allDates.filter((date) => date !== "0001-01-01").sort();
 
   if (loading) {
