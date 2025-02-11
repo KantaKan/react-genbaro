@@ -33,7 +33,7 @@ function AdminDashboard() {
       <div className="flex-1 h-1/2 mb-6">
         <BaroChart />
       </div>
-      <div className="flex gap-4 h-full overflow-hidden">
+      {/* <div className="flex gap-4 h-full overflow-hidden">
         <div className="w-1/3">
           <h2 className="text-xl font-semibold mb-4"> WIP</h2>
           <FillChart />
@@ -46,7 +46,7 @@ function AdminDashboard() {
           <h2 className="text-xl font-semibold mb-4"> WIP</h2>
           <AllUsers />
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
