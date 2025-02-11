@@ -151,10 +151,10 @@ export default function UserReflections() {
         <TableHeader>
           <TableRow>
             <TableHead>Date</TableHead>
-            <TableHead>Tech Sessions</TableHead>
+
             <TableHead>Tech Happy</TableHead>
             <TableHead>Tech Improve</TableHead>
-            <TableHead>Non-Tech Sessions</TableHead>
+
             <TableHead>Non-Tech Happy</TableHead>
             <TableHead>Non-Tech Improve</TableHead>
             <TableHead>Barometer</TableHead>
@@ -164,10 +164,8 @@ export default function UserReflections() {
           {reflections.map((reflection) => (
             <TableRow key={reflection.date}>
               <TableCell>{formatDate(reflection.date)}</TableCell>
-              <TableCell>{reflection.reflection.tech_sessions?.session_name?.join(", ") || ""}</TableCell>
               <TableCell>{reflection.reflection.tech_sessions?.happy || ""}</TableCell>
               <TableCell>{reflection.reflection.tech_sessions?.improve || ""}</TableCell>
-              <TableCell>{reflection.reflection.non_tech_sessions?.session_name?.join(", ") || ""}</TableCell>
               <TableCell>{reflection.reflection.non_tech_sessions?.happy || ""}</TableCell>
               <TableCell>{reflection.reflection.non_tech_sessions?.improve || ""}</TableCell>
               <TableCell className={getColorForBarometer(reflection.reflection.barometer)}>{reflection.reflection.barometer}</TableCell>
