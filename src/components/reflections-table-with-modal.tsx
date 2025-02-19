@@ -12,6 +12,8 @@ import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { ReflectionPreview } from "./reflection-preview";
 import { AlertDialog, AlertDialogContent, AlertDialogAction, AlertDialogCancel } from "./ui/alert-dialog";
+import { Skeleton } from "./ui/skeleton";
+import { Card, CardContent, CardHeader } from "./ui/card";
 
 // Types
 interface TechSession {
@@ -149,7 +151,45 @@ export default function ReflectionsTableWithModal() {
     return reflections.find((r) => new Date(r.date).toDateString() === today);
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading)
+    return (
+      <div className="container mx-auto py-10">
+        <Skeleton className="h-10 w-40 mb-4" />
+
+        <Card className="mb-6">
+          <CardHeader>
+            <Skeleton className="h-6 w-40" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-4 gap-4">
+              {[...Array(4)].map((_, index) => (
+                <div key={index}>
+                  <Skeleton className="h-4 w-20 mb-2" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="border rounded-md">
+          <div className="border-b">
+            <div className="flex p-4">
+              {[...Array(6)].map((_, index) => (
+                <Skeleton key={index} className="h-6 flex-1 mr-2" />
+              ))}
+            </div>
+          </div>
+          {[...Array(5)].map((_, rowIndex) => (
+            <div key={rowIndex} className="flex p-4 border-b last:border-b-0">
+              {[...Array(6)].map((_, cellIndex) => (
+                <Skeleton key={cellIndex} className="h-4 flex-1 mr-2" />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   if (error) return <div>Error: {error}</div>;
 
   const todaysReflection = getTodaysReflection();
