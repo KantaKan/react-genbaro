@@ -241,7 +241,7 @@ export default function EmojiZoneTable() {
       </CardHeader>
       <CardContent className="overflow-x-auto">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <TableRow>
               <TableHead className="sticky left-0 z-10 w-full min-w-32 h-12 font-medium border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">User Input Day</TableHead>
               {sortedUsers.map((user) => (
