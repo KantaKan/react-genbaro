@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { api } from "@/lib/api";
+import { Skeleton } from "./ui/skeleton";
 
 interface Reflection {
   day: string;
@@ -97,7 +98,44 @@ export default function UserReflections() {
   };
 
   if (isLoading) {
-    return <div className="container mx-auto py-10">Loading...</div>;
+    return (
+      <div className="container mx-auto py-10">
+        <Skeleton className="h-10 w-40 mb-4" />
+
+        <Card className="mb-6">
+          <CardHeader>
+            <Skeleton className="h-6 w-40" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-4 gap-4">
+              {[...Array(4)].map((_, index) => (
+                <div key={index}>
+                  <Skeleton className="h-4 w-20 mb-2" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="border rounded-md">
+          <div className="border-b">
+            <div className="flex p-4">
+              {[...Array(6)].map((_, index) => (
+                <Skeleton key={index} className="h-6 flex-1 mr-2" />
+              ))}
+            </div>
+          </div>
+          {[...Array(5)].map((_, rowIndex) => (
+            <div key={rowIndex} className="flex p-4 border-b last:border-b-0">
+              {[...Array(6)].map((_, cellIndex) => (
+                <Skeleton key={cellIndex} className="h-4 flex-1 mr-2" />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (error) {
