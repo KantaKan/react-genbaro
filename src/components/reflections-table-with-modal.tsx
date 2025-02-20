@@ -38,10 +38,10 @@ interface Reflection {
 }
 
 const reflectionZones = [
-  { id: "comfort", label: "Comfort Zone", bgColor: "bg-green-500" },
-  { id: "stretch-enjoying", label: "Stretch zone - Enjoying the challenges", bgColor: "bg-yellow-500" },
-  { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", bgColor: "bg-red-500" },
-  { id: "panic", label: "Panic Zone", bgColor: "bg-purple-500" },
+  { id: "comfort", label: "Comfort Zone", bgColor: "bg-green-500", emoji: "😸" },
+  { id: "stretch-enjoying", label: "Stretch zone - Enjoying the challenges", bgColor: "bg-yellow-500", emoji: "😺" },
+  { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", bgColor: "bg-red-500", emoji: "😿" },
+  { id: "panic", label: "Panic Zone", bgColor: "bg-purple-500", emoji: "🙀" },
 ];
 
 const getColorForBarometer = (barometer: string) => {
@@ -54,6 +54,42 @@ const showTodaysReflectionDialog = (reflection: Reflection) => {
   // You can use the Dialog component from your UI library
   // This is a placeholder function
   console.log("Showing today's reflection:", reflection);
+};
+
+// Add this function to calculate zone statistics
+const calculateZoneStats = (reflections: Reflection[]) => {
+  const stats = {
+    comfort: 0,
+    stretchEnjoying: 0,
+    stretchOverwhelmed: 0,
+    panic: 0,
+    total: reflections.length,
+  };
+
+  reflections.forEach((reflection) => {
+    const zone = reflectionZones.find((zone) => zone.label === reflection.reflection.barometer);
+    if (zone) {
+      if (zone.id === "comfort") stats.comfort++;
+      if (zone.id === "stretch-enjoying") stats.stretchEnjoying++;
+      if (zone.id === "stretch-overwhelmed") stats.stretchOverwhelmed++;
+      if (zone.id === "panic") stats.panic++;
+    }
+  });
+
+  return stats;
+};
+
+// Add this function to find the dominant zone
+const findDominantZone = (stats: ReturnType<typeof calculateZoneStats>) => {
+  const zoneCounts = [
+    { id: "comfort", count: stats.comfort },
+    { id: "stretch-enjoying", count: stats.stretchEnjoying },
+    { id: "stretch-overwhelmed", count: stats.stretchOverwhelmed },
+    { id: "panic", count: stats.panic },
+  ];
+
+  const sortedZones = zoneCounts.sort((a, b) => b.count - a.count);
+  return sortedZones[0].id;
 };
 
 export default function ReflectionsTableWithModal() {
@@ -189,11 +225,34 @@ export default function ReflectionsTableWithModal() {
     );
   if (error) return <div>Error: {error}</div>;
 
+  const zoneStats = calculateZoneStats(reflections);
+  const dominantZoneId = findDominantZone(zoneStats);
   const todaysReflection = getTodaysReflection();
+  const currentZone = todaysReflection ? reflectionZones.find((zone) => zone.label === todaysReflection.reflection.barometer) : null;
 
   return (
     <div className="container mx-auto py-10">
       <ToastContainer position="top-right" autoClose={3000} />
+      <div className="flex flex-row gap-4 mb-6 overflow-x-auto">
+        {reflectionZones.map((zone) => {
+          const isDominant = zone.id === dominantZoneId;
+          const isCurrent = currentZone?.id === zone.id;
+
+          return (
+            <div key={zone.id} className={`flex-1 p-4 rounded-lg ${zone.bgColor} text-white relative transition-all duration-300 ${isDominant ? "flex-grow-[2]" : "flex-grow-[1]"} min-w-[150px]`}>
+              {isCurrent && <div className="absolute -top-2 -right-2 bg-white text-black px-2 py-1 rounded-full text-xs font-bold">You're here!</div>}
+              <div className="text-2xl">{zone.emoji}</div>
+              <div className="font-bold">{zone.label}</div>
+              <div className="text-sm">
+                {zone.id === "comfort" && `${zoneStats.comfort} (${Math.round((zoneStats.comfort / zoneStats.total) * 100)}%)`}
+                {zone.id === "stretch-enjoying" && `${zoneStats.stretchEnjoying} (${Math.round((zoneStats.stretchEnjoying / zoneStats.total) * 100)}%)`}
+                {zone.id === "stretch-overwhelmed" && `${zoneStats.stretchOverwhelmed} (${Math.round((zoneStats.stretchOverwhelmed / zoneStats.total) * 100)}%)`}
+                {zone.id === "panic" && `${zoneStats.panic} (${Math.round((zoneStats.panic / zoneStats.total) * 100)}%)`}
+              </div>
+            </div>
+          );
+        })}
+      </div>
       <div className="flex justify-between mb-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
