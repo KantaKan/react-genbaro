@@ -109,15 +109,15 @@ const getDayColor = (dateString: string): string => {
   const day = date.getDay();
   switch (day) {
     case 1:
-      return "bg-blue-300"; // Monday - lighter blue
+      return "bg-amber-300"; // Monday - lighter blue
     case 2:
-      return "bg-green-300"; // Tuesday - lighter green
+      return "bg-pink-300"; // Tuesday - lighter green
     case 3:
-      return "bg-yellow-300"; // Wednesday - lighter yellow
+      return "bg-green-300"; // Wednesday - lighter yellow
     case 4:
       return "bg-orange-300"; // Thursday - lighter orange
     case 5:
-      return "bg-pink-300"; // Friday - lighter pink
+      return "bg-sky-300"; // Friday - lighter pink
     default:
       return "bg-gray-300"; // Weekend - lighter gray
   }
@@ -176,7 +176,7 @@ const FilterBar = ({ filters, setFilters }: { filters: FilterControls; setFilter
 
       <Input className="w-[240px]" placeholder="Search users..." value={filters.userSearch} onChange={(e) => setFilters({ ...filters, userSearch: e.target.value })} />
 
-      <Button variant="outline" className={filters.showWeekends ? "bg-blue-100" : ""} onClick={() => setFilters({ ...filters, showWeekends: !filters.showWeekends })}>
+      <Button variant="outline" className={filters.showWeekends ? "bg-rose-400" : ""} onClick={() => setFilters({ ...filters, showWeekends: !filters.showWeekends })}>
         {filters.showWeekends ? "Hide Weekends" : "Show Weekends"}
       </Button>
 
