@@ -395,7 +395,7 @@ export default function EmojiZoneTable() {
                 <TableBody>
                   {filteredDates.map((date) => (
                     <TableRow key={date}>
-                      <TableCell className={`sticky left-0 z-10 w-full min-w-32 h-12 font-medium border-r ${getDayColor(date)}`}>
+                      <TableCell className={`sticky left-0 z-10 w-full min-w-32 h-12 font-medium border-r ${getDayColor(date)} bg-opacity-50 backdrop-blur`}>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger className="w-full text-left">{getDayName(date)}</TooltipTrigger>
