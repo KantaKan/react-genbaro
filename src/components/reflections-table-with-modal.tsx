@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useMemo, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -13,6 +15,7 @@ import { ToastContainer } from "react-toastify";
 import { ReflectionPreview } from "./reflection-preview";
 import { AlertDialog, AlertDialogContent, AlertDialogAction, AlertDialogCancel } from "./ui/alert-dialog";
 import { Skeleton } from "./ui/skeleton";
+import { ZoneStatCard } from "./zone-stat-card";
 
 // Types
 interface TechSession {
@@ -37,11 +40,12 @@ interface Reflection {
   reflection: ReflectionData;
 }
 
+// Update reflectionZones array with new colors
 const reflectionZones = [
-  { id: "comfort", label: "Comfort Zone", bgColor: "bg-green-500", emoji: "😸" },
-  { id: "stretch-enjoying", label: "Stretch zone - Enjoying the challenges", bgColor: "bg-yellow-500", emoji: "😺" },
+  { id: "comfort", label: "Comfort Zone", bgColor: "bg-emerald-500", emoji: "😸" },
+  { id: "stretch-enjoying", label: "Stretch zone - Enjoying the challenges", bgColor: "bg-amber-500", emoji: "😺" },
   { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", bgColor: "bg-red-500", emoji: "😿" },
-  { id: "panic", label: "Panic Zone", bgColor: "bg-purple-500", emoji: "🙀" },
+  { id: "panic", label: "Panic Zone", bgColor: "bg-violet-500", emoji: "🙀" },
 ];
 
 const getColorForBarometer = (barometer: string) => {
@@ -233,24 +237,16 @@ export default function ReflectionsTableWithModal() {
   return (
     <div className="container mx-auto py-10">
       <ToastContainer position="top-right" autoClose={3000} />
-      <div className="flex flex-row gap-4 mb-6 overflow-x-auto">
+      <div className="flex gap-4 mb-6 overflow-x-auto pb-2">
         {reflectionZones.map((zone) => {
           const isDominant = zone.id === dominantZoneId;
           const isCurrent = currentZone?.id === zone.id;
+          const stats = {
+            count: zone.id === "comfort" ? zoneStats.comfort : zone.id === "stretch-enjoying" ? zoneStats.stretchEnjoying : zone.id === "stretch-overwhelmed" ? zoneStats.stretchOverwhelmed : zoneStats.panic,
+            total: zoneStats.total,
+          };
 
-          return (
-            <div key={zone.id} className={`flex-1 p-4 rounded-lg ${zone.bgColor} text-white relative transition-all duration-300 ${isDominant ? "flex-grow-[2]" : "flex-grow-[1]"} min-w-[150px]`}>
-              {isCurrent && <div className="absolute -top-2 -right-2 bg-white text-black px-2 py-1 rounded-full text-xs font-bold">You're here!</div>}
-              <div className="text-2xl">{zone.emoji}</div>
-              <div className="font-bold">{zone.label}</div>
-              <div className="text-sm">
-                {zone.id === "comfort" && `${zoneStats.comfort} (${Math.round((zoneStats.comfort / zoneStats.total) * 100)}%)`}
-                {zone.id === "stretch-enjoying" && `${zoneStats.stretchEnjoying} (${Math.round((zoneStats.stretchEnjoying / zoneStats.total) * 100)}%)`}
-                {zone.id === "stretch-overwhelmed" && `${zoneStats.stretchOverwhelmed} (${Math.round((zoneStats.stretchOverwhelmed / zoneStats.total) * 100)}%)`}
-                {zone.id === "panic" && `${zoneStats.panic} (${Math.round((zoneStats.panic / zoneStats.total) * 100)}%)`}
-              </div>
-            </div>
-          );
+          return <ZoneStatCard key={zone.id} zone={zone} stats={stats} isDominant={isDominant} isCurrent={isCurrent} />;
         })}
       </div>
       <div className="flex justify-between mb-4">
