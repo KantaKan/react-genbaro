@@ -4,8 +4,9 @@ import { useState, useMemo, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, Plus, HelpCircle } from "lucide-react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { ChevronDown, ChevronUp, Plus, BookOpen } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
 import FeedbackForm from "./feedback-form";
 import { useUserData } from "@/UserDataContext";
 import { api } from "@/lib/api";
@@ -237,7 +238,87 @@ export default function ReflectionsTableWithModal() {
   return (
     <div className="container mx-auto py-10">
       <ToastContainer position="top-right" autoClose={3000} />
-      <div className="flex gap-4 mb-6 overflow-x-auto pb-2">
+
+      {/* Hero section for Add Reflection */}
+      <div className="mb-8 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 rounded-lg border">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold">Daily Reflections</h1>
+            <p className="text-muted-foreground">Track your learning journey and growth over time</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Dialog
+              open={isDialogOpen}
+              onOpenChange={(open) => {
+                if (!open && formData) {
+                  setShowCloseWarning(true);
+                } else {
+                  setIsDialogOpen(open);
+                }
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button size="lg" className="shadow-lg" disabled={hasReflection}>
+                  <Plus className="mr-2 h-5 w-5" />
+                  {hasReflection ? "Reflection Added Today" : "Add Daily Reflection"}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[70vw] w-[70vw] h-[70vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Add Daily Reflection</DialogTitle>
+                </DialogHeader>
+                <FeedbackForm
+                  initialData={formData}
+                  onSubmit={handleSubmit}
+                  onChange={setFormData}
+                  onSuccess={() => {
+                    setFormData(null);
+                    setIsDialogOpen(false);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="lg">
+                  <BookOpen className="mr-2 h-5 w-5" />
+                  About Zones
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[800px]">
+                <DialogHeader>
+                  <DialogTitle>Understanding Learning Zones</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 p-4">
+                  <img src="/baronzone.png" alt="Learning Barometer Zones" className="w-full rounded-lg shadow-md" />
+                  <div className="grid gap-4 mt-4">
+                    {reflectionZones.map((zone) => (
+                      <Card key={zone.id} className="overflow-hidden">
+                        <CardContent className={`p-4 flex items-center gap-4 ${zone.bgColor} bg-opacity-10`}>
+                          <div className="text-2xl">{zone.emoji}</div>
+                          <div>
+                            <h3 className="font-semibold">{zone.label}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {zone.id === "comfort" && "You're confident and can work independently"}
+                              {zone.id === "stretch-enjoying" && "You're challenged but growing and learning"}
+                              {zone.id === "stretch-overwhelmed" && "You're finding the challenges difficult"}
+                              {zone.id === "panic" && "You're feeling stuck and need support"}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+      </div>
+
+      {/* Zone Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {reflectionZones.map((zone) => {
           const isDominant = zone.id === dominantZoneId;
           const isCurrent = currentZone?.id === zone.id;
@@ -249,14 +330,33 @@ export default function ReflectionsTableWithModal() {
           return <ZoneStatCard key={zone.id} zone={zone} stats={stats} isDominant={isDominant} isCurrent={isCurrent} />;
         })}
       </div>
+
+      {/* Today's Reflection Card */}
+      {todaysReflection && (
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h2 className="text-xl font-semibold">Today's Reflection</h2>
+                <p className="text-sm text-muted-foreground">
+                  You're in the {currentZone?.label} {currentZone?.emoji}
+                </p>
+              </div>
+              <ReflectionPreview reflection={todaysReflection} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Table Controls */}
       <div className="flex justify-between mb-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline">
-              Columns <ChevronDown className="ml-2 h-4 w-4" />
+              Visible Columns <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-56">
             {["Date", "Tech Happy", "Tech Improve", "Non-Tech Happy", "Non-Tech Improve", "Barometer"].map((column) => (
               <DropdownMenuCheckboxItem key={column} className="capitalize" checked={!hiddenColumns.includes(column)} onCheckedChange={() => toggleColumn(column)}>
                 {column}
@@ -264,63 +364,7 @@ export default function ReflectionsTableWithModal() {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <div className="flex gap-2">
-          <Dialog
-            open={isDialogOpen}
-            onOpenChange={(open) => {
-              if (!open && formData) {
-                setShowCloseWarning(true);
-              } else {
-                setIsDialogOpen(open);
-              }
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button disabled={hasReflection}>
-                <Plus className="mr-2 h-4 w-4" /> Add Reflection
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[70vw] w-[70vw] h-[70vh] overflow-y-auto">
-              <FeedbackForm
-                initialData={formData}
-                onSubmit={handleSubmit}
-                onChange={setFormData}
-                onSuccess={() => {
-                  setFormData(null);
-                  setIsDialogOpen(false);
-                }}
-              />
-            </DialogContent>
-          </Dialog>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <HelpCircle className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[800px]">
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold text-center">Learning Barometer Zones</h2>
-                <img
-                  src="/baronzone.png
-                "
-                  alt="Learning Barometer Zones"
-                  className="w-full rounded-lg"
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
       </div>
-      {todaysReflection && (
-        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 rounded-r shadow-md flex items-center justify-between">
-          <div>
-            <p className="font-bold">Daily Reflection Complete! 🎉</p>
-            <p className="text-sm">You've already submitted your reflection for today. Great job staying consistent!</p>
-          </div>
-          <ReflectionPreview reflection={todaysReflection} />
-        </div>
-      )}
       <Table>
         <TableHeader>
           <TableRow>

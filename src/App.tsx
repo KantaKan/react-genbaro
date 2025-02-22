@@ -183,7 +183,6 @@ function AppContent() {
               <ProtectedRoute allowedRoles={["learner"]}>
                 <Page>
                   <div className="flex flex-col gap-8 p-6">
-                    <h1 className="text-2xl font-bold">JSD Learner Daily Reflection & Learning Barometer</h1>
                     <ReflectionsTableWithModal />
                   </div>
                 </Page>
