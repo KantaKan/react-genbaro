@@ -407,7 +407,7 @@ export default function ReflectionsTableWithModal() {
               <DialogTrigger asChild>
                 <Button variant="outline" size="lg">
                   <BookOpen className="mr-2 h-5 w-5" />
-                  Learning Guide
+                  About zones
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[800px]">
