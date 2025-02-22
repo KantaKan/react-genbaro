@@ -354,10 +354,10 @@ export default function ReflectionsTableWithModal() {
             <p className="text-muted-foreground">
               {streakCount > 0 ? (
                 <>
-                  🎯 You've been reflecting consistently for {streakCount} day{streakCount !== 1 ? "s" : ""}
+                  🎯 You've been reflecting consistently for {streakCount} work day{streakCount !== 1 ? "s" : ""} (Mon-Fri)
                 </>
               ) : (
-                "Track your learning journey during work days"
+                "Track your learning journey during work days (Mon-Fri)"
               )}
             </p>
           </div>
@@ -407,7 +407,7 @@ export default function ReflectionsTableWithModal() {
               <DialogTrigger asChild>
                 <Button variant="outline" size="lg">
                   <BookOpen className="mr-2 h-5 w-5" />
-                  About Zone
+                  Learning Guide
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[800px]">
@@ -529,7 +529,7 @@ export default function ReflectionsTableWithModal() {
             <TableRow>
               {!hiddenColumns.includes("Date") && (
                 <TableHead>
-                  <Button variant="ghost" onClick={() => requestSort("date")} className="font-semibold">
+                  <Button variant="ghost" onClick={() => requestSort("date")} className="font-semibold h-auto py-4">
                     Date
                     {sortConfig.key === "date" && (sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />)}
                   </Button>
@@ -563,7 +563,7 @@ export default function ReflectionsTableWithModal() {
             ) : (
               filteredReflections.map((reflection, index) => (
                 <TableRow key={`${reflection.user_id}-${reflection.date}-${index}`}>
-                  {!hiddenColumns.includes("Date") && <TableCell>{new Date(reflection.date).toLocaleDateString()}</TableCell>}
+                  {!hiddenColumns.includes("Date") && <TableCell className="whitespace-normal py-4">{new Date(reflection.date).toLocaleDateString()}</TableCell>}
                   {!hiddenColumns.includes("Tech Happy") && <TableCell className="whitespace-normal py-4">{reflection.reflection.tech_sessions.happy}</TableCell>}
                   {!hiddenColumns.includes("Tech Improve") && <TableCell className="whitespace-normal py-4">{reflection.reflection.tech_sessions.improve}</TableCell>}
                   {!hiddenColumns.includes("Non-Tech Happy") && <TableCell className="whitespace-normal py-4">{reflection.reflection.non_tech_sessions.happy}</TableCell>}
