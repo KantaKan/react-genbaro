@@ -354,10 +354,10 @@ export default function ReflectionsTableWithModal() {
             <p className="text-muted-foreground">
               {streakCount > 0 ? (
                 <>
-                  🎯 You've been reflecting consistently for {streakCount} work day{streakCount !== 1 ? "s" : ""} (Mon-Fri)
+                  🎯 You've been reflecting consistently for {streakCount} day{streakCount !== 1 ? "s" : ""}
                 </>
               ) : (
-                "Track your learning journey during work days (Mon-Fri)"
+                "Track your learning journey during work days"
               )}
             </p>
           </div>
