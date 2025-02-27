@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronDown, ChevronUp, Plus, BookOpen, Search, FlameIcon as Fire } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, BookOpen, Search, FlameIcon as Fire, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import FeedbackForm from "./feedback-form";
 import { useUserData } from "@/UserDataContext";
 import { api } from "@/lib/api";
@@ -20,7 +19,6 @@ import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { ReflectionPreview } from "./reflection-preview";
 import { AlertDialog, AlertDialogContent, AlertDialogAction, AlertDialogCancel } from "./ui/alert-dialog";
-import { Skeleton } from "./ui/skeleton";
 import { ZoneStatCard } from "./zone-stat-card";
 
 // Types
@@ -103,6 +101,95 @@ const isWeekend = (date: Date): boolean => {
   return day === 0 || day === 6; // 0 is Sunday, 6 is Saturday
 };
 
+// Animated fire component for streak
+const FireBar = ({ value, max = 100 }: { value: number; max?: number }) => {
+  const progress = (value / max) * 100;
+  const controls = useAnimation();
+  const fireRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    controls.start({
+      width: `${progress}%`,
+      transition: { duration: 1, ease: "easeOut" },
+    });
+
+    // Animate fire particles
+    if (fireRef.current && value > 0) {
+      const particles = Array.from({ length: Math.min(value, 10) }, () => {
+        const particle = document.createElement("div");
+        particle.className = "absolute bottom-0 rounded-full bg-orange-500 opacity-70";
+        particle.style.width = `${Math.random() * 6 + 4}px`;
+        particle.style.height = `${Math.random() * 6 + 4}px`;
+        particle.style.left = `${Math.random() * 100}%`;
+        return particle;
+      });
+
+      particles.forEach((particle) => {
+        fireRef.current?.appendChild(particle);
+
+        // Animate each particle
+        const animation = particle.animate(
+          [
+            {
+              transform: `translateY(0) scale(1)`,
+              opacity: 0.7,
+            },
+            {
+              transform: `translateY(-${Math.random() * 20 + 10}px) scale(${Math.random() * 0.5 + 0.5})`,
+              opacity: 0,
+            },
+          ],
+          {
+            duration: Math.random() * 1000 + 1000,
+            iterations: Number.POSITIVE_INFINITY,
+          }
+        );
+
+        return () => {
+          animation.cancel();
+          particle.remove();
+        };
+      });
+
+      return () => {
+        particles.forEach((p) => p.remove());
+      };
+    }
+  }, [controls, progress, value]);
+
+  return (
+    <div className="relative w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+      <motion.div className="absolute top-0 left-0 h-full bg-gradient-to-r from-orange-500 to-red-500" initial={{ width: 0 }} animate={controls} />
+      <div ref={fireRef} className="absolute top-0 left-0 w-full h-full pointer-events-none" />
+    </div>
+  );
+};
+
+// Animated streak counter
+const StreakCounter = ({ count }: { count: number }) => {
+  const prevCount = useRef(0);
+  const countAnimation = useAnimation();
+
+  useEffect(() => {
+    if (count !== prevCount.current) {
+      countAnimation.start({
+        scale: [1, 1.2, 1],
+        transition: { duration: 0.5 },
+      });
+      prevCount.current = count;
+    }
+  }, [count, countAnimation]);
+
+  return (
+    <motion.div className="flex items-center gap-1" animate={countAnimation}>
+      <Fire className="h-4 w-4 text-orange-500" />
+      <motion.span initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+        {count} day streak
+      </motion.span>
+    </motion.div>
+  );
+};
+
 export default function ReflectionsTableWithModal() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
@@ -126,6 +213,7 @@ export default function ReflectionsTableWithModal() {
   const [selectedReflection, setSelectedReflection] = useState<Reflection | null>(null);
   const [streakCount, setStreakCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [showStreakAnimation, setShowStreakAnimation] = useState(false);
 
   // Calculate streak
   useEffect(() => {
@@ -163,6 +251,13 @@ export default function ReflectionsTableWithModal() {
     }
 
     setStreakCount(streak);
+
+    // Trigger streak animation if streak is greater than 0
+    if (streak > 0) {
+      setShowStreakAnimation(true);
+      const timer = setTimeout(() => setShowStreakAnimation(false), 3000);
+      return () => clearTimeout(timer);
+    }
   }, [reflections]);
 
   // Memoize sort function
@@ -311,15 +406,49 @@ export default function ReflectionsTableWithModal() {
     return (
       <div className="container mx-auto py-10 space-y-8">
         <div className="space-y-4">
-          <Skeleton className="h-20 w-full" />
+          <div className="h-20 w-full">
+            <motion.div
+              className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-lg"
+              animate={{
+                backgroundPosition: ["0% 0%", "100% 0%", "0% 0%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Number.POSITIVE_INFINITY,
+                ease: "linear",
+              }}
+            />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {Array(4)
               .fill(null)
               .map((_, i) => (
-                <Skeleton key={i} className="h-32" />
+                <motion.div
+                  key={i}
+                  className="h-32 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-lg"
+                  animate={{
+                    backgroundPosition: ["0% 0%", "100% 0%", "0% 0%"],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "linear",
+                    delay: i * 0.2,
+                  }}
+                />
               ))}
           </div>
-          <Skeleton className="h-96" />
+          <motion.div
+            className="h-96 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-lg"
+            animate={{
+              backgroundPosition: ["0% 0%", "100% 0%", "0% 0%"],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "linear",
+            }}
+          />
         </div>
       </div>
     );
@@ -328,25 +457,27 @@ export default function ReflectionsTableWithModal() {
   if (error)
     return (
       <div className="container mx-auto py-10">
-        <Card className="border-destructive">
-          <CardContent className="p-6">
-            <div className="text-center text-destructive">
-              <h2 className="text-lg font-semibold">Error Loading Reflections</h2>
-              <p>{error}</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => {
-                  if (typeof refreshUserData === "function") {
-                    refreshUserData();
-                  }
-                }}
-              >
-                Try Again
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <Card className="border-destructive">
+            <CardContent className="p-6">
+              <div className="text-center text-destructive">
+                <h2 className="text-lg font-semibold">Error Loading Reflections</h2>
+                <p>{error}</p>
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() => {
+                    if (typeof refreshUserData === "function") {
+                      refreshUserData();
+                    }
+                  }}
+                >
+                  Try Again
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     );
 
@@ -360,19 +491,49 @@ export default function ReflectionsTableWithModal() {
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
 
       {/* Hero section */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-8 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 rounded-lg border">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-8 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 rounded-lg border">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold">Daily Reflections</h1>
+              <motion.h1 className="text-3xl font-bold" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
+                Daily Reflections
+              </motion.h1>
               {streakCount > 0 && (
-                <Badge variant="secondary" className="gap-1">
-                  <Fire className="h-4 w-4 text-orange-500" />
-                  {streakCount} day streak
-                </Badge>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{
+                    opacity: 1,
+                    scale: showStreakAnimation ? [1, 1.1, 1] : 1,
+                  }}
+                  transition={{
+                    duration: 0.5,
+                    delay: 0.4,
+                    scale: {
+                      repeat: showStreakAnimation ? 3 : 0,
+                      duration: 0.3,
+                    },
+                  }}
+                >
+                  <Badge variant="secondary" className="gap-1 relative overflow-hidden">
+                    {showStreakAnimation && (
+                      <motion.div
+                        className="absolute inset-0 bg-orange-500 opacity-20"
+                        initial={{ x: "-100%" }}
+                        animate={{ x: "100%" }}
+                        transition={{
+                          repeat: Number.POSITIVE_INFINITY,
+                          duration: 1.5,
+                          ease: "linear",
+                        }}
+                      />
+                    )}
+                    <Fire className="h-4 w-4 text-orange-500" />
+                    {streakCount} day streak
+                  </Badge>
+                </motion.div>
               )}
             </div>
-            <p className="text-muted-foreground">
+            <motion.p className="text-muted-foreground" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.3 }}>
               {streakCount > 0 ? (
                 <>
                   🎯 You've been reflecting consistently for {streakCount} day{streakCount !== 1 ? "s" : ""}
@@ -380,7 +541,7 @@ export default function ReflectionsTableWithModal() {
               ) : (
                 "Track your learning journey during work days"
               )}
-            </p>
+            </motion.p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <Dialog
@@ -397,18 +558,35 @@ export default function ReflectionsTableWithModal() {
               }}
             >
               <DialogTrigger asChild>
-                <Button size="lg" className="shadow-lg relative" disabled={hasReflection || isLoading}>
-                  {isLoading ? (
-                    <motion.div className="absolute inset-0 flex items-center justify-center bg-primary" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                      <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white" />
-                    </motion.div>
-                  ) : (
-                    <>
-                      <Plus className="mr-2 h-5 w-5" />
-                      {hasReflection ? "Reflection Added Today" : "Add Daily Reflection"}
-                    </>
-                  )}
-                </Button>
+                <motion.div whileHover={{ scale: hasReflection ? 1 : 1.03 }} whileTap={{ scale: hasReflection ? 1 : 0.97 }}>
+                  <Button size="lg" className={`shadow-lg relative ${!hasReflection ? "bg-gradient-to-r from-primary to-primary" : ""}`} disabled={hasReflection || isLoading}>
+                    {isLoading ? (
+                      <motion.div className="absolute inset-0 flex items-center justify-center bg-primary rounded-md overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                        <motion.div className="h-5 w-5 rounded-full border-2 border-t-transparent border-white" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
+                      </motion.div>
+                    ) : (
+                      <>
+                        <Plus className="mr-2 h-5 w-5" />
+                        {hasReflection ? "Reflection Added Today" : "Add Daily Reflection"}
+                        {!hasReflection && (
+                          <motion.span
+                            className="absolute inset-0 rounded-md bg-white"
+                            initial={{ opacity: 0 }}
+                            animate={{
+                              opacity: [0, 0.1, 0],
+                              scale: [1, 1.05, 1],
+                            }}
+                            transition={{
+                              duration: 2,
+                              repeat: Number.POSITIVE_INFINITY,
+                              repeatType: "reverse",
+                            }}
+                          />
+                        )}
+                      </>
+                    )}
+                  </Button>
+                </motion.div>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
@@ -431,10 +609,12 @@ export default function ReflectionsTableWithModal() {
 
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" size="lg">
-                  <BookOpen className="mr-2 h-5 w-5" />
-                  About zones
-                </Button>
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <Button variant="outline" size="lg">
+                    <BookOpen className="mr-2 h-5 w-5" />
+                    About zones
+                  </Button>
+                </motion.div>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
@@ -481,7 +661,18 @@ export default function ReflectionsTableWithModal() {
             };
 
             return (
-              <motion.div key={zone.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ delay: index * 0.1 }} layout>
+              <motion.div
+                key={zone.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: index * 0.1, duration: 0.4 }}
+                layout
+                whileHover={{
+                  scale: 1.03,
+                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+                }}
+              >
                 <ZoneStatCard zone={zone} stats={stats} isDominant={isDominant} isCurrent={isCurrent} />
               </motion.div>
             );
@@ -491,23 +682,50 @@ export default function ReflectionsTableWithModal() {
 
       {/* Today's Reflection */}
       {todaysReflection && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-8">
-          <Card>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-8">
+          <Card className="overflow-hidden border-2 hover:border-primary/50 transition-all duration-300">
             <CardHeader>
-              <CardTitle>Today's Reflection</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                Today's Reflection
+                <motion.div animate={{ rotate: [0, 5, 0, -5, 0] }} transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, repeatType: "loop", ease: "easeInOut" }}>
+                  <Sparkles className="h-5 w-5 text-amber-500" />
+                </motion.div>
+              </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div className="space-y-2">
-                  <p className="text-lg">
-                    You're in the {currentZone?.label} {currentZone?.emoji}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Progress value={streakCount * 10} className="w-32" />
-                    <span className="text-sm text-muted-foreground">{streakCount} day streak</span>
+                <div className="space-y-4">
+                  <motion.p className="text-lg font-medium flex items-center gap-2" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
+                    You're in the {currentZone?.label}
+                    <motion.span
+                      animate={{
+                        scale: [1, 1.2, 1],
+                        rotate: [0, 10, 0, -10, 0],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Number.POSITIVE_INFINITY,
+                        repeatType: "loop",
+                      }}
+                    >
+                      {currentZone?.emoji}
+                    </motion.span>
+                  </motion.p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <FireBar value={streakCount} max={20} />
+                      <StreakCounter count={streakCount} />
+                    </div>
+                    {streakCount >= 5 && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} transition={{ duration: 0.3 }} className="text-sm text-emerald-600 font-medium">
+                        Great job maintaining your reflection streak! 🎉
+                      </motion.div>
+                    )}
                   </div>
                 </div>
-                <ReflectionPreview reflection={todaysReflection} />
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="w-full md:w-auto">
+                  <ReflectionPreview reflection={todaysReflection} />
+                </motion.div>
               </div>
             </CardContent>
           </Card>
@@ -549,7 +767,7 @@ export default function ReflectionsTableWithModal() {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border overflow-x-auto">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="rounded-md border overflow-x-auto">
         <Table className="[&_td]:align-top">
           <TableHeader>
             <TableRow>
@@ -557,7 +775,11 @@ export default function ReflectionsTableWithModal() {
                 <TableHead>
                   <Button variant="ghost" onClick={() => requestSort("date")} className="font-semibold h-auto py-4">
                     Date
-                    {sortConfig.key === "date" && (sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />)}
+                    {sortConfig.key === "date" && (
+                      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+                        {sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+                      </motion.span>
+                    )}
                   </Button>
                 </TableHead>
               )}
@@ -572,7 +794,7 @@ export default function ReflectionsTableWithModal() {
             {filteredReflections.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="h-32 text-center">
-                  <div className="flex flex-col items-center gap-2">
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="flex flex-col items-center gap-2">
                     <p className="text-muted-foreground">No reflections found</p>
                     <Button
                       variant="outline"
@@ -583,30 +805,39 @@ export default function ReflectionsTableWithModal() {
                     >
                       Clear filters
                     </Button>
-                  </div>
+                  </motion.div>
                 </TableCell>
               </TableRow>
             ) : (
               filteredReflections.map((reflection, index) => (
-                <TableRow key={reflection.id || `${reflection.user_id}-${reflection.date}-${index}`}>
-                  {!hiddenColumns.includes("Date") && <TableCell className="whitespace-normal py-4">{new Date(reflection.date).toLocaleDateString()}</TableCell>}
+                <motion.tr
+                  key={reflection.id || `${reflection.user_id}-${reflection.date}-${index}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className="group"
+                  whileHover={{ backgroundColor: "rgba(0,0,0,0.02)" }}
+                >
+                  {!hiddenColumns.includes("Date") && <TableCell className="whitespace-normal py-4 group-hover:text-primary transition-colors">{new Date(reflection.date).toLocaleDateString()}</TableCell>}
                   {!hiddenColumns.includes("Tech Happy") && <TableCell className="whitespace-normal py-4">{reflection.reflection.tech_sessions.happy}</TableCell>}
                   {!hiddenColumns.includes("Tech Improve") && <TableCell className="whitespace-normal py-4">{reflection.reflection.tech_sessions.improve}</TableCell>}
                   {!hiddenColumns.includes("Non-Tech Happy") && <TableCell className="whitespace-normal py-4">{reflection.reflection.non_tech_sessions.happy}</TableCell>}
                   {!hiddenColumns.includes("Non-Tech Improve") && <TableCell className="whitespace-normal py-4">{reflection.reflection.non_tech_sessions.improve}</TableCell>}
                   {!hiddenColumns.includes("Barometer") && (
                     <TableCell>
-                      <Badge variant="secondary" className={`${getColorForBarometer(reflection.reflection.barometer)} bg-opacity-15`}>
-                        {reflection.reflection.barometer}
-                      </Badge>
+                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Badge variant="secondary" className={`${getColorForBarometer(reflection.reflection.barometer)} bg-opacity-15 transition-all duration-300 hover:bg-opacity-30`}>
+                          {reflection.reflection.barometer}
+                        </Badge>
+                      </motion.div>
                     </TableCell>
                   )}
-                </TableRow>
+                </motion.tr>
               ))
             )}
           </TableBody>
         </Table>
-      </div>
+      </motion.div>
 
       {/* View Details Dialog */}
       <Dialog open={!!selectedReflection} onOpenChange={() => setSelectedReflection(null)}>
@@ -621,7 +852,7 @@ export default function ReflectionsTableWithModal() {
       {/* Unsaved Changes Alert */}
       <AlertDialog open={showCloseWarning} onOpenChange={setShowCloseWarning}>
         <AlertDialogContent>
-          <div className="text-center space-y-4">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="text-center space-y-4">
             <h3 className="text-lg font-semibold">Unsaved Changes</h3>
             <p>You have unsaved changes. Do you want to continue editing or discard changes?</p>
             <div className="flex justify-end gap-2">
@@ -643,7 +874,7 @@ export default function ReflectionsTableWithModal() {
                 Discard Changes
               </AlertDialogAction>
             </div>
-          </div>
+          </motion.div>
         </AlertDialogContent>
       </AlertDialog>
     </div>
