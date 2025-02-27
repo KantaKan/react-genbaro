@@ -89,7 +89,7 @@ const calculateZoneStats = (reflections: Reflection[]) => {
 const findDominantZone = (stats: ReturnType<typeof calculateZoneStats>) => {
   const zoneCounts = [
     { id: "comfort", count: stats.comfort },
-    { id: "stretch-enjoying", count: stats.stretchEnjoying }, // Fixed typo from stretchEnjoyed
+    { id: "stretch-enjoying", count: stats.stretchEnjoying },
     { id: "stretch-overwhelmed", count: stats.stretchOverwhelmed },
     { id: "panic", count: stats.panic },
   ];
@@ -135,17 +135,17 @@ export default function ReflectionsTableWithModal() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // If today is a weekend, we'll count from the last Friday
-    while (isWeekend(today)) {
-      today.setDate(today.getDate() - 1);
-    }
-
+    // Sort dates in descending order
     const sortedDates = reflections.map((r) => new Date(r.date)).sort((a, b) => b.getTime() - a.getTime());
 
+    // Start from today or last Friday if weekend
     const currentDate = new Date(today);
-    let expectedWorkDays = 0;
+    while (isWeekend(currentDate) && currentDate > sortedDates[0]) {
+      currentDate.setDate(currentDate.getDate() - 1);
+    }
 
-    while (expectedWorkDays < sortedDates.length) {
+    // Count consecutive workdays with reflections
+    while (streak < sortedDates.length) {
       if (!isWeekend(currentDate)) {
         const hasReflectionOnDate = sortedDates.some((date) => {
           const d = new Date(date);
@@ -158,7 +158,6 @@ export default function ReflectionsTableWithModal() {
         } else {
           break;
         }
-        expectedWorkDays++;
       }
       currentDate.setDate(currentDate.getDate() - 1);
     }
@@ -172,8 +171,14 @@ export default function ReflectionsTableWithModal() {
       return [...reflectionsToSort].sort((a, b) => {
         const extractValue = (item: Reflection, key: string) => {
           if (key === "date") return new Date(item.date).getTime();
-          if (key.startsWith("tech_sessions")) return item.reflection.tech_sessions[key.split(".")[1] as keyof TechSession] || "";
-          if (key.startsWith("non_tech_sessions")) return item.reflection.non_tech_sessions[key.split(".")[1] as keyof NonTechSession] || "";
+          if (key.startsWith("tech_sessions.")) {
+            const field = key.split(".")[1] as keyof TechSession;
+            return item.reflection.tech_sessions[field] || "";
+          }
+          if (key.startsWith("non_tech_sessions.")) {
+            const field = key.split(".")[1] as keyof NonTechSession;
+            return item.reflection.non_tech_sessions[field] || "";
+          }
           return item.reflection[key as keyof ReflectionData] || "";
         };
 
@@ -197,11 +202,11 @@ export default function ReflectionsTableWithModal() {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (reflection) =>
-          reflection.reflection.tech_sessions.happy.toLowerCase().includes(query) ||
-          reflection.reflection.tech_sessions.improve.toLowerCase().includes(query) ||
-          reflection.reflection.non_tech_sessions.happy.toLowerCase().includes(query) ||
-          reflection.reflection.non_tech_sessions.improve.toLowerCase().includes(query) ||
-          reflection.reflection.barometer.toLowerCase().includes(query)
+          (reflection.reflection.tech_sessions.happy || "").toLowerCase().includes(query) ||
+          (reflection.reflection.tech_sessions.improve || "").toLowerCase().includes(query) ||
+          (reflection.reflection.non_tech_sessions.happy || "").toLowerCase().includes(query) ||
+          (reflection.reflection.non_tech_sessions.improve || "").toLowerCase().includes(query) ||
+          (reflection.reflection.barometer || "").toLowerCase().includes(query)
       );
     }
 
@@ -220,12 +225,18 @@ export default function ReflectionsTableWithModal() {
       case "week":
         const weekAgo = new Date(today);
         weekAgo.setDate(today.getDate() - 7);
-        filtered = filtered.filter((reflection) => new Date(reflection.date) >= weekAgo);
+        filtered = filtered.filter((reflection) => {
+          const date = new Date(reflection.date);
+          return date >= weekAgo;
+        });
         break;
       case "month":
         const monthAgo = new Date(today);
         monthAgo.setMonth(today.getMonth() - 1);
-        filtered = filtered.filter((reflection) => new Date(reflection.date) >= monthAgo);
+        filtered = filtered.filter((reflection) => {
+          const date = new Date(reflection.date);
+          return date >= monthAgo;
+        });
         break;
     }
 
@@ -255,7 +266,7 @@ export default function ReflectionsTableWithModal() {
       setIsLoading(true);
       const response = await api.post(`users/${newReflection.user_id}/reflections`, newReflection);
       if (response.data) {
-        setReflections((prev) => [...prev, newReflection]);
+        setFormData(null);
         setIsDialogOpen(false);
         if (typeof refreshUserData === "function") {
           await refreshUserData();
@@ -267,23 +278,33 @@ export default function ReflectionsTableWithModal() {
         toast.error("You have already submitted a reflection today. Please try again tomorrow.");
       } else {
         toast.error("Failed to submit reflection. Please try again later.");
+        console.error("Error posting reflection:", error);
       }
-      console.error("Error posting reflection:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const hasReflectionToday = (reflections: Reflection[]): boolean => {
-    const today = new Date().toLocaleDateString("en-US"); // Format: "M/D/YYYY"
-    return reflections.some((reflection) => new Date(reflection.date).toLocaleDateString("en-US") === today);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return reflections.some((reflection) => {
+      const reflectionDate = new Date(reflection.date);
+      reflectionDate.setHours(0, 0, 0, 0);
+      return reflectionDate.getTime() === today.getTime();
+    });
   };
 
   const hasReflection = hasReflectionToday(reflections);
 
   const getTodaysReflection = (): Reflection | undefined => {
-    const today = new Date().toDateString();
-    return reflections.find((r) => new Date(r.date).toDateString() === today);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return reflections.find((r) => {
+      const reflectionDate = new Date(r.date);
+      reflectionDate.setHours(0, 0, 0, 0);
+      return reflectionDate.getTime() === today.getTime();
+    });
   };
 
   if (loading) {
@@ -365,10 +386,13 @@ export default function ReflectionsTableWithModal() {
             <Dialog
               open={isDialogOpen}
               onOpenChange={(open) => {
-                if (!open && formData) {
+                if (!open && formData !== null) {
                   setShowCloseWarning(true);
                 } else {
                   setIsDialogOpen(open);
+                  if (open) {
+                    setFormData(null); // Reset form data when opening
+                  }
                 }
               }}
             >
@@ -386,20 +410,22 @@ export default function ReflectionsTableWithModal() {
                   )}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[70vw] w-[70vw] h-[70vh] overflow-y-auto">
+              <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Add Daily Reflection</DialogTitle>
                 </DialogHeader>
-                <FeedbackForm
-                  initialData={formData}
-                  onSubmit={handleSubmit}
-                  onChange={setFormData}
-                  onSuccess={() => {
-                    setFormData(null);
-                    setIsDialogOpen(false);
-                  }}
-                  isLoading={isLoading}
-                />
+                <div className="overflow-y-auto">
+                  <FeedbackForm
+                    initialData={formData}
+                    onSubmit={handleSubmit}
+                    onChange={setFormData}
+                    onSuccess={() => {
+                      setFormData(null);
+                      setIsDialogOpen(false);
+                    }}
+                    isLoading={isLoading}
+                  />
+                </div>
               </DialogContent>
             </Dialog>
 
@@ -410,7 +436,7 @@ export default function ReflectionsTableWithModal() {
                   About zones
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[800px]">
+              <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Understanding Learning Zones</DialogTitle>
                 </DialogHeader>
@@ -562,7 +588,7 @@ export default function ReflectionsTableWithModal() {
               </TableRow>
             ) : (
               filteredReflections.map((reflection, index) => (
-                <TableRow key={`${reflection.user_id}-${reflection.date}-${index}`}>
+                <TableRow key={reflection.id || `${reflection.user_id}-${reflection.date}-${index}`}>
                   {!hiddenColumns.includes("Date") && <TableCell className="whitespace-normal py-4">{new Date(reflection.date).toLocaleDateString()}</TableCell>}
                   {!hiddenColumns.includes("Tech Happy") && <TableCell className="whitespace-normal py-4">{reflection.reflection.tech_sessions.happy}</TableCell>}
                   {!hiddenColumns.includes("Tech Improve") && <TableCell className="whitespace-normal py-4">{reflection.reflection.tech_sessions.improve}</TableCell>}

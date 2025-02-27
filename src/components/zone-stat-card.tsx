@@ -60,7 +60,7 @@ export function ZoneStatCard({ zone, stats, isDominant, isCurrent }: ZoneStatCar
             </div>
             <div className="flex items-baseline justify-between mt-1">
               <p className="text-sm text-white/80">{isDominant ? "Most frequent zone" : `${stats.count} reflections`}</p>
-              {isDominant && <span className="text-sm font-medium bg-white/20 px-2 py-0.5 rounded-full">{stats.count} total</span>}
+              {isDominant && <span className="text-sm font-medium bg-white/20 px-2 py-0.5 rounded-full whitespace-nowrap">{stats.count} total</span>}
             </div>
           </div>
         </div>
