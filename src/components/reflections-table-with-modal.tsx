@@ -18,7 +18,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { ReflectionPreview } from "./reflection-preview";
-import { AlertDialog, AlertDialogContent, AlertDialogAction, AlertDialogCancel } from "./ui/alert-dialog";
+import { AlertDialogContent, AlertDialogAction, AlertDialogCancel, AlertDialog } from "./ui/alert-dialog";
 import { ZoneStatCard } from "./zone-stat-card";
 
 // Types
@@ -661,18 +661,7 @@ export default function ReflectionsTableWithModal() {
             };
 
             return (
-              <motion.div
-                key={zone.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ delay: index * 0.1, duration: 0.4 }}
-                layout
-                whileHover={{
-                  scale: 1.03,
-                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-                }}
-              >
+              <motion.div key={zone.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ delay: index * 0.1, duration: 0.4 }} layout>
                 <ZoneStatCard zone={zone} stats={stats} isDominant={isDominant} isCurrent={isCurrent} />
               </motion.div>
             );
@@ -683,7 +672,7 @@ export default function ReflectionsTableWithModal() {
       {/* Today's Reflection */}
       {todaysReflection && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-8">
-          <Card className="overflow-hidden border-2 hover:border-primary/50 transition-all duration-300">
+          <Card className="overflow-hidden border-2 hover:border-primary/5 transition-all duration-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 Today's Reflection
@@ -839,7 +828,6 @@ export default function ReflectionsTableWithModal() {
         </Table>
       </motion.div>
 
-      {/* View Details Dialog */}
       <Dialog open={!!selectedReflection} onOpenChange={() => setSelectedReflection(null)}>
         <DialogContent>
           <DialogHeader>
@@ -849,7 +837,6 @@ export default function ReflectionsTableWithModal() {
         </DialogContent>
       </Dialog>
 
-      {/* Unsaved Changes Alert */}
       <AlertDialog open={showCloseWarning} onOpenChange={setShowCloseWarning}>
         <AlertDialogContent>
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="text-center space-y-4">
