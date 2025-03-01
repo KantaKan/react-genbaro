@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { motion, AnimatePresence } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 import FeedbackForm from "./feedback-form";
 import { api } from "@/lib/api";
 
@@ -38,29 +40,29 @@ const reflectionZones = [
   {
     id: "comfort",
     label: "Comfort Zone",
-    bgColor: "bg-green-500",
-    emoji: "😊",
+    bgColor: "bg-emerald-500",
+    emoji: "😸",
     description: "Where you feel safe and in control. Tasks are easy and familiar.",
   },
   {
     id: "stretch-enjoying",
     label: "Stretch zone - Enjoying the challenges",
-    bgColor: "bg-yellow-500",
-    emoji: "🤔",
+    bgColor: "bg-amber-500",
+    emoji: "😺",
     description: "Pushing your boundaries, feeling challenged but excited.",
   },
   {
     id: "stretch-overwhelmed",
     label: "Stretch zone - Overwhelmed",
-    bgColor: "bg-orange-500",
-    emoji: "😰",
+    bgColor: "bg-red-500",
+    emoji: "😿",
     description: "Feeling stressed, but still learning and growing.",
   },
   {
     id: "panic",
     label: "Panic Zone",
-    bgColor: "bg-red-500",
-    emoji: "😱",
+    bgColor: "bg-violet-500",
+    emoji: "🙀",
     description: "Feeling extreme stress or fear. Learning is difficult here.",
   },
   {
@@ -70,7 +72,52 @@ const reflectionZones = [
     emoji: "❌",
     description: "Insufficient information to categorize the experience.",
   },
-];
+] as const;
+
+const BarometerVisual = ({ barometer }: { barometer: string }) => {
+  const zone = reflectionZones.find((z) => z.label === barometer);
+  if (!zone) return <span>{barometer}</span>;
+
+  return (
+    <motion.div
+      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md ${zone.bgColor} bg-opacity-15 transition-all duration-300`}
+      whileHover={{
+        scale: 1.05,
+        backgroundColor: `var(--${zone.bgColor.replace("bg-", "")})`,
+        backgroundOpacity: 0.25,
+      }}
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <motion.span
+        className="text-base"
+        animate={{
+          rotate: [0, 10, 0, -10, 0],
+          scale: [1, 1.1, 1],
+        }}
+        transition={{
+          duration: 2,
+          repeat: Number.POSITIVE_INFINITY,
+          repeatType: "loop",
+        }}
+      >
+        {zone.emoji}
+      </motion.span>
+      <span className="font-medium text-sm">{zone.label}</span>
+    </motion.div>
+  );
+};
+
+const LoadingRow = () => (
+  <TableRow>
+    <TableCell colSpan={9}>
+      <div className="flex items-center justify-center p-8">
+        <motion.div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
+      </div>
+    </TableCell>
+  </TableRow>
+);
 
 const getColorForBarometer = (barometer: string) => {
   const zone = reflectionZones.find((zone) => zone.label === barometer);
@@ -210,26 +257,50 @@ export default function AdminReflectionsTable() {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="container mx-auto py-10">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>First Name</TableHead>
+              <TableHead>Last Name</TableHead>
+              <TableHead>JSD Number</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Barometer</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {[...Array(5)].map((_, i) => (
+              <LoadingRow key={i} />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
   }
 
   return (
     <div className="container mx-auto py-10">
-      <div className="flex justify-between mb-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              Columns <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {["First Name", "Last Name", "JSD Number", "Date", "Tech Happy", "Tech Improve", "Non-Tech Happy", "Non-Tech Improve", "Barometer"].map((column) => (
-              <DropdownMenuCheckboxItem key={column} className="capitalize" checked={!hiddenColumns.includes(column)} onCheckedChange={() => toggleColumn(column)}>
-                {column}
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                Columns <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {["First Name", "Last Name", "JSD Number", "Date", "Tech Happy", "Tech Improve", "Non-Tech Happy", "Non-Tech Improve", "Barometer"].map((column) => (
+                <DropdownMenuCheckboxItem key={column} className="capitalize" checked={!hiddenColumns.includes(column)} onCheckedChange={() => toggleColumn(column)}>
+                  {column}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Badge variant="outline" className="text-sm">
+            {displayedReflections.length} reflections
+          </Badge>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>{/* <Button variant="outline">Add Reflection</Button> */}</DialogTrigger>
           <DialogContent className="sm:max-w-[70vw] w-[70vw] h-[70vh] overflow-y-auto">
@@ -237,72 +308,106 @@ export default function AdminReflectionsTable() {
           </DialogContent>
         </Dialog>
       </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {!hiddenColumns.includes("First Name") && (
-              <TableHead>
-                <Button variant="ghost" onClick={() => requestSort("FirstName")}>
-                  First Name
-                  {sortConfig.key === "FirstName" && (sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />)}
-                </Button>
-              </TableHead>
-            )}
-            {!hiddenColumns.includes("Last Name") && (
-              <TableHead>
-                <Button variant="ghost" onClick={() => requestSort("LastName")}>
-                  Last Name
-                  {sortConfig.key === "LastName" && (sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />)}
-                </Button>
-              </TableHead>
-            )}
-            {!hiddenColumns.includes("JSD Number") && (
-              <TableHead>
-                <Button variant="ghost" onClick={() => requestSort("JsdNumber")}>
-                  JSD Number
-                  {sortConfig.key === "JsdNumber" && (sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />)}
-                </Button>
-              </TableHead>
-            )}
-            {!hiddenColumns.includes("Date") && (
-              <TableHead>
-                <Button variant="ghost" onClick={() => requestSort("Date")}>
-                  Date
-                  {sortConfig.key === "Date" && (sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />)}
-                </Button>
-              </TableHead>
-            )}
-            {!hiddenColumns.includes("Tech Happy") && <TableHead>Tech Happy</TableHead>}
-            {!hiddenColumns.includes("Tech Improve") && <TableHead>Tech Improve</TableHead>}
-            {!hiddenColumns.includes("Non-Tech Happy") && <TableHead>Non-Tech Happy</TableHead>}
-            {!hiddenColumns.includes("Non-Tech Improve") && <TableHead>Non-Tech Improve</TableHead>}
-            {!hiddenColumns.includes("Barometer") && <TableHead>Barometer</TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {displayedReflections.map((reflection) => (
-            <TableRow key={reflection.id} onClick={() => handleRowClick(reflection.id)}>
-              {!hiddenColumns.includes("First Name") && <TableCell>{reflection.FirstName}</TableCell>}
-              {!hiddenColumns.includes("Last Name") && <TableCell>{reflection.LastName}</TableCell>}
-              {!hiddenColumns.includes("JSD Number") && <TableCell>{reflection.JsdNumber}</TableCell>}
-              {!hiddenColumns.includes("Date") && <TableCell>{formatDate(reflection.Date)}</TableCell>}
-              {!hiddenColumns.includes("Tech Happy") && <TableCell>{reflection.Reflection?.TechSessions?.Happy || ""}</TableCell>}
-              {!hiddenColumns.includes("Tech Improve") && <TableCell>{reflection.Reflection?.TechSessions?.Improve || ""}</TableCell>}
-              {!hiddenColumns.includes("Non-Tech Happy") && <TableCell>{reflection.Reflection?.NonTechSessions?.Happy || ""}</TableCell>}
-              {!hiddenColumns.includes("Non-Tech Improve") && <TableCell>{reflection.Reflection?.NonTechSessions?.Improve || ""}</TableCell>}
-              {!hiddenColumns.includes("Barometer") && <TableCell className={getColorForBarometer(reflection.Reflection?.Barometer || "")}>{reflection.Reflection?.Barometer || ""}</TableCell>}
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {!hiddenColumns.includes("First Name") && (
+                <TableHead>
+                  <Button variant="ghost" onClick={() => requestSort("FirstName")} className="font-semibold">
+                    First Name
+                    {sortConfig.key === "FirstName" && (
+                      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+                        {sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+                      </motion.span>
+                    )}
+                  </Button>
+                </TableHead>
+              )}
+              {!hiddenColumns.includes("Last Name") && (
+                <TableHead>
+                  <Button variant="ghost" onClick={() => requestSort("LastName")} className="font-semibold">
+                    Last Name
+                    {sortConfig.key === "LastName" && (
+                      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+                        {sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+                      </motion.span>
+                    )}
+                  </Button>
+                </TableHead>
+              )}
+              {!hiddenColumns.includes("JSD Number") && (
+                <TableHead>
+                  <Button variant="ghost" onClick={() => requestSort("JsdNumber")} className="font-semibold">
+                    JSD Number
+                    {sortConfig.key === "JsdNumber" && (
+                      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+                        {sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+                      </motion.span>
+                    )}
+                  </Button>
+                </TableHead>
+              )}
+              {!hiddenColumns.includes("Date") && (
+                <TableHead>
+                  <Button variant="ghost" onClick={() => requestSort("Date")} className="font-semibold">
+                    Date
+                    {sortConfig.key === "Date" && (
+                      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+                        {sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+                      </motion.span>
+                    )}
+                  </Button>
+                </TableHead>
+              )}
+              {!hiddenColumns.includes("Tech Happy") && <TableHead>Tech Happy</TableHead>}
+              {!hiddenColumns.includes("Tech Improve") && <TableHead>Tech Improve</TableHead>}
+              {!hiddenColumns.includes("Non-Tech Happy") && <TableHead>Non-Tech Happy</TableHead>}
+              {!hiddenColumns.includes("Non-Tech Improve") && <TableHead>Non-Tech Improve</TableHead>}
+              {!hiddenColumns.includes("Barometer") && <TableHead>Barometer</TableHead>}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      <Pagination className="mt-4">
+          </TableHeader>
+          <TableBody>
+            <AnimatePresence mode="wait">
+              {displayedReflections.map((reflection, index) => (
+                <motion.tr
+                  key={reflection.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2, delay: index * 0.03 }}
+                  onClick={() => handleRowClick(reflection.id)}
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                >
+                  {!hiddenColumns.includes("First Name") && <TableCell>{reflection.FirstName}</TableCell>}
+                  {!hiddenColumns.includes("Last Name") && <TableCell>{reflection.LastName}</TableCell>}
+                  {!hiddenColumns.includes("JSD Number") && <TableCell>{reflection.JsdNumber}</TableCell>}
+                  {!hiddenColumns.includes("Date") && <TableCell>{formatDate(reflection.Date)}</TableCell>}
+                  {!hiddenColumns.includes("Tech Happy") && <TableCell>{reflection.Reflection?.TechSessions?.Happy || ""}</TableCell>}
+                  {!hiddenColumns.includes("Tech Improve") && <TableCell>{reflection.Reflection?.TechSessions?.Improve || ""}</TableCell>}
+                  {!hiddenColumns.includes("Non-Tech Happy") && <TableCell>{reflection.Reflection?.NonTechSessions?.Happy || ""}</TableCell>}
+                  {!hiddenColumns.includes("Non-Tech Improve") && <TableCell>{reflection.Reflection?.NonTechSessions?.Improve || ""}</TableCell>}
+                  {!hiddenColumns.includes("Barometer") && (
+                    <TableCell>
+                      <BarometerVisual barometer={reflection.Reflection?.Barometer || ""} />
+                    </TableCell>
+                  )}
+                </motion.tr>
+              ))}
+            </AnimatePresence>
+          </TableBody>
+        </Table>
+      </div>
+
+      <Pagination className="mt-6">
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} />
           </PaginationItem>
           {[...Array(totalPages)].map((_, i) => (
             <PaginationItem key={i}>
-              <PaginationLink onClick={() => setCurrentPage(i + 1)} isActive={currentPage === i + 1}>
+              <PaginationLink onClick={() => setCurrentPage(i + 1)} isActive={currentPage === i + 1} className="min-w-[2.5rem] text-center">
                 {i + 1}
               </PaginationLink>
             </PaginationItem>

@@ -1,9 +1,13 @@
+"use client";
+
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, FileSpreadsheet } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "react-toastify";
 
 interface User {
@@ -32,29 +36,29 @@ const reflectionZones = [
   {
     id: "comfort",
     label: "Comfort Zone",
-    bgColor: "bg-green-500",
-    emoji: "😊",
+    bgColor: "bg-emerald-500",
+    emoji: "😸",
     description: "Where you feel safe and in control. Tasks are easy and familiar.",
   },
   {
     id: "stretch-enjoying",
     label: "Stretch zone - Enjoying the challenges",
-    bgColor: "bg-yellow-500",
-    emoji: "🤔",
+    bgColor: "bg-amber-500",
+    emoji: "😺",
     description: "Pushing your boundaries, feeling challenged but excited.",
   },
   {
     id: "stretch-overwhelmed",
     label: "Stretch zone - Overwhelmed",
-    bgColor: "bg-orange-500",
-    emoji: "😰",
+    bgColor: "bg-red-500",
+    emoji: "😿",
     description: "Feeling stressed, but still learning and growing.",
   },
   {
     id: "panic",
     label: "Panic Zone",
-    bgColor: "bg-red-500",
-    emoji: "😱",
+    bgColor: "bg-violet-500",
+    emoji: "🙀",
     description: "Feeling extreme stress or fear. Learning is difficult here.",
   },
   {
@@ -64,12 +68,52 @@ const reflectionZones = [
     emoji: "❌",
     description: "Insufficient information to categorize the experience.",
   },
-];
+] as const;
 
-const getColorForBarometer = (barometer: string) => {
-  const zone = reflectionZones.find((zone) => zone.label === barometer);
-  return zone ? `${zone.bgColor}` : "";
+const BarometerVisual = ({ barometer }: { barometer: string }) => {
+  const zone = reflectionZones.find((z) => z.label === barometer);
+  if (!zone || barometer === "-") return <span>{barometer}</span>;
+
+  return (
+    <motion.div
+      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md ${zone.bgColor} bg-opacity-15 transition-all duration-300`}
+      whileHover={{
+        scale: 1.05,
+        backgroundColor: `var(--${zone.bgColor.replace("bg-", "")})`,
+        backgroundOpacity: 0.25,
+      }}
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <motion.span
+        className="text-base"
+        animate={{
+          rotate: [0, 10, 0, -10, 0],
+          scale: [1, 1.1, 1],
+        }}
+        transition={{
+          duration: 2,
+          repeat: Number.POSITIVE_INFINITY,
+          repeatType: "loop",
+        }}
+      >
+        {zone.emoji}
+      </motion.span>
+      <span className="font-medium text-sm">{zone.label}</span>
+    </motion.div>
+  );
 };
+
+const LoadingRow = () => (
+  <TableRow>
+    <TableCell colSpan={10}>
+      <div className="flex items-center justify-center p-8">
+        <motion.div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
+      </div>
+    </TableCell>
+  </TableRow>
+);
 
 // Define all available columns in their desired order
 const ALL_COLUMNS = ["Zoom Name", "Project Group", "Genmate Group", "First Name", "Last Name", "JSD Number", "Email", "Cohort", "Total Reflections", "Last Barometer"] as const;
@@ -86,21 +130,16 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
   const toggleColumn = (column: string) => {
     setVisibleColumns((current) => {
       if (current.includes(column)) {
-        // Remove the column
         return current.filter((col) => col !== column);
       } else {
-        // Add the column back in its original position
         const newColumns = [...current];
         const originalIndex = ALL_COLUMNS.indexOf(column as (typeof ALL_COLUMNS)[number]);
-
-        // Find the correct insertion point
         let insertIndex = 0;
         for (let i = 0; i < originalIndex; i++) {
           if (newColumns.includes(ALL_COLUMNS[i])) {
             insertIndex = newColumns.indexOf(ALL_COLUMNS[i]) + 1;
           }
         }
-
         newColumns.splice(insertIndex, 0, column);
         return newColumns;
       }
@@ -167,7 +206,6 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
     return 0;
   });
 
-  // New function to handle export
   const handleExport = async () => {
     setIsExporting(true);
     try {
@@ -187,15 +225,59 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="container mx-auto py-10">
+        <div className="flex justify-between mb-6">
+          <Button variant="outline" disabled>
+            Columns <ChevronDown className="ml-2 h-4 w-4" />
+          </Button>
+          <Button disabled>Export to Google Sheets</Button>
+        </div>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {visibleColumns.map((column) => (
+                  <TableHead key={column} className="text-center">
+                    {column}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[...Array(5)].map((_, i) => (
+                <LoadingRow key={i} />
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    );
   }
 
   const renderTableCell = (user: User, column: string) => {
     const value = getValueByKey(user, column);
-    const colorClass = column === "Last Barometer" ? getColorForBarometer(value as string) : "";
+
+    if (column === "Last Barometer") {
+      return (
+        <TableCell key={column} className="text-center">
+          <BarometerVisual barometer={value as string} />
+        </TableCell>
+      );
+    }
+
+    if (column === "Total Reflections") {
+      return (
+        <TableCell key={column} className="text-center">
+          <Badge variant="secondary" className="font-mono">
+            {value}
+          </Badge>
+        </TableCell>
+      );
+    }
 
     return (
-      <TableCell key={column} className={`text-center ${colorClass}`}>
+      <TableCell key={column} className="text-center">
         {value || "-"}
       </TableCell>
     );
@@ -203,54 +285,76 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
 
   return (
     <div className="container mx-auto py-10">
-      <div className="flex justify-between mb-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              Columns <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {ALL_COLUMNS.map((column) => (
-              <DropdownMenuCheckboxItem key={column} className="capitalize" checked={visibleColumns.includes(column)} onCheckedChange={() => toggleColumn(column)}>
-                {column}
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <Button onClick={handleExport} disabled={isExporting}>
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                Columns <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {ALL_COLUMNS.map((column) => (
+                <DropdownMenuCheckboxItem key={column} className="capitalize" checked={visibleColumns.includes(column)} onCheckedChange={() => toggleColumn(column)}>
+                  {column}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Badge variant="outline" className="text-sm">
+            {users.length} users
+          </Badge>
+        </div>
+        <Button onClick={handleExport} disabled={isExporting} className="gap-2">
+          <FileSpreadsheet className="h-4 w-4" />
           {isExporting ? (
-            <>
-              <span className="mr-2">Exporting...</span>
-              <span className="animate-spin">⏳</span>
-            </>
+            <motion.div className="inline-flex items-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <motion.div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
+              Exporting...
+            </motion.div>
           ) : (
-            "Export to Google Sheets"
+            "Export to Sheets"
           )}
         </Button>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {visibleColumns.map((column) => (
-              <TableHead key={column} className="text-center">
-                <Button variant="ghost" onClick={() => requestSort(column)} className="w-full justify-center font-bold">
-                  {column}
-                  {sortConfig.key === column && (sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4 inline" /> : <ChevronDown className="ml-2 h-4 w-4 inline" />)}
-                </Button>
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sortedUsers.map((user) => (
-            <TableRow key={user._id} onClick={() => handleRowClick(user._id)}>
-              {visibleColumns.map((column) => renderTableCell(user, column))}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {visibleColumns.map((column) => (
+                <TableHead key={column} className="text-center">
+                  <Button variant="ghost" onClick={() => requestSort(column)} className="w-full justify-center font-bold">
+                    {column}
+                    {sortConfig.key === column && (
+                      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+                        {sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4 inline" /> : <ChevronDown className="ml-2 h-4 w-4 inline" />}
+                      </motion.span>
+                    )}
+                  </Button>
+                </TableHead>
+              ))}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            <AnimatePresence mode="wait">
+              {sortedUsers.map((user, index) => (
+                <motion.tr
+                  key={user._id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2, delay: index * 0.03 }}
+                  onClick={() => handleRowClick(user._id)}
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                >
+                  {visibleColumns.map((column) => renderTableCell(user, column))}
+                </motion.tr>
+              ))}
+            </AnimatePresence>
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
