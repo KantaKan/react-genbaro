@@ -258,9 +258,18 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
   const renderTableCell = (user: User, column: string) => {
     const value = getValueByKey(user, column);
 
-    if (column === "Last Barometer") {
+    // Add center alignment only for specific columns
+    if (["First Name", "Last Name", "JSD Number", "Date"].includes(column)) {
       return (
         <TableCell key={column} className="text-center">
+          {value || "-"}
+        </TableCell>
+      );
+    }
+
+    if (column === "Last Barometer") {
+      return (
+        <TableCell key={column}>
           <BarometerVisual barometer={value as string} />
         </TableCell>
       );
@@ -268,7 +277,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
 
     if (column === "Total Reflections") {
       return (
-        <TableCell key={column} className="text-center">
+        <TableCell key={column}>
           <Badge variant="secondary" className="font-mono">
             {value}
           </Badge>
@@ -276,11 +285,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
       );
     }
 
-    return (
-      <TableCell key={column} className="text-center">
-        {value || "-"}
-      </TableCell>
-    );
+    return <TableCell key={column}>{value || "-"}</TableCell>;
   };
 
   return (
