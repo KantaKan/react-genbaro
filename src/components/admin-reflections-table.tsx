@@ -405,13 +405,51 @@ export default function AdminReflectionsTable() {
           <PaginationItem>
             <PaginationPrevious onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} />
           </PaginationItem>
-          {[...Array(totalPages)].map((_, i) => (
-            <PaginationItem key={i}>
-              <PaginationLink onClick={() => setCurrentPage(i + 1)} isActive={currentPage === i + 1} className="min-w-[2.5rem] text-center">
-                {i + 1}
-              </PaginationLink>
-            </PaginationItem>
-          ))}
+
+          {/* First page */}
+          {currentPage > 3 && (
+            <>
+              <PaginationItem>
+                <PaginationLink onClick={() => setCurrentPage(1)}>1</PaginationLink>
+              </PaginationItem>
+              {currentPage > 4 && (
+                <PaginationItem>
+                  <PaginationLink className="cursor-default">...</PaginationLink>
+                </PaginationItem>
+              )}
+            </>
+          )}
+
+          {/* Numbered pages */}
+          {[...Array(totalPages)].map((_, i) => {
+            const pageNumber = i + 1;
+            // Show current page and 1 page before and after
+            if (pageNumber === currentPage || pageNumber === currentPage - 1 || pageNumber === currentPage + 1) {
+              return (
+                <PaginationItem key={i}>
+                  <PaginationLink onClick={() => setCurrentPage(pageNumber)} isActive={currentPage === pageNumber} className="min-w-[2.5rem] text-center">
+                    {pageNumber}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            }
+            return null;
+          })}
+
+          {/* Last page */}
+          {currentPage < totalPages - 2 && (
+            <>
+              {currentPage < totalPages - 3 && (
+                <PaginationItem>
+                  <PaginationLink className="cursor-default">...</PaginationLink>
+                </PaginationItem>
+              )}
+              <PaginationItem>
+                <PaginationLink onClick={() => setCurrentPage(totalPages)}>{totalPages}</PaginationLink>
+              </PaginationItem>
+            </>
+          )}
+
           <PaginationItem>
             <PaginationNext onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} />
           </PaginationItem>
