@@ -351,7 +351,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2, delay: index * 0.03 }}
                   onClick={() => handleRowClick(user._id)}
-                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  className="cursor-pointer hover:bg-muted/50 transition-colors text-center"
                 >
                   {visibleColumns.map((column) => renderTableCell(user, column))}
                 </motion.tr>
