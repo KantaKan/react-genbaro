@@ -380,9 +380,9 @@ export default function AdminReflectionsTable() {
                   onClick={() => handleRowClick(reflection.id)}
                   className="cursor-pointer hover:bg-muted/50 transition-colors"
                 >
-                  {!hiddenColumns.includes("First Name") && <TableCell>{reflection.FirstName}</TableCell>}
-                  {!hiddenColumns.includes("Last Name") && <TableCell>{reflection.LastName}</TableCell>}
-                  {!hiddenColumns.includes("JSD Number") && <TableCell>{reflection.JsdNumber}</TableCell>}
+                  {!hiddenColumns.includes("First Name") && <TableCell className="text-center">{reflection.FirstName}</TableCell>}
+                  {!hiddenColumns.includes("Last Name") && <TableCell className="text-center">{reflection.LastName}</TableCell>}
+                  {!hiddenColumns.includes("JSD Number") && <TableCell className="text-center">{reflection.JsdNumber}</TableCell>}
                   {!hiddenColumns.includes("Date") && <TableCell>{formatDate(reflection.Date)}</TableCell>}
                   {!hiddenColumns.includes("Tech Happy") && <TableCell>{reflection.Reflection?.TechSessions?.Happy || ""}</TableCell>}
                   {!hiddenColumns.includes("Tech Improve") && <TableCell>{reflection.Reflection?.TechSessions?.Improve || ""}</TableCell>}
