@@ -49,6 +49,14 @@ interface Reflection {
   reflection: ReflectionData
 }
 
+// Add interface for streak data
+interface StreakData {
+  currentStreak: number
+  oldStreak: number
+  lastActiveDate: Date | null
+  hasCurrentStreak: boolean
+}
+
 // Update reflectionZones array with new colors
 const reflectionZones = [
   { id: "comfort", label: "Comfort Zone", bgColor: "bg-emerald-500", emoji: "😸" },
@@ -404,36 +412,50 @@ const isHoliday = (date: Date): boolean => {
   return HOLIDAYS.some((holiday) => holiday.getTime() === normalizedDate.getTime())
 }
 
-// Add a new StreakIcon component near the other UI components (around line 200)
-const StreakIcon = ({ hasReflection, streakCount }: { hasReflection: boolean; streakCount: number }) => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const isTodayHoliday = isHoliday(today)
+// Function to check if a date is a valid workday (not weekend, not holiday)
+const isValidWorkday = (date: Date): boolean => {
+  return !isWeekend(date) && !isHoliday(date)
+}
 
-  // Show colored icon if there's a reflection or if today is a holiday
-  const showColored = hasReflection || isTodayHoliday
+// Function to get the previous valid workday
+const getPreviousWorkday = (date: Date): Date => {
+  const prevDate = new Date(date)
+  prevDate.setDate(prevDate.getDate() - 1)
+
+  while (!isValidWorkday(prevDate)) {
+    prevDate.setDate(prevDate.getDate() - 1)
+  }
+
+  return prevDate
+}
+
+// Updated StreakIcon component to handle both current and old streaks
+const StreakIcon = ({ streakData }: { streakData: StreakData }) => {
+  const { currentStreak, oldStreak, hasCurrentStreak } = streakData
 
   return (
-    <div className="relative">
-      {showColored ? (
+    <div className="flex items-center gap-2">
+      {/* Current streak (colored if active) */}
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="flex items-center gap-1"
+      >
+        <Fire className={`h-5 w-5 ${hasCurrentStreak ? "text-orange-500" : "text-gray-400"}`} />
+        <span className={`text-sm font-medium ${hasCurrentStreak ? "" : "text-gray-400"}`}>{currentStreak}</span>
+      </motion.div>
+
+      {/* Show old streak if it exists and there's no current streak */}
+      {oldStreak > 0 && !hasCurrentStreak && (
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="flex items-center gap-1"
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="flex items-center gap-1 border-l pl-2 border-gray-200"
         >
-          <Fire className="h-5 w-5 text-orange-500" />
-          <span className="text-sm font-medium">{streakCount}</span>
-        </motion.div>
-      ) : (
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="flex items-center gap-1"
-        >
-          <Fire className="h-5 w-5 text-gray-400" />
-          <span className="text-sm font-medium text-gray-400">0</span>
+          <span className="text-xs text-gray-500">Previous:</span>
+          <span className="text-sm font-medium text-gray-500">{oldStreak}</span>
         </motion.div>
       )}
     </div>
@@ -461,58 +483,177 @@ export default function ReflectionsTableWithModal() {
   const [searchQuery, setSearchQuery] = useState("")
   const [timeFilter, setTimeFilter] = useState("all")
   const [selectedReflection, setSelectedReflection] = useState<Reflection | null>(null)
-  const [streakCount, setStreakCount] = useState(0)
+  const [streakData, setStreakData] = useState<StreakData>({
+    currentStreak: 0,
+    oldStreak: 0,
+    lastActiveDate: null,
+    hasCurrentStreak: false,
+  })
   const [isLoading, setIsLoading] = useState(false)
   const [showStreakAnimation, setShowStreakAnimation] = useState(false)
 
-  // Calculate streak
+  // Calculate streak with both current and old streak tracking
   useEffect(() => {
     if (reflections.length === 0) return
 
-    let streak = 0
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    // Sort dates in descending order
+    // Sort dates in descending order (newest first)
     const sortedDates = reflections.map((r) => new Date(r.date)).sort((a, b) => b.getTime() - a.getTime())
 
-    // Start from today or last Friday if weekend
+    // Initialize streak data
+    let currentStreak = 0
+    let oldStreak = 0
+    let lastActiveDate: Date | null = null
+    let hasCurrentStreak = false
+    let streakBroken = false
+
+    // Check if today has a reflection or is a holiday
+    const hasTodayReflection =
+      sortedDates.some((date) => {
+        const d = new Date(date)
+        d.setHours(0, 0, 0, 0)
+        return d.getTime() === today.getTime()
+      }) || isHoliday(today)
+
+    // If today is a weekend, check if the last workday has a reflection
     let currentDate = new Date(today)
-    while ((isWeekend(currentDate) || isHoliday(currentDate)) && currentDate > sortedDates[0]) {
-      currentDate.setDate(currentDate.getDate() - 1)
+    if (isWeekend(today)) {
+      // Find the last workday
+      while (isWeekend(currentDate)) {
+        currentDate.setDate(currentDate.getDate() - 1)
+      }
+
+      // Check if the last workday has a reflection or is a holiday
+      const hasLastWorkdayReflection =
+        sortedDates.some((date) => {
+          const d = new Date(date)
+          d.setHours(0, 0, 0, 0)
+          return d.getTime() === currentDate.getTime()
+        }) || isHoliday(currentDate)
+
+      // If the last workday has a reflection, we have a current streak
+      if (hasLastWorkdayReflection) {
+        hasCurrentStreak = true
+      }
+    } else {
+      // If today is not a weekend, check if today has a reflection
+      hasCurrentStreak = hasTodayReflection
     }
 
-    // Count consecutive workdays with reflections
-    while (streak < sortedDates.length) {
-      if (!isWeekend(currentDate)) {
-        // If it's a holiday, count it as having a reflection
-        if (isHoliday(currentDate)) {
-          streak++
-        } else {
-          const hasReflectionOnDate = sortedDates.some((date) => {
+    // Start counting from today or the last workday
+    currentDate = isWeekend(today) ? getPreviousWorkday(today) : today
+
+    // Count consecutive workdays with reflections for current streak
+    if (hasCurrentStreak) {
+      // Count today if it has a reflection and is not a weekend
+      if (hasTodayReflection && !isWeekend(today)) {
+        currentStreak = 1
+        lastActiveDate = new Date(today)
+      }
+
+      // Continue counting backwards from previous workday
+      let checkDate = getPreviousWorkday(currentDate)
+
+      while (true) {
+        // Skip weekends and holidays
+        if (isWeekend(checkDate)) {
+          checkDate = getPreviousWorkday(checkDate)
+          continue
+        }
+
+        // Check if this date has a reflection or is a holiday
+        const hasReflectionOnDate =
+          sortedDates.some((date) => {
             const d = new Date(date)
             d.setHours(0, 0, 0, 0)
-            return d.getTime() === currentDate.getTime()
-          })
+            return d.getTime() === checkDate.getTime()
+          }) || isHoliday(checkDate)
+
+        if (hasReflectionOnDate) {
+          currentStreak++
+          if (!lastActiveDate) lastActiveDate = new Date(checkDate)
+          checkDate = getPreviousWorkday(checkDate)
+        } else {
+          // Found a gap, stop counting current streak
+          streakBroken = true
+          break
+        }
+      }
+
+      // If we found a gap, start counting the old streak
+      if (streakBroken) {
+        // Skip the gap day
+        checkDate = getPreviousWorkday(checkDate)
+
+        // Count consecutive days before the gap
+        while (true) {
+          // Skip weekends and holidays
+          if (isWeekend(checkDate)) {
+            checkDate = getPreviousWorkday(checkDate)
+            continue
+          }
+
+          // Check if this date has a reflection or is a holiday
+          const hasReflectionOnDate =
+            sortedDates.some((date) => {
+              const d = new Date(date)
+              d.setHours(0, 0, 0, 0)
+              return d.getTime() === checkDate.getTime()
+            }) || isHoliday(checkDate)
 
           if (hasReflectionOnDate) {
-            streak++
+            oldStreak++
+            checkDate = getPreviousWorkday(checkDate)
           } else {
+            // End of old streak
             break
           }
         }
       }
+    } else {
+      // No current streak, check for old streak
+      // Skip today since we know there's no reflection
+      let checkDate = getPreviousWorkday(today)
 
-      // Move to previous day
-      const prevDate = new Date(currentDate)
-      prevDate.setDate(prevDate.getDate() - 1)
-      currentDate = prevDate
+      // Count consecutive days for old streak
+      while (true) {
+        // Skip weekends and holidays
+        if (isWeekend(checkDate)) {
+          checkDate = getPreviousWorkday(checkDate)
+          continue
+        }
+
+        // Check if this date has a reflection or is a holiday
+        const hasReflectionOnDate =
+          sortedDates.some((date) => {
+            const d = new Date(date)
+            d.setHours(0, 0, 0, 0)
+            return d.getTime() === checkDate.getTime()
+          }) || isHoliday(checkDate)
+
+        if (hasReflectionOnDate) {
+          if (!lastActiveDate) lastActiveDate = new Date(checkDate)
+          oldStreak++
+          checkDate = getPreviousWorkday(checkDate)
+        } else {
+          // End of old streak
+          break
+        }
+      }
     }
 
-    setStreakCount(streak)
+    // Update streak data
+    setStreakData({
+      currentStreak: hasCurrentStreak ? currentStreak : 0,
+      oldStreak,
+      lastActiveDate,
+      hasCurrentStreak,
+    })
 
-    // Trigger streak animation if streak is greater than 0
-    if (streak > 0) {
+    // Trigger streak animation if current streak is greater than 0
+    if (hasCurrentStreak && currentStreak > 0) {
       setShowStreakAnimation(true)
       const timer = setTimeout(() => setShowStreakAnimation(false), 3000)
       return () => clearTimeout(timer)
@@ -790,7 +931,7 @@ export default function ReflectionsTableWithModal() {
               >
                 Daily Reflections
               </motion.h1>
-              <StreakIcon hasReflection={hasReflection} streakCount={streakCount} />
+              <StreakIcon streakData={streakData} />
             </div>
             <motion.p
               className="text-muted-foreground"
@@ -798,9 +939,15 @@ export default function ReflectionsTableWithModal() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              {streakCount > 0 ? (
+              {streakData.hasCurrentStreak && streakData.currentStreak > 0 ? (
                 <>
-                  🎯 You've been reflecting consistently for {streakCount} day{streakCount !== 1 ? "s" : ""}
+                  🎯 You've been reflecting consistently for {streakData.currentStreak} day
+                  {streakData.currentStreak !== 1 ? "s" : ""}
+                </>
+              ) : streakData.oldStreak > 0 ? (
+                <>
+                  📊 Your last streak was {streakData.oldStreak} day{streakData.oldStreak !== 1 ? "s" : ""}. Add today's
+                  reflection to start a new streak!
                 </>
               ) : (
                 "Track your learning journey during work days"
@@ -1013,10 +1160,13 @@ export default function ReflectionsTableWithModal() {
                   </motion.p>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <FireBar value={streakCount} max={20} />
-                      <StreakCounter count={streakCount} />
+                      <FireBar value={streakData.currentStreak} max={20} />
+                      <div className="flex items-center gap-1">
+                        <Fire className="h-4 w-4 text-orange-500" />
+                        <span className="tabular-nums">{streakData.currentStreak} day streak</span>
+                      </div>
                     </div>
-                    {streakCount >= 5 && (
+                    {streakData.currentStreak >= 5 && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
@@ -1031,6 +1181,63 @@ export default function ReflectionsTableWithModal() {
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="w-full md:w-auto">
                   <ReflectionPreview reflection={todaysReflection} />
                 </motion.div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Streak History Card - Show when there's an old streak but no current streak */}
+      {!streakData.hasCurrentStreak && streakData.oldStreak > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mb-8"
+        >
+          <Card className="overflow-hidden border border-gray-200">
+            <CardHeader className="bg-gray-50">
+              <CardTitle className="text-gray-700 flex items-center gap-2">
+                <Fire className="h-5 w-5 text-gray-400" />
+                Previous Streak
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="space-y-2">
+                  <p className="text-lg font-medium text-gray-600">
+                    Your last streak was {streakData.oldStreak} day{streakData.oldStreak !== 1 ? "s" : ""}
+                  </p>
+                  {streakData.lastActiveDate && (
+                    <p className="text-sm text-gray-500">
+                      Last active: {streakData.lastActiveDate.toLocaleDateString()}
+                    </p>
+                  )}
+                  <div className="mt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(true)}
+                      disabled={hasReflection}
+                      className="group"
+                    >
+                      <Plus className="mr-2 h-4 w-4 group-hover:text-primary transition-colors" />
+                      {hasReflection ? "Reflection Added Today" : "Add Today's Reflection"}
+                    </Button>
+                  </div>
+                </div>
+                <div className="w-full md:w-1/3">
+                  <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="absolute top-0 left-0 h-full bg-gray-400"
+                      style={{ width: `${(streakData.oldStreak / 20) * 100}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between mt-1 text-xs text-gray-500">
+                    <span>0</span>
+                    <span>10</span>
+                    <span>20</span>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
