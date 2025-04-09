@@ -429,35 +429,32 @@ const getPreviousWorkday = (date: Date): Date => {
   return prevDate
 }
 
-// Updated StreakIcon component to handle both current and old streaks
+// Update the StreakIcon component to properly display the previous streak value
 const StreakIcon = ({ streakData }: { streakData: StreakData }) => {
   const { currentStreak, oldStreak, hasCurrentStreak } = streakData
 
+  // Display the streak value - if there's no current streak but there is an old streak, show the old streak
+  const displayStreak = hasCurrentStreak ? currentStreak : oldStreak > 0 ? oldStreak : 0
+
   return (
     <div className="flex items-center gap-2">
-      {/* Current streak (colored if active) */}
+      {/* Current streak (colored if active, gray if showing previous) */}
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.3 }}
         className="flex items-center gap-1"
       >
-        <Fire className={`h-5 w-5 ${hasCurrentStreak ? "text-orange-500" : "text-gray-400"}`} />
-        <span className={`text-sm font-medium ${hasCurrentStreak ? "" : "text-gray-400"}`}>{currentStreak}</span>
-      </motion.div>
-
-      {/* Show old streak if it exists and there's no current streak */}
-      {oldStreak > 0 && !hasCurrentStreak && (
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className="flex items-center gap-1 border-l pl-2 border-gray-200"
+        <Fire
+          className={`h-5 w-5 ${hasCurrentStreak ? "text-orange-500" : oldStreak > 0 ? "text-gray-500" : "text-gray-400"}`}
+        />
+        <span
+          className={`text-sm font-medium ${hasCurrentStreak ? "" : oldStreak > 0 ? "text-gray-500" : "text-gray-400"}`}
         >
-          <span className="text-xs text-gray-500">Previous:</span>
-          <span className="text-sm font-medium text-gray-500">{oldStreak}</span>
-        </motion.div>
-      )}
+          {displayStreak}
+        </span>
+        {!hasCurrentStreak && oldStreak > 0 && <span className="text-xs text-gray-500 ml-1">(previous)</span>}
+      </motion.div>
     </div>
   )
 }
@@ -780,26 +777,30 @@ export default function ReflectionsTableWithModal() {
     }
   }
 
-  const hasReflectionToday = (reflections: Reflection[]): boolean => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+  const [hasReflection, setHasReflection] = useState(false)
 
-    // First check if there's an actual reflection for today
-    const hasReflection = reflections.some((reflection) => {
-      const reflectionDate = new Date(reflection.date)
-      reflectionDate.setHours(0, 0, 0, 0)
-      return reflectionDate.getTime() === today.getTime()
-    })
+  useEffect(() => {
+    const checkHasReflectionToday = (reflections: Reflection[]): boolean => {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
 
-    // If there's no reflection, check if today is a holiday (which would have auto-filled data)
-    if (!hasReflection) {
-      return isHoliday(today)
+      // First check if there's an actual reflection for today
+      const hasReflection = reflections.some((reflection) => {
+        const reflectionDate = new Date(reflection.date)
+        reflectionDate.setHours(0, 0, 0, 0)
+        return reflectionDate.getTime() === today.getTime()
+      })
+
+      // If there's no reflection, check if today is a holiday (which would have auto-filled data)
+      if (!hasReflection) {
+        return isHoliday(today)
+      }
+
+      return hasReflection
     }
 
-    return hasReflection
-  }
-
-  const hasReflection = hasReflectionToday(reflections)
+    setHasReflection(checkHasReflectionToday(reflections))
+  }, [reflections])
 
   const getTodaysReflection = (): Reflection | undefined => {
     const today = new Date()
@@ -933,6 +934,7 @@ export default function ReflectionsTableWithModal() {
               </motion.h1>
               <StreakIcon streakData={streakData} />
             </div>
+            {/* Update the hero section text to match the design in the image */}
             <motion.p
               className="text-muted-foreground"
               initial={{ opacity: 0 }}
@@ -946,8 +948,12 @@ export default function ReflectionsTableWithModal() {
                 </>
               ) : streakData.oldStreak > 0 ? (
                 <>
-                  📊 Your last streak was {streakData.oldStreak} day{streakData.oldStreak !== 1 ? "s" : ""}. Add today's
-                  reflection to start a new streak!
+                  <span className="inline-flex items-center">
+                    <span className="bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 bg-clip-text text-transparent">
+                      Your last streak was {streakData.oldStreak} days.
+                    </span>{" "}
+                    Add today's reflection to start a new streak!
+                  </span>
                 </>
               ) : (
                 "Track your learning journey during work days"
