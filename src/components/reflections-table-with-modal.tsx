@@ -1,47 +1,52 @@
-"use client";
+"use client"
 
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronDown, ChevronUp, Plus, BookOpen, Search, FlameIcon as Fire, Sparkles } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { motion, AnimatePresence, useAnimation } from "framer-motion";
-import FeedbackForm from "./feedback-form";
-import { useUserData } from "@/UserDataContext";
-import { api } from "@/lib/api";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { ToastContainer } from "react-toastify";
-import { ReflectionPreview } from "./reflection-preview";
-import { AlertDialogContent, AlertDialogAction, AlertDialogCancel, AlertDialog } from "./ui/alert-dialog";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ChevronDown, ChevronUp, Plus, BookOpen, Search, FlameIcon as Fire, Sparkles } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { motion, AnimatePresence, useAnimation } from "framer-motion"
+import FeedbackForm from "./feedback-form"
+import { useUserData } from "@/UserDataContext"
+import { api } from "@/lib/api"
+import { toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
+import { ToastContainer } from "react-toastify"
+import { ReflectionPreview } from "./reflection-preview"
+import { AlertDialogContent, AlertDialogAction, AlertDialogCancel, AlertDialog } from "./ui/alert-dialog"
 
 // Types
 interface TechSession {
-  happy: string;
-  improve: string;
+  happy: string
+  improve: string
 }
 
 interface NonTechSession {
-  happy: string;
-  improve: string;
+  happy: string
+  improve: string
 }
 
 interface ReflectionData {
-  barometer: string;
-  tech_sessions: TechSession;
-  non_tech_sessions: NonTechSession;
+  barometer: string
+  tech_sessions: TechSession
+  non_tech_sessions: NonTechSession
 }
 
 interface Reflection {
-  id?: string; // Add ID for deletion
-  user_id: string;
-  date: string;
-  reflection: ReflectionData;
+  id?: string // Add ID for deletion
+  user_id: string
+  date: string
+  reflection: ReflectionData
 }
 
 // Update reflectionZones array with new colors
@@ -50,14 +55,14 @@ const reflectionZones = [
   { id: "stretch-enjoying", label: "Stretch zone - Enjoying the challenges", bgColor: "bg-amber-500", emoji: "😺" },
   { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", bgColor: "bg-red-500", emoji: "😿" },
   { id: "panic", label: "Panic Zone", bgColor: "bg-violet-500", emoji: "🙀" },
-] as const;
+] as const
 
-type ReflectionZone = (typeof reflectionZones)[number];
+type ReflectionZone = (typeof reflectionZones)[number]
 
 const getColorForBarometer = (barometer: string) => {
-  const zone = reflectionZones.find((zone) => zone.label === barometer);
-  return zone ? `${zone.bgColor}` : "";
-};
+  const zone = reflectionZones.find((zone) => zone.label === barometer)
+  return zone ? `${zone.bgColor}` : ""
+}
 
 // Add this function to calculate zone statistics
 const calculateZoneStats = (reflections: Reflection[]) => {
@@ -67,20 +72,20 @@ const calculateZoneStats = (reflections: Reflection[]) => {
     stretchOverwhelmed: 0,
     panic: 0,
     total: reflections.length,
-  };
+  }
 
   reflections.forEach((reflection) => {
-    const zone = reflectionZones.find((zone) => zone.label === reflection.reflection.barometer);
+    const zone = reflectionZones.find((zone) => zone.label === reflection.reflection.barometer)
     if (zone) {
-      if (zone.id === "comfort") stats.comfort++;
-      if (zone.id === "stretch-enjoying") stats.stretchEnjoying++;
-      if (zone.id === "stretch-overwhelmed") stats.stretchOverwhelmed++;
-      if (zone.id === "panic") stats.panic++;
+      if (zone.id === "comfort") stats.comfort++
+      if (zone.id === "stretch-enjoying") stats.stretchEnjoying++
+      if (zone.id === "stretch-overwhelmed") stats.stretchOverwhelmed++
+      if (zone.id === "panic") stats.panic++
     }
-  });
+  })
 
-  return stats;
-};
+  return stats
+}
 
 // Add this function to find the dominant zone
 const findDominantZone = (stats: ReturnType<typeof calculateZoneStats>) => {
@@ -89,42 +94,42 @@ const findDominantZone = (stats: ReturnType<typeof calculateZoneStats>) => {
     { id: "stretch-enjoying", count: stats.stretchEnjoying },
     { id: "stretch-overwhelmed", count: stats.stretchOverwhelmed },
     { id: "panic", count: stats.panic },
-  ];
+  ]
 
-  const sortedZones = zoneCounts.sort((a, b) => b.count - a.count);
-  return sortedZones[0].id;
-};
+  const sortedZones = zoneCounts.sort((a, b) => b.count - a.count)
+  return sortedZones[0].id
+}
 
 const isWeekend = (date: Date): boolean => {
-  const day = date.getDay();
-  return day === 0 || day === 6; // 0 is Sunday, 6 is Saturday
-};
+  const day = date.getDay()
+  return day === 0 || day === 6 // 0 is Sunday, 6 is Saturday
+}
 
 // Animated fire component for streak
 const FireBar = ({ value, max = 100 }: { value: number; max?: number }) => {
-  const progress = (value / max) * 100;
-  const controls = useAnimation();
-  const fireRef = useRef<HTMLDivElement>(null);
+  const progress = (value / max) * 100
+  const controls = useAnimation()
+  const fireRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     controls.start({
       width: `${progress}%`,
       transition: { duration: 1, ease: "easeOut" },
-    });
+    })
 
     // Animate fire particles
     if (fireRef.current && value > 0) {
       const particles = Array.from({ length: Math.min(value, 10) }, () => {
-        const particle = document.createElement("div");
-        particle.className = "absolute bottom-0 rounded-full bg-orange-500 opacity-70";
-        particle.style.width = `${Math.random() * 6 + 4}px`;
-        particle.style.height = `${Math.random() * 6 + 4}px`;
-        particle.style.left = `${Math.random() * 100}%`;
-        return particle;
-      });
+        const particle = document.createElement("div")
+        particle.className = "absolute bottom-0 rounded-full bg-orange-500 opacity-70"
+        particle.style.width = `${Math.random() * 6 + 4}px`
+        particle.style.height = `${Math.random() * 6 + 4}px`
+        particle.style.left = `${Math.random() * 100}%`
+        return particle
+      })
 
       particles.forEach((particle) => {
-        fireRef.current?.appendChild(particle);
+        fireRef.current?.appendChild(particle)
 
         // Animate each particle
         const animation = particle.animate(
@@ -141,43 +146,47 @@ const FireBar = ({ value, max = 100 }: { value: number; max?: number }) => {
           {
             duration: Math.random() * 1000 + 1000,
             iterations: Number.POSITIVE_INFINITY,
-          }
-        );
+          },
+        )
 
         return () => {
-          animation.cancel();
-          particle.remove();
-        };
-      });
+          animation.cancel()
+          particle.remove()
+        }
+      })
 
       return () => {
-        particles.forEach((p) => p.remove());
-      };
+        particles.forEach((p) => p.remove())
+      }
     }
-  }, [controls, progress, value]);
+  }, [controls, progress, value])
 
   return (
     <div className="relative w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-      <motion.div className="absolute top-0 left-0 h-full bg-gradient-to-r from-orange-500 to-red-500" initial={{ width: 0 }} animate={controls} />
+      <motion.div
+        className="absolute top-0 left-0 h-full bg-gradient-to-r from-orange-500 to-red-500"
+        initial={{ width: 0 }}
+        animate={controls}
+      />
       <div ref={fireRef} className="absolute top-0 left-0 w-full h-full pointer-events-none" />
     </div>
-  );
-};
+  )
+}
 
 // Animated streak counter
 const StreakCounter = ({ count }: { count: number }) => {
-  const prevCount = useRef(0);
-  const countAnimation = useAnimation();
+  const prevCount = useRef(0)
+  const countAnimation = useAnimation()
 
   useEffect(() => {
     if (count !== prevCount.current) {
       countAnimation.start({
         scale: [1, 1.2, 1],
         transition: { duration: 0.5 },
-      });
-      prevCount.current = count;
+      })
+      prevCount.current = count
     }
-  }, [count, countAnimation]);
+  }, [count, countAnimation])
 
   return (
     <motion.div className="flex items-center gap-1" animate={countAnimation}>
@@ -186,35 +195,35 @@ const StreakCounter = ({ count }: { count: number }) => {
         {count} day streak
       </motion.span>
     </motion.div>
-  );
-};
+  )
+}
 
 const useMousePosition = () => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
     const updateMousePosition = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
+      setMousePosition({ x: e.clientX, y: e.clientY })
+    }
 
-    window.addEventListener("mousemove", updateMousePosition);
+    window.addEventListener("mousemove", updateMousePosition)
 
     return () => {
-      window.removeEventListener("mousemove", updateMousePosition);
-    };
-  }, []);
+      window.removeEventListener("mousemove", updateMousePosition)
+    }
+  }, [])
 
-  return mousePosition;
-};
+  return mousePosition
+}
 
 const pulseAnimation = {
   "0%": { boxShadow: "0 0 0 0 rgba(var(--primary), 0.7)" },
   "70%": { boxShadow: "0 0 0 10px rgba(var(--primary), 0)" },
   "100%": { boxShadow: "0 0 0 0 rgba(var(--primary), 0)" },
-};
+}
 
 const BarometerVisual = ({ zone, isCurrent = false }: { zone: ReflectionZone; isCurrent?: boolean }) => {
-  const controls = useAnimation();
+  const controls = useAnimation()
 
   useEffect(() => {
     controls.start({
@@ -224,8 +233,8 @@ const BarometerVisual = ({ zone, isCurrent = false }: { zone: ReflectionZone; is
         repeat: Number.POSITIVE_INFINITY,
         repeatType: "reverse",
       },
-    });
-  }, [controls]);
+    })
+  }, [controls])
 
   return (
     <motion.div
@@ -254,8 +263,8 @@ const BarometerVisual = ({ zone, isCurrent = false }: { zone: ReflectionZone; is
       </motion.span>
       <span className="font-medium text-sm">{zone.label}</span>
     </motion.div>
-  );
-};
+  )
+}
 
 // Add this helper function to convert Tailwind color names to hex values
 const getColorHex = (colorName: string): string => {
@@ -265,15 +274,15 @@ const getColorHex = (colorName: string): string => {
     "red-500": "ef4444",
     "violet-500": "8b5cf6",
     // Add more colors as needed
-  };
+  }
 
-  return colorMap[colorName] || "888888"; // Default gray if color not found
-};
+  return colorMap[colorName] || "888888" // Default gray if color not found
+}
 
 // Replace the LiquidWave component with this updated version that properly handles colors in light mode
 const LiquidWave = ({ color, percentage }: { color: string; percentage: number }) => {
   // Extract the color name from the bg-color class
-  const colorName = color.replace("bg-", "");
+  const colorName = color.replace("bg-", "")
 
   return (
     <div className="relative h-16 w-full overflow-hidden rounded-b-lg">
@@ -282,11 +291,11 @@ const LiquidWave = ({ color, percentage }: { color: string; percentage: number }
           className="absolute top-0 left-0 w-[200%] h-8"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z' opacity='.25' fill='%23${getColorHex(
-              colorName
+              colorName,
             )}'%3E%3C/path%3E%3Cpath d='M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z' opacity='.5' fill='%23${getColorHex(
-              colorName
+              colorName,
             )}'%3E%3C/path%3E%3Cpath d='M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z' fill='%23${getColorHex(
-              colorName
+              colorName,
             )}'%3E%3C/path%3E%3C/svg%3E")`,
             backgroundSize: "cover",
             backgroundRepeat: "no-repeat",
@@ -303,27 +312,32 @@ const LiquidWave = ({ color, percentage }: { color: string; percentage: number }
         />
       </div>
     </div>
-  );
-};
+  )
+}
 
-const ZoneStatCard = ({ zone, stats, isDominant, isCurrent }: { zone: ReflectionZone; stats: { count: number; total: number }; isDominant: boolean; isCurrent: boolean }) => {
-  const cardRef = useRef(null);
-  const { x, y } = useMousePosition();
-  const [tiltValues, setTiltValues] = useState({ x: 0, y: 0 });
+const ZoneStatCard = ({
+  zone,
+  stats,
+  isDominant,
+  isCurrent,
+}: { zone: ReflectionZone; stats: { count: number; total: number }; isDominant: boolean; isCurrent: boolean }) => {
+  const cardRef = useRef(null)
+  const { x, y } = useMousePosition()
+  const [tiltValues, setTiltValues] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
     if (cardRef.current) {
-      const card = cardRef.current;
-      const rect = card.getBoundingClientRect();
-      const cardCenterX = rect.left + rect.width / 2;
-      const cardCenterY = rect.top + rect.height / 2;
+      const card = cardRef.current
+      const rect = card.getBoundingClientRect()
+      const cardCenterX = rect.left + rect.width / 2
+      const cardCenterY = rect.top + rect.height / 2
 
-      const tiltX = (y - cardCenterY) / 20;
-      const tiltY = (cardCenterX - x) / 20;
+      const tiltX = (y - cardCenterY) / 20
+      const tiltY = (cardCenterX - x) / 20
 
-      setTiltValues({ x: tiltX, y: tiltY });
+      setTiltValues({ x: tiltX, y: tiltY })
     }
-  }, [x, y]);
+  }, [x, y])
 
   return (
     <motion.div
@@ -335,11 +349,15 @@ const ZoneStatCard = ({ zone, stats, isDominant, isCurrent }: { zone: Reflection
       whileHover={{ scale: 1.05 }}
       transition={{ type: "spring", stiffness: 300 }}
     >
-      <Card className={`overflow-hidden ${isDominant ? "border-primary" : ""} ${isCurrent ? "ring-2 ring-primary" : ""}`}>
+      <Card
+        className={`overflow-hidden ${isDominant ? "border-primary" : ""} ${isCurrent ? "ring-2 ring-primary" : ""}`}
+      >
         <CardContent className="p-4">
           <div className="flex justify-between items-start mb-2">
             <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${zone.bgColor} text-white`}>{zone.emoji}</div>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${zone.bgColor} text-white`}>
+                {zone.emoji}
+              </div>
               <h3 className="font-medium">{zone.label}</h3>
             </div>
             {isDominant && (
@@ -355,253 +373,284 @@ const ZoneStatCard = ({ zone, stats, isDominant, isCurrent }: { zone: Reflection
           </div>
           <div className="mt-2">
             <div className="text-2xl font-bold">{stats.count}</div>
-            <div className="text-sm text-muted-foreground">{((stats.count / stats.total) * 100).toFixed(0)}% of reflections</div>
+            <div className="text-sm text-muted-foreground">
+              {((stats.count / stats.total) * 100).toFixed(0)}% of reflections
+            </div>
           </div>
           <LiquidWave color={zone.bgColor} percentage={(stats.count / stats.total) * 100} />
         </CardContent>
       </Card>
     </motion.div>
-  );
-};
+  )
+}
 
 const HOLIDAYS = [
-  new Date('2025-04-07'), // Specific holiday
+  new Date("2025-04-07"), // Specific holiday
   // Thai holidays (add more as needed)
-  new Date('2025-04-13'), // Songkran Day 1
-  new Date('2025-04-14'), // Songkran Day 2
-  new Date('2025-04-15'), // Songkran Day 3
+  new Date("2025-04-13"), // Songkran Day 1
+  new Date("2025-04-14"), // Songkran Day 2
+  new Date("2025-04-15"), // Songkran Day 3
   // Add more holidays here...
-].map(date => {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
-});
+].map((date) => {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  return d
+})
 
 // Helper function to check if a date is a holiday
 const isHoliday = (date: Date): boolean => {
-  const normalizedDate = new Date(date);
-  normalizedDate.setHours(0, 0, 0, 0);
-  return HOLIDAYS.some(holiday => holiday.getTime() === normalizedDate.getTime());
-};
+  const normalizedDate = new Date(date)
+  normalizedDate.setHours(0, 0, 0, 0)
+  return HOLIDAYS.some((holiday) => holiday.getTime() === normalizedDate.getTime())
+}
+
+// Add a new StreakIcon component near the other UI components (around line 200)
+const StreakIcon = ({ hasReflection, streakCount }: { hasReflection: boolean; streakCount: number }) => {
+  return (
+    <div className="relative">
+      {hasReflection ? (
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="flex items-center gap-1"
+        >
+          <Fire className="h-5 w-5 text-orange-500" />
+          <span className="text-sm font-medium">{streakCount}</span>
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="flex items-center gap-1"
+        >
+          <Fire className="h-5 w-5 text-gray-400" />
+          <span className="text-sm font-medium text-gray-400">0</span>
+        </motion.div>
+      )}
+    </div>
+  )
+}
 
 export default function ReflectionsTableWithModal() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([])
   const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: "ascending" | "descending";
+    key: string
+    direction: "ascending" | "descending"
   }>({
     key: "date",
     direction: "descending",
-  });
+  })
 
-  const { userData, loading, error, refreshUserData } = useUserData();
-  const [reflections, setReflections] = useState<Reflection[]>([]);
+  const { userData, loading, error, refreshUserData } = useUserData()
+  const [reflections, setReflections] = useState<Reflection[]>([])
   const [formData, setFormData] = useState<{
-    categoryInputs: Record<string, string>;
-    comfortLevel: string;
-  } | null>(null);
-  const [showCloseWarning, setShowCloseWarning] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [timeFilter, setTimeFilter] = useState("all");
-  const [selectedReflection, setSelectedReflection] = useState<Reflection | null>(null);
-  const [streakCount, setStreakCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showStreakAnimation, setShowStreakAnimation] = useState(false);
+    categoryInputs: Record<string, string>
+    comfortLevel: string
+  } | null>(null)
+  const [showCloseWarning, setShowCloseWarning] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [timeFilter, setTimeFilter] = useState("all")
+  const [selectedReflection, setSelectedReflection] = useState<Reflection | null>(null)
+  const [streakCount, setStreakCount] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
+  const [showStreakAnimation, setShowStreakAnimation] = useState(false)
 
   // Calculate streak
   useEffect(() => {
-    if (reflections.length === 0) return;
+    if (reflections.length === 0) return
 
-    let streak = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    let streak = 0
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
 
     // Sort dates in descending order
-    const sortedDates = reflections.map((r) => new Date(r.date)).sort((a, b) => b.getTime() - a.getTime());
+    const sortedDates = reflections.map((r) => new Date(r.date)).sort((a, b) => b.getTime() - a.getTime())
 
     // Start from today or last Friday if weekend
-    let currentDate = new Date(today);
+    let currentDate = new Date(today)
     while ((isWeekend(currentDate) || isHoliday(currentDate)) && currentDate > sortedDates[0]) {
-      currentDate.setDate(currentDate.getDate() - 1);
+      currentDate.setDate(currentDate.getDate() - 1)
     }
 
     // Count consecutive workdays with reflections
     while (streak < sortedDates.length) {
       if (!isWeekend(currentDate) && !isHoliday(currentDate)) {
         const hasReflectionOnDate = sortedDates.some((date) => {
-          const d = new Date(date);
-          d.setHours(0, 0, 0, 0);
-          return d.getTime() === currentDate.getTime();
-        });
+          const d = new Date(date)
+          d.setHours(0, 0, 0, 0)
+          return d.getTime() === currentDate.getTime()
+        })
 
         if (hasReflectionOnDate) {
-          streak++;
+          streak++
         } else {
-          break;
+          break
         }
       }
-      
+
       // Move to previous day, skipping holidays
-      let prevDate = new Date(currentDate);
+      const prevDate = new Date(currentDate)
       do {
-        prevDate.setDate(prevDate.getDate() - 1);
-      } while (isHoliday(prevDate));
-      
-      currentDate = prevDate;
+        prevDate.setDate(prevDate.getDate() - 1)
+      } while (isHoliday(prevDate))
+
+      currentDate = prevDate
     }
 
-    setStreakCount(streak);
+    setStreakCount(streak)
 
     // Trigger streak animation if streak is greater than 0
     if (streak > 0) {
-      setShowStreakAnimation(true);
-      const timer = setTimeout(() => setShowStreakAnimation(false), 3000);
-      return () => clearTimeout(timer);
+      setShowStreakAnimation(true)
+      const timer = setTimeout(() => setShowStreakAnimation(false), 3000)
+      return () => clearTimeout(timer)
     }
-  }, [reflections]);
+  }, [reflections])
 
   // Memoize sort function
   const sortReflections = useCallback(
     (reflectionsToSort: Reflection[]) => {
       return [...reflectionsToSort].sort((a, b) => {
         const extractValue = (item: Reflection, key: string) => {
-          if (key === "date") return new Date(item.date).getTime();
+          if (key === "date") return new Date(item.date).getTime()
           if (key.startsWith("tech_sessions.")) {
-            const field = key.split(".")[1] as keyof TechSession;
-            return item.reflection.tech_sessions[field] || "";
+            const field = key.split(".")[1] as keyof TechSession
+            return item.reflection.tech_sessions[field] || ""
           }
           if (key.startsWith("non_tech_sessions.")) {
-            const field = key.split(".")[1] as keyof NonTechSession;
-            return item.reflection.non_tech_sessions[field] || "";
+            const field = key.split(".")[1] as keyof NonTechSession
+            return item.reflection.non_tech_sessions[field] || ""
           }
-          return item.reflection[key as keyof ReflectionData] || "";
-        };
+          return item.reflection[key as keyof ReflectionData] || ""
+        }
 
-        const aValue = extractValue(a, sortConfig.key);
-        const bValue = extractValue(b, sortConfig.key);
+        const aValue = extractValue(a, sortConfig.key)
+        const bValue = extractValue(b, sortConfig.key)
 
-        if (aValue < bValue) return sortConfig.direction === "ascending" ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === "ascending" ? 1 : -1;
-        return 0;
-      });
+        if (aValue < bValue) return sortConfig.direction === "ascending" ? -1 : 1
+        if (aValue > bValue) return sortConfig.direction === "ascending" ? 1 : -1
+        return 0
+      })
     },
-    [sortConfig]
-  );
+    [sortConfig],
+  )
 
   // Filter reflections based on search and time
   const filteredReflections = useMemo(() => {
-    let filtered = [...reflections];
+    let filtered = [...reflections]
 
     // Apply search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
         (reflection) =>
           (reflection.reflection.tech_sessions.happy || "").toLowerCase().includes(query) ||
           (reflection.reflection.tech_sessions.improve || "").toLowerCase().includes(query) ||
           (reflection.reflection.non_tech_sessions.happy || "").toLowerCase().includes(query) ||
           (reflection.reflection.non_tech_sessions.improve || "").toLowerCase().includes(query) ||
-          (reflection.reflection.barometer || "").toLowerCase().includes(query)
-      );
+          (reflection.reflection.barometer || "").toLowerCase().includes(query),
+      )
     }
 
     // Apply time filter
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
 
     switch (timeFilter) {
       case "today":
         filtered = filtered.filter((reflection) => {
-          const date = new Date(reflection.date);
-          date.setHours(0, 0, 0, 0);
-          return date.getTime() === today.getTime();
-        });
-        break;
+          const date = new Date(reflection.date)
+          date.setHours(0, 0, 0, 0)
+          return date.getTime() === today.getTime()
+        })
+        break
       case "week":
-        const weekAgo = new Date(today);
-        weekAgo.setDate(today.getDate() - 7);
+        const weekAgo = new Date(today)
+        weekAgo.setDate(today.getDate() - 7)
         filtered = filtered.filter((reflection) => {
-          const date = new Date(reflection.date);
-          return date >= weekAgo;
-        });
-        break;
+          const date = new Date(reflection.date)
+          return date >= weekAgo
+        })
+        break
       case "month":
-        const monthAgo = new Date(today);
-        monthAgo.setMonth(today.getMonth() - 1);
+        const monthAgo = new Date(today)
+        monthAgo.setMonth(today.getMonth() - 1)
         filtered = filtered.filter((reflection) => {
-          const date = new Date(reflection.date);
-          return date >= monthAgo;
-        });
-        break;
+          const date = new Date(reflection.date)
+          return date >= monthAgo
+        })
+        break
     }
 
     // Apply sorting
-    return sortReflections(filtered);
-  }, [reflections, searchQuery, timeFilter, sortReflections]);
+    return sortReflections(filtered)
+  }, [reflections, searchQuery, timeFilter, sortReflections])
 
   useEffect(() => {
     if (userData?.data?.reflections) {
-      setReflections(userData.data.reflections);
+      setReflections(userData.data.reflections)
     }
-  }, [userData]);
+  }, [userData])
 
   const toggleColumn = (columnId: string) => {
-    setHiddenColumns((prev) => (prev.includes(columnId) ? prev.filter((id) => id !== columnId) : [...prev, columnId]));
-  };
+    setHiddenColumns((prev) => (prev.includes(columnId) ? prev.filter((id) => id !== columnId) : [...prev, columnId]))
+  }
 
   const requestSort = (key: string) => {
     setSortConfig((prev) => ({
       key,
       direction: prev.key === key && prev.direction === "ascending" ? "descending" : "ascending",
-    }));
-  };
+    }))
+  }
 
   const handleSubmit = async (newReflection: Reflection) => {
     try {
-      setIsLoading(true);
-      const response = await api.post(`users/${newReflection.user_id}/reflections`, newReflection);
+      setIsLoading(true)
+      const response = await api.post(`users/${newReflection.user_id}/reflections`, newReflection)
       if (response.data) {
-        setFormData(null);
-        setIsDialogOpen(false);
+        setFormData(null)
+        setIsDialogOpen(false)
         if (typeof refreshUserData === "function") {
-          await refreshUserData();
+          await refreshUserData()
         }
-        toast.success("Reflection submitted successfully!");
+        toast.success("Reflection submitted successfully!")
       }
     } catch (error: any) {
       if (error.response?.status === 409) {
-        toast.error("You have already submitted a reflection today. Please try again tomorrow.");
+        toast.error("You have already submitted a reflection today. Please try again tomorrow.")
       } else {
-        toast.error("Failed to submit reflection. Please try again later.");
-        console.error("Error posting reflection:", error);
+        toast.error("Failed to submit reflection. Please try again later.")
+        console.error("Error posting reflection:", error)
       }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const hasReflectionToday = (reflections: Reflection[]): boolean => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
     return reflections.some((reflection) => {
-      const reflectionDate = new Date(reflection.date);
-      reflectionDate.setHours(0, 0, 0, 0);
-      return reflectionDate.getTime() === today.getTime();
-    });
-  };
+      const reflectionDate = new Date(reflection.date)
+      reflectionDate.setHours(0, 0, 0, 0)
+      return reflectionDate.getTime() === today.getTime()
+    })
+  }
 
-  const hasReflection = hasReflectionToday(reflections);
+  const hasReflection = hasReflectionToday(reflections)
 
   const getTodaysReflection = (): Reflection | undefined => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
     return reflections.find((r) => {
-      const reflectionDate = new Date(r.date);
-      reflectionDate.setHours(0, 0, 0, 0);
-      return reflectionDate.getTime() === today.getTime();
-    });
-  };
+      const reflectionDate = new Date(r.date)
+      reflectionDate.setHours(0, 0, 0, 0)
+      return reflectionDate.getTime() === today.getTime()
+    })
+  }
 
   if (loading) {
     return (
@@ -652,7 +701,7 @@ export default function ReflectionsTableWithModal() {
           />
         </div>
       </div>
-    );
+    )
   }
 
   if (error)
@@ -669,7 +718,7 @@ export default function ReflectionsTableWithModal() {
                   className="mt-4"
                   onClick={() => {
                     if (typeof refreshUserData === "function") {
-                      refreshUserData();
+                      refreshUserData()
                     }
                   }}
                 >
@@ -680,61 +729,57 @@ export default function ReflectionsTableWithModal() {
           </Card>
         </motion.div>
       </div>
-    );
+    )
 
-  const zoneStats = calculateZoneStats(reflections);
-  const dominantZoneId = findDominantZone(zoneStats);
-  const todaysReflection = getTodaysReflection();
-  const currentZone = todaysReflection ? reflectionZones.find((zone) => zone.label === todaysReflection.reflection.barometer) : null;
+  const zoneStats = calculateZoneStats(reflections)
+  const dominantZoneId = findDominantZone(zoneStats)
+  const todaysReflection = getTodaysReflection()
+  const currentZone = todaysReflection
+    ? reflectionZones.find((zone) => zone.label === todaysReflection.reflection.barometer)
+    : null
 
   return (
     <div className="container mx-auto py-10">
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
 
       {/* Hero section */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-8 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 rounded-lg border">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-8 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 rounded-lg border"
+      >
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-2">
+            {/* Update the hero section to include the streak icon (around line 600) */}
+            {/* Replace the existing streak badge with our new component */}
             <div className="flex items-center gap-3">
-              <motion.h1 className="text-3xl font-bold" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
+              <motion.h1
+                className="text-3xl font-bold"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
                 Daily Reflections
               </motion.h1>
-              {streakCount > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{
-                    opacity: 1,
-                    scale: showStreakAnimation ? [1, 1.1, 1] : 1,
-                  }}
-                  transition={{
-                    duration: 0.5,
-                    delay: 0.4,
-                    scale: {
-                      repeat: showStreakAnimation ? 3 : 0,
-                      duration: 0.3,
-                    },
-                  }}
-                >
-                  <Badge variant="secondary" className="gap-1 relative overflow-hidden">
-                    {showStreakAnimation && (
-                      <motion.div
-                        className="absolute inset-0 bg-orange-500 opacity-20"
-                        initial={{ x: "-100%" }}
-                        animate={{ x: "100%" }}
-                        transition={{
-                          repeat: Number.POSITIVE_INFINITY,
-                          duration: 1.5,
-                          ease: "linear",
-                        }}
-                      />
-                    )}
-                    <Fire className="h-4 w-4 text-orange-500" />
-                    {streakCount} day streak
-                  </Badge>
-                </motion.div>
-              )}
+              <StreakIcon hasReflection={hasReflection} streakCount={streakCount} />
             </div>
-            <motion.p className="text-muted-foreground" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.3 }}>
+            <motion.p
+              className="text-muted-foreground"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
               {streakCount > 0 ? (
                 <>
                   🎯 You've been reflecting consistently for {streakCount} day{streakCount !== 1 ? "s" : ""}
@@ -749,21 +794,37 @@ export default function ReflectionsTableWithModal() {
               open={isDialogOpen}
               onOpenChange={(open) => {
                 if (!open && formData !== null) {
-                  setShowCloseWarning(true);
+                  setShowCloseWarning(true)
                 } else {
-                  setIsDialogOpen(open);
+                  setIsDialogOpen(open)
                   if (open) {
-                    setFormData(null); // Reset form data when opening
+                    setFormData(null) // Reset form data when opening
                   }
                 }
               }}
             >
               <DialogTrigger asChild>
-                <motion.div whileHover={{ scale: hasReflection ? 1 : 1.03 }} whileTap={{ scale: hasReflection ? 1 : 0.97 }}>
-                  <Button size="lg" className={`shadow-lg relative ${!hasReflection ? "bg-gradient-to-r from-primary to-primary" : ""}`} disabled={hasReflection || isLoading}>
+                <motion.div
+                  whileHover={{ scale: hasReflection ? 1 : 1.03 }}
+                  whileTap={{ scale: hasReflection ? 1 : 0.97 }}
+                >
+                  {/* Update the "Add Daily Reflection" button to show the streak icon (around line 650) */}
+                  <Button
+                    size="lg"
+                    className={`shadow-lg relative ${!hasReflection ? "bg-gradient-to-r from-primary to-primary" : ""}`}
+                    disabled={hasReflection || isLoading}
+                  >
                     {isLoading ? (
-                      <motion.div className="absolute inset-0 flex items-center justify-center bg-primary rounded-md overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                        <motion.div className="h-5 w-5 rounded-full border-2 border-t-transparent border-white" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
+                      <motion.div
+                        className="absolute inset-0 flex items-center justify-center bg-primary rounded-md overflow-hidden"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                      >
+                        <motion.div
+                          className="h-5 w-5 rounded-full border-2 border-t-transparent border-white"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                        />
                       </motion.div>
                     ) : (
                       <>
@@ -799,8 +860,8 @@ export default function ReflectionsTableWithModal() {
                     onSubmit={handleSubmit}
                     onChange={setFormData}
                     onSuccess={() => {
-                      setFormData(null);
-                      setIsDialogOpen(false);
+                      setFormData(null)
+                      setIsDialogOpen(false)
                     }}
                     isLoading={isLoading}
                   />
@@ -825,7 +886,11 @@ export default function ReflectionsTableWithModal() {
                   <img src="/baronzone.png" alt="Learning Barometer Zones" className="w-full rounded-lg shadow-md" />
                   <div className="grid gap-4">
                     {reflectionZones.map((zone) => (
-                      <motion.div key={zone.id} whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300 }}>
+                      <motion.div
+                        key={zone.id}
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
                         <Card className="overflow-hidden">
                           <CardContent className={`p-4 flex items-center gap-4 ${zone.bgColor} bg-opacity-10`}>
                             <div className="text-2xl">{zone.emoji}</div>
@@ -854,30 +919,52 @@ export default function ReflectionsTableWithModal() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <AnimatePresence mode="wait">
           {reflectionZones.map((zone, index) => {
-            const isDominant = zone.id === dominantZoneId;
-            const isCurrent = currentZone?.id === zone.id;
+            const isDominant = zone.id === dominantZoneId
+            const isCurrent = currentZone?.id === zone.id
             const stats = {
-              count: zone.id === "comfort" ? zoneStats.comfort : zone.id === "stretch-enjoying" ? zoneStats.stretchEnjoying : zone.id === "stretch-overwhelmed" ? zoneStats.stretchOverwhelmed : zoneStats.panic,
+              count:
+                zone.id === "comfort"
+                  ? zoneStats.comfort
+                  : zone.id === "stretch-enjoying"
+                    ? zoneStats.stretchEnjoying
+                    : zone.id === "stretch-overwhelmed"
+                      ? zoneStats.stretchOverwhelmed
+                      : zoneStats.panic,
               total: zoneStats.total,
-            };
+            }
 
             return (
-              <motion.div key={zone.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ delay: index * 0.1, duration: 0.4 }} layout>
+              <motion.div
+                key={zone.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: index * 0.1, duration: 0.4 }}
+                layout
+              >
                 <ZoneStatCard zone={zone} stats={stats} isDominant={isDominant} isCurrent={isCurrent} />
               </motion.div>
-            );
+            )
           })}
         </AnimatePresence>
       </div>
 
       {/* Today's Reflection */}
       {todaysReflection && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
           <Card className="overflow-hidden border-2 hover:border-primary/5 transition-all duration-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 Today's Reflection
-                <motion.div animate={{ rotate: [0, 5, 0, -5, 0] }} transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, repeatType: "loop", ease: "easeInOut" }}>
+                <motion.div
+                  animate={{ rotate: [0, 5, 0, -5, 0] }}
+                  transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, repeatType: "loop", ease: "easeInOut" }}
+                >
                   <Sparkles className="h-5 w-5 text-amber-500" />
                 </motion.div>
               </CardTitle>
@@ -885,7 +972,12 @@ export default function ReflectionsTableWithModal() {
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="space-y-4">
-                  <motion.p className="text-lg font-medium flex items-center gap-2" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
+                  <motion.p
+                    className="text-lg font-medium flex items-center gap-2"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: 0.2 }}
+                  >
                     You're in the {currentZone?.label}
                     <motion.span
                       animate={{
@@ -907,7 +999,12 @@ export default function ReflectionsTableWithModal() {
                       <StreakCounter count={streakCount} />
                     </div>
                     {streakCount >= 5 && (
-                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} transition={{ duration: 0.3 }} className="text-sm text-emerald-600 font-medium">
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        transition={{ duration: 0.3 }}
+                        className="text-sm text-emerald-600 font-medium"
+                      >
                         Great job maintaining your reflection streak! 🎉
                       </motion.div>
                     )}
@@ -927,7 +1024,12 @@ export default function ReflectionsTableWithModal() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="relative w-full sm:w-auto">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search reflections..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 w-full sm:w-[200px]" />
+            <Input
+              placeholder="Search reflections..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 w-full sm:w-[200px]"
+            />
           </div>
           <Tabs value={timeFilter} onValueChange={setTimeFilter} className="w-full sm:w-auto">
             <TabsList className="w-full sm:w-auto grid grid-cols-4 sm:flex">
@@ -946,18 +1048,30 @@ export default function ReflectionsTableWithModal() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              {["Date", "Tech Happy", "Tech Improve", "Non-Tech Happy", "Non-Tech Improve", "Barometer"].map((column) => (
-                <DropdownMenuCheckboxItem key={column} className="capitalize" checked={!hiddenColumns.includes(column)} onCheckedChange={() => toggleColumn(column)}>
-                  {column}
-                </DropdownMenuCheckboxItem>
-              ))}
+              {["Date", "Tech Happy", "Tech Improve", "Non-Tech Happy", "Non-Tech Improve", "Barometer"].map(
+                (column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column}
+                    className="capitalize"
+                    checked={!hiddenColumns.includes(column)}
+                    onCheckedChange={() => toggleColumn(column)}
+                  >
+                    {column}
+                  </DropdownMenuCheckboxItem>
+                ),
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
 
       {/* Table */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="rounded-md border overflow-x-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="rounded-md border overflow-x-auto"
+      >
         <Table className="[&_td]:align-top">
           <TableHeader>
             <TableRow>
@@ -967,7 +1081,11 @@ export default function ReflectionsTableWithModal() {
                     Date
                     {sortConfig.key === "date" && (
                       <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
-                        {sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+                        {sortConfig.direction === "ascending" ? (
+                          <ChevronUp className="ml-2 h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="ml-2 h-4 w-4" />
+                        )}
                       </motion.span>
                     )}
                   </Button>
@@ -984,13 +1102,18 @@ export default function ReflectionsTableWithModal() {
             {filteredReflections.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="h-32 text-center">
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="flex flex-col items-center gap-2">
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="flex flex-col items-center gap-2"
+                  >
                     <p className="text-muted-foreground">No reflections found</p>
                     <Button
                       variant="outline"
                       onClick={() => {
-                        setSearchQuery("");
-                        setTimeFilter("all");
+                        setSearchQuery("")
+                        setTimeFilter("all")
                       }}
                     >
                       Clear filters
@@ -1008,17 +1131,41 @@ export default function ReflectionsTableWithModal() {
                   className="group"
                   whileHover={{ backgroundColor: "rgba(0,0,0,0.02)" }}
                 >
-                  {!hiddenColumns.includes("Date") && <TableCell className="whitespace-normal py-4 group-hover:text-primary transition-colors">{new Date(reflection.date).toLocaleDateString()}</TableCell>}
-                  {!hiddenColumns.includes("Tech Happy") && <TableCell className="whitespace-normal py-4">{reflection.reflection.tech_sessions.happy}</TableCell>}
-                  {!hiddenColumns.includes("Tech Improve") && <TableCell className="whitespace-normal py-4">{reflection.reflection.tech_sessions.improve}</TableCell>}
-                  {!hiddenColumns.includes("Non-Tech Happy") && <TableCell className="whitespace-normal py-4">{reflection.reflection.non_tech_sessions.happy}</TableCell>}
-                  {!hiddenColumns.includes("Non-Tech Improve") && <TableCell className="whitespace-normal py-4">{reflection.reflection.non_tech_sessions.improve}</TableCell>}
+                  {!hiddenColumns.includes("Date") && (
+                    <TableCell className="whitespace-normal py-4 group-hover:text-primary transition-colors">
+                      {new Date(reflection.date).toLocaleDateString()}
+                    </TableCell>
+                  )}
+                  {!hiddenColumns.includes("Tech Happy") && (
+                    <TableCell className="whitespace-normal py-4">
+                      {reflection.reflection.tech_sessions.happy}
+                    </TableCell>
+                  )}
+                  {!hiddenColumns.includes("Tech Improve") && (
+                    <TableCell className="whitespace-normal py-4">
+                      {reflection.reflection.tech_sessions.improve}
+                    </TableCell>
+                  )}
+                  {!hiddenColumns.includes("Non-Tech Happy") && (
+                    <TableCell className="whitespace-normal py-4">
+                      {reflection.reflection.non_tech_sessions.happy}
+                    </TableCell>
+                  )}
+                  {!hiddenColumns.includes("Non-Tech Improve") && (
+                    <TableCell className="whitespace-normal py-4">
+                      {reflection.reflection.non_tech_sessions.improve}
+                    </TableCell>
+                  )}
                   {!hiddenColumns.includes("Barometer") && (
                     <TableCell>
                       {(() => {
-                        const zone = reflectionZones.find((z) => z.label === reflection.reflection.barometer);
-                        const isCurrent = todaysReflection?.reflection.barometer === reflection.reflection.barometer;
-                        return zone ? <BarometerVisual zone={zone} isCurrent={isCurrent} /> : reflection.reflection.barometer;
+                        const zone = reflectionZones.find((z) => z.label === reflection.reflection.barometer)
+                        const isCurrent = todaysReflection?.reflection.barometer === reflection.reflection.barometer
+                        return zone ? (
+                          <BarometerVisual zone={zone} isCurrent={isCurrent} />
+                        ) : (
+                          reflection.reflection.barometer
+                        )
                       })()}
                     </TableCell>
                   )}
@@ -1040,23 +1187,28 @@ export default function ReflectionsTableWithModal() {
 
       <AlertDialog open={showCloseWarning} onOpenChange={setShowCloseWarning}>
         <AlertDialogContent>
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="text-center space-y-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="text-center space-y-4"
+          >
             <h3 className="text-lg font-semibold">Unsaved Changes</h3>
             <p>You have unsaved changes. Do you want to continue editing or discard changes?</p>
             <div className="flex justify-end gap-2">
               <AlertDialogCancel
                 onClick={() => {
-                  setShowCloseWarning(false);
-                  setIsDialogOpen(true);
+                  setShowCloseWarning(false)
+                  setIsDialogOpen(true)
                 }}
               >
                 Continue Editing
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => {
-                  setFormData(null);
-                  setShowCloseWarning(false);
-                  setIsDialogOpen(false);
+                  setFormData(null)
+                  setShowCloseWarning(false)
+                  setIsDialogOpen(false)
                 }}
               >
                 Discard Changes
@@ -1066,5 +1218,5 @@ export default function ReflectionsTableWithModal() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
+  )
 }
