@@ -406,9 +406,16 @@ const isHoliday = (date: Date): boolean => {
 
 // Add a new StreakIcon component near the other UI components (around line 200)
 const StreakIcon = ({ hasReflection, streakCount }: { hasReflection: boolean; streakCount: number }) => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const isTodayHoliday = isHoliday(today)
+
+  // Show colored icon if there's a reflection or if today is a holiday
+  const showColored = hasReflection || isTodayHoliday
+
   return (
     <div className="relative">
-      {hasReflection ? (
+      {showColored ? (
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -477,26 +484,28 @@ export default function ReflectionsTableWithModal() {
 
     // Count consecutive workdays with reflections
     while (streak < sortedDates.length) {
-      if (!isWeekend(currentDate) && !isHoliday(currentDate)) {
-        const hasReflectionOnDate = sortedDates.some((date) => {
-          const d = new Date(date)
-          d.setHours(0, 0, 0, 0)
-          return d.getTime() === currentDate.getTime()
-        })
-
-        if (hasReflectionOnDate) {
+      if (!isWeekend(currentDate)) {
+        // If it's a holiday, count it as having a reflection
+        if (isHoliday(currentDate)) {
           streak++
         } else {
-          break
+          const hasReflectionOnDate = sortedDates.some((date) => {
+            const d = new Date(date)
+            d.setHours(0, 0, 0, 0)
+            return d.getTime() === currentDate.getTime()
+          })
+
+          if (hasReflectionOnDate) {
+            streak++
+          } else {
+            break
+          }
         }
       }
 
-      // Move to previous day, skipping holidays
+      // Move to previous day
       const prevDate = new Date(currentDate)
-      do {
-        prevDate.setDate(prevDate.getDate() - 1)
-      } while (isHoliday(prevDate))
-
+      prevDate.setDate(prevDate.getDate() - 1)
       currentDate = prevDate
     }
 
@@ -633,11 +642,20 @@ export default function ReflectionsTableWithModal() {
   const hasReflectionToday = (reflections: Reflection[]): boolean => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    return reflections.some((reflection) => {
+
+    // First check if there's an actual reflection for today
+    const hasReflection = reflections.some((reflection) => {
       const reflectionDate = new Date(reflection.date)
       reflectionDate.setHours(0, 0, 0, 0)
       return reflectionDate.getTime() === today.getTime()
     })
+
+    // If there's no reflection, check if today is a holiday (which would have auto-filled data)
+    if (!hasReflection) {
+      return isHoliday(today)
+    }
+
+    return hasReflection
   }
 
   const hasReflection = hasReflectionToday(reflections)
