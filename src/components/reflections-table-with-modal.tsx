@@ -364,6 +364,26 @@ const ZoneStatCard = ({ zone, stats, isDominant, isCurrent }: { zone: Reflection
   );
 };
 
+const HOLIDAYS = [
+  new Date('2025-04-07'), // Specific holiday
+  // Thai holidays (add more as needed)
+  new Date('2025-04-13'), // Songkran Day 1
+  new Date('2025-04-14'), // Songkran Day 2
+  new Date('2025-04-15'), // Songkran Day 3
+  // Add more holidays here...
+].map(date => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+});
+
+// Helper function to check if a date is a holiday
+const isHoliday = (date: Date): boolean => {
+  const normalizedDate = new Date(date);
+  normalizedDate.setHours(0, 0, 0, 0);
+  return HOLIDAYS.some(holiday => holiday.getTime() === normalizedDate.getTime());
+};
+
 export default function ReflectionsTableWithModal() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
@@ -401,14 +421,14 @@ export default function ReflectionsTableWithModal() {
     const sortedDates = reflections.map((r) => new Date(r.date)).sort((a, b) => b.getTime() - a.getTime());
 
     // Start from today or last Friday if weekend
-    const currentDate = new Date(today);
-    while (isWeekend(currentDate) && currentDate > sortedDates[0]) {
+    let currentDate = new Date(today);
+    while ((isWeekend(currentDate) || isHoliday(currentDate)) && currentDate > sortedDates[0]) {
       currentDate.setDate(currentDate.getDate() - 1);
     }
 
     // Count consecutive workdays with reflections
     while (streak < sortedDates.length) {
-      if (!isWeekend(currentDate)) {
+      if (!isWeekend(currentDate) && !isHoliday(currentDate)) {
         const hasReflectionOnDate = sortedDates.some((date) => {
           const d = new Date(date);
           d.setHours(0, 0, 0, 0);
@@ -421,7 +441,14 @@ export default function ReflectionsTableWithModal() {
           break;
         }
       }
-      currentDate.setDate(currentDate.getDate() - 1);
+      
+      // Move to previous day, skipping holidays
+      let prevDate = new Date(currentDate);
+      do {
+        prevDate.setDate(prevDate.getDate() - 1);
+      } while (isHoliday(prevDate));
+      
+      currentDate = prevDate;
     }
 
     setStreakCount(streak);
