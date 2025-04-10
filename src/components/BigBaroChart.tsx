@@ -39,7 +39,7 @@ export function BaroChart({ userId }) {
     refetchOnWindowFocus: false,
   });
 
-  // Sort the data by date
+  
   const chartData = React.useMemo(() => {
     if (!rawChartData) return [];
     return [...rawChartData].sort((a, b) => new Date(a.date) - new Date(b.date));
