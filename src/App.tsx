@@ -155,6 +155,7 @@ function AppContent() {
               </Page>
             }
           />
+
           <Route
             path="/admin/table/:id"
             element={
