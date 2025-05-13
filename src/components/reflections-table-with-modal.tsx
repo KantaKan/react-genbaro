@@ -380,7 +380,7 @@ const HOLIDAYS = [
   new Date("2025-04-15"), // Songkran Day 3
   new Date("2025-05-01"), // Songkran Day 2
   new Date("2025-05-05"), // Songkran Day 3
-  // Add more holidays here...
+  new Date("2025-05-12"), // Add more holidays here...
 ].map((date) => {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
