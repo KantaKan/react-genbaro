@@ -36,12 +36,20 @@ interface User {
   password: string;
   reflections: Reflection[] | null;
   role: string;
+  zoom_name: string;
+  project_group: string;
+  genmate_group: string;
 }
 
 interface ApiResponse {
   status: string;
   message: string;
-  data: User[];
+  data: {
+    limit: number;
+    page: number;
+    total: number;
+    users: User[];
+  };
 }
 
 export function AdminUsersPage() {
@@ -52,7 +60,7 @@ export function AdminUsersPage() {
     const fetchUsers = async () => {
       try {
         const response = await api.get<ApiResponse>("/admin/users");
-        setUsers(response.data.data);
+        setUsers(response.data.data.users);
       } catch (error) {
         console.error("Error fetching users:", error);
       } finally {
