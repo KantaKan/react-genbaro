@@ -59,7 +59,7 @@ export function AdminUsersPage() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await api.get<ApiResponse>("/admin/users");
+        const response = await api.get<ApiResponse>("/admin/users?cohort=10");
         setUsers(response.data.data.users);
       } catch (error) {
         console.error("Error fetching users:", error);

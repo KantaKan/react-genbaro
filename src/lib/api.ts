@@ -30,6 +30,11 @@ export const getAllUsers = async (): Promise<User[]> => {
   return response.data;
 };
 
+export const getCohort = async (cohort: string): Promise<User[]> => {
+  const response = await api.get<User[]>(`admin/users?cohort=${cohort}`);
+  return response.data;
+};
+
 export const getUsersByBarometer = async (barometer: string): Promise<User[]> => {
   const response = await api.get<User[]>(`admin/users/barometer/${barometer}`);
   return response.data;
