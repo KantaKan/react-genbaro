@@ -20,6 +20,7 @@ import UserReflections from "./components/users-reflectiontable";
 import { AdminUsersPage } from "./pages/admin-users-page";
 import EmojiZoneTable from "./components/emoji-zone-table";
 import ComfortZoneCards from "./components/comfort-zone-cards";
+import ReflectionsPage from "./pages/user-reflection";
 
 function AdminDashboard() {
   return (
@@ -184,7 +185,7 @@ function AppContent() {
               <ProtectedRoute allowedRoles={["learner"]}>
                 <Page>
                   <div className="flex flex-col gap-8 p-6">
-                    <ReflectionsTableWithModal />
+                    <ReflectionsPage />
                   </div>
                 </Page>
               </ProtectedRoute>
