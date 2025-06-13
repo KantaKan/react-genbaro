@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getBarometerData } from "@/lib/api";
+import AdminReflectionsTable from "./admin-reflections-table";
 
 const chartConfig = {
   "Comfort Zone": {
@@ -39,7 +40,6 @@ export function BaroChart({ userId }) {
     refetchOnWindowFocus: false,
   });
 
-  
   const chartData = React.useMemo(() => {
     if (!rawChartData) return [];
     return [...rawChartData].sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -144,6 +144,7 @@ export function BaroChart({ userId }) {
             <ChartLegend content={<ChartLegendContent />} />
           </AreaChart>
         </ChartContainer>
+        <AdminReflectionsTable />
       </CardContent>
     </Card>
   );
