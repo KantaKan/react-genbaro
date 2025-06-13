@@ -3,14 +3,14 @@ export const reflectionZones = [
   { id: "stretch-enjoying", label: "Stretch zone - Enjoying the challenges", bgColor: "bg-amber-500", emoji: "😺" },
   { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", bgColor: "bg-red-500", emoji: "😿" },
   { id: "panic", label: "Panic Zone", bgColor: "bg-violet-500", emoji: "🙀" },
-] as const
+] as const;
 
-export type ReflectionZone = (typeof reflectionZones)[number]
+export type ReflectionZone = (typeof reflectionZones)[number];
 
 export const getColorForBarometer = (barometer: string) => {
-  const zone = reflectionZones.find((zone) => zone.label === barometer)
-  return zone ? `${zone.bgColor}` : ""
-}
+  const zone = reflectionZones.find((zone) => zone.label === barometer);
+  return zone ? `${zone.bgColor}` : "";
+};
 
 export const calculateZoneStats = (reflections: any[]) => {
   const stats = {
@@ -19,20 +19,22 @@ export const calculateZoneStats = (reflections: any[]) => {
     stretchOverwhelmed: 0,
     panic: 0,
     total: reflections.length,
-  }
+  };
 
   reflections.forEach((reflection) => {
-    const zone = reflectionZones.find((zone) => zone.label === reflection.reflection.barometer)
-    if (zone) {
-      if (zone.id === "comfort") stats.comfort++
-      if (zone.id === "stretch-enjoying") stats.stretchEnjoying++
-      if (zone.id === "stretch-overwhelmed") stats.stretchOverwhelmed++
-      if (zone.id === "panic") stats.panic++
+    if (reflection?.reflection?.barometer) {
+      const zone = reflectionZones.find((zone) => zone.label === reflection.reflection.barometer);
+      if (zone) {
+        if (zone.id === "comfort") stats.comfort++;
+        if (zone.id === "stretch-enjoying") stats.stretchEnjoying++;
+        if (zone.id === "stretch-overwhelmed") stats.stretchOverwhelmed++;
+        if (zone.id === "panic") stats.panic++;
+      }
     }
-  })
+  });
 
-  return stats
-}
+  return stats;
+};
 
 export const findDominantZone = (stats: ReturnType<typeof calculateZoneStats>) => {
   const zoneCounts = [
@@ -40,8 +42,8 @@ export const findDominantZone = (stats: ReturnType<typeof calculateZoneStats>) =
     { id: "stretch-enjoying", count: stats.stretchEnjoying },
     { id: "stretch-overwhelmed", count: stats.stretchOverwhelmed },
     { id: "panic", count: stats.panic },
-  ]
+  ];
 
-  const sortedZones = zoneCounts.sort((a, b) => b.count - a.count)
-  return sortedZones[0].id
-}
+  const sortedZones = zoneCounts.sort((a, b) => b.count - a.count);
+  return sortedZones[0].id;
+};

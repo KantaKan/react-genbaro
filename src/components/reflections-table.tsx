@@ -82,7 +82,7 @@ export const ReflectionsTable = ({ reflections, todaysReflection }: ReflectionsT
           return date.getTime() === today.getTime();
         });
         break;
-      case "week":
+      case "week": {
         const weekAgo = new Date(today);
         weekAgo.setDate(today.getDate() - 7);
         filtered = filtered.filter((reflection) => {
@@ -90,7 +90,8 @@ export const ReflectionsTable = ({ reflections, todaysReflection }: ReflectionsT
           return date >= weekAgo;
         });
         break;
-      case "month":
+      }
+      case "month": {
         const monthAgo = new Date(today);
         monthAgo.setMonth(today.getMonth() - 1);
         filtered = filtered.filter((reflection) => {
@@ -98,6 +99,7 @@ export const ReflectionsTable = ({ reflections, todaysReflection }: ReflectionsT
           return date >= monthAgo;
         });
         break;
+      }
     }
 
     return sortReflections(filtered);
@@ -195,7 +197,7 @@ export const ReflectionsTable = ({ reflections, todaysReflection }: ReflectionsT
             ) : (
               filteredReflections.map((reflection, index) => (
                 <motion.tr
-                  key={reflection.id || `${reflection.user_id}-${reflection.date}-${index}`}
+                  key={reflection._id || `${reflection.user_id}-${reflection.date}-${index}`}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -203,16 +205,16 @@ export const ReflectionsTable = ({ reflections, todaysReflection }: ReflectionsT
                   whileHover={{ backgroundColor: "rgba(0,0,0,0.02)" }}
                 >
                   {!hiddenColumns.includes("Date") && <TableCell className="whitespace-normal py-4 group-hover:text-primary transition-colors">{new Date(reflection.day || reflection.date).toLocaleDateString()}</TableCell>}
-                  {!hiddenColumns.includes("Tech Happy") && <TableCell className="whitespace-normal py-4">{reflection.reflection.tech_sessions.happy}</TableCell>}
-                  {!hiddenColumns.includes("Tech Improve") && <TableCell className="whitespace-normal py-4">{reflection.reflection.tech_sessions.improve}</TableCell>}
-                  {!hiddenColumns.includes("Non-Tech Happy") && <TableCell className="whitespace-normal py-4">{reflection.reflection.non_tech_sessions.happy}</TableCell>}
-                  {!hiddenColumns.includes("Non-Tech Improve") && <TableCell className="whitespace-normal py-4">{reflection.reflection.non_tech_sessions.improve}</TableCell>}
+                  {!hiddenColumns.includes("Tech Happy") && <TableCell className="whitespace-normal py-4">{reflection?.reflection?.tech_sessions?.happy || ""}</TableCell>}
+                  {!hiddenColumns.includes("Tech Improve") && <TableCell className="whitespace-normal py-4">{reflection?.reflection?.tech_sessions?.improve || ""}</TableCell>}
+                  {!hiddenColumns.includes("Non-Tech Happy") && <TableCell className="whitespace-normal py-4">{reflection?.reflection?.non_tech_sessions?.happy || ""}</TableCell>}
+                  {!hiddenColumns.includes("Non-Tech Improve") && <TableCell className="whitespace-normal py-4">{reflection?.reflection?.non_tech_sessions?.improve || ""}</TableCell>}
                   {!hiddenColumns.includes("Barometer") && (
                     <TableCell>
                       {(() => {
-                        const zone = reflectionZones.find((z) => z.label === reflection.reflection.barometer);
-                        const isCurrent = todaysReflection?.reflection.barometer === reflection.reflection.barometer;
-                        return zone ? <BarometerVisual zone={zone} isCurrent={isCurrent} /> : reflection.reflection.barometer;
+                        const zone = reflectionZones.find((z) => z.label === reflection?.reflection?.barometer);
+                        const isCurrent = todaysReflection?.reflection?.barometer === reflection?.reflection?.barometer;
+                        return zone ? <BarometerVisual zone={zone} isCurrent={isCurrent} /> : reflection?.reflection?.barometer || "";
                       })()}
                     </TableCell>
                   )}

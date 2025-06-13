@@ -4,7 +4,7 @@ import { useUserData } from "@/UserDataContext";
 import ReflectionsDashboard from "@/components/reflections-dashboard";
 
 export default function ReflectionsPage() {
-  const { userData, loading, error } = useUserData();
+  const { userData, loading, error, refetchUserData } = useUserData();
 
   if (loading) {
     return (
@@ -14,7 +14,7 @@ export default function ReflectionsPage() {
     );
   }
 
-  if (error || !userData?.data?._id) {
+  if (error || !userData?._id) {
     return (
       <div className="container mx-auto py-10">
         <div className="text-center text-destructive">Error: Unable to load user data</div>
@@ -23,5 +23,5 @@ export default function ReflectionsPage() {
   }
 
   // Pass the user ID and reflections data directly
-  return <ReflectionsDashboard userId={userData.data._id} initialReflections={userData.data.reflections || []} />;
+  return <ReflectionsDashboard userId={userData._id} initialReflections={userData.reflections || []} onReflectionSubmit={refetchUserData} />;
 }

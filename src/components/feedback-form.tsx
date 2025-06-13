@@ -53,13 +53,13 @@ interface FeedbackFormProps {
     comfortLevel: string;
   };
   onChange?: (data: { categoryInputs: Record<string, string>; comfortLevel: string }) => void;
+  isLoading?: boolean;
 }
 
-export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChange }: FeedbackFormProps) {
+export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChange, isLoading = false }: FeedbackFormProps) {
   const { userData, loading, error } = useUserData();
   const [categoryInputs, setCategoryInputs] = useState<Record<string, string>>(initialData?.categoryInputs || {});
   const [comfortLevel, setComfortLevel] = useState(initialData?.comfortLevel || "");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Add effect to sync changes
   useEffect(() => {
@@ -131,13 +131,11 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
       return;
     }
 
-    const userId = userData?.data?._id;
+    const userId = userData?._id;
     if (!userId) {
       toast.error("User ID is missing");
       return;
     }
-
-    setIsSubmitting(true);
 
     try {
       const newReflection: Reflection = {
@@ -166,8 +164,6 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
       onSuccess?.();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to submit reflection");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -201,7 +197,7 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
                       [category.id]: e.target.value,
                     }))
                   }
-                  rows={4}
+                  disabled={isLoading}
                 />
               </CardContent>
             </Card>
@@ -221,9 +217,6 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
                     className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${zone.bgColor} ${comfortLevel === zone.id ? "ring-2 ring-offset-2" : ""} ${
                       index === comfortZones.length - 1 && comfortZones.length % 2 !== 0 ? "md:col-span-2" : ""
                     }`}
-                    style={{
-                      ringColor: comfortLevel === zone.id ? getComputedStyle(document.documentElement).getPropertyValue(`--${zone.color}`) : "",
-                    }}
                   >
                     <RadioGroupItem value={zone.id} id={zone.id} />
                     <span className={`font-medium`}>{zone.label}</span>
@@ -234,9 +227,9 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
           </Card>
         </div>
       </div>
-      <div className="mt-6">
-        <Button size="lg" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold" onClick={handleSubmit} disabled={isSubmitting}>
-          {isSubmitting ? "Submitting..." : "Submit Reflection"}
+      <div className="mt-auto flex justify-end">
+        <Button onClick={handleSubmit} disabled={isLoading}>
+          {isLoading ? "Submitting..." : "Submit Reflection"}
         </Button>
       </div>
     </div>

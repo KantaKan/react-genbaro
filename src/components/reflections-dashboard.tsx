@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,17 +23,25 @@ import { SubmissionStatusCard } from "./submission-status-card";
 interface ReflectionsDashboardProps {
   userId: string;
   initialReflections?: Reflection[];
+  onReflectionSubmit?: () => Promise<void>;
 }
 
-export default function ReflectionsDashboard({ userId, initialReflections = [] }: ReflectionsDashboardProps) {
-  const { reflections, isLoading, error, addReflection } = useReflections(userId, initialReflections);
+export default function ReflectionsDashboard({ userId, initialReflections = [], onReflectionSubmit }: ReflectionsDashboardProps) {
+  const { reflections, isLoading, error, addReflection, refetch } = useReflections(userId, initialReflections);
   const streakData = useStreakCalculation(reflections);
 
+  useEffect(() => {
+    refetch();
+  }, [userId, refetch]);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState<{
-    categoryInputs: Record<string, string>;
-    comfortLevel: string;
-  } | null>(null);
+  const [formData, setFormData] = useState<
+    | {
+        categoryInputs: Record<string, string>;
+        comfortLevel: string;
+      }
+    | undefined
+  >(undefined);
   const [showCloseWarning, setShowCloseWarning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -63,13 +71,22 @@ export default function ReflectionsDashboard({ userId, initialReflections = [] }
     return null;
   }, [todaysReflection]);
 
-  const handleSubmit = async (newReflection: any) => {
+  const handleSubmit = async (newReflection: Omit<Reflection, "_id" | "createdAt" | "day">) => {
     try {
       setIsSubmitting(true);
-      await addReflection(newReflection);
-      setFormData(null);
+      await addReflection({
+        ...newReflection,
+        _id: undefined,
+        createdAt: new Date().toISOString(),
+        day: new Date().toISOString().split("T")[0],
+      });
+      setFormData(undefined);
       setIsDialogOpen(false);
-    } catch (error) {
+      if (onReflectionSubmit) {
+        await onReflectionSubmit();
+      }
+    } catch (err) {
+      console.error("Error submitting reflection:", err);
       // Error handling is done in the hook
     } finally {
       setIsSubmitting(false);
@@ -83,12 +100,12 @@ export default function ReflectionsDashboard({ userId, initialReflections = [] }
         return;
       }
 
-      if (!open && formData !== null) {
+      if (!open && formData !== undefined) {
         setShowCloseWarning(true);
       } else {
         setIsDialogOpen(open);
         if (open) {
-          setFormData(null);
+          setFormData(undefined);
         }
       }
     },
@@ -252,7 +269,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [] }
                       onSubmit={handleSubmit}
                       onChange={setFormData}
                       onSuccess={() => {
-                        setFormData(null);
+                        setFormData(undefined);
                         setIsDialogOpen(false);
                       }}
                       isLoading={isSubmitting}
@@ -438,7 +455,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [] }
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => {
-                  setFormData(null);
+                  setFormData(undefined);
                   setShowCloseWarning(false);
                   setIsDialogOpen(false);
                 }}

@@ -25,6 +25,7 @@ interface Reflection {
   day: string;
   user_id: string;
   date: string;
+  createdAt: string;
   reflection: ReflectionData;
 }
 
@@ -41,6 +42,12 @@ interface UserData {
 
 interface JWTPayload {
   id: string;
+}
+
+interface ApiResponse<T> {
+  status: string;
+  message: string;
+  data: T;
 }
 
 interface UserDataContextType {
@@ -72,13 +79,13 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
       const decodedToken = jwtDecode<JWTPayload>(token);
 
-      const response = await api.get<UserData>(`/users/${decodedToken.id}`);
+      const response = await api.get<ApiResponse<UserData>>(`/users/${decodedToken.id}`);
 
-      if (!response.data) {
-        throw new Error("No user data received");
+      if (!response.data || !response.data.data) {
+        throw new Error("No user data received or invalid format");
       }
 
-      setUserData(response.data);
+      setUserData(response.data.data);
       setUserId(decodedToken.id);
     } catch (error) {
       console.error("Error fetching user data:", error);
