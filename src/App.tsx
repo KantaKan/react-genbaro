@@ -21,6 +21,7 @@ import { AdminUsersPage } from "./pages/admin-users-page";
 import EmojiZoneTable from "./components/emoji-zone-table";
 import ComfortZoneCards from "./components/comfort-zone-cards";
 import ReflectionsPage from "./pages/user-reflection";
+import AdminReflectionsTable from "./components/admin-reflections-table";
 
 function AdminDashboard() {
   return (
@@ -128,7 +129,7 @@ function AppContent() {
               <Page>
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminDashboard />
-                  <AdminTablePage />
+                  <AdminReflectionsTable />
                 </ProtectedRoute>
               </Page>
             }
