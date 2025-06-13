@@ -128,6 +128,7 @@ function AppContent() {
               <Page>
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminDashboard />
+                  <AdminTablePage />
                 </ProtectedRoute>
               </Page>
             }
