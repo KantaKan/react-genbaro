@@ -84,7 +84,6 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
       if (!response.data || !response.data.data) {
         throw new Error("No user data received or invalid format");
       }
-
       setUserData(response.data.data);
       setUserId(decodedToken.id);
     } catch (error) {

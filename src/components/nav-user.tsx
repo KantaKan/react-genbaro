@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { BadgeCheck, ChevronsUpDown, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,7 +12,7 @@ export function NavUser() {
   const { isMobile } = useSidebar();
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const { userData, loading, error, userId, clearUserData } = useUserData();
+  const { userData, loading, error, clearUserData } = useUserData();
 
   const handleLogout = () => {
     clearUserData();
@@ -28,9 +28,8 @@ export function NavUser() {
     return <div>Error loading user data</div>;
   }
 
-  // Destructuring userData to access data properties
-  const { data } = userData || {};
-  const { first_name, email, avatar } = data || {};
+  // Access userData directly since it's already the UserData object
+  const { first_name, email } = userData || {};
 
   return (
     <SidebarMenu>
@@ -39,7 +38,7 @@ export function NavUser() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={avatar || ""} alt={first_name || "User"} />
+                <AvatarImage src="" alt={first_name || "User"} />
                 <AvatarFallback className="rounded-lg">😁</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -53,7 +52,7 @@ export function NavUser() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={avatar || ""} alt={first_name || "User"} />
+                  <AvatarImage src="" alt={first_name || "User"} />
                   <AvatarFallback className="rounded-lg">🥰</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
