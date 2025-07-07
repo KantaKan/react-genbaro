@@ -41,7 +41,7 @@ interface UserData {
 }
 
 interface JWTPayload {
-  id: string;
+  user_id: string; // <-- changed from id to user_id
 }
 
 interface ApiResponse<T> {
@@ -79,13 +79,17 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
       const decodedToken = jwtDecode<JWTPayload>(token);
 
-      const response = await api.get<ApiResponse<UserData>>(`/users/${decodedToken.id}`);
+      if (!decodedToken.user_id) {
+        throw new Error("User ID not found in token");
+      }
+
+      const response = await api.get<ApiResponse<UserData>>(`/users/${decodedToken.user_id}`);
 
       if (!response.data || !response.data.data) {
         throw new Error("No user data received or invalid format");
       }
       setUserData(response.data.data);
-      setUserId(decodedToken.id);
+      setUserId(decodedToken.user_id);
     } catch (error) {
       console.error("Error fetching user data:", error);
       setError(error instanceof Error ? error.message : "Failed to fetch user data");
