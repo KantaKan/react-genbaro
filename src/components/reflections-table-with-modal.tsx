@@ -378,8 +378,9 @@ const HOLIDAYS = [
   new Date("2025-04-13"), // Songkran Day 1
   new Date("2025-04-14"), // Songkran Day 2
   new Date("2025-04-15"), // Songkran Day 3
-  new Date("2025-05-01"), // Songkran Day 2
-  new Date("2025-05-05"), // Songkran Day 3
+  new Date("2025-05-01"), // 
+  new Date("2025-05-05"), // 
+  new Date("2025-08-12"), // วันแม่
   new Date("2025-05-12"), // Add more holidays here...
 ].map((date) => {
   const d = new Date(date);
