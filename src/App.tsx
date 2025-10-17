@@ -12,8 +12,8 @@ import Page from "./app/dashboard/page";
 import UserDataProvider, { useUserData } from "./UserDataContext";
 import { api } from "./lib/api";
 import { AdminTablePage } from "./components/AdminTablePage";
-import UserReflections from "./components/users-reflectiontable";
 import { AdminUsersPage } from "./pages/admin-users-page";
+import UserReflectionsPage from "./pages/UserReflectionsPage";
 import EmojiZoneTable from "./components/emoji-zone-table";
 import ComfortZoneCards from "./components/comfort-zone-cards";
 import ReflectionsPage from "./pages/user-reflection";
@@ -159,7 +159,7 @@ function AppContent() {
             element={
               <Page>
                 <ProtectedRoute allowedRoles={["admin"]}>
-                  <UserReflections />
+                  <UserReflectionsPage />
                 </ProtectedRoute>
               </Page>
             }

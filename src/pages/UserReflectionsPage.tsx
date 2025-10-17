@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Users, School, ClipboardList, TrendingUp } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { api } from "@/lib/api";
-import { Skeleton } from "./ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ReflectionsTable } from "@/components/reflections-table";
+import { reflectionZones } from "@/components/reflection-zones";
+import { BarometerVisual } from "@/components/barometer-visual";
+import { formatDate } from "@/lib/utils";
 
 interface Reflection {
   day: string;
@@ -39,56 +42,6 @@ interface User {
   _id: string;
 }
 
-const reflectionZones = [
-  { id: "comfort", label: "Comfort Zone", bgColor: "bg-emerald-500", emoji: "😸" },
-  { id: "stretch-enjoying", label: "Stretch zone - Enjoying the challenges", bgColor: "bg-amber-500", emoji: "😺" },
-  { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", bgColor: "bg-red-500", emoji: "😿" },
-  { id: "panic", label: "Panic Zone", bgColor: "bg-violet-500", emoji: "🙀" },
-] as const;
-
-const BarometerVisual = ({ barometer }: { barometer: string }) => {
-  const zone = reflectionZones.find((z) => z.label === barometer);
-  if (!zone) return <span>{barometer}</span>;
-
-  return (
-    <motion.div
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md ${zone.bgColor} bg-opacity-15 transition-all duration-300`}
-      whileHover={{
-        scale: 1.05,
-        backgroundColor: `var(--${zone.bgColor.replace("bg-", "")})`,
-        backgroundOpacity: 0.25,
-      }}
-      initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-    >
-      <motion.span
-        className="text-base"
-        animate={{
-          rotate: [0, 10, 0, -10, 0],
-          scale: [1, 1.1, 1],
-        }}
-        transition={{
-          duration: 2,
-          repeat: Number.POSITIVE_INFINITY,
-          repeatType: "loop",
-        }}
-      >
-        {zone.emoji}
-      </motion.span>
-      <span className="font-medium text-sm">{zone.label}</span>
-    </motion.div>
-  );
-};
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  if (isNaN(date.getTime()) || date.getFullYear() === 1) {
-    return "No date";
-  }
-  return date.toLocaleDateString();
-};
-
 const StatCard = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | number | JSX.Element }) => (
   <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
     <div className={`p-2.5 rounded-full bg-primary/10 shrink-0`}>
@@ -101,7 +54,7 @@ const StatCard = ({ icon: Icon, label, value }: { icon: any; label: string; valu
   </div>
 );
 
-export default function UserReflections() {
+export default function UserReflectionsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [reflections, setReflections] = useState<Reflection[]>([]);
@@ -250,43 +203,7 @@ export default function UserReflections() {
         </motion.div>
       )}
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Tech Happy</TableHead>
-              <TableHead>Tech Improve</TableHead>
-              <TableHead>Non-Tech Happy</TableHead>
-              <TableHead>Non-Tech Improve</TableHead>
-              <TableHead>Barometer</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <AnimatePresence mode="wait">
-              {reflections.map((reflection, index) => (
-                <motion.tr
-                  key={reflection.date}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2, delay: index * 0.03 }}
-                  className="group hover:bg-muted/50 transition-colors"
-                >
-                  <TableCell>{formatDate(reflection.date)}</TableCell>
-                  <TableCell>{reflection.reflection.tech_sessions?.happy || ""}</TableCell>
-                  <TableCell>{reflection.reflection.tech_sessions?.improve || ""}</TableCell>
-                  <TableCell>{reflection.reflection.non_tech_sessions?.happy || ""}</TableCell>
-                  <TableCell>{reflection.reflection.non_tech_sessions?.improve || ""}</TableCell>
-                  <TableCell>
-                    <BarometerVisual barometer={reflection.reflection.barometer} />
-                  </TableCell>
-                </motion.tr>
-              ))}
-            </AnimatePresence>
-          </TableBody>
-        </Table>
-      </motion.div>
+      <ReflectionsTable reflections={reflections} />
     </div>
   );
 }
