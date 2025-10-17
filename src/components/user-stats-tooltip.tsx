@@ -1,5 +1,8 @@
 import { TooltipContent } from "@/components/ui/tooltip"
-import type { Zone } from "../emoji-zone-table"
+
+
+import type { Zone } from "../lib/types";
+
 
 interface UserStats {
   totalEntries: number

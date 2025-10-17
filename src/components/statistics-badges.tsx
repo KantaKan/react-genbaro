@@ -1,7 +1,9 @@
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import type { Zone } from "../emoji-zone-table"
+
+
+import type { Zone } from "../lib/types";
 
 interface ZoneStats {
   zone: Zone

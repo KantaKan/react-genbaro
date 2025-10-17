@@ -55,3 +55,5 @@ export interface Reflection {
   date: string;
   reflection: ReflectionData;
 }
+
+export type Zone = "comfort" | "stretch-enjoying" | "stretch-overwhelmed" | "panic" | "no-data" | "weekend";

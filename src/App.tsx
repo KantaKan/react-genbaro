@@ -14,7 +14,7 @@ import { api } from "./lib/api";
 import { AdminTablePage } from "./components/AdminTablePage";
 import { AdminUsersPage } from "./pages/admin-users-page";
 import UserReflectionsPage from "./pages/UserReflectionsPage";
-import EmojiZoneTable from "./components/emoji-zone-table";
+
 import ComfortZoneCards from "./components/comfort-zone-cards";
 import ReflectionsPage from "./pages/user-reflection";
 import AdminReflectionsTable from "./components/admin-reflections-table";
@@ -129,19 +129,7 @@ function AppContent() {
               </Page>
             }
           />
-          <Route
-            path="/admin/emoji-zone-table"
-            element={
-              <Page>
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <div className="flex flex-col gap-4">
-                    <EmojiZoneTable />
-                    <ComfortZoneCards />
-                  </div>
-                </ProtectedRoute>
-              </Page>
-            }
-          />
+
 
           <Route
             path="/admin/table"
