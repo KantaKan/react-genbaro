@@ -74,3 +74,48 @@ export function getTodayISOString(): string {
   const today = new Date();
   return today.toISOString().split("T")[0];
 }
+
+export const HOLIDAYS = [
+  new Date("2025-04-07"), // Specific holiday
+  // Thai holidays (add more as needed)
+  new Date("2025-04-13"), // Songkran Day 1
+  new Date("2025-04-14"), // Songkran Day 2
+  new Date("2025-04-15"), // Songkran Day 3
+  new Date("2025-05-01"), // 
+  new Date("2025-05-05"), // 
+  new Date("2025-08-12"), // วันแม่
+  new Date("2025-05-12"), // Add more holidays here...
+].map((date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+});
+
+export const isWeekend = (date: Date): boolean => {
+  const day = date.getDay();
+  return day === 0 || day === 6; // 0 is Sunday, 6 is Saturday
+};
+
+// Helper function to check if a date is a holiday
+export const isHoliday = (date: Date): boolean => {
+  const normalizedDate = new Date(date);
+  normalizedDate.setHours(0, 0, 0, 0);
+  return HOLIDAYS.some((holiday) => holiday.getTime() === normalizedDate.getTime());
+};
+
+// Function to check if a date is a valid workday (not weekend, not holiday)
+export const isValidWorkday = (date: Date): boolean => {
+  return !isWeekend(date) && !isHoliday(date);
+};
+
+// Function to get the previous valid workday
+export const getPreviousWorkday = (date: Date): Date => {
+  const prevDate = new Date(date);
+  prevDate.setDate(prevDate.getDate() - 1);
+
+  while (!isValidWorkday(prevDate)) {
+    prevDate.setDate(prevDate.getDate() - 1);
+  }
+
+  return prevDate;
+};

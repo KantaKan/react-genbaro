@@ -10,24 +10,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getBarometerData } from "@/lib/api";
 import AdminReflectionsTable from "./admin-reflections-table";
 
-const chartConfig = {
-  "Comfort Zone": {
-    label: "Comfort Zone",
-    color: "hsl(var(--chart-1))",
-  },
-  "Panic Zone": {
-    label: "Panic Zone",
-    color: "hsl(var(--chart-2))",
-  },
-  "Stretch Zone - Enjoying the Challenges": {
-    label: "Stretch Zone - Enjoying the Challenges",
-    color: "hsl(var(--chart-3))",
-  },
-  "Stretch Zone - Overwhelmed": {
-    label: "Stretch Zone - Overwhelmed",
-    color: "hsl(var(--chart-4))",
-  },
-};
+import { reflectionZones } from "./reflection-zones";
+
+const chartConfig = Object.fromEntries(
+  reflectionZones.map((zone, index) => [
+    zone.label,
+    {
+      label: zone.label,
+      color: `hsl(var(--chart-${index + 1}))`,
+    },
+  ])
+) as ChartConfig;
 
 export function BaroChart({ userId }) {
   const [timeRange, setTimeRange] = React.useState("7d");

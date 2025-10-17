@@ -2,23 +2,7 @@ import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import type { Reflection } from "../lib/types"; // Make sure to import your Reflection type
-
-const reflectionZones = [
-  { id: "comfort", label: "Comfort Zone", bgColor: "bg-green-500", textColor: "text-green-900" },
-  {
-    id: "stretch-enjoying",
-    label: "Stretch zone - Enjoying the challenges",
-    bgColor: "bg-yellow-500",
-    textColor: "text-yellow-900",
-  },
-  { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", bgColor: "bg-red-500", textColor: "text-red-900" },
-  { id: "panic", label: "Panic Zone", bgColor: "bg-purple-500", textColor: "text-purple-900" },
-];
-
-const getColorForBarometer = (barometer: string) => {
-  const zone = reflectionZones.find((zone) => zone.label === barometer);
-  return zone ? `${zone.bgColor} ${zone.textColor}` : "";
-};
+import { getColorForBarometer } from "./reflection-zones";
 
 interface ReflectionPreviewProps {
   reflection: Reflection;
