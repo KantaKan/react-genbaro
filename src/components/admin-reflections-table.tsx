@@ -372,12 +372,12 @@ export default function AdminReflectionsTable() {
             <AnimatePresence mode="wait">
               {displayedReflections.map((reflection, index) => (
                 <motion.tr
-                  key={reflection.id}
+                  key={reflection._id || index}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2, delay: index * 0.03 }}
-                  onClick={() => handleRowClick(reflection.id)}
+                  onClick={() => handleRowClick(reflection.user_id)}
                   className="cursor-pointer hover:bg-muted/50 transition-colors"
                 >
                   {!hiddenColumns.includes("First Name") && <TableCell className="text-center">{reflection.FirstName}</TableCell>}
