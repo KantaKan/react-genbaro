@@ -377,7 +377,7 @@ export default function AdminReflectionsTable() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2, delay: index * 0.03 }}
-                  onClick={() => handleRowClick(reflection.user_id)}
+                  onClick={() => handleRowClick(reflection.id)}
                   className="cursor-pointer hover:bg-muted/50 transition-colors"
                 >
                   {!hiddenColumns.includes("First Name") && <TableCell className="text-center">{reflection.FirstName}</TableCell>}

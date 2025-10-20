@@ -23,11 +23,6 @@ function AdminDashboard() {
   return (
     <div className="flex flex-col gap-2 overflow-hidden p-6">
       <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
-      <nav className="mb-4">
-        <Link to="/admin/table" className="text-blue-500 hover:text-blue-700">
-          View Admin Reflections Table
-        </Link>
-      </nav>
       <div className="flex-1 h-1/2 mb-6">
         <BaroChart />
       </div>
