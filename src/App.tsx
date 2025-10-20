@@ -14,6 +14,8 @@ import { api } from "./lib/api";
 import { AdminTablePage } from "./components/AdminTablePage";
 import { AdminUsersPage } from "./pages/admin-users-page";
 import UserReflectionsPage from "./pages/UserReflectionsPage";
+import TalkBoardPage from "./pages/talk-board-page"; // Import the new page
+import PostPage from "./pages/PostPage";
 
 import ComfortZoneCards from "./components/comfort-zone-cards";
 import ReflectionsPage from "./pages/user-reflection";
@@ -178,6 +180,28 @@ function AppContent() {
                   <div className="flex flex-col gap-8 p-6">
                     <ReflectionsPage />
                   </div>
+                </Page>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/talk-board"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "learner"]}>
+                <Page>
+                  <TalkBoardPage />
+                </Page>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/talk-board/:postId"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "learner"]}>
+                <Page>
+                  <PostPage />
                 </Page>
               </ProtectedRoute>
             }

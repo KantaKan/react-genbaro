@@ -1,5 +1,5 @@
 import * as React from "react";
-import { GalleryVerticalEnd, SquareTerminal, BookOpen, FileText } from "lucide-react";
+import { GalleryVerticalEnd, SquareTerminal, BookOpen, FileText, MessageSquare } from "lucide-react"; // Import MessageSquare
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
@@ -39,7 +39,18 @@ const navigationConfig = {
           title: "Weekly Summary",
           url: "/admin/weekly-summary",
         },
-
+      ],
+    },
+    {
+      title: "Talk Board",
+      url: "/talk-board",
+      icon: MessageSquare,
+      isActive: false,
+      items: [
+        {
+          title: "Discussion",
+          url: "/talk-board",
+        },
       ],
     },
   ],
@@ -54,27 +65,20 @@ const navigationConfig = {
           title: "My Reflections",
           url: "/learner",
         },
-        // {
-        //   title: "Learning Materials",
-        //   url: "/learner",
-        // },
       ],
     },
-    // {
-    //   title: "Assignments",
-    //   url: "/assignments",
-    //   icon: FileText,
-    //   items: [
-    //     {
-    //       title: "Current Tasks",
-    //       url: "/learner",
-    //     },
-    //     {
-    //       title: "Completed Work",
-    //       url: "/learner",
-    //     },
-    //   ],
-    // },
+    {
+      title: "Talk Board",
+      url: "/talk-board",
+      icon: MessageSquare,
+      isActive: false,
+      items: [
+        {
+          title: "Discussion",
+          url: "/talk-board",
+        },
+      ],
+    },
   ],
 };
 

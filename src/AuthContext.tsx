@@ -5,25 +5,21 @@ import { api } from "./lib/api";
 type AuthContextType = {
   isAuthenticated: boolean;
   userRole: string | null;
+  userId: string | null;
   error: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<string>;
   logout: () => void;
 };
 
-type VerifyTokenResponse = {
-  status: string;
-  message: string;
-  data: {
-    role: string;
-  };
-};
+// ... (VerifyTokenResponse remains the same)
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem("authToken"));
   const [userRole, setUserRole] = useState<string | null>(() => localStorage.getItem("userRole"));
+  const [userId, setUserId] = useState<string | null>(() => localStorage.getItem("userId"));
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -38,13 +34,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
           if (response.data.status === "success") {
             const role = response.data.data.role || "";
+            const fetchedUserId = response.data.data.userId || "";
+
             if (!role || role === "invalidRole") {
               throw new Error("Invalid role in response");
             }
 
             setIsAuthenticated(true);
             setUserRole(role);
+            setUserId(fetchedUserId);
             localStorage.setItem("userRole", role);
+            localStorage.setItem("userId", fetchedUserId);
           } else {
             throw new Error("Token verification failed: Invalid status in response");
           }
@@ -52,8 +52,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.error("Token verification failed:", error);
           localStorage.removeItem("authToken");
           localStorage.removeItem("userRole");
+          localStorage.removeItem("userId");
           setIsAuthenticated(false);
           setUserRole(null);
+          setUserId(null);
         } finally {
           setLoading(false);
         }
@@ -72,14 +74,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (response.data?.data?.token) {
         const role = response.data.data.role || "learner";
         const token = response.data.data.token;
+        const fetchedUserId = response.data.data.userId || ""; // Assuming userId is returned on login
 
         // Set token first
         localStorage.setItem("authToken", token);
         localStorage.setItem("userRole", role);
+        localStorage.setItem("userId", fetchedUserId);
 
         // Update auth state
         setIsAuthenticated(true);
         setUserRole(role);
+        setUserId(fetchedUserId);
         setError(null);
 
         // Configure axios with new token
@@ -87,7 +92,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         return role;
       } else {
-        throw new Error("No token in response");
+        throw new Error("No token or userId in response");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -99,14 +104,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("userRole");
+    localStorage.removeItem("userId");
     setIsAuthenticated(false);
     setUserRole(null);
+    setUserId(null);
     setError(null);
   };
 
   const value: AuthContextType = {
     isAuthenticated,
     userRole,
+    userId,
     error,
     loading,
     login,
