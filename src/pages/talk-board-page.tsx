@@ -156,12 +156,20 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: any; removeReactionM
       // If user already reacted, remove current reaction first, then add new one
       removeReactionMutation.mutate(post.id, {
         onSuccess: () => {
-          addReactionMutation.mutate({ postId: post.id, reaction });
+          addReactionMutation.mutate({ postId: post.id, reaction }, {
+            onSuccess: () => {
+              queryClient.invalidateQueries("talkBoardPosts");
+            }
+          });
         }
       });
     } else {
       // If user hasn't reacted, just add the reaction
-      addReactionMutation.mutate({ postId: post.id, reaction });
+      addReactionMutation.mutate({ postId: post.id, reaction }, {
+        onSuccess: () => {
+          queryClient.invalidateQueries("talkBoardPosts");
+        }
+      });
     }
     setShowReactionPicker(false);
   };
@@ -169,7 +177,11 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: any; removeReactionM
   const handleRemoveReaction = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    removeReactionMutation.mutate(post.id);
+    removeReactionMutation.mutate(post.id, {
+      onSuccess: () => {
+        queryClient.invalidateQueries("talkBoardPosts");
+      }
+    });
     setShowReactionPicker(false);
   };
 
@@ -213,7 +225,7 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: any; removeReactionM
         </CardContent>
         <CardFooter className="flex justify-between">
           <div className="flex gap-4 relative">
-            <Button variant="ghost" size="sm" onClick={toggleReactionPicker}>
+            <Button variant="ghost" size="sm" onClick={toggleReactionPicker} disabled={addReactionMutation.isLoading || removeReactionMutation.isLoading}>
               <Smile className="mr-2 h-4 w-4" />
               {hasUserReacted ? "Change Reaction" : "React"}
             </Button>

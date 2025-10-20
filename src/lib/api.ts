@@ -78,3 +78,23 @@ export const register = async (userData: RegistrationData) => {
     throw error;
   }
 };
+
+export const removeReaction = async (postId: string) => {
+  const response = await api.delete(`/board/posts/${postId}/reactions`);
+  return response.data.data;
+};
+
+export const addReaction = async ({ postId, reaction }: { postId: string; reaction: string }) => {
+  const response = await api.post(`/board/posts/${postId}/reactions`, { reaction });
+  return response.data.data;
+};
+
+export const addCommentReaction = async ({ commentId, reaction }: { commentId: string; reaction: string }) => {
+  const response = await api.post(`/board/comments/${commentId}/reactions`, { reaction });
+  return response.data.data;
+};
+
+export const removeCommentReaction = async (commentId: string) => {
+  const response = await api.delete(`/board/comments/${commentId}/reactions`);
+  return response.data.data;
+};
