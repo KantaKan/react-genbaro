@@ -66,6 +66,7 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
   return <>{children}</>;
 }
 
+import WeeklySummaryPage from "./pages/weekly-summary-page";
 function AppContent() {
   const { isAuthenticated, userRole, error, login } = useAuth();
   const { refetchUserData } = useUserData();
@@ -159,6 +160,16 @@ function AppContent() {
               <Page>
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminUsersPage />
+                </ProtectedRoute>
+              </Page>
+            }
+          />
+          <Route
+            path="/admin/weekly-summary"
+            element={
+              <Page>
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <WeeklySummaryPage />
                 </ProtectedRoute>
               </Page>
             }

@@ -35,6 +35,10 @@ const navigationConfig = {
           title: "All Users",
           url: "/admin/users",
         },
+        {
+          title: "Weekly Summary",
+          url: "/admin/weekly-summary",
+        },
 
       ],
     },
