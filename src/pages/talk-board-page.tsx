@@ -100,7 +100,7 @@ const TalkBoardPage: React.FC = () => {
 
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-6">Talk Board</h1>
+      <h1 className="text-3xl font-bold mb-6">Random Talk | Gen Notes</h1>
 
       <Card className="mb-8">
         <CardHeader>

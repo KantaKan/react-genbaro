@@ -1,6 +1,6 @@
 import "./App.css";
 
-import { Routes, Route, Navigate, useNavigate, Link } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { QueryClientProvider } from "react-query";
 import { queryClient } from "./lib/queryClient";
 import { ThemeProvider } from "./components/theme-provider";
@@ -17,9 +17,7 @@ import UserReflectionsPage from "./pages/UserReflectionsPage";
 import TalkBoardPage from "./pages/talk-board-page"; // Import the new page
 import PostPage from "./pages/PostPage";
 
-import ComfortZoneCards from "./components/comfort-zone-cards";
 import ReflectionsPage from "./pages/user-reflection";
-import AdminReflectionsTable from "./components/admin-reflections-table";
 
 function AdminDashboard() {
   return (
@@ -98,7 +96,7 @@ function AppContent() {
       } else {
         throw new Error("Invalid response from server");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Sign-up error:", err);
     }
   };

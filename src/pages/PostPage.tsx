@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "react-query";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,6 +40,26 @@ interface Post {
   createdAt: string;
 }
 
+interface AddReactionMutation {
+  mutate: (variables: { postId: string; reaction: string }) => void;
+  isLoading: boolean;
+}
+
+interface RemoveReactionMutation {
+  mutate: (variables: string) => void;
+  isLoading: boolean;
+}
+
+interface AddCommentReactionMutation {
+  mutate: (variables: { commentId: string; reaction: string }) => void;
+  isLoading: boolean;
+}
+
+interface RemoveCommentReactionMutation {
+  mutate: (variables: string) => void;
+  isLoading: boolean;
+}
+
 const fetchPost = async (postId: string): Promise<Post> => {
   const response = await api.get(`/board/posts/${postId}`);
   return response.data.data;
@@ -50,11 +70,7 @@ const createComment = async ({ postId, content }: { postId: string; content: str
   return response.data.data;
 };
 
-const PostCard: React.FC<{ post: Post; addReactionMutation: any; removeReactionMutation: any }> = ({ 
-  post, 
-  addReactionMutation, 
-  removeReactionMutation 
-}) => {
+const PostCard: React.FC<{ post: Post; addReactionMutation: AddReactionMutation; removeReactionMutation: RemoveReactionMutation }> = ({ post, addReactionMutation, removeReactionMutation }) => {
   const { userId } = useAuth();
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const userReaction = post.reactions.find(reaction => reaction.userId === userId);
@@ -186,15 +202,7 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: any; removeReactionM
   );
 };
 
-const CommentCard: React.FC<{ 
-  comment: Comment; 
-  addCommentReactionMutation: any; 
-  removeCommentReactionMutation: any 
-}> = ({ 
-  comment, 
-  addCommentReactionMutation, 
-  removeCommentReactionMutation 
-}) => {
+const CommentCard: React.FC<{ comment: Comment; addCommentReactionMutation: AddCommentReactionMutation; removeCommentReactionMutation: RemoveCommentReactionMutation }> = ({ comment, addCommentReactionMutation, removeCommentReactionMutation }) => {
   const { userId } = useAuth();
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const userReaction = comment.reactions.find(reaction => reaction.userId === userId);
