@@ -1,13 +1,13 @@
-
 import React, { useState } from "react";
 import { useQuery } from "react-query";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AlertCircle, TrendingDown, UserX } from "lucide-react";
 
 interface StudentInfo {
   user_id: string;
@@ -40,6 +40,44 @@ const fetchWeeklySummary = async (page: number, limit: number): Promise<ApiRespo
   return response.data.data;
 };
 
+const WeeklySummarySkeleton: React.FC = () => (
+  <div className="space-y-8">
+    {[...Array(2)].map((_, i) => (
+      <Card key={i}>
+        <CardHeader>
+          <Skeleton className="h-7 w-1/2" />
+          <Skeleton className="h-4 w-1/3" />
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-2/4" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="flex items-center space-x-4">
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-2/4" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
+    ))}
+  </div>
+);
+
 
 const WeeklySummaryPage: React.FC = () => {
   const [page, setPage] = useState(1);
@@ -56,7 +94,6 @@ const WeeklySummaryPage: React.FC = () => {
     return (student.zoom_name && student.zoom_name.trim()) || fullName || 'Unknown Student';
   };
 
-
   const totalPages = data ? Math.ceil(data.total / limit) : 0;
 
   const handlePageChange = (newPage: number) => {
@@ -67,99 +104,106 @@ const WeeklySummaryPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="container mx-auto py-10">
+        <h1 className="text-3xl font-bold mb-6">Weekly Summary of At-Risk Learners</h1>
+        <WeeklySummarySkeleton />
       </div>
-    );
+    )
   }
 
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error.message}</AlertDescription>
-      </Alert>
+      <div className="container mx-auto py-10">
+         <Alert variant="destructive" className="max-w-2xl mx-auto">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            Failed to load weekly summary. Please try again later.
+          </AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-6">Weekly Summary of At-Risk Learners</h1>
-      <div className="space-y-8">
+      <h1 className="text-3xl font-bold mb-8 text-center">Weekly Summary of At-Risk Learners</h1>
+      <div className="space-y-12">
         {data?.summaries.map((summary, index) => (
-          <Card key={index}>
-            <CardHeader>
-              <CardTitle>
+          <Card key={index} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardHeader className="bg-muted/30">
+              <CardTitle className="text-2xl">
                 Week: {new Date(summary.week_start_date).toLocaleDateString()} - {new Date(summary.week_end_date).toLocaleDateString()}
               </CardTitle>
-              <CardDescription>Learners in "Panic" or "Overwhelmed" zones.</CardDescription>
+              <CardDescription>A summary of learners who reported being in the "Panic" or "Overwhelmed" zones.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-xl font-semibold mb-4">Panic Zone 🙀</h3>
+            <CardContent className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <TrendingDown className="h-6 w-6 text-red-500" />
+                    <h3 className="text-xl font-semibold">Panic Zone</h3>
+                  </div>
+                  <Badge variant="destructive">{summary.overwhelmed_students?.length || 0}</Badge>
+                </CardHeader>
+                <CardContent>
                   {summary.overwhelmed_students && summary.overwhelmed_students.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Date</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {summary.overwhelmed_students?.map((student: StudentInfo) => (
-                          <TableRow key={student.user_id + student.date}>
-                            <TableCell>
-                              <Link to={`/admin/table/${student.user_id}`} className="text-blue-500 hover:underline">
-                                {getStudentName(student)}
-                              </Link>
-                            </TableCell>
-                            <TableCell>{new Date(student.date).toLocaleDateString()}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    <ul className="space-y-3">
+                      {summary.overwhelmed_students.map((student: StudentInfo) => (
+                        <li key={student.user_id + student.date} className="flex justify-between items-center p-2 rounded-md hover:bg-muted/50">
+                          <Link to={`/admin/table/${student.user_id}`} className="font-medium text-primary hover:underline">
+                            {getStudentName(student)}
+                          </Link>
+                          <span className="text-sm text-muted-foreground">{new Date(student.date).toLocaleDateString()}</span>
+                        </li>
+                      ))}
+                    </ul>
                   ) : (
-                    <p>No learners in the Panic Zone this week.</p>
+                    <div className="text-center text-muted-foreground py-8">
+                      <UserX className="h-12 w-12 mx-auto mb-2" />
+                      <p>No learners in the Panic Zone this week.</p>
+                    </div>
                   )}
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-4">Stretch Zone - Overwhelmed 😿</h3>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-6 w-6 text-yellow-500" />
+                    <h3 className="text-xl font-semibold">Stretch Zone - Overwhelmed</h3>
+                  </div>
+                  <Badge variant="secondary">{summary.stressed_students?.length || 0}</Badge>
+                </CardHeader>
+                <CardContent>
                   {summary.stressed_students && summary.stressed_students.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Date</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {summary.stressed_students?.map((student: StudentInfo) => (
-                          <TableRow key={student.user_id + student.date}>
-                            <TableCell>
-                              <Link to={`/admin/table/${student.user_id}`} className="text-blue-500 hover:underline">
-                                {getStudentName(student)}
-                              </Link>
-                            </TableCell>
-                            <TableCell>{new Date(student.date).toLocaleDateString()}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                     <ul className="space-y-3">
+                      {summary.stressed_students.map((student: StudentInfo) => (
+                         <li key={student.user_id + student.date} className="flex justify-between items-center p-2 rounded-md hover:bg-muted/50">
+                          <Link to={`/admin/table/${student.user_id}`} className="font-medium text-primary hover:underline">
+                            {getStudentName(student)}
+                          </Link>
+                          <span className="text-sm text-muted-foreground">{new Date(student.date).toLocaleDateString()}</span>
+                        </li>
+                      ))}
+                    </ul>
                   ) : (
-                    <p>No learners in the Overwhelmed Zone this week.</p>
+                    <div className="text-center text-muted-foreground py-8">
+                      <UserX className="h-12 w-12 mx-auto mb-2" />
+                      <p>No learners in the Overwhelmed Zone this week.</p>
+                    </div>
                   )}
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </CardContent>
           </Card>
         ))}
       </div>
       {totalPages > 1 && (
-        <Pagination className="mt-8">
+        <Pagination className="mt-12">
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious onClick={() => handlePageChange(page - 1)} />
+              <PaginationPrevious onClick={() => handlePageChange(page - 1)} disabled={page === 1} />
             </PaginationItem>
             {[...Array(totalPages)].map((_, i) => (
               <PaginationItem key={i}>
@@ -169,7 +213,7 @@ const WeeklySummaryPage: React.FC = () => {
               </PaginationItem>
             ))}
             <PaginationItem>
-              <PaginationNext onClick={() => handlePageChange(page + 1)} />
+              <PaginationNext onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} />
             </PaginationItem>
           </PaginationContent>
         </Pagination>
