@@ -128,6 +128,7 @@ const PostCard: React.FC<{ post: Post }> = ({ post }) => {
     "peepolike": "/reaction/peepoLIKE-2x.webp",
     "pepelaugh": "/reaction/PepeLaugh-2x.webp",
     "sadge": "/reaction/Sadge-2x.png",
+    "peepoheart": "/reaction/peepoHeart-2x.webp",
   };
 
   return (
@@ -156,14 +157,21 @@ const PostCard: React.FC<{ post: Post }> = ({ post }) => {
         <div>
           {post.reactions.length > 0 && (
             <div className="flex items-center gap-2">
-              {post.reactions.map((r) => (
-                reactionMap[r.value] ? (
-                  <img key={r.id} src={reactionMap[r.value]} alt={r.value} className="w-5 h-5" />
-                ) : (
-                  <span key={r.id}>{r.value}</span>
-                )
+              {Object.entries(
+                post.reactions.reduce((acc, reaction) => {
+                  acc[reaction.value] = (acc[reaction.value] || 0) + 1;
+                  return acc;
+                }, {} as Record<string, number>)
+              ).map(([reactionType, count]) => (
+                <div key={reactionType} className="flex items-center gap-1">
+                  {reactionMap[reactionType] ? (
+                    <img src={reactionMap[reactionType]} alt={reactionType} className="w-5 h-5" />
+                  ) : (
+                    <span>{reactionType}</span>
+                  )}
+                  <span className="text-sm text-muted-foreground">{count}</span>
+                </div>
               ))}
-              <span className="text-sm text-muted-foreground">{post.reactions.length}</span>
             </div>
           )}
         </div>

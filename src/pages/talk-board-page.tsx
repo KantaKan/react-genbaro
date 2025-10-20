@@ -54,6 +54,11 @@ const addReaction = async ({ postId, reaction }: { postId: string; reaction: str
   return response.data.data;
 };
 
+const removeReaction = async (postId: string) => {
+  const response = await api.delete(`/board/posts/${postId}/reactions`);
+  return response.data.data;
+};
+
 const TalkBoardPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [newPostContent, setNewPostContent] = useState("");
@@ -68,6 +73,12 @@ const TalkBoardPage: React.FC = () => {
   });
 
   const addReactionMutation = useMutation(addReaction, {
+    onSuccess: () => {
+      queryClient.invalidateQueries("talkBoardPosts");
+    },
+  });
+
+  const removeReactionMutation = useMutation(removeReaction, {
     onSuccess: () => {
       queryClient.invalidateQueries("talkBoardPosts");
     },
@@ -121,7 +132,7 @@ const TalkBoardPage: React.FC = () => {
               exit={{ opacity: 0, y: -20 }}
               layout
             >
-              <PostCard post={post} addReactionMutation={addReactionMutation} />
+              <PostCard post={post} addReactionMutation={addReactionMutation} removeReactionMutation={removeReactionMutation} />
             </motion.div>
           ))}
         </AnimatePresence>
@@ -130,19 +141,36 @@ const TalkBoardPage: React.FC = () => {
   );
 };
 
-const PostCard: React.FC<{ post: Post; addReactionMutation: any }> = ({ post, addReactionMutation }) => {
+const PostCard: React.FC<{ post: Post; addReactionMutation: any; removeReactionMutation: any }> = ({ post, addReactionMutation, removeReactionMutation }) => {
   const { userId } = useAuth();
   const [showReactionPicker, setShowReactionPicker] = useState(false);
 
-  const hasUserReacted = post.reactions.some(reaction => reaction.userId === userId);
+  const userReaction = post.reactions.find(reaction => reaction.userId === userId);
+  const hasUserReacted = !!userReaction;
 
   const handleReact = (e: React.MouseEvent, reaction: string) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!hasUserReacted) {
+    
+    if (hasUserReacted) {
+      // If user already reacted, remove current reaction first, then add new one
+      removeReactionMutation.mutate(post.id, {
+        onSuccess: () => {
+          addReactionMutation.mutate({ postId: post.id, reaction });
+        }
+      });
+    } else {
+      // If user hasn't reacted, just add the reaction
       addReactionMutation.mutate({ postId: post.id, reaction });
-      setShowReactionPicker(false);
     }
+    setShowReactionPicker(false);
+  };
+
+  const handleRemoveReaction = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    removeReactionMutation.mutate(post.id);
+    setShowReactionPicker(false);
   };
 
   const toggleReactionPicker = (e: React.MouseEvent) => {
@@ -155,12 +183,14 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: any }> = ({ post, ad
     { name: "peepolike", url: "/reaction/peepoLIKE-2x.webp" },
     { name: "pepelaugh", url: "/reaction/PepeLaugh-2x.webp" },
     { name: "sadge", url: "/reaction/Sadge-2x.png" },
+    { name: "peepoheart", url: "/reaction/peepoHeart-2x.webp" },
   ];
 
   const reactionMap: { [key: string]: string } = {
     "peepolike": "/reaction/peepoLIKE-2x.webp",
     "pepelaugh": "/reaction/PepeLaugh-2x.webp",
     "sadge": "/reaction/Sadge-2x.png",
+    "peepoheart": "/reaction/peepoHeart-2x.webp",
   };
 
 
@@ -183,9 +213,9 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: any }> = ({ post, ad
         </CardContent>
         <CardFooter className="flex justify-between">
           <div className="flex gap-4 relative">
-            <Button variant="ghost" size="sm" onClick={toggleReactionPicker} disabled={hasUserReacted}>
+            <Button variant="ghost" size="sm" onClick={toggleReactionPicker}>
               <Smile className="mr-2 h-4 w-4" />
-              React
+              {hasUserReacted ? "Change Reaction" : "React"}
             </Button>
             {showReactionPicker && (
               <div className="absolute bottom-10 flex gap-2 bg-card p-2 rounded-lg border">
@@ -193,12 +223,23 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: any }> = ({ post, ad
                   <button
                     key={r.name}
                     onClick={(e) => handleReact(e, r.name)}
-                    className="text-2xl hover:scale-125 transition-transform"
-                    disabled={hasUserReacted}
+                    className={`text-2xl hover:scale-125 transition-transform ${
+                      userReaction?.value === r.name ? 'ring-2 ring-blue-500 rounded-full' : ''
+                    }`}
+                    title={userReaction?.value === r.name ? 'Current reaction' : `React with ${r.name}`}
                   >
                     <img src={r.url} alt={r.name} className="w-8 h-8" />
                   </button>
                 ))}
+                {hasUserReacted && (
+                  <button
+                    onClick={handleRemoveReaction}
+                    className="text-2xl hover:scale-125 transition-transform p-1 bg-red-100 hover:bg-red-200 rounded-full"
+                    title="Remove reaction"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
             )}
             <Button variant="ghost" size="sm">
@@ -209,14 +250,21 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: any }> = ({ post, ad
           <div>
             {post.reactions.length > 0 && (
               <div className="flex items-center gap-2">
-                {post.reactions.map((r) => (
-                  reactionMap[r.value] ? (
-                    <img key={r.id} src={reactionMap[r.value]} alt={r.value} className="w-5 h-5" />
-                  ) : (
-                    <span key={r.id}>{r.value}</span>
-                  )
+                {Object.entries(
+                  post.reactions.reduce((acc, reaction) => {
+                    acc[reaction.value] = (acc[reaction.value] || 0) + 1;
+                    return acc;
+                  }, {} as Record<string, number>)
+                ).map(([reactionType, count]) => (
+                  <div key={reactionType} className="flex items-center gap-1">
+                    {reactionMap[reactionType] ? (
+                      <img src={reactionMap[reactionType]} alt={reactionType} className="w-5 h-5" />
+                    ) : (
+                      <span>{reactionType}</span>
+                    )}
+                    <span className="text-sm text-muted-foreground">{count}</span>
+                  </div>
                 ))}
-                <span className="text-sm text-muted-foreground">{post.reactions.length}</span>
               </div>
             )}
           </div>
