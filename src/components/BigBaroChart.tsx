@@ -11,8 +11,24 @@ import { getBarometerData } from "@/lib/api";
 import AdminReflectionsTable from "./admin-reflections-table";
 import { Button } from "@/components/ui/button";
 import LatestWeeklySummary from "./latest-weekly-summary";
+import { Badge } from "@/components/ui/badge"; // New import
+import { getDayBadge } from "@/utils/day-colors"; // New import
 
 import { reflectionZones } from "./reflection-zones";
+
+const CustomizedXAxisTick = ({ x, y, payload }) => {
+  const { dayName, colorClass } = getDayBadge(payload.value);
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <foreignObject x={-30} y={0} width={60} height={24}>
+        <div className="flex justify-center">
+          <Badge className={colorClass}>{dayName}</Badge>
+        </div>
+      </foreignObject>
+    </g>
+  );
+};
+
 
 const chartConfig = Object.fromEntries(
   reflectionZones.map((zone, index) => [
@@ -113,16 +129,7 @@ export function BaroChart({ userId }) {
                   axisLine={false}
                   tickMargin={8}
                   minTickGap={32}
-                  tickFormatter={(value) => {
-                    const date = new Date(value);
-                    if (isNaN(date.getTime())) {
-                      return "Invalid Date";
-                    }
-                    return date.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    });
-                  }}
+                  tick={<CustomizedXAxisTick />} // Use custom tick component
                 />
                 <ChartTooltip
                   cursor={false}
