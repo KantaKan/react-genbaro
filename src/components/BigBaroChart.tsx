@@ -17,12 +17,12 @@ import { getDayBadge } from "@/utils/day-colors"; // New import
 import { reflectionZones } from "./reflection-zones";
 
 const CustomizedXAxisTick = ({ x, y, payload }) => {
-  const { dayName, colorClass } = getDayBadge(payload.value);
+  const { dayName } = getDayBadge(payload.value);
   return (
     <g transform={`translate(${x},${y})`}>
       <foreignObject x={-30} y={0} width={60} height={24}>
         <div className="flex justify-center">
-          <Badge className={colorClass}>{dayName}</Badge>
+          <Badge variant="outline">{dayName.slice(0, 3)}</Badge>
         </div>
       </foreignObject>
     </g>
@@ -117,8 +117,8 @@ export default function BaroChart({ userId }) {
                 <defs>
                   {Object.entries(chartConfig).map(([key, value]) => (
                     <linearGradient key={key} id={`fill${key.replace(/\s+/g, "")}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={value.color} stopOpacity={0} />
-                      <stop offset="95%" stopColor={value.color} stopOpacity={0} />
+                      <stop offset="5%" stopColor={value.color} stopOpacity={0.8} />
+                      <stop offset="95%" stopColor={value.color} stopOpacity={0.1} />
                     </linearGradient>
                   ))}
                 </defs>
