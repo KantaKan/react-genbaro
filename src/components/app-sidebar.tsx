@@ -1,5 +1,7 @@
 import * as React from "react";
 import { GalleryVerticalEnd, SquareTerminal, BookOpen, FileText, MessageSquare } from "lucide-react"; // Import MessageSquare
+import { motion } from "framer-motion"; // New import for animation
+import { Badge } from "@/components/ui/badge"; // New import for the 'New' badge
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
@@ -13,6 +15,9 @@ const teams = [
     plan: "Enterprise",
   },
 ];
+
+// Feature flag for the 'New' indicator
+const showNewTalkBoardIndicator = true; // Set to false to hide the 'New' indicator
 
 // Navigation configurations for different roles
 const navigationConfig = {
@@ -46,6 +51,22 @@ const navigationConfig = {
       url: "/talk-board",
       icon: MessageSquare,
       isActive: false,
+      badge: showNewTalkBoardIndicator ? ( // Add badge conditionally
+        <motion.div
+          initial={{ opacity: 0.5, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{
+            duration: 0.8,
+            repeat: Infinity,
+            repeatType: "reverse",
+            ease: "easeInOut",
+          }}
+        >
+          <Badge variant="secondary" className="ml-2 bg-blue-500 text-white">
+            New
+          </Badge>
+        </motion.div>
+      ) : undefined,
       items: [
         {
           title: "Discussion",
@@ -72,6 +93,22 @@ const navigationConfig = {
       url: "/talk-board",
       icon: MessageSquare,
       isActive: false,
+      badge: showNewTalkBoardIndicator ? ( // Add badge conditionally
+        <motion.div
+          initial={{ opacity: 0.5, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{
+            duration: 0.8,
+            repeat: Infinity,
+            repeatType: "reverse",
+            ease: "easeInOut",
+          }}
+        >
+          <Badge variant="secondary" className="ml-2 bg-blue-500 text-white">
+            New
+          </Badge>
+        </motion.div>
+      ) : undefined,
       items: [
         {
           title: "Discussion",
