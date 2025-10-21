@@ -6,7 +6,7 @@ import { queryClient } from "./lib/queryClient";
 import { ThemeProvider } from "./components/theme-provider";
 import { Login } from "./components/auth/login";
 import { SignUp } from "./components/auth/signup";
-import { BaroChart } from "./components/BigBaroChart";
+import BaroChart from "./components/BigBaroChart";
 import { AuthProvider, useAuth } from "./AuthContext";
 import Page from "./app/dashboard/page";
 import UserDataProvider, { useUserData } from "./UserDataContext";

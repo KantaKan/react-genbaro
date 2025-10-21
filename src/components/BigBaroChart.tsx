@@ -40,7 +40,7 @@ const chartConfig = Object.fromEntries(
   ])
 ) as ChartConfig;
 
-export function BaroChart({ userId }) {
+export default function BaroChart({ userId }) {
   const [timeRange, setTimeRange] = React.useState("7d");
   const [view, setView] = React.useState<"chart" | "summary">("chart");
 
@@ -117,8 +117,8 @@ export function BaroChart({ userId }) {
                 <defs>
                   {Object.entries(chartConfig).map(([key, value]) => (
                     <linearGradient key={key} id={`fill${key.replace(/\s+/g, "")}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={value.color} stopOpacity={0.8} />
-                      <stop offset="95%" stopColor={value.color} stopOpacity={0.1} />
+                      <stop offset="5%" stopColor={value.color} stopOpacity={0} />
+                      <stop offset="95%" stopColor={value.color} stopOpacity={0} />
                     </linearGradient>
                   ))}
                 </defs>
@@ -170,4 +170,3 @@ export function BaroChart({ userId }) {
   );
 }
 
-export default BaroChart;

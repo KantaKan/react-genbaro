@@ -7,6 +7,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, TrendingDown, UserX } from "lucide-react";
+import { getDayBadge } from "@/utils/day-colors"; // New import
+
+const DayBadgeComponent: React.FC<{ dateString: string }> = ({ dateString }) => {
+  const { dayName, colorClass } = getDayBadge(dateString);
+  return <Badge className={colorClass}>{dayName}</Badge>;
+};
 
 interface StudentInfo {
   user_id: string;
@@ -138,7 +144,7 @@ const LatestWeeklySummary: React.FC = () => {
                     <Link to={`/admin/table/${student.user_id}`} className="font-medium text-primary hover:underline">
                       {getStudentName(student)}
                     </Link>
-                    <span className="text-sm text-muted-foreground">{new Date(student.date).toLocaleDateString()}</span>
+                    <span className="text-sm text-muted-foreground"><DayBadgeComponent dateString={student.date} /></span>
                   </li>
                 ))}
               </ul>
@@ -167,7 +173,7 @@ const LatestWeeklySummary: React.FC = () => {
                     <Link to={`/admin/table/${student.user_id}`} className="font-medium text-primary hover:underline">
                       {getStudentName(student)}
                     </Link>
-                    <span className="text-sm text-muted-foreground">{new Date(student.date).toLocaleDateString()}</span>
+                    <span className="text-sm text-muted-foreground"><DayBadgeComponent dateString={student.date} /></span>
                   </li>
                 ))}
               </ul>
