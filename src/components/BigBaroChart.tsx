@@ -57,6 +57,36 @@ export default function BaroChart({ userId }) {
     return [...rawChartData].sort((a, b) => new Date(a.date) - new Date(b.date));
   }, [rawChartData]);
 
+  const totalReflections = React.useMemo(() => {
+    if (!chartData) return 0;
+    return Math.round(
+      chartData.reduce((total, dayData) => {
+        return (
+          total +
+          reflectionZones.reduce(
+            (dayTotal, zone) => dayTotal + (dayData[zone.label] || 0),
+            0
+          )
+        );
+      }, 0)
+    );
+  }, [chartData]);
+
+  const todayReflections = React.useMemo(() => {
+    if (!chartData || chartData.length === 0) return 0;
+
+    const today = new Date();
+    const todayFormatted = today.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    const todayData = chartData.find(day => day.date === todayFormatted);
+
+    if (!todayData) return 0;
+
+    return Math.round(
+      reflectionZones.reduce((dayTotal, zone) => dayTotal + (todayData[zone.label] || 0), 0)
+    );
+  }, [chartData]);
+
   if (isLoading) {
     return (
       <Card>
@@ -112,6 +142,26 @@ export default function BaroChart({ userId }) {
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         {view === "chart" ? (
           <>
+            <div className="text-center mb-4">
+              <div className="flex justify-center gap-8">
+                <div>
+                  <div className="text-4xl font-bold">
+                    {totalReflections}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Total Reflections
+                  </div>
+                </div>
+                <div>
+                  <div className="text-4xl font-bold">
+                    {todayReflections}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Today's Reflections
+                  </div>
+                </div>
+              </div>
+            </div>
             <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
               <AreaChart data={chartData}>
                 <defs>
@@ -129,7 +179,6 @@ export default function BaroChart({ userId }) {
                   axisLine={false}
                   tickMargin={8}
                   minTickGap={32}
-                  tick={<CustomizedXAxisTick />} // Use custom tick component
                 />
                 <ChartTooltip
                   cursor={false}
