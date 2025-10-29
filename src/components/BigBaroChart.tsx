@@ -63,8 +63,9 @@ export default function BaroChart({ userId }) {
       chartData.reduce((total, dayData) => {
         return (
           total +
-          reflectionZones.reduce(
-            (dayTotal, zone) => dayTotal + (dayData[zone.label] || 0),
+          Object.keys(dayData).reduce(
+            (dayTotal, key) =>
+              key === "date" ? dayTotal : dayTotal + (dayData[key] || 0),
             0
           )
         );
@@ -76,14 +77,18 @@ export default function BaroChart({ userId }) {
     if (!chartData || chartData.length === 0) return 0;
 
     const today = new Date();
-    const todayFormatted = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    const todayFormatted = today.toISOString().split("T")[0]; // YYYY-MM-DD
 
-    const todayData = chartData.find(day => day.date === todayFormatted);
+    const todayData = chartData.find((day) => day.date === todayFormatted);
 
     if (!todayData) return 0;
 
     return Math.round(
-      reflectionZones.reduce((dayTotal, zone) => dayTotal + (todayData[zone.label] || 0), 0)
+      Object.keys(todayData).reduce(
+        (dayTotal, key) =>
+          key === "date" ? dayTotal : dayTotal + (todayData[key] || 0),
+        0
+      )
     );
   }, [chartData]);
 
