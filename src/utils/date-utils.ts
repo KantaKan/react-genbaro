@@ -85,6 +85,8 @@ export const HOLIDAYS = [
   new Date("2025-05-05"), // 
   new Date("2025-08-12"), // วันแม่
   new Date("2025-05-12"), // Add more holidays here...
+  new Date("2025-10-13"),
+  new Date("2025-10-23"),
 ].map((date) => {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);

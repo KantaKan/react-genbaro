@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import type { Reflection, StreakData } from "./use-reflections";
 
-const HOLIDAYS = [new Date("2025-04-07"), new Date("2025-04-13"), new Date("2025-04-14"), new Date("2025-04-15"), new Date("2025-05-01"), new Date("2025-05-05"), new Date("2025-05-12")].map((date) => {
+const HOLIDAYS = [new Date("2025-04-07"), new Date("2025-04-13"), new Date("2025-04-14"), new Date("2025-04-15"), new Date("2025-05-01"), new Date("2025-05-05"), new Date("2025-05-12"), new Date("2025-10-13"), new Date("2025-10-23")].map((date) => {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
   return d;
