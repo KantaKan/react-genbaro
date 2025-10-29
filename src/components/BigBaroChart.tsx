@@ -14,8 +14,6 @@ import LatestWeeklySummary from "./latest-weekly-summary";
 import { Badge } from "@/components/ui/badge"; // New import
 import { getDayBadge } from "@/utils/day-colors"; // New import
 
-import { reflectionZones } from "./reflection-zones";
-
 const CustomizedXAxisTick = ({ x, y, payload }) => {
   const { dayName } = getDayBadge(payload.value);
   return (
@@ -30,16 +28,6 @@ const CustomizedXAxisTick = ({ x, y, payload }) => {
 };
 
 
-const chartConfig = Object.fromEntries(
-  reflectionZones.map((zone, index) => [
-    zone.label,
-    {
-      label: zone.label,
-      color: `hsl(var(--chart-${index + 1}))`,
-    },
-  ])
-) as ChartConfig;
-
 export default function BaroChart({ userId }) {
   const [timeRange, setTimeRange] = React.useState("7d");
   const [view, setView] = React.useState<"chart" | "summary">("chart");
@@ -51,6 +39,30 @@ export default function BaroChart({ userId }) {
   } = useQuery(["barometerData", timeRange], () => getBarometerData(timeRange), {
     refetchOnWindowFocus: false,
   });
+
+  const chartConfig = React.useMemo(() => {
+    if (!rawChartData) return {} as ChartConfig;
+    const allZoneKeys = new Set<string>();
+    rawChartData.forEach((dataPoint) => {
+      Object.keys(dataPoint).forEach((key) => {
+        if (key !== "date") {
+          allZoneKeys.add(key);
+        }
+      });
+    });
+
+    const sortedKeys = Array.from(allZoneKeys).sort();
+
+    return Object.fromEntries(
+      sortedKeys.map((zone, index) => [
+        zone,
+        {
+          label: zone,
+          color: `hsl(var(--chart-${index + 1}))`,
+        },
+      ])
+    ) as ChartConfig;
+  }, [rawChartData]);
 
   const chartData = React.useMemo(() => {
     if (!rawChartData) return [];
@@ -77,7 +89,10 @@ export default function BaroChart({ userId }) {
     if (!chartData || chartData.length === 0) return 0;
 
     const today = new Date();
-    const todayFormatted = today.toISOString().split("T")[0]; // YYYY-MM-DD
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayFormatted = `${year}-${month}-${day}`;
 
     const todayData = chartData.find((day) => day.date === todayFormatted);
 
