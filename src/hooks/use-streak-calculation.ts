@@ -25,12 +25,11 @@ export function useStreakCalculation(reflections: Reflection[]): StreakData {
     let hasCurrentStreak = false;
     let streakBroken = false;
 
-    const hasTodayReflection =
-      sortedDates.some((date) => {
-        const d = new Date(date);
-        d.setHours(0, 0, 0, 0);
-        return d.getTime() === today.getTime();
-      }) || isHoliday(today);
+    const hasTodayReflection = sortedDates.some((date) => {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      return d.getTime() === today.getTime();
+    });
 
     let currentDate = new Date(today);
     if (isWeekend(today)) {
@@ -38,12 +37,11 @@ export function useStreakCalculation(reflections: Reflection[]): StreakData {
         currentDate.setDate(currentDate.getDate() - 1);
       }
 
-      const hasLastWorkdayReflection =
-        sortedDates.some((date) => {
-          const d = new Date(date);
-          d.setHours(0, 0, 0, 0);
-          return d.getTime() === currentDate.getTime();
-        }) || isHoliday(currentDate);
+      const hasLastWorkdayReflection = sortedDates.some((date) => {
+        const d = new Date(date);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime() === currentDate.getTime();
+      });
 
       if (hasLastWorkdayReflection) {
         hasCurrentStreak = true;
@@ -136,10 +134,10 @@ export function useStreakCalculation(reflections: Reflection[]): StreakData {
     }
 
     return {
-      currentStreak: hasCurrentStreak ? currentStreak : 0,
+      currentStreak: hasCurrentStreak ? currentStreak : oldStreak,
       oldStreak,
       lastActiveDate,
-      hasCurrentStreak,
+      hasCurrentStreak: hasCurrentStreak || oldStreak > 0,
     };
   }, [reflections]);
 }
