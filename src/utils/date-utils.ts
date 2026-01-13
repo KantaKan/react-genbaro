@@ -17,7 +17,7 @@ export function formatDate(date: string | Date | undefined | null, fallback = "U
   if (!isValidDate(date)) return fallback;
 
   try {
-    const d = new Date(date);
+    const d = new Date(date as string | number | Date); // Cast to standard types accepted by Date constructor
     return d.toLocaleDateString();
   } catch (error) {
     console.error(`Error formatting date: ${date}`, error);
@@ -87,6 +87,30 @@ export const HOLIDAYS = [
   new Date("2025-05-12"), // Add more holidays here...
   new Date("2025-10-13"),
   new Date("2025-10-23"),
+  new Date("2025-12-05"), // Father's Day
+  new Date("2025-12-10"), // Constitution Day
+  new Date("2025-12-31"), // New Year's Eve
+  new Date("2026-01-13"), // Special Holiday
+  // 2026 Thai Holidays
+  new Date("2026-01-01"), // New Year's Day
+  new Date("2026-03-03"), // Makha Bucha Day
+  new Date("2026-04-06"), // Chakri Memorial Day
+  new Date("2026-04-13"), // Songkran Day 1
+  new Date("2026-04-14"), // Songkran Day 2
+  new Date("2026-04-15"), // Songkran Day 3
+  new Date("2026-05-01"), // National Labour Day
+  new Date("2026-05-04"), // Coronation Day
+  new Date("2026-05-31"), // Visakha Bucha Day (Estimated)
+  new Date("2026-06-03"), // H.M. Queen Suthida's Birthday
+  new Date("2026-07-28"), // H.M. King Rama X's Birthday
+  new Date("2026-07-29"), // Asalha Bucha Day
+  new Date("2026-07-30"), // Buddhist Lent Day
+  new Date("2026-08-12"), // Mother's Day
+  new Date("2026-10-13"), // King Bhumibol Memorial Day
+  new Date("2026-10-23"), // Chulalongkorn Day
+  new Date("2026-12-05"), // Father's Day
+  new Date("2026-12-10"), // Constitution Day
+  new Date("2026-12-31"), // New Year's Eve
 ].map((date) => {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);

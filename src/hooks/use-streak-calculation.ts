@@ -1,39 +1,6 @@
-"use client";
-
 import { useMemo } from "react";
 import type { Reflection, StreakData } from "./use-reflections";
-
-const HOLIDAYS = [new Date("2025-04-07"), new Date("2025-04-13"), new Date("2025-04-14"), new Date("2025-04-15"), new Date("2025-05-01"), new Date("2025-05-05"), new Date("2025-05-12"), new Date("2025-10-13"), new Date("2025-10-23")].map((date) => {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
-});
-
-const isWeekend = (date: Date): boolean => {
-  const day = date.getDay();
-  return day === 0 || day === 6;
-};
-
-const isHoliday = (date: Date): boolean => {
-  const normalizedDate = new Date(date);
-  normalizedDate.setHours(0, 0, 0, 0);
-  return HOLIDAYS.some((holiday) => holiday.getTime() === normalizedDate.getTime());
-};
-
-const isValidWorkday = (date: Date): boolean => {
-  return !isWeekend(date) && !isHoliday(date);
-};
-
-const getPreviousWorkday = (date: Date): Date => {
-  const prevDate = new Date(date);
-  prevDate.setDate(prevDate.getDate() - 1);
-
-  while (!isValidWorkday(prevDate)) {
-    prevDate.setDate(prevDate.getDate() - 1);
-  }
-
-  return prevDate;
-};
+import { isHoliday, isWeekend, getPreviousWorkday } from "../utils/date-utils";
 
 export function useStreakCalculation(reflections: Reflection[]): StreakData {
   return useMemo(() => {
