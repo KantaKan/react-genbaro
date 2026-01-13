@@ -93,6 +93,7 @@ export const HOLIDAYS = [
   new Date("2026-01-13"), // Special Holiday
   // 2026 Thai Holidays
   new Date("2026-01-01"), // New Year's Day
+  new Date("2026-01-02"), // New Year's Day
   new Date("2026-03-03"), // Makha Bucha Day
   new Date("2026-04-06"), // Chakri Memorial Day
   new Date("2026-04-13"), // Songkran Day 1
