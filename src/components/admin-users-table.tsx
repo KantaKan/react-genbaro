@@ -102,6 +102,8 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
         return getTotalReflections(user.reflections);
       case "Last Barometer":
         return getLastBarometer(user.reflections);
+      case "Actions":
+        return "";
       default:
         return "";
     }
@@ -178,6 +180,16 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
 
   const renderTableCell = (user: User, column: string) => {
     const value = getValueByKey(user, column);
+
+    if (column === "Actions") {
+      return (
+        <TableCell key={column} className="text-center">
+          <Button variant="outline" size="sm" onClick={() => handleRowClick(user._id)}>
+            View Details
+          </Button>
+        </TableCell>
+      );
+    }
 
     // Add center alignment only for specific columns
     if (["First Name", "Last Name", "JSD Number", "Date"].includes(column)) {
@@ -272,7 +284,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2, delay: index * 0.03 }}
                   onClick={() => handleRowClick(user._id)}
-                  className="cursor-pointer hover:bg-muted/50 transition-colors text-center"
+                  className="cursor-pointer hover:bg-muted/50 transition-colors text-center even:bg-muted/25"
                 >
                   {visibleColumns.map((column) => renderTableCell(user, column))}
                 </motion.tr>
