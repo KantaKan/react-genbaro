@@ -1,55 +1,67 @@
-"use client"
+import { motion } from "framer-motion";
 
-import { useEffect } from "react"
-import { motion, useAnimation } from "framer-motion"
-import type { ReflectionZone } from "./reflection-zones"
+export const reflectionZones = [
+  {
+    id: "comfort",
+    label: "Comfort Zone",
+    bgColor: "bg-chart-2",
+    emoji: "😸",
+    description: "Where you feel safe and in control. Tasks are easy and familiar.",
+  },
+  {
+    id: "stretch-enjoying",
+    label: "Stretch zone - Enjoying the challenges",
+    bgColor: "bg-chart-4",
+    emoji: "😺",
+    description: "Pushing your boundaries, feeling challenged but excited.",
+  },
+  {
+    id: "stretch-overwhelmed",
+    label: "Stretch zone - Overwhelmed",
+    bgColor: "bg-chart-1",
+    emoji: "😿",
+    description: "Feeling stressed, but still learning and growing.",
+  },
+  {
+    id: "panic",
+    label: "Panic Zone",
+    bgColor: "bg-destructive",
+    emoji: "🙀",
+    description: "Feeling extreme stress or fear. Learning is difficult here.",
+  },
+  {
+    id: "no-data",
+    label: "No Data",
+    bgColor: "bg-muted",
+    emoji: "❌",
+    description: "Insufficient information to categorize the experience.",
+  },
+] as const;
 
-const pulseAnimation = {
-  "0%": { boxShadow: "0 0 0 0 rgba(var(--primary), 0.7)" },
-  "70%": { boxShadow: "0 0 0 10px rgba(var(--primary), 0)" },
-  "100%": { boxShadow: "0 0 0 0 rgba(var(--primary), 0)" },
-}
-
-interface BarometerVisualProps {
-  zone: ReflectionZone
-  isCurrent?: boolean
-}
-
-export const BarometerVisual = ({ zone, isCurrent = false }: BarometerVisualProps) => {
-  const controls = useAnimation()
-
-  useEffect(() => {
-    controls.start({
-      scale: [1, 1.05, 1],
-      transition: {
-        duration: 2,
-        repeat: Number.POSITIVE_INFINITY,
-        repeatType: "reverse",
-      },
-    })
-  }, [controls])
+export const BarometerVisual = ({ barometer }: { barometer: string }) => {
+  const zone = reflectionZones.find((z) => z.label === barometer);
+  if (!zone || barometer === "-") return <span>{barometer}</span>;
 
   return (
     <motion.div
-      className={`flex items-center gap-2 p-2 rounded-md ${zone.bgColor} bg-opacity-20 transition-all duration-300 ${
-        isCurrent ? "ring-2 ring-primary ring-opacity-50" : ""
-      }`}
-      animate={controls}
+      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md ${zone.bgColor} bg-opacity-15 transition-all duration-300`}
       whileHover={{
-        scale: 1.1,
+        scale: 1.05,
         backgroundColor: `var(--${zone.bgColor.replace("bg-", "")})`,
-        backgroundOpacity: 0.3,
+        backgroundOpacity: 0.25,
       }}
-      style={isCurrent ? { animation: `${pulseAnimation} 2s infinite` } : {}}
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
     >
       <motion.span
-        className="text-xl"
+        className="text-base"
         animate={{
           rotate: [0, 10, 0, -10, 0],
-          scale: [1, 1.2, 1],
+          scale: [1, 1.1, 1],
         }}
         transition={{
-          duration: 3,
+          duration: 2,
           repeat: Number.POSITIVE_INFINITY,
           repeatType: "loop",
         }}
@@ -58,5 +70,5 @@ export const BarometerVisual = ({ zone, isCurrent = false }: BarometerVisualProp
       </motion.span>
       <span className="font-medium text-sm">{zone.label}</span>
     </motion.div>
-  )
-}
+  );
+};

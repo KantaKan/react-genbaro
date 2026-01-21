@@ -32,88 +32,9 @@ interface AdminUsersTableProps {
   isLoading: boolean;
 }
 
-const reflectionZones = [
-  {
-    id: "comfort",
-    label: "Comfort Zone",
-    bgColor: "bg-emerald-500",
-    emoji: "😸",
-    description: "Where you feel safe and in control. Tasks are easy and familiar.",
-  },
-  {
-    id: "stretch-enjoying",
-    label: "Stretch zone - Enjoying the challenges",
-    bgColor: "bg-amber-500",
-    emoji: "😺",
-    description: "Pushing your boundaries, feeling challenged but excited.",
-  },
-  {
-    id: "stretch-overwhelmed",
-    label: "Stretch zone - Overwhelmed",
-    bgColor: "bg-red-500",
-    emoji: "😿",
-    description: "Feeling stressed, but still learning and growing.",
-  },
-  {
-    id: "panic",
-    label: "Panic Zone",
-    bgColor: "bg-violet-500",
-    emoji: "🙀",
-    description: "Feeling extreme stress or fear. Learning is difficult here.",
-  },
-  {
-    id: "no-data",
-    label: "No Data",
-    bgColor: "bg-gray-200",
-    emoji: "❌",
-    description: "Insufficient information to categorize the experience.",
-  },
-] as const;
+import { BarometerVisual, reflectionZones } from "@/components/barometer-visual";
 
-const BarometerVisual = ({ barometer }: { barometer: string }) => {
-  const zone = reflectionZones.find((z) => z.label === barometer);
-  if (!zone || barometer === "-") return <span>{barometer}</span>;
-
-  return (
-    <motion.div
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md ${zone.bgColor} bg-opacity-15 transition-all duration-300`}
-      whileHover={{
-        scale: 1.05,
-        backgroundColor: `var(--${zone.bgColor.replace("bg-", "")})`,
-        backgroundOpacity: 0.25,
-      }}
-      initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-    >
-      <motion.span
-        className="text-base"
-        animate={{
-          rotate: [0, 10, 0, -10, 0],
-          scale: [1, 1.1, 1],
-        }}
-        transition={{
-          duration: 2,
-          repeat: Number.POSITIVE_INFINITY,
-          repeatType: "loop",
-        }}
-      >
-        {zone.emoji}
-      </motion.span>
-      <span className="font-medium text-sm">{zone.label}</span>
-    </motion.div>
-  );
-};
-
-const LoadingRow = () => (
-  <TableRow>
-    <TableCell colSpan={10}>
-      <div className="flex items-center justify-center p-8">
-        <motion.div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
-      </div>
-    </TableCell>
-  </TableRow>
-);
+import { LoadingRow } from "@/components/loading-row";
 
 // Define all available columns in their desired order
 const ALL_COLUMNS = ["Zoom Name", "Project Group", "Genmate Group", "First Name", "Last Name", "JSD Number", "Email", "Cohort", "Total Reflections", "Last Barometer"] as const;
