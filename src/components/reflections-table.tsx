@@ -215,8 +215,7 @@ export const ReflectionsTable = ({ reflections, todaysReflection, isAdmin = fals
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="group"
-                  whileHover={{ backgroundColor: "rgba(0,0,0,0.02)" }}
+                  className="group hover:bg-muted/50 transition-colors"
                 >
                   {!hiddenColumns.includes("Date") && <TableCell className="whitespace-normal py-4 group-hover:text-primary transition-colors">{new Date(reflection.day || reflection.date).toLocaleDateString()}</TableCell>}
                   {!hiddenColumns.includes("Tech Happy") && <TableCell className="whitespace-normal py-4">{reflection?.reflection?.tech_sessions?.happy || ""}</TableCell>}
@@ -227,15 +226,14 @@ export const ReflectionsTable = ({ reflections, todaysReflection, isAdmin = fals
                     <TableCell>
                       {(() => {
                         const barometerValue = reflection?.reflection?.barometer || reflection?.barometer || "";
-                        const zone = reflectionZones.find((z) => 
+                        const zone = reflectionZones.find((z) =>
                           z.label.toLowerCase() === barometerValue.toLowerCase() ||
                           z.aliases?.some(alias => alias.toLowerCase() === barometerValue.toLowerCase())
                         );
-                        const isCurrent = todaysReflection?.reflection?.barometer === barometerValue;
                         if (!zone) {
                           return <span className="text-muted-foreground">{barometerValue}</span>;
                         }
-                        return <BarometerVisual zone={zone} isCurrent={isCurrent} />;
+                        return <BarometerVisual barometer={zone.label} />;
                       })()}
                     </TableCell>
                   )}
