@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { api } from "./lib/api";
 import { jwtDecode } from "jwt-decode";
+import type { Badge } from "./lib/types";
 
 // Types
 interface TechSession {
@@ -38,6 +39,7 @@ interface UserData {
   jsd_number: string;
   role: string;
   reflections: Reflection[];
+  badges?: Badge[];
 }
 
 interface JWTPayload {

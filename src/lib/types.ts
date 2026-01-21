@@ -57,3 +57,12 @@ export interface Reflection {
 }
 
 export type Zone = "comfort" | "stretch-enjoying" | "stretch-overwhelmed" | "panic" | "no-data" | "weekend";
+
+export interface Badge {
+  _id?: string;
+  type: string;
+  name: string;
+  emoji: string;
+  imageUrl?: string;
+  awardedAt: string;
+}

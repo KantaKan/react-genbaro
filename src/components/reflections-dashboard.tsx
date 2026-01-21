@@ -19,6 +19,24 @@ import { ReflectionsTable } from "./reflections-table";
 import FeedbackForm from "./feedback-form";
 import { ReflectionPreview } from "./reflection-preview";
 import { SubmissionStatusCard } from "./submission-status-card";
+import { AchievementsSection } from "./achievements-section";
+import { api } from "@/lib/api";
+import type { Badge } from "@/lib/types";
+import { PixelBadge } from "./pixel-badge";
+
+// Define the User interface
+interface User {
+  _id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  cohort_number: number;
+  role: string;
+  zoom_name: string;
+  project_group: string;
+  genmate_group: string;
+  badges?: Badge[];
+}
 
 interface ReflectionsDashboardProps {
   userId: string;
@@ -27,12 +45,34 @@ interface ReflectionsDashboardProps {
 }
 
 export default function ReflectionsDashboard({ userId, initialReflections = [], onReflectionSubmit }: ReflectionsDashboardProps) {
-  const { reflections, isLoading, error, addReflection, refetch } = useReflections(userId, initialReflections);
+  const { reflections, isLoading: isLoadingReflections, error: reflectionsError, addReflection, refetch } = useReflections(userId, initialReflections);
   const streakData = useStreakCalculation(reflections);
 
+  const [user, setUser] = useState<User | null>(null); // New state for user
+  const [isLoadingUser, setIsLoadingUser] = useState(false); // New loading state for user
+  const [userError, setUserError] = useState<string | null>(null); // New error state for user
+
   useEffect(() => {
-    refetch();
-  }, [userId, refetch]);
+    refetch(); // Refetch reflections
+
+    const fetchUser = async () => { // New function to fetch user
+      if (!userId) return;
+      setIsLoadingUser(true);
+      setUserError(null);
+      try {
+        const response = await api.get<any>(`users/${userId}`);
+        console.log("User data fetched:", response.data.data);
+        console.log("Badges:", response.data.data?.badges);
+        setUser(response.data.data);
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        setUserError("Failed to load user data");
+      } finally {
+        setIsLoadingUser(false);
+      }
+    };
+    fetchUser(); // Call new fetch user function
+  }, [userId, refetch]); // Depend on userId and refetch
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState<
@@ -112,7 +152,10 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
     [hasSubmittedToday, formData]
   );
 
-  if (isLoading) {
+  const totalIsLoading = isLoadingReflections || isLoadingUser;
+  const totalError = reflectionsError || userError;
+
+  if (totalIsLoading) {
     return (
       <div className="container mx-auto py-10 space-y-8">
         <div className="space-y-4">
@@ -153,15 +196,15 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
     );
   }
 
-  if (error) {
+  if (totalError) {
     return (
       <div className="container mx-auto py-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <Card className="border-destructive">
             <CardContent className="p-6">
               <div className="text-center text-destructive">
-                <h2 className="text-lg font-semibold">Error Loading Reflections</h2>
-                <p>{error}</p>
+                <h2 className="text-lg font-semibold">Error Loading Data</h2>
+                <p>{totalError}</p>
               </div>
             </CardContent>
           </Card>
@@ -284,6 +327,11 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
 
       {/* Submission Status Card */}
       <SubmissionStatusCard hasSubmitted={hasSubmittedToday} submissionDate={submissionDate} todaysReflection={todaysReflection} />
+
+      {/* Achievements Section */}
+      {user && user.badges && user.badges.length > 0 && (
+        <AchievementsSection badges={user.badges} />
+      )}
 
       {/* Zone Statistics */}
       <div className="flex items-center justify-between mb-4">
@@ -436,7 +484,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
       )}
 
       {/* Reflections Table */}
-      <ReflectionsTable reflections={reflections} todaysReflection={todaysReflection} />
+      <ReflectionsTable reflections={reflections} todaysReflection={todaysReflection} isAdmin={false} />
 
       {/* Warning Dialog */}
       <AlertDialog open={showCloseWarning} onOpenChange={setShowCloseWarning}>

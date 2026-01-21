@@ -1,20 +1,24 @@
 export const reflectionZones = [
-  { id: "comfort", label: "Comfort Zone", bgColor: "bg-green-500", textColor: "text-green-900", emoji: "😸" },
+  { id: "comfort", label: "Comfort Zone", bgColor: "bg-green-500", textColor: "text-green-900", emoji: "😸", aliases: ["comfort zone", "comfort"] },
   {
     id: "stretch-enjoying",
     label: "Stretch zone - Enjoying the challenges",
     bgColor: "bg-yellow-500",
     textColor: "text-yellow-900",
     emoji: "😺",
+    aliases: ["stretch zone - enjoying the challenges", "stretch-enjoying", "enjoying"],
   },
-  { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", bgColor: "bg-red-500", textColor: "text-red-900", emoji: "😿" },
-  { id: "panic", label: "Panic Zone", bgColor: "bg-purple-500", textColor: "text-purple-900", emoji: "🙀" },
+  { id: "stretch-overwhelmed", label: "Stretch zone - Overwhelmed", bgColor: "bg-red-500", textColor: "text-red-900", emoji: "😿", aliases: ["stretch zone - overwhelmed", "stretch-overwhelmed", "overwhelmed"] },
+  { id: "panic", label: "Panic Zone", bgColor: "bg-purple-500", textColor: "text-purple-900", emoji: "🙀", aliases: ["panic zone", "panic"] },
 ] as const;
 
 export type ReflectionZone = (typeof reflectionZones)[number];
 
 export const getColorForBarometer = (barometer: string) => {
-  const zone = reflectionZones.find((zone) => zone.label === barometer);
+  const zone = reflectionZones.find((zone) => 
+    zone.label.toLowerCase() === barometer.toLowerCase() ||
+    zone.aliases?.some(alias => alias.toLowerCase() === barometer.toLowerCase())
+  );
   return zone ? `${zone.bgColor} ${zone.textColor}` : "";
 };
 

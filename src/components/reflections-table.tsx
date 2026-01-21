@@ -11,13 +11,18 @@ import { ChevronDown, ChevronUp, Search } from "lucide-react";
 import type { Reflection, TechSession, NonTechSession, ReflectionData } from "@/hooks/use-reflections";
 import { reflectionZones } from "./reflection-zones";
 import { BarometerVisual } from "./barometer-visual";
+import { FeedbackButton } from "./feedback-button"; // Import the new component
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"; // Import Dialog components
+import { MessageSquareText } from "lucide-react"; // Import for feedback icon
 
 interface ReflectionsTableProps {
   reflections: Reflection[];
   todaysReflection?: Reflection;
+  isAdmin?: boolean; // New prop to indicate if the table is used in an admin context
+  userId?: string; // New prop to pass the user ID for feedback
 }
 
-export const ReflectionsTable = ({ reflections, todaysReflection }: ReflectionsTableProps) => {
+export const ReflectionsTable = ({ reflections, todaysReflection, isAdmin = false, userId }: ReflectionsTableProps) => {
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
   const [sortConfig, setSortConfig] = useState<{
     key: string;
@@ -28,6 +33,14 @@ export const ReflectionsTable = ({ reflections, todaysReflection }: ReflectionsT
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [timeFilter, setTimeFilter] = useState("all");
+
+  const ALL_REFLECTION_COLUMNS = useMemo(() => {
+    const columns = ["Date", "Tech Happy", "Tech Improve", "Non-Tech Happy", "Non-Tech Improve", "Barometer"];
+    if (isAdmin) {
+      columns.push("Feedback");
+    }
+    return columns;
+  }, [isAdmin]);
 
   const sortReflections = useCallback(
     (reflectionsToSort: Reflection[]) => {
@@ -142,7 +155,7 @@ export const ReflectionsTable = ({ reflections, todaysReflection }: ReflectionsT
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              {["Date", "Tech Happy", "Tech Improve", "Non-Tech Happy", "Non-Tech Improve", "Barometer"].map((column) => (
+              {ALL_REFLECTION_COLUMNS.map((column) => (
                 <DropdownMenuCheckboxItem key={column} className="capitalize" checked={!hiddenColumns.includes(column)} onCheckedChange={() => toggleColumn(column)}>
                   {column}
                 </DropdownMenuCheckboxItem>
@@ -174,6 +187,7 @@ export const ReflectionsTable = ({ reflections, todaysReflection }: ReflectionsT
               {!hiddenColumns.includes("Non-Tech Happy") && <TableHead>Non-Tech Happy</TableHead>}
               {!hiddenColumns.includes("Non-Tech Improve") && <TableHead>Non-Tech Improve</TableHead>}
               {!hiddenColumns.includes("Barometer") && <TableHead>Barometer</TableHead>}
+              {isAdmin && !hiddenColumns.includes("Feedback") && <TableHead>Feedback</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -212,10 +226,45 @@ export const ReflectionsTable = ({ reflections, todaysReflection }: ReflectionsT
                   {!hiddenColumns.includes("Barometer") && (
                     <TableCell>
                       {(() => {
-                        const zone = reflectionZones.find((z) => z.label === reflection?.reflection?.barometer);
-                        const isCurrent = todaysReflection?.reflection?.barometer === reflection?.reflection?.barometer;
-                        return zone ? <BarometerVisual zone={zone} isCurrent={isCurrent} /> : reflection?.reflection?.barometer || "";
+                        const barometerValue = reflection?.reflection?.barometer || reflection?.barometer || "";
+                        const zone = reflectionZones.find((z) => 
+                          z.label.toLowerCase() === barometerValue.toLowerCase() ||
+                          z.aliases?.some(alias => alias.toLowerCase() === barometerValue.toLowerCase())
+                        );
+                        const isCurrent = todaysReflection?.reflection?.barometer === barometerValue;
+                        if (!zone) {
+                          return <span className="text-muted-foreground">{barometerValue}</span>;
+                        }
+                        return <BarometerVisual zone={zone} isCurrent={isCurrent} />;
                       })()}
+                    </TableCell>
+                  )}
+                  {isAdmin && !hiddenColumns.includes("Feedback") && userId && reflection._id && (
+                    <TableCell>
+                      <FeedbackButton
+                        userId={userId}
+                        reflectionId={reflection._id}
+                        initialFeedback={reflection.admin_feedback}
+                        onFeedbackUpdated={() => { /* Consider a way to refresh reflections if needed */ }}
+                      />
+                    </TableCell>
+                  )}
+                  {!isAdmin && !hiddenColumns.includes("Feedback") && reflection.admin_feedback && (
+                    <TableCell>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="icon" className="h-8 w-8">
+                            <MessageSquareText className="h-4 w-4" />
+                            <span className="sr-only">View Feedback</span>
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Admin Feedback</DialogTitle>
+                          </DialogHeader>
+                          <p className="py-4 whitespace-pre-wrap">{reflection.admin_feedback}</p>
+                        </DialogContent>
+                      </Dialog>
                     </TableCell>
                   )}
                 </motion.tr>

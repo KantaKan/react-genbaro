@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, School, ClipboardList, TrendingUp } from "lucide-react";
+import { ArrowLeft, Users, School, ClipboardList, TrendingUp, Award } from "lucide-react";
+import { PixelBadge } from "@/components/pixel-badge";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,7 +13,8 @@ import { ReflectionsTable } from "@/components/reflections-table";
 import { reflectionZones } from "@/components/reflection-zones";
 import { BarometerVisual } from "@/components/barometer-visual";
 import { formatDate } from "@/lib/utils";
-
+import { AwardBadgeButton } from "@/components/award-badge-button";
+import type { Badge } from "@/lib/types";
 interface Reflection {
   day: string;
   user_id: string;
@@ -40,6 +42,7 @@ interface User {
   jsd_number: string;
   role: string;
   _id: string;
+  badges?: Badge[];
 }
 
 const StatCard = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | number | JSX.Element }) => (
@@ -62,8 +65,24 @@ export default function UserReflectionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchUserData = async (userId: string) => {
+    try {
+      const response = await api.get(`/admin/userreflections/${userId}`);
+      if (response.data.data.reflections) {
+        const sortedReflections = response.data.data.reflections.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setReflections(sortedReflections);
+        setUser(response.data.data.user);
+      } else {
+        setError("No reflections found");
+      }
+    } catch (err) {
+      console.error("Error fetching user data:", err);
+      setError("Failed to load user data");
+    }
+  };
+
   useEffect(() => {
-    const fetchUserReflections = async () => {
+    const loadData = async () => {
       if (!id) {
         setError("No user ID provided");
         setIsLoading(false);
@@ -71,28 +90,21 @@ export default function UserReflectionsPage() {
       }
 
       setIsLoading(true);
-      try {
-        const response = await api.get(`/admin/userreflections/${id}`);
-        if (response.data.data.reflections) {
-          const sortedReflections = response.data.data.reflections.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-          setReflections(sortedReflections);
-          setUser(response.data.data.user);
-        } else {
-          setError("No reflections found");
-        }
-      } catch (error) {
-        console.error("Error fetching user reflections:", error);
-        setError("Failed to load user reflections");
-      } finally {
-        setIsLoading(false);
-      }
+      await fetchUserData(id);
+      setIsLoading(false);
     };
 
-    fetchUserReflections();
+    loadData();
   }, [id]);
 
   const handleBack = () => {
     navigate(-1);
+  };
+
+  const handleBadgeAwarded = () => {
+    if (id) {
+      fetchUserData(id); // Refetch user data to update badges displayed
+    }
   };
 
   const getZoneStats = () => {
@@ -104,7 +116,7 @@ export default function UserReflectionsPage() {
         }
         return acc;
       },
-      { comfort: 0, "stretch-enjoying": 0, "stretch-overwhelmed": 0, panic: 0 } as Record<string, number>
+      { comfort: 0, "stretch-enjoying": 0, "stretch-overwhelmed": 0, panic: 0 } as Record<string, number>,
     );
 
     const total = reflections.length;
@@ -166,10 +178,11 @@ export default function UserReflectionsPage() {
 
   return (
     <div className="container mx-auto py-10 space-y-6">
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-        <Button onClick={handleBack} variant="outline" className="mb-4">
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="flex justify-between items-center mb-4">
+        <Button onClick={handleBack} variant="outline">
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to All Reflections
         </Button>
+        {id && <AwardBadgeButton userId={id} onBadgeAwarded={handleBadgeAwarded} />}
       </motion.div>
 
       {user && (
@@ -198,12 +211,25 @@ export default function UserReflectionsPage() {
                   }
                 />
               </div>
+              {user.badges && user.badges.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-3">Awarded Badges:</h3>
+                  <div className="flex flex-wrap gap-4">
+                    {user.badges.map((badge, index) => (
+                      <PixelBadge
+                        key={badge._id || index}
+                        badge={badge}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
       )}
 
-      <ReflectionsTable reflections={reflections} />
+      <ReflectionsTable reflections={reflections} isAdmin={true} userId={id || undefined} />
     </div>
   );
 }
