@@ -171,7 +171,15 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
   if (error) return <div>Error loading user data</div>;
 
   return (
-    <div className="space-y-6 h-full flex flex-col">
+    <div className="relative space-y-6 h-full flex flex-col">
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/80 dark:bg-black/80 flex items-center justify-center z-10 rounded-lg">
+          <div className="flex items-center gap-2 text-lg">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span>Submitting...</span>
+          </div>
+        </div>
+      )}
       <DialogHeader>
         <DialogTitle className="text-2xl font-bold">Daily Reflection</DialogTitle>
       </DialogHeader>

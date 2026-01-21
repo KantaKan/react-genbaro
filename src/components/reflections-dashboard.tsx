@@ -205,7 +205,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
               )}
             </motion.p>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
               <DialogTrigger asChild>
                 <motion.div whileHover={{ scale: hasSubmittedToday ? 1 : 1.03 }} whileTap={{ scale: hasSubmittedToday ? 1 : 0.97 }}>
@@ -259,7 +259,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
               </DialogTrigger>
               {/* Only render DialogContent if user hasn't submitted today */}
               {!hasSubmittedToday && (
-                <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+                <DialogContent className="w-screen h-screen md:w-full md:h-auto sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Add Daily Reflection</DialogTitle>
                   </DialogHeader>
@@ -278,45 +278,6 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                 </DialogContent>
               )}
             </Dialog>
-
-            <Dialog>
-              <DialogTrigger asChild>
-                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                  <Button variant="outline" size="lg">
-                    <BookOpen className="mr-2 h-5 w-5" />
-                    About zones
-                  </Button>
-                </motion.div>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Understanding Learning Zones</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-6 p-6">
-                  <img src="/baronzone.png" alt="Learning Barometer Zones" className="w-full rounded-lg shadow-md" />
-                  <div className="grid gap-4">
-                    {reflectionZones.map((zone) => (
-                      <motion.div key={zone.id} whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300 }}>
-                        <Card className="overflow-hidden">
-                          <CardContent className={`p-4 flex items-center gap-4 ${zone.bgColor} bg-opacity-10`}>
-                            <div className="text-2xl">{zone.emoji}</div>
-                            <div>
-                              <h3 className="font-semibold">{zone.label}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {zone.id === "comfort" && "You're confident and can work independently"}
-                                {zone.id === "stretch-enjoying" && "You're challenged but growing and learning"}
-                                {zone.id === "stretch-overwhelmed" && "You're finding the challenges difficult"}
-                                {zone.id === "panic" && "You're feeling stuck and need support"}
-                              </p>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
           </div>
         </div>
       </motion.div>
@@ -325,6 +286,45 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
       <SubmissionStatusCard hasSubmitted={hasSubmittedToday} submissionDate={submissionDate} todaysReflection={todaysReflection} />
 
       {/* Zone Statistics */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold">Your Zone Breakdown</h2>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="icon">
+              <BookOpen className="h-4 w-4" />
+              <span className="sr-only">About learning zones</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Understanding Learning Zones</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6 p-6">
+              <img src="/baronzone.png" alt="Learning Barometer Zones" className="w-full rounded-lg shadow-md" />
+              <div className="grid gap-4">
+                {reflectionZones.map((zone) => (
+                  <motion.div key={zone.id} whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300 }}>
+                    <Card className="overflow-hidden">
+                      <CardContent className={`p-4 flex items-center gap-4 ${zone.bgColor} bg-opacity-10`}>
+                        <div className="text-2xl">{zone.emoji}</div>
+                        <div>
+                          <h3 className="font-semibold">{zone.label}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {zone.id === "comfort" && "You're confident and can work independently"}
+                            {zone.id === "stretch-enjoying" && "You're challenged but growing and learning"}
+                            {zone.id === "stretch-overwhelmed" && "You're finding the challenges difficult"}
+                            {zone.id === "panic" && "You're feeling stuck and need support"}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <AnimatePresence mode="wait">
           {reflectionZones.map((zone, index) => {
