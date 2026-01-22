@@ -21,7 +21,7 @@ export function AchievementsSection({ badges }: AchievementsSectionProps) {
             <span className="text-xl">🏆</span> My Achievements
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <div className="flex flex-wrap gap-4 gap-y-4">
             {badges.map((badge, index) => (
               <div key={badge._id || index}>

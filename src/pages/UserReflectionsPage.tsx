@@ -130,8 +130,8 @@ export default function UserReflectionsPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="container mx-auto py-10 space-y-6">
+  return (
+    <div className="container mx-auto pt-16 pb-10 space-y-6">
         <Skeleton className="h-10 w-40" />
         <Card>
           <CardHeader>
@@ -212,8 +212,8 @@ export default function UserReflectionsPage() {
                 />
               </div>
               {user.badges && user.badges.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="text-lg font-semibold mb-3">Awarded Badges:</h3>
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold mb-4">Awarded Badges:</h3>
                   <div className="flex flex-wrap gap-4">
                     {user.badges.map((badge, index) => (
                       <PixelBadge
