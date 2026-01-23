@@ -22,7 +22,6 @@ import { SubmissionStatusCard } from "./submission-status-card";
 import { AchievementsSection } from "./achievements-section";
 import { api } from "@/lib/api";
 import type { Badge } from "@/lib/types";
-import { PixelBadge } from "./pixel-badge";
 
 // Define the User interface
 interface User {
@@ -60,10 +59,8 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
       setIsLoadingUser(true);
       setUserError(null);
       try {
-        const response = await api.get<any>(`users/${userId}`);
-        console.log("User data fetched:", response.data.data);
-        console.log("Badges:", response.data.data?.badges);
-        setUser(response.data.data);
+      const response = await api.get<any>(`users/${userId}`);
+      setUser(response.data.data);
       } catch (err) {
         console.error("Error fetching user data:", err);
         setUserError("Failed to load user data");

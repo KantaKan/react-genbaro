@@ -64,5 +64,7 @@ export interface Badge {
   name: string;
   emoji: string;
   imageUrl?: string;
+  color?: string;        // Custom color hex code for badge
+  style?: 'pixel' | 'rounded' | 'minimal';  // Badge display style
   awardedAt: string;
 }

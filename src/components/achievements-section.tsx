@@ -1,8 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Award } from "lucide-react";
 import { motion } from "framer-motion";
 import type { Badge } from "@/lib/types";
-import { PixelBadge } from "./pixel-badge";
+import { BadgeRenderer } from "./badge-renderer";
 
 interface AchievementsSectionProps {
   badges: Badge[];
@@ -22,13 +21,13 @@ export function AchievementsSection({ badges }: AchievementsSectionProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="flex flex-wrap gap-4 gap-y-4">
-            {badges.map((badge, index) => (
-              <div key={badge._id || index}>
-                <PixelBadge badge={badge} />
-              </div>
-            ))}
-          </div>
+           <div className="flex flex-wrap gap-4 gap-y-4">
+             {badges.map((badge, index) => (
+               <div key={badge._id || index}>
+                 <BadgeRenderer badge={badge} />
+               </div>
+             ))}
+           </div>
         </CardContent>
       </Card>
     </motion.div>

@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BadgePlus, Award, Sparkles, ImageIcon, X } from "lucide-react";
-import { api } from "@/lib/api";
+import { BadgePlus, Award, Sparkles, Palette } from "lucide-react";
+import { api, awardBadge } from "@/lib/api";
 import { toast } from "sonner";
+import { BadgeRenderer, badgeColors } from "./badge-renderer";
 
 interface AwardBadgeButtonProps {
   userId: string;
@@ -39,81 +40,95 @@ export function AwardBadgeButton({ userId, onBadgeAwarded }: AwardBadgeButtonPro
   
   const [selectedPredefinedBadge, setSelectedPredefinedBadge] = useState<string | null>(null);
   
-  const [customBadge, setCustomBadge] = useState({
-    type: "",
-    name: "",
-    emoji: "",
-    imageUrl: "",
-  });
+   const [customBadge, setCustomBadge] = useState({
+     type: "",
+     name: "",
+     emoji: "",
+     imageUrl: "",
+     color: "#3B82F6", // Default blue
+     style: "pixel" as "pixel" | "rounded" | "minimal",
+   });
+
+
   
   const [useImageUrl, setUseImageUrl] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  const handleAwardBadge = async () => {
-    let badgeData;
-    
-    if (activeTab === "predefined") {
-      if (!selectedPredefinedBadge) {
-        toast.error("Please select a badge to award.");
-        return;
-      }
-      const selected = predefinedBadges.find(b => b.id === selectedPredefinedBadge);
-      badgeData = {
-        type: selected!.name,
-        name: selected!.name,
-        emoji: selected!.emoji,
-        imageUrl: "",
-      };
-    } else {
-      if (!customBadge.type || !customBadge.name) {
-        toast.error("Badge type and name are required.");
-        return;
-      }
-      if (!customBadge.emoji && !customBadge.imageUrl) {
-        toast.error("Please provide either an emoji or image URL.");
-        return;
-      }
-      badgeData = {
-        type: customBadge.type,
-        name: customBadge.name,
-        emoji: customBadge.emoji,
-        imageUrl: customBadge.imageUrl,
-      };
-    }
+   const handleAwardBadge = async () => {
+     let badgeData;
+     
+     if (activeTab === "predefined") {
+       if (!selectedPredefinedBadge) {
+         toast.error("Please select a badge to award.");
+         return;
+       }
+       const selected = predefinedBadges.find(b => b.id === selectedPredefinedBadge);
+       badgeData = {
+         type: selected!.name,
+         name: selected!.name,
+         emoji: selected!.emoji,
+         imageUrl: "",
+       };
+     } else {
+       if (!customBadge.type || !customBadge.name) {
+         toast.error("Badge type and name are required.");
+         return;
+       }
+       if (!customBadge.emoji && !customBadge.imageUrl) {
+         toast.error("Please provide either an emoji or image URL.");
+         return;
+       }
+       badgeData = {
+         type: customBadge.type,
+         name: customBadge.name,
+         emoji: customBadge.emoji,
+         imageUrl: customBadge.imageUrl,
+         color: customBadge.color,
+         style: customBadge.style,
+       };
+     }
 
-    setIsSubmitting(true);
-    try {
-      await api.post(`/admin/users/${userId}/badges`, badgeData);
-      toast.success(`Badge "${badgeData.name}" awarded successfully!`);
-      setIsOpen(false);
-      resetForm();
-      onBadgeAwarded?.();
-    } catch (error) {
-      console.error("Error awarding badge:", error);
-      toast.error("Failed to award badge. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+     setIsSubmitting(true);
+     try {
+       const response = await awardBadge(userId, badgeData);
+       toast.success(`Badge "${badgeData.name}" awarded successfully!`);
+       setIsOpen(false);
+       resetForm();
+       onBadgeAwarded?.();
+     } catch (error) {
+       console.error("Error awarding badge:", error);
+       toast.error("Failed to award badge. Please try again.");
+     } finally {
+       setIsSubmitting(false);
+     }
+   };
 
-  const resetForm = () => {
-    setSelectedPredefinedBadge(null);
-    setCustomBadge({ type: "", name: "", emoji: "", imageUrl: "" });
-    setUseImageUrl(false);
-    setShowEmojiPicker(false);
-    setActiveTab("predefined");
-  };
+   const resetForm = () => {
+     setSelectedPredefinedBadge(null);
+     setCustomBadge({ type: "", name: "", emoji: "", imageUrl: "", color: "#3B82F6", style: "pixel" });
+     setUseImageUrl(false);
+     setShowEmojiPicker(false);
+     setActiveTab("predefined");
+   };
 
-  const getBadgePreview = () => {
-    if (activeTab === "predefined" && selectedPredefinedBadge) {
-      const selected = predefinedBadges.find(b => b.id === selectedPredefinedBadge);
-      return { type: selected!.name, name: selected!.name, emoji: selected!.emoji, imageUrl: "" };
-    }
-    if (activeTab === "custom" && customBadge.name) {
-      return { type: customBadge.type || "Custom Badge", name: customBadge.name, emoji: customBadge.emoji, imageUrl: customBadge.imageUrl };
-    }
-    return null;
-  };
+   const getBadgePreview = () => {
+     if (activeTab === "predefined" && selectedPredefinedBadge) {
+       const selected = predefinedBadges.find(b => b.id === selectedPredefinedBadge);
+       return { type: selected!.name, name: selected!.name, emoji: selected!.emoji, imageUrl: "", awardedAt: new Date().toISOString() };
+     }
+     if (activeTab === "custom") {
+       return {
+         type: customBadge.type || "Custom Badge",
+         name: customBadge.name || "Preview Badge",
+         emoji: customBadge.emoji || "🏆",
+         imageUrl: customBadge.imageUrl || "",
+         color: customBadge.color,
+         style: customBadge.style,
+         awardedAt: new Date().toISOString()
+       };
+     }
+     return null;
+   };
 
   const preview = getBadgePreview();
 
@@ -244,46 +259,123 @@ export function AwardBadgeButton({ userId, onBadgeAwarded }: AwardBadgeButtonPro
                         </div>
                       </div>
                     )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+                   </div>
+                 )}
+               </div>
 
-        {preview && (
-          <div className="mt-6 p-4 border rounded-lg bg-muted/50">
-            <Label className="text-sm text-muted-foreground mb-2 block">Badge Preview:</Label>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl shrink-0">
-                {preview.imageUrl ? (
-                  <img src={preview.imageUrl} alt="Badge" className="w-full h-full rounded-full object-cover" />
-                ) : (
-                  preview.emoji
-                )}
-              </div>
-              <div>
-                <p className="font-medium">{preview.name}</p>
-                <p className="text-sm text-muted-foreground">{preview.type}</p>
-              </div>
-            </div>
-          </div>
-        )}
+               <div className="space-y-3">
+                 <Label>Badge Style *</Label>
+                 <RadioGroup
+                   value={customBadge.style}
+                   onValueChange={(v) => setCustomBadge({ ...customBadge, style: v as "pixel" | "rounded" | "minimal" })}
+                   className="grid grid-cols-3 gap-3"
+                 >
+                   <div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-muted transition-colors">
+                     <RadioGroupItem value="pixel" id="pixel" />
+                     <Label htmlFor="pixel" className="cursor-pointer flex-1">
+                       <div className="text-sm font-medium">Pixel</div>
+                       <div className="text-xs text-muted-foreground">Classic retro style</div>
+                     </Label>
+                   </div>
+                   <div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-muted transition-colors">
+                     <RadioGroupItem value="rounded" id="rounded" />
+                     <Label htmlFor="rounded" className="cursor-pointer flex-1">
+                       <div className="text-sm font-medium">Circle</div>
+                       <div className="text-xs text-muted-foreground">Picture-only badge</div>
+                     </Label>
+                   </div>
+                   <div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-muted transition-colors">
+                     <RadioGroupItem value="minimal" id="minimal" />
+                     <Label htmlFor="minimal" className="cursor-pointer flex-1">
+                       <div className="text-sm font-medium">Dot</div>
+                       <div className="text-xs text-muted-foreground">Minimal indicator</div>
+                     </Label>
+                   </div>
+                 </RadioGroup>
+               </div>
 
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setIsOpen(false)}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
-          <Button type="button" onClick={handleAwardBadge} disabled={isSubmitting}>
-            {isSubmitting ? "Awarding..." : "Award Badge"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
+               <div className="space-y-3">
+                 <Label className="flex items-center gap-2">
+                   <Palette className="h-4 w-4" />
+                   Badge Color *
+                 </Label>
+
+                 {/* Predefined Color Palette */}
+                 <div className="space-y-2">
+                   <Label className="text-sm text-muted-foreground">Choose from palette:</Label>
+                   <div className="grid grid-cols-6 gap-2">
+                     {badgeColors.map((color) => (
+                       <button
+                         key={color.name}
+                         type="button"
+                         onClick={() => setCustomBadge({ ...customBadge, color: color.hex })}
+                         className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
+                           customBadge.color === color.hex ? 'border-gray-800 shadow-lg' : 'border-gray-300'
+                         }`}
+                         style={{ backgroundColor: color.hex }}
+                         title={color.name}
+                       />
+                     ))}
+                   </div>
+                 </div>
+
+                 {/* Custom Hex Color Input */}
+                 <div className="space-y-2">
+                   <Label className="text-sm text-muted-foreground">Or enter custom hex color:</Label>
+                   <div className="flex gap-2">
+                     <Input
+                       type="color"
+                       value={customBadge.color}
+                       onChange={(e) => setCustomBadge({ ...customBadge, color: e.target.value })}
+                       className="w-16 h-10 p-1 border rounded cursor-pointer"
+                     />
+                     <Input
+                       placeholder="#3B82F6"
+                       value={customBadge.color}
+                       onChange={(e) => setCustomBadge({ ...customBadge, color: e.target.value })}
+                       className="flex-1"
+                     />
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </TabsContent>
+         </Tabs>
+
+         <div className="mt-6 p-4 border rounded-lg bg-muted/50">
+           <Label className="text-sm text-muted-foreground mb-2 block">Badge Preview:</Label>
+           {preview ? (
+             <div className="flex items-center gap-4">
+               <BadgeRenderer badge={preview} showTooltip={false} />
+               <div className="flex-1">
+                 <p className="font-medium">{preview.name}</p>
+                 <p className="text-sm text-muted-foreground">{preview.type}</p>
+                 {preview.color && (
+                   <p className="text-xs text-muted-foreground mt-1">
+                     Color: {preview.color} • Style: {preview.style || 'pixel'}
+                   </p>
+                 )}
+               </div>
+             </div>
+           ) : (
+             <div className="text-muted-foreground">No badge selected</div>
+           )}
+         </div>
+
+         <DialogFooter>
+           <Button
+             type="button"
+             variant="outline"
+             onClick={() => setIsOpen(false)}
+             disabled={isSubmitting}
+           >
+             Cancel
+           </Button>
+           <Button type="button" onClick={handleAwardBadge} disabled={isSubmitting}>
+             {isSubmitting ? "Awarding..." : "Award Badge"}
+           </Button>
+         </DialogFooter>
+       </DialogContent>
+     </Dialog>
+   );
+ }

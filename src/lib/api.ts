@@ -98,3 +98,9 @@ export const removeCommentReaction = async (commentId: string) => {
   const response = await api.delete(`/board/comments/${commentId}/reactions`);
   return response.data.data;
 };
+
+// Badge API functions
+export const awardBadge = async (userId: string, badgeData: any) => {
+  const response = await api.post(`/admin/users/${userId}/badges`, badgeData);
+  return response.data;
+};

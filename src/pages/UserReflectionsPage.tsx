@@ -5,7 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Users, School, ClipboardList, TrendingUp, Award } from "lucide-react";
-import { PixelBadge } from "@/components/pixel-badge";
+import { BadgeRenderer } from "@/components/badge-renderer";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -214,14 +214,14 @@ export default function UserReflectionsPage() {
               {user.badges && user.badges.length > 0 && (
                 <div className="mt-8">
                   <h3 className="text-lg font-semibold mb-4">Awarded Badges:</h3>
-                  <div className="flex flex-wrap gap-4">
-                    {user.badges.map((badge, index) => (
-                      <PixelBadge
-                        key={badge._id || index}
-                        badge={badge}
-                      />
-                    ))}
-                  </div>
+                   <div className="flex flex-wrap gap-4">
+                     {user.badges.map((badge, index) => (
+                       <BadgeRenderer
+                         key={badge._id || index}
+                         badge={badge}
+                       />
+                     ))}
+                   </div>
                 </div>
               )}
             </CardContent>
