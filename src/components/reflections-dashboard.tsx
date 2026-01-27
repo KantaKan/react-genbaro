@@ -16,7 +16,7 @@ import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflect
 import { StreakIcon, FireBar } from "./streak-components";
 import { ZoneStatCard } from "./zone-stat-card";
 import { ReflectionsTable } from "./reflections-table";
-import FeedbackForm from "./feedback-form";
+import FeedbackForm from "./improved-feedback-form";
 import { ReflectionPreview } from "./reflection-preview";
 import { SubmissionStatusCard } from "./submission-status-card";
 import { AchievementsSection } from "./achievements-section";
@@ -283,9 +283,10 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                       className={`relative shadow-lg ${!hasSubmittedToday ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white" : "bg-gray-400 cursor-not-allowed text-gray-200"}`}
                       disabled={hasSubmittedToday || isSubmitting}
                       onClick={(e) => {
-                        if (hasSubmittedToday) {
+                        if (hasSubmittedToday || isSubmitting) {
                           e.preventDefault();
                           e.stopPropagation();
+                          return false;
                         }
                       }}
                     >
@@ -298,7 +299,9 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                         {hasSubmittedToday ? (
                           <>
                             <CheckCircle className="mr-2 h-5 w-5" />
-                            Reflection Completed Today
+                            <span className="flex items-center">
+                              <span className="mr-1">🎉</span> Reflection Completed!
+                            </span>
                           </>
                         ) : (
                           <>
@@ -315,7 +318,18 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                             >
                               <Plus className="mr-2 h-5 w-5" />
                             </motion.div>
-                            Add Daily Reflection
+                            {(() => {
+                              const hour = new Date().getHours();
+                              if (hour >= 5 && hour < 12) {
+                                return "Good Morning! Add Today's Reflection";
+                              } else if (hour >= 12 && hour < 17) {
+                                return "Good Afternoon! Reflect on Your Day";
+                              } else if (hour >= 17 && hour < 21) {
+                                return "Good Evening! Reflect on Today";
+                              } else {
+                                return "Add Night Reflection";
+                              }
+                            })()}
                           </>
                         )}
                         {!hasSubmittedToday && (
