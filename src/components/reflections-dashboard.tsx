@@ -248,18 +248,47 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
           <div className="flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
               <DialogTrigger asChild>
-                <motion.div whileHover={{ scale: hasSubmittedToday ? 1 : 1.03 }} whileTap={{ scale: hasSubmittedToday ? 1 : 0.97 }}>
-                  <Button
-                    size="lg"
-                    className={`shadow-lg relative ${!hasSubmittedToday ? "bg-gradient-to-r from-primary to-primary" : "bg-gray-400 cursor-not-allowed"}`}
-                    disabled={hasSubmittedToday || isSubmitting}
-                    onClick={(e) => {
-                      if (hasSubmittedToday) {
-                        e.preventDefault();
-                        e.stopPropagation();
+                <motion.div
+                  whileHover={{ scale: hasSubmittedToday ? 1 : 1.03 }}
+                  whileTap={{ scale: hasSubmittedToday ? 1 : 0.97 }}
+                  animate={{
+                    y: [0, -3, 0], // Subtle floating animation
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    repeatType: "reverse",
+                  }}
+                >
+                  <div className="relative">
+                    {/* Glow effect */}
+                    <div
+                      className={`absolute -inset-0.5 rounded-full ${!hasSubmittedToday ? 'block' : 'hidden'}`}
+                      style={{
+                        background: 'linear-gradient(45deg, #6366f1, #8b5cf6, #d946ef, #ec4899, #f43f5e)',
+                        filter: 'blur(12px)',
+                        opacity: '0.7',
+                        animation: 'glowPulse 3s ease-in-out infinite',
+                        borderRadius: 'calc(var(--radius) + 0.25rem)',
+                      }}
+                    />
+                    <style>{`
+                      @keyframes glowPulse {
+                        0%, 100% { opacity: 0.5; transform: scale(1); }
+                        50% { opacity: 0.8; transform: scale(1.05); }
                       }
-                    }}
-                  >
+                    `}</style>
+                    <Button
+                      size="lg"
+                      className={`relative shadow-lg ${!hasSubmittedToday ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white" : "bg-gray-400 cursor-not-allowed text-gray-200"}`}
+                      disabled={hasSubmittedToday || isSubmitting}
+                      onClick={(e) => {
+                        if (hasSubmittedToday) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }
+                      }}
+                    >
                     {isSubmitting ? (
                       <motion.div className="absolute inset-0 flex items-center justify-center bg-primary rounded-md overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                         <motion.div className="h-5 w-5 rounded-full border-2 border-t-transparent border-white" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
@@ -273,7 +302,19 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                           </>
                         ) : (
                           <>
-                            <Plus className="mr-2 h-5 w-5" />
+                            <motion.div
+                              animate={{
+                                rotate: [0, 10, -10, 0],
+                                scale: [1, 1.1, 1]
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                repeatType: "reverse",
+                              }}
+                            >
+                              <Plus className="mr-2 h-5 w-5" />
+                            </motion.div>
                             Add Daily Reflection
                           </>
                         )}
@@ -295,7 +336,8 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                       </>
                     )}
                   </Button>
-                </motion.div>
+                </div>
+              </motion.div>
               </DialogTrigger>
               {/* Only render DialogContent if user hasn't submitted today */}
               {!hasSubmittedToday && (
