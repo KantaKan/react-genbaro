@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
+import Cookies from "js-cookie";
 
 import { api } from "./lib/api";
 
@@ -12,20 +13,26 @@ type AuthContextType = {
   logout: () => void;
 };
 
-// ... (VerifyTokenResponse remains the same)
+type VerifyTokenResponse = {
+  status: string;
+  data: {
+    role: string;
+    userId: string;
+  };
+};
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem("authToken"));
-  const [userRole, setUserRole] = useState<string | null>(() => localStorage.getItem("userRole"));
-  const [userId, setUserId] = useState<string | null>(() => localStorage.getItem("userId"));
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!Cookies.get("authToken"));
+  const [userRole, setUserRole] = useState<string | null>(() => Cookies.get("userRole") || null);
+  const [userId, setUserId] = useState<string | null>(() => Cookies.get("userId") || null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const verifyToken = async () => {
-      const token = localStorage.getItem("authToken");
+      const token = Cookies.get("authToken");
       if (token) {
         try {
           const response = await api.get<VerifyTokenResponse>("/api/verify-token", {
@@ -43,16 +50,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setIsAuthenticated(true);
             setUserRole(role);
             setUserId(fetchedUserId);
-            localStorage.setItem("userRole", role);
-            localStorage.setItem("userId", fetchedUserId);
+            Cookies.set("userRole", role);
+            Cookies.set("userId", fetchedUserId);
           } else {
             throw new Error("Token verification failed: Invalid status in response");
           }
         } catch (error) {
           console.error("Token verification failed:", error);
-          localStorage.removeItem("authToken");
-          localStorage.removeItem("userRole");
-          localStorage.removeItem("userId");
+          Cookies.remove("authToken");
+          Cookies.remove("userRole");
+          Cookies.remove("userId");
           setIsAuthenticated(false);
           setUserRole(null);
           setUserId(null);
@@ -77,9 +84,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const fetchedUserId = response.data.data.userId || ""; // Assuming userId is returned on login
 
         // Set token first
-        localStorage.setItem("authToken", token);
-        localStorage.setItem("userRole", role);
-        localStorage.setItem("userId", fetchedUserId);
+        Cookies.set("authToken", token);
+        Cookies.set("userRole", role);
+        Cookies.set("userId", fetchedUserId);
 
         // Update auth state
         setIsAuthenticated(true);
@@ -102,9 +109,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userId");
+    Cookies.remove("authToken");
+    Cookies.remove("userRole");
+    Cookies.remove("userId");
     setIsAuthenticated(false);
     setUserRole(null);
     setUserId(null);

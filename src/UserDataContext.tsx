@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { api } from "./lib/api";
 import { jwtDecode } from "jwt-decode";
 import type { Badge } from "./lib/types";
+import Cookies from "js-cookie";
 
 // Types
 interface TechSession {
@@ -74,7 +75,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("authToken");
+      const token = Cookies.get("authToken");
       if (!token) {
         throw new Error("Authentication required");
       }
@@ -119,7 +120,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
   useEffect(() => {
     const requestInterceptor = api.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem("authToken");
+        const token = Cookies.get("authToken");
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -132,7 +133,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
       (response) => response,
       async (error) => {
         if (error.response?.status === 401) {
-          localStorage.removeItem("authToken");
+          Cookies.remove("authToken");
           setUserData(null);
           setError("Session expired. Please log in again.");
         }

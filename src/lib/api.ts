@@ -1,7 +1,8 @@
 import axios, { AxiosError } from "axios";
 import type { Todo, CreateTodoInput, UpdateTodoInput, WeeklyReflection, User, CreateReflectionPayload, BarometerData } from "./types";
-// Retrieve the token from localStorage (or sessionStorage, depending on your setup)
-const getAuthToken = () => localStorage.getItem("authToken");
+import Cookies from "js-cookie";
+// Retrieve the token from Cookies
+const getAuthToken = () => Cookies.get("authToken");
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:3000/", // Fallback to localhost if env var is not set
