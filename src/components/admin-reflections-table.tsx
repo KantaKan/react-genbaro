@@ -369,10 +369,10 @@ export default function AdminReflectionsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               {displayedReflections.map((reflection, index) => (
                 <motion.tr
-                  key={reflection._id || index}
+                  key={reflection._id || `reflection-${reflection.user_id || 'unknown'}-${reflection.date || 'nodate'}-${index}`}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}

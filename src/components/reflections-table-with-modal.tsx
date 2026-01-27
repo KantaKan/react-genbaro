@@ -606,7 +606,7 @@ export default function ReflectionsTableWithModal() {
 
       {/* Zone Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           {reflectionZones.map((zone, index) => {
             const isDominant = zone.id === dominantZoneId;
             const isCurrent = currentZone?.id === zone.id;

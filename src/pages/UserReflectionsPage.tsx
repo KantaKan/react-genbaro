@@ -217,7 +217,7 @@ export default function UserReflectionsPage() {
                    <div className="flex flex-wrap gap-4">
                      {user.badges.map((badge, index) => (
                        <BadgeRenderer
-                         key={badge._id || index}
+                         key={badge._id || `badge-${badge.name || 'unknown'}-${index}`}
                          badge={badge}
                        />
                      ))}

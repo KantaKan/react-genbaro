@@ -275,7 +275,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               {sortedUsers.map((user, index) => (
                 <motion.tr
                   key={user._id}

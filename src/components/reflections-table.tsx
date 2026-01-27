@@ -66,7 +66,7 @@ export const ReflectionsTable = ({ reflections, todaysReflection, isAdmin = fals
         return 0;
       });
     },
-    [sortConfig]
+    [sortConfig],
   );
 
   const filteredReflections = useMemo(() => {
@@ -80,7 +80,7 @@ export const ReflectionsTable = ({ reflections, todaysReflection, isAdmin = fals
           (reflection.reflection.tech_sessions.improve || "").toLowerCase().includes(query) ||
           (reflection.reflection.non_tech_sessions.happy || "").toLowerCase().includes(query) ||
           (reflection.reflection.non_tech_sessions.improve || "").toLowerCase().includes(query) ||
-          (reflection.reflection.barometer || "").toLowerCase().includes(query)
+          (reflection.reflection.barometer || "").toLowerCase().includes(query),
       );
     }
 
@@ -211,7 +211,7 @@ export const ReflectionsTable = ({ reflections, todaysReflection, isAdmin = fals
             ) : (
               filteredReflections.map((reflection, index) => (
                 <motion.tr
-                  key={reflection._id || `${reflection.user_id}-${reflection.date}-${index}`}
+                  key={`${reflection._id || "no-id"}-${reflection.date || "no-date"}-${index}`}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -226,10 +226,7 @@ export const ReflectionsTable = ({ reflections, todaysReflection, isAdmin = fals
                     <TableCell>
                       {(() => {
                         const barometerValue = reflection?.reflection?.barometer || reflection?.barometer || "";
-                        const zone = reflectionZones.find((z) =>
-                          z.label.toLowerCase() === barometerValue.toLowerCase() ||
-                          z.aliases?.some(alias => alias.toLowerCase() === barometerValue.toLowerCase())
-                        );
+                        const zone = reflectionZones.find((z) => z.label.toLowerCase() === barometerValue.toLowerCase() || z.aliases?.some((alias) => alias.toLowerCase() === barometerValue.toLowerCase()));
                         if (!zone) {
                           return <span className="text-muted-foreground">{barometerValue}</span>;
                         }
@@ -243,7 +240,9 @@ export const ReflectionsTable = ({ reflections, todaysReflection, isAdmin = fals
                         userId={userId}
                         reflectionId={reflection._id}
                         initialFeedback={reflection.admin_feedback}
-                        onFeedbackUpdated={() => { /* Consider a way to refresh reflections if needed */ }}
+                        onFeedbackUpdated={() => {
+                          /* Consider a way to refresh reflections if needed */
+                        }}
                       />
                     </TableCell>
                   )}
