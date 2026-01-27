@@ -18,6 +18,7 @@ import TalkBoardPage from "./pages/talk-board-page"; // Import the new page
 import PostPage from "./pages/PostPage";
 
 import ReflectionsPage from "./pages/user-reflection";
+import SplashCursor from "./components/SplashCursor";
 
 function AdminDashboard() {
   return (
@@ -174,6 +175,7 @@ function AppContent() {
             path="/learner"
             element={
               <ProtectedRoute allowedRoles={["learner"]}>
+                <SplashCursor />
                 <Page>
                   <div className="flex flex-col gap-8 p-6">
                     <ReflectionsPage />
