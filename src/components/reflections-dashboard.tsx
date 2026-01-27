@@ -85,12 +85,14 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   // Memoize today's reflection check to prevent re-renders
   const todaysReflection = useMemo(() => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayString = today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
 
     return reflections.find((reflection) => {
-      const reflectionDate = new Date(reflection.day || reflection.date);
-      reflectionDate.setHours(0, 0, 0, 0);
-      return reflectionDate.getTime() === today.getTime();
+      // Check both day and date fields for compatibility
+      const reflectionDay = reflection.day || reflection.date;
+      const reflectionDateString = new Date(reflectionDay).toISOString().split('T')[0];
+
+      return reflectionDateString === todayString;
     });
   }, [reflections]);
 
