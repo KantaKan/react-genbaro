@@ -1,5 +1,5 @@
 import * as React from "react";
-import { GalleryVerticalEnd, SquareTerminal, BookOpen, FileText, MessageSquare } from "lucide-react"; // Import MessageSquare
+import { GalleryVerticalEnd, SquareTerminal, BookOpen, FileText, MessageSquare, Table, Users, Calendar, User } from "lucide-react"; // Import MessageSquare and additional icons
 import { motion } from "framer-motion"; // New import for animation
 import { Badge } from "@/components/ui/badge"; // New import for the 'New' badge
 import { NavMain } from "@/components/nav-main";
@@ -31,18 +31,22 @@ const navigationConfig = {
         {
           title: "All Users Reflections",
           url: "/admin/table",
+          icon: Table, // Add icon for sub-menu item
         },
         {
           title: "Admin Panel",
           url: "/admin",
+          icon: SquareTerminal, // Add icon for sub-menu item
         },
         {
           title: "All Users",
           url: "/admin/users",
+          icon: Users, // Add icon for sub-menu item
         },
         {
           title: "Weekly Summary",
           url: "/admin/weekly-summary",
+          icon: Calendar, // Add icon for sub-menu item
         },
       ],
     },
@@ -71,6 +75,7 @@ const navigationConfig = {
         {
           title: "Discussion",
           url: "/talk-board",
+          icon: MessageSquare, // Add icon for sub-menu item
         },
       ],
     },
@@ -85,6 +90,7 @@ const navigationConfig = {
         {
           title: "My Reflections",
           url: "/learner",
+          icon: User, // Add icon for sub-menu item
         },
       ],
     },
@@ -113,6 +119,7 @@ const navigationConfig = {
         {
           title: "Discussion",
           url: "/talk-board",
+          icon: MessageSquare, // Add icon for sub-menu item
         },
       ],
     },

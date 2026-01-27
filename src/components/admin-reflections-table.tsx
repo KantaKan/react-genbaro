@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import FeedbackForm from "./feedback-form";
 import { api } from "@/lib/api";
+import { useConfig } from "@/hooks/use-config";
 
 interface Reflection {
   _id: string;
@@ -133,12 +134,19 @@ const formatDate = (dateString: string) => {
 };
 
 export default function AdminReflectionsTable() {
+  const { config, updateAdminReflectionsSort, updateAdminReflectionsVisibleColumns } = useConfig();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "ascending" | "descending" }>({
-    key: "Date",
-    direction: "descending",
-  });
+
+  // Initialize state from config
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "ascending" | "descending" }>(
+    config.adminTables.reflections.sortConfig
+  );
+
+  // Convert hidden columns to visible columns for easier management
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(
+    config.adminTables.reflections.visibleColumns
+  );
+
   const [originalReflections, setOriginalReflections] = useState<Reflection[]>([]);
   const [displayedReflections, setDisplayedReflections] = useState<Reflection[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -191,7 +199,15 @@ export default function AdminReflectionsTable() {
   }, [currentPage, sortConfig.key, sortConfig.direction]);
 
   const toggleColumn = (columnId: string) => {
-    setHiddenColumns((prev) => (prev.includes(columnId) ? prev.filter((id) => id !== columnId) : [...prev, columnId]));
+    setVisibleColumns(prev => {
+      const newVisibleColumns = prev.includes(columnId)
+        ? prev.filter(id => id !== columnId)
+        : [...prev, columnId];
+
+      // Update config with new visible columns
+      updateAdminReflectionsVisibleColumns(newVisibleColumns);
+      return newVisibleColumns;
+    });
   };
 
   const getValueByKey = (reflection: Reflection, key: string) => {
@@ -230,7 +246,11 @@ export default function AdminReflectionsTable() {
 
       setDisplayedReflections(sortedReflections);
 
-      return { key, direction: newDirection };
+      // Update config with new sort settings
+      const newSortConfig = { key, direction: newDirection };
+      updateAdminReflectionsSort(key, newDirection);
+
+      return newSortConfig;
     });
   };
 
@@ -291,7 +311,7 @@ export default function AdminReflectionsTable() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               {["First Name", "Last Name", "JSD Number", "Date", "Tech Happy", "Tech Improve", "Non-Tech Happy", "Non-Tech Improve", "Barometer"].map((column) => (
-                <DropdownMenuCheckboxItem key={column} className="capitalize" checked={!hiddenColumns.includes(column)} onCheckedChange={() => toggleColumn(column)}>
+                <DropdownMenuCheckboxItem key={column} className="capitalize" checked={visibleColumns.includes(column)} onCheckedChange={() => toggleColumn(column)}>
                   {column}
                 </DropdownMenuCheckboxItem>
               ))}
@@ -313,7 +333,7 @@ export default function AdminReflectionsTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              {!hiddenColumns.includes("First Name") && (
+              {visibleColumns.includes("First Name") && (
                 <TableHead>
                   <Button variant="ghost" onClick={() => requestSort("FirstName")} className="font-semibold">
                     First Name
@@ -325,7 +345,7 @@ export default function AdminReflectionsTable() {
                   </Button>
                 </TableHead>
               )}
-              {!hiddenColumns.includes("Last Name") && (
+              {visibleColumns.includes("Last Name") && (
                 <TableHead>
                   <Button variant="ghost" onClick={() => requestSort("LastName")} className="font-semibold">
                     Last Name
@@ -337,7 +357,7 @@ export default function AdminReflectionsTable() {
                   </Button>
                 </TableHead>
               )}
-              {!hiddenColumns.includes("JSD Number") && (
+              {visibleColumns.includes("JSD Number") && (
                 <TableHead>
                   <Button variant="ghost" onClick={() => requestSort("JsdNumber")} className="font-semibold">
                     JSD Number
@@ -349,7 +369,7 @@ export default function AdminReflectionsTable() {
                   </Button>
                 </TableHead>
               )}
-              {!hiddenColumns.includes("Date") && (
+              {visibleColumns.includes("Date") && (
                 <TableHead>
                   <Button variant="ghost" onClick={() => requestSort("Date")} className="font-semibold">
                     Date
@@ -361,11 +381,11 @@ export default function AdminReflectionsTable() {
                   </Button>
                 </TableHead>
               )}
-              {!hiddenColumns.includes("Tech Happy") && <TableHead>Tech Happy</TableHead>}
-              {!hiddenColumns.includes("Tech Improve") && <TableHead>Tech Improve</TableHead>}
-              {!hiddenColumns.includes("Non-Tech Happy") && <TableHead>Non-Tech Happy</TableHead>}
-              {!hiddenColumns.includes("Non-Tech Improve") && <TableHead>Non-Tech Improve</TableHead>}
-              {!hiddenColumns.includes("Barometer") && <TableHead>Barometer</TableHead>}
+              {visibleColumns.includes("Tech Happy") && <TableHead>Tech Happy</TableHead>}
+              {visibleColumns.includes("Tech Improve") && <TableHead>Tech Improve</TableHead>}
+              {visibleColumns.includes("Non-Tech Happy") && <TableHead>Non-Tech Happy</TableHead>}
+              {visibleColumns.includes("Non-Tech Improve") && <TableHead>Non-Tech Improve</TableHead>}
+              {visibleColumns.includes("Barometer") && <TableHead>Barometer</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -380,15 +400,15 @@ export default function AdminReflectionsTable() {
                   onClick={() => handleRowClick(reflection.id)}
                   className="cursor-pointer hover:bg-muted/50 transition-colors"
                 >
-                  {!hiddenColumns.includes("First Name") && <TableCell className="text-center">{reflection.FirstName}</TableCell>}
-                  {!hiddenColumns.includes("Last Name") && <TableCell className="text-center">{reflection.LastName}</TableCell>}
-                  {!hiddenColumns.includes("JSD Number") && <TableCell className="text-center">{reflection.JsdNumber}</TableCell>}
-                  {!hiddenColumns.includes("Date") && <TableCell>{formatDate(reflection.Date)}</TableCell>}
-                  {!hiddenColumns.includes("Tech Happy") && <TableCell>{reflection.Reflection?.TechSessions?.Happy || ""}</TableCell>}
-                  {!hiddenColumns.includes("Tech Improve") && <TableCell>{reflection.Reflection?.TechSessions?.Improve || ""}</TableCell>}
-                  {!hiddenColumns.includes("Non-Tech Happy") && <TableCell>{reflection.Reflection?.NonTechSessions?.Happy || ""}</TableCell>}
-                  {!hiddenColumns.includes("Non-Tech Improve") && <TableCell>{reflection.Reflection?.NonTechSessions?.Improve || ""}</TableCell>}
-                  {!hiddenColumns.includes("Barometer") && (
+                  {visibleColumns.includes("First Name") && <TableCell className="text-center">{reflection.FirstName}</TableCell>}
+                  {visibleColumns.includes("Last Name") && <TableCell className="text-center">{reflection.LastName}</TableCell>}
+                  {visibleColumns.includes("JSD Number") && <TableCell className="text-center">{reflection.JsdNumber}</TableCell>}
+                  {visibleColumns.includes("Date") && <TableCell>{formatDate(reflection.Date)}</TableCell>}
+                  {visibleColumns.includes("Tech Happy") && <TableCell>{reflection.Reflection?.TechSessions?.Happy || ""}</TableCell>}
+                  {visibleColumns.includes("Tech Improve") && <TableCell>{reflection.Reflection?.TechSessions?.Improve || ""}</TableCell>}
+                  {visibleColumns.includes("Non-Tech Happy") && <TableCell>{reflection.Reflection?.NonTechSessions?.Happy || ""}</TableCell>}
+                  {visibleColumns.includes("Non-Tech Improve") && <TableCell>{reflection.Reflection?.NonTechSessions?.Improve || ""}</TableCell>}
+                  {visibleColumns.includes("Barometer") && (
                     <TableCell>
                       <BarometerVisual barometer={reflection.Reflection?.Barometer || ""} />
                     </TableCell>

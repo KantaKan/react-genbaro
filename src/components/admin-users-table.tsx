@@ -9,6 +9,7 @@ import { ChevronDown, ChevronUp, FileSpreadsheet } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "react-toastify";
+import { useConfig } from "@/hooks/use-config";
 
 interface User {
   _id: string;
@@ -40,20 +41,27 @@ import { LoadingRow } from "@/components/loading-row";
 const ALL_COLUMNS = ["Zoom Name", "Project Group", "Genmate Group", "First Name", "Last Name", "JSD Number", "Email", "Cohort", "Total Reflections", "Last Barometer"] as const;
 
 export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
+  const { config, updateAdminUsersSort, updateAdminUsersVisibleColumns } = useConfig();
   const navigate = useNavigate();
-  const [visibleColumns, setVisibleColumns] = useState([...ALL_COLUMNS]);
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "ascending" | "descending" }>({
-    key: "Zoom Name",
-    direction: "ascending",
-  });
+
+  // Initialize state from config
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(
+    config.adminTables.users.visibleColumns
+  );
+
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "ascending" | "descending" }>(
+    config.adminTables.users.sortConfig
+  );
+
   const [isExporting, setIsExporting] = useState(false);
 
   const toggleColumn = (column: string) => {
     setVisibleColumns((current) => {
+      let newColumns: string[];
       if (current.includes(column)) {
-        return current.filter((col) => col !== column);
+        newColumns = current.filter((col) => col !== column);
       } else {
-        const newColumns = [...current];
+        newColumns = [...current];
         const originalIndex = ALL_COLUMNS.indexOf(column as (typeof ALL_COLUMNS)[number]);
         let insertIndex = 0;
         for (let i = 0; i < originalIndex; i++) {
@@ -62,8 +70,11 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
           }
         }
         newColumns.splice(insertIndex, 0, column);
-        return newColumns;
       }
+
+      // Update config with new visible columns
+      updateAdminUsersVisibleColumns(newColumns);
+      return newColumns;
     });
   };
 
@@ -110,10 +121,17 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
   };
 
   const requestSort = (key: string) => {
-    setSortConfig((prev) => ({
-      key,
-      direction: prev.key === key && prev.direction === "ascending" ? "descending" : "ascending",
-    }));
+    setSortConfig((prev) => {
+      const newDirection = prev.key === key && prev.direction === "ascending" ? "descending" : "ascending";
+
+      // Update config with new sort settings
+      updateAdminUsersSort(key, newDirection);
+
+      return {
+        key,
+        direction: newDirection,
+      };
+    });
   };
 
   const sortedUsers = [...users].sort((a, b) => {

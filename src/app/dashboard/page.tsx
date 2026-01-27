@@ -2,12 +2,13 @@ import { useParams } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { ModeToggle } from "@/components/mode-toggle";
+import { CustomSidebarProvider } from "@/components/custom-sidebar-provider";
 
 export default function Page({ children }: { children: React.ReactNode }, props: any) {
   return (
-    <SidebarProvider>
+    <CustomSidebarProvider>
       <div className="flex w-full">
         <AppSidebar />
         <main className="flex-1 overflow-hidden ">
@@ -24,6 +25,6 @@ export default function Page({ children }: { children: React.ReactNode }, props:
           <div className="p-4 flex-1 ">{children}</div>
         </main>
       </div>
-    </SidebarProvider>
+    </CustomSidebarProvider>
   );
 }

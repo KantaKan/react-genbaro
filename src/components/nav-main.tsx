@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { ChevronRight, type LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom"; // Import Link from react-router-dom
 
@@ -18,6 +19,7 @@ export function NavMain({
     items?: {
       title: string;
       url: string;
+      icon?: LucideIcon; // Add icon property for sub-items
     }[];
   }[];
 }) {
@@ -43,6 +45,7 @@ export function NavMain({
                       <SidebarMenuSubButton asChild>
                         {/* Replace <a> with <Link> */}
                         <Link to={subItem.url}>
+                          {subItem.icon && <subItem.icon className="mr-2 h-4 w-4" />}
                           <span>{subItem.title}</span>
                         </Link>
                       </SidebarMenuSubButton>
