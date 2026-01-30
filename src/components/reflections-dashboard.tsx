@@ -16,7 +16,7 @@ import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflect
 import { StreakIcon, FireBar } from "./streak-components";
 import { ZoneStatCard } from "./zone-stat-card";
 import { ReflectionsTable } from "./reflections-table";
-import FeedbackForm from "./improved-feedback-form";
+import FeedbackForm from "./linear-feedback-form";
 import { ReflectionPreview } from "./reflection-preview";
 import { SubmissionStatusCard } from "./submission-status-card";
 import { AchievementsSection } from "./achievements-section";
@@ -357,7 +357,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
               </DialogTrigger>
               {/* Only render DialogContent if user hasn't submitted today */}
               {!hasSubmittedToday && (
-                <DialogContent className="w-screen h-screen md:w-full md:h-auto sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+                <DialogContent className="w-screen h-screen md:w-full md:h-auto sm:max-w-[1000px] max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Add Daily Reflection</DialogTitle>
                   </DialogHeader>
