@@ -28,7 +28,7 @@ const CustomizedXAxisTick = ({ x, y, payload }) => {
 };
 
 
-export default function BaroChart({ userId }) {
+export default function BaroChart({ userId, cohort }) {
   const [timeRange, setTimeRange] = React.useState("7d");
   const [view, setView] = React.useState<"chart" | "summary">("chart");
 
@@ -36,7 +36,7 @@ export default function BaroChart({ userId }) {
     data: rawChartData,
     isLoading,
     error,
-  } = useQuery(["barometerData", timeRange], () => getBarometerData(timeRange), {
+  } = useQuery(["barometerData", timeRange, cohort], () => getBarometerData(timeRange, cohort), {
     refetchOnWindowFocus: false,
   });
 

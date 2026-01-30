@@ -5,11 +5,13 @@ import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, FileSpreadsheet } from "lucide-react";
+import { ChevronDown, ChevronUp, FileSpreadsheet, MessageSquare, Award, Eye, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "react-toastify";
 import { useConfig } from "@/hooks/use-config";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface User {
   _id: string;
@@ -38,7 +40,7 @@ import { BarometerVisual, reflectionZones } from "@/components/barometer-visual"
 import { LoadingRow } from "@/components/loading-row";
 
 // Define all available columns in their desired order
-const ALL_COLUMNS = ["Zoom Name", "Project Group", "Genmate Group", "First Name", "Last Name", "JSD Number", "Email", "Cohort", "Total Reflections", "Last Barometer"] as const;
+const ALL_COLUMNS = ["Zoom Name", "Project Group", "Genmate Group", "First Name", "Last Name", "JSD Number", "Email", "Cohort", "Total Reflections", "Last Barometer", "Actions"] as const;
 
 export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
   const { config, updateAdminUsersSort, updateAdminUsersVisibleColumns } = useConfig();
@@ -54,6 +56,9 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
   );
 
   const [isExporting, setIsExporting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [barometerFilter, setBarometerFilter] = useState<string>("all");
+  const [projectGroupFilter, setProjectGroupFilter] = useState<string>("all");
 
   const toggleColumn = (column: string) => {
     setVisibleColumns((current) => {
@@ -147,6 +152,32 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
     return 0;
   });
 
+  const filteredUsers = sortedUsers.filter((user) => {
+    const matchesSearch = 
+      user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.zoom_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.jsd_number.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesBarometer = barometerFilter === "all" || getLastBarometer(user.reflections) === barometerFilter;
+    const matchesProjectGroup = projectGroupFilter === "all" || user.project_group === projectGroupFilter;
+
+    return matchesSearch && matchesBarometer && matchesProjectGroup;
+  });
+
+  const uniqueProjectGroups = Array.from(new Set(users.map(u => u.project_group).filter(Boolean)));
+
+  const handleQuickAction = (action: string, userId: string, user: User) => {
+    if (action === "view") {
+      navigate(`/admin/table/${userId}`);
+    } else if (action === "message") {
+      toast.info(`Message feature coming soon for ${user.first_name}`);
+    } else if (action === "badge") {
+      toast.info(`Badge award feature coming soon for ${user.first_name}`);
+    }
+  };
+
   const handleExport = async () => {
     setIsExporting(true);
     try {
@@ -168,11 +199,14 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
   if (isLoading) {
     return (
       <div className="container mx-auto py-10">
-        <div className="flex justify-between mb-6">
+        <div className="flex justify-between mb-6 flex-wrap gap-4">
           <Button variant="outline" disabled>
             Columns <ChevronDown className="ml-2 h-4 w-4" />
           </Button>
-          <Button disabled>Export to Google Sheets</Button>
+          <div className="flex gap-2">
+            <Input placeholder="Search users..." disabled className="w-64" />
+            <Button disabled>Export to Sheets</Button>
+          </div>
         </div>
         <div className="rounded-md border">
           <Table>
@@ -202,9 +236,17 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
     if (column === "Actions") {
       return (
         <TableCell key={column} className="text-center">
-          <Button variant="outline" size="sm" onClick={() => handleRowClick(user._id)}>
-            View Details
-          </Button>
+          <div className="flex items-center justify-center gap-1">
+            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleQuickAction("view", user._id, user); }} title="View Details">
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleQuickAction("message", user._id, user); }} title="Send Message">
+              <MessageSquare className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleQuickAction("badge", user._id, user); }} title="Award Badge">
+              <Award className="h-4 w-4" />
+            </Button>
+          </div>
         </TableCell>
       );
     }
@@ -241,8 +283,8 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
 
   return (
     <div className="container mx-auto py-10">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
@@ -258,21 +300,62 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
             </DropdownMenuContent>
           </DropdownMenu>
           <Badge variant="outline" className="text-sm">
-            {users.length} users
+            {filteredUsers.length} / {users.length} users
           </Badge>
         </div>
-        <Button onClick={handleExport} disabled={isExporting} className="gap-2">
-          <FileSpreadsheet className="h-4 w-4" />
-          {isExporting ? (
-            <motion.div className="inline-flex items-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <motion.div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
-              Exporting...
-            </motion.div>
-          ) : (
-            "Export to Sheets"
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative">
+            <Filter className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-64 pl-8"
+            />
+          </div>
+          <Select value={barometerFilter} onValueChange={setBarometerFilter}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filter by zone" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Zones</SelectItem>
+              {reflectionZones.map((zone) => (
+                <SelectItem key={zone.id} value={zone.label}>{zone.emoji} {zone.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {uniqueProjectGroups.length > 0 && (
+            <Select value={projectGroupFilter} onValueChange={setProjectGroupFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Project Group" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Groups</SelectItem>
+                {uniqueProjectGroups.map((group) => (
+                  <SelectItem key={group} value={group}>{group}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
-        </Button>
+          <Button onClick={handleExport} disabled={isExporting} variant="outline" className="gap-2">
+            <FileSpreadsheet className="h-4 w-4" />
+            {isExporting ? (
+              <motion.div className="inline-flex items-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <motion.div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
+                Exporting...
+              </motion.div>
+            ) : (
+              "Export to Sheets"
+            )}
+          </Button>
+        </div>
       </div>
+
+      {filteredUsers.length === 0 && searchQuery && (
+        <div className="text-center py-8 text-muted-foreground">
+          No users found matching your filters. Try adjusting your search or filters.
+        </div>
+      )}
 
       <div className="rounded-md border">
         <Table>
@@ -294,7 +377,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
           </TableHeader>
           <TableBody>
             <AnimatePresence>
-              {sortedUsers.map((user, index) => (
+              {filteredUsers.map((user, index) => (
                 <motion.tr
                   key={user._id}
                   initial={{ opacity: 0, y: 10 }}

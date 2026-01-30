@@ -46,8 +46,12 @@ export const createReflection = async (userId: string, reflectionData: CreateRef
   await api.post(`users/${userId}/reflections`, reflectionData);
 };
 
-export const getBarometerData = async (timeRange: string): Promise<BarometerData[]> => {
-  const response = await api.get<BarometerData[]>(`admin/reflections/chartday?timeRange=${timeRange}`);
+export const getBarometerData = async (timeRange: string, cohort?: string): Promise<BarometerData[]> => {
+  let url = `admin/reflections/chartday?timeRange=${timeRange}`;
+  if (cohort) {
+    url += `&cohort=${cohort}`;
+  }
+  const response = await api.get<BarometerData[]>(url);
   return response.data;
 };
 

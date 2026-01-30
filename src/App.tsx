@@ -14,33 +14,44 @@ import { api } from "./lib/api";
 import { AdminTablePage } from "./components/AdminTablePage";
 import { AdminUsersPage } from "./pages/admin-users-page";
 import UserReflectionsPage from "./pages/UserReflectionsPage";
-import TalkBoardPage from "./pages/talk-board-page"; // Import the new page
+import TalkBoardPage from "./pages/talk-board-page";
 import PostPage from "./pages/PostPage";
-
 import ReflectionsPage from "./pages/user-reflection";
 import SplashCursor from "./components/SplashCursor";
+import { DashboardMetrics } from "./components/dashboard-metrics";
+import LatestWeeklySummary from "./components/latest-weekly-summary";
+import { useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function AdminDashboard() {
+  const [selectedCohort, setSelectedCohort] = useState<string | undefined>(undefined);
+
   return (
-    <div className="flex flex-col gap-2 overflow-hidden p-6">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
-      <div className="flex-1 h-1/2 mb-6">
-        <BaroChart />
+    <div className="flex flex-col gap-6 overflow-hidden p-6">
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+          <p className="text-muted-foreground">Overview of learner progress and reflection data</p>
+        </div>
+        <Select value={selectedCohort} onValueChange={(value) => setSelectedCohort(value === "all" ? undefined : value)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select Cohort" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Cohorts</SelectItem>
+            <SelectItem value="9">Cohort 9</SelectItem>
+            <SelectItem value="10">Cohort 10</SelectItem>
+            <SelectItem value="11">Cohort 11</SelectItem>
+            <SelectItem value="12">Cohort 12</SelectItem>
+            <SelectItem value="13">Cohort 13</SelectItem>
+            <SelectItem value="14">Cohort 14</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-      {/* <div className="flex gap-4 h-full overflow-hidden">
-        <div className="w-1/3">
-          <h2 className="text-xl font-semibold mb-4"> WIP</h2>
-          <FillChart />
-        </div>
-        <div className="w-1/3">
-          <h2 className="text-xl font-semibold mb-4"> WIP</h2>
-          <GenMateChart />
-        </div>
-        <div className="w-1/3">
-          <h2 className="text-xl font-semibold mb-4"> WIP</h2>
-          <AllUsers />
-        </div>
-      </div> */}
+      
+      <DashboardMetrics cohort={selectedCohort} />
+      
+      <BaroChart cohort={selectedCohort} />
     </div>
   );
 }

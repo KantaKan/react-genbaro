@@ -7,8 +7,10 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, TrendingDown, UserX } from "lucide-react";
-import { getDayBadge } from "@/utils/day-colors"; // New import
+import { Button } from "@/components/ui/button";
+import { AlertCircle, TrendingDown, TrendingUp, UserX, MessageSquare, Users } from "lucide-react";
+import { getDayBadge } from "@/utils/day-colors";
+import { toast } from "react-toastify";
 
 const DayBadgeComponent: React.FC<{ dateString: string }> = ({ dateString }) => {
   const { dayName, colorClass } = getDayBadge(dateString);
@@ -103,6 +105,15 @@ const WeeklySummaryPage: React.FC = () => {
 
   const totalPages = data ? Math.ceil(data.total / limit) : 0;
 
+  const calculateTrend = (current: number, previous: number) => {
+    if (previous === 0) return { value: 0, isPositive: true };
+    const change = ((current - previous) / previous) * 100;
+    return {
+      value: Math.abs(Math.round(change)),
+      isPositive: change < 0 // positive means fewer at-risk students
+    };
+  };
+
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= totalPages) {
       setPage(newPage);
@@ -134,77 +145,109 @@ const WeeklySummaryPage: React.FC = () => {
 
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-8 text-center">Weekly Summary of At-Risk Learners</h1>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2 text-center">Weekly Summary of At-Risk Learners</h1>
+        <p className="text-muted-foreground text-center">Track and support learners who need additional attention</p>
+      </div>
       <div className="space-y-12">
-        {data?.summaries.map((summary, index) => (
+        {data?.summaries.map((summary, index) => {
+          const previousSummary = data.summaries[index + 1];
+          const overwhelmedCount = summary.overwhelmed_students?.length || 0;
+          const stressedCount = summary.stressed_students?.length || 0;
+          
+          const overwhelmedTrend = previousSummary 
+            ? calculateTrend(overwhelmedCount, previousSummary.overwhelmed_students?.length || 0)
+            : null;
+          const stressedTrend = previousSummary
+            ? calculateTrend(stressedCount, previousSummary.stressed_students?.length || 0)
+            : null;
+          
+          return (
           <Card key={index} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
             <CardHeader className="bg-muted/30">
               <CardTitle className="text-2xl">
                 Week: {new Date(summary.week_start_date).toLocaleDateString()} - {new Date(summary.week_end_date).toLocaleDateString()}
               </CardTitle>
-              <CardDescription>A summary of learners who reported being in the "Panic" or "Overwhelmed" zones.</CardDescription>
+              <CardDescription>Learners who reported being in "Panic" or "Overwhelmed" zones</CardDescription>
             </CardHeader>
-            <CardContent className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <TrendingDown className="h-6 w-6 text-red-500" />
-                    <h3 className="text-xl font-semibold">Panic Zone</h3>
-                  </div>
-                  <Badge variant="destructive">{summary.overwhelmed_students?.length || 0}</Badge>
-                </CardHeader>
-                <CardContent>
-                  {summary.overwhelmed_students && summary.overwhelmed_students.length > 0 ? (
-                    <ul className="space-y-3">
-                      {summary.overwhelmed_students.map((student: StudentInfo) => (
-                        <li key={student.user_id + student.date} className="flex justify-between items-center p-2 rounded-md hover:bg-muted/50">
-                          <Link to={`/admin/table/${student.user_id}`} className="font-medium text-primary hover:underline">
-                            {getStudentName(student)}
-                          </Link>
-                          <span className="text-sm text-muted-foreground"><DayBadgeComponent dateString={student.date} /></span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="text-center text-muted-foreground py-8">
-                      <UserX className="h-12 w-12 mx-auto mb-2" />
-                      <p>No learners in the Panic Zone this week.</p>
+              <CardContent className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <TrendingDown className="h-6 w-6 text-red-500" />
+                      <h3 className="text-xl font-semibold">Panic Zone</h3>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                    <div className="flex items-center gap-3">
+                      <Badge variant="destructive">{overwhelmedCount}</Badge>
+                      {overwhelmedTrend && (
+                        <div className={`flex items-center gap-1 text-xs ${overwhelmedTrend.isPositive ? "text-green-500" : "text-red-500"}`}>
+                          {overwhelmedTrend.isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                          <span>{overwhelmedTrend.value}%</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {summary.overwhelmed_students && summary.overwhelmed_students.length > 0 ? (
+                      <ul className="space-y-3">
+                        {summary.overwhelmed_students.map((student: StudentInfo) => (
+                          <li key={student.user_id + student.date} className="flex justify-between items-center p-2 rounded-md hover:bg-muted/50">
+                            <Link to={`/admin/table/${student.user_id}`} className="font-medium text-primary hover:underline">
+                              {getStudentName(student)}
+                            </Link>
+                            <span className="text-sm text-muted-foreground"><DayBadgeComponent dateString={student.date} /></span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="text-center text-muted-foreground py-8">
+                        <UserX className="h-12 w-12 mx-auto mb-2" />
+                        <p>No learners in the Panic Zone this week.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="h-6 w-6 text-yellow-500" />
-                    <h3 className="text-xl font-semibold">Stretch Zone - Overwhelmed</h3>
-                  </div>
-                  <Badge variant="secondary">{summary.stressed_students?.length || 0}</Badge>
-                </CardHeader>
-                <CardContent>
-                  {summary.stressed_students && summary.stressed_students.length > 0 ? (
-                     <ul className="space-y-3">
-                      {summary.stressed_students.map((student: StudentInfo) => (
-                         <li key={student.user_id + student.date} className="flex justify-between items-center p-2 rounded-md hover:bg-muted/50">
-                          <Link to={`/admin/table/${student.user_id}`} className="font-medium text-primary hover:underline">
-                            {getStudentName(student)}
-                          </Link>
-                          <span className="text-sm text-muted-foreground"><DayBadgeComponent dateString={student.date} /></span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="text-center text-muted-foreground py-8">
-                      <UserX className="h-12 w-12 mx-auto mb-2" />
-                      <p>No learners in the Overwhelmed Zone this week.</p>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-6 w-6 text-yellow-500" />
+                      <h3 className="text-xl font-semibold">Stretch Zone - Overwhelmed</h3>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </CardContent>
-          </Card>
-        ))}
+                    <div className="flex items-center gap-3">
+                      <Badge variant="secondary">{stressedCount}</Badge>
+                      {stressedTrend && (
+                        <div className={`flex items-center gap-1 text-xs ${stressedTrend.isPositive ? "text-green-500" : "text-red-500"}`}>
+                          {stressedTrend.isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                          <span>{stressedTrend.value}%</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {summary.stressed_students && summary.stressed_students.length > 0 ? (
+                      <ul className="space-y-3">
+                        {summary.stressed_students.map((student: StudentInfo) => (
+                          <li key={student.user_id + student.date} className="flex justify-between items-center p-2 rounded-md hover:bg-muted/50">
+                            <Link to={`/admin/table/${student.user_id}`} className="font-medium text-primary hover:underline">
+                              {getStudentName(student)}
+                            </Link>
+                            <span className="text-sm text-muted-foreground"><DayBadgeComponent dateString={student.date} /></span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="text-center text-muted-foreground py-8">
+                        <UserX className="h-12 w-12 mx-auto mb-2" />
+                        <p>No learners in the Overwhelmed Zone this week.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
       {totalPages > 1 && (
         <Pagination className="mt-12">
