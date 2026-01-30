@@ -24,7 +24,16 @@ import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function AdminDashboard() {
-  const [selectedCohort, setSelectedCohort] = useState<string | undefined>(undefined);
+  const [selectedCohort, setSelectedCohort] = useState<string | undefined>(() => {
+    const saved = localStorage.getItem('selectedCohort');
+    return saved ? (saved === 'all' ? undefined : saved) : undefined;
+  });
+
+  const handleCohortChange = (value: string) => {
+    const cohortValue = value === "all" ? undefined : value;
+    setSelectedCohort(cohortValue);
+    localStorage.setItem('selectedCohort', value);
+  };
 
   return (
     <div className="flex flex-col gap-6 overflow-hidden p-6">
@@ -33,7 +42,7 @@ function AdminDashboard() {
           <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
           <p className="text-muted-foreground">Overview of learner progress and reflection data</p>
         </div>
-        <Select value={selectedCohort} onValueChange={(value) => setSelectedCohort(value === "all" ? undefined : value)}>
+        <Select value={selectedCohort ?? "all"} onValueChange={handleCohortChange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select Cohort" />
           </SelectTrigger>
