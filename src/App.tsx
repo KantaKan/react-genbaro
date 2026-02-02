@@ -282,18 +282,22 @@ function AppContent() {
           <Route
             path="/tools"
             element={
-              <Page>
-                <ToolsPage />
-              </Page>
+              <ProtectedRoute allowedRoles={["admin", "learner"]}>
+                <Page>
+                  <ToolsPage />
+                </Page>
+              </ProtectedRoute>
             }
           />
 
           <Route
             path="/tools/spin-wheel"
             element={
-              <Page>
-                <SpinWheelPage />
-              </Page>
+              <ProtectedRoute allowedRoles={["admin", "learner"]}>
+                <Page>
+                  <SpinWheelPage />
+                </Page>
+              </ProtectedRoute>
             }
           />
 

@@ -4,6 +4,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Users } from "lucide-react";
+import { getCohort } from "@/lib/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type WheelOption = {
   option: string;
@@ -62,9 +70,26 @@ const SpinWheelPage = () => {
     ...INITIAL_GENMATE,
   ]);
 
-  // Learner: mock ข้อมูล, ภายหลัง fetch API
+  // Learner: fetch ตาม cohort
+  const [cohort, setCohort] = useState("11");
   const [learnerOptions, setLearnerOptions] = useState<string[]>([]);
   const [learnersLoading, setLearnersLoading] = useState(false);
+
+  const fetchUsers = async () => {
+    try {
+      setLearnersLoading(true);
+      const response = await getCohort(cohort);
+      setLearnerOptions(
+        response.map(
+          (user) => user.jsd_number.split("_").pop() ?? user.jsd_number
+        )
+      );
+    } catch (error) {
+      setLearnersLoading(false);
+    } finally {
+      setLearnersLoading(false);
+    }
+  };
 
   const wheelData = useMemo((): WheelOption[] => {
     let labels: string[] = [];
@@ -123,16 +148,6 @@ const SpinWheelPage = () => {
   };
 
   // --- Learner mode (mock fetch, ภายหลังเป็น API) ---
-  const fetchLearners = async () => {
-    setLearnersLoading(true);
-    try {
-      // TODO: แทนที่ด้วย API จริง เช่น await api.get("/learners") หรือตาม endpoint
-      await new Promise((r) => setTimeout(r, 800));
-      setLearnerOptions([...MOCK_LEARNERS]);
-    } finally {
-      setLearnersLoading(false);
-    }
-  };
 
   return (
     <div className="container mx-auto py-6 flex flex-col gap-6">
@@ -232,17 +247,29 @@ const SpinWheelPage = () => {
             <TabsContent value="learner" className="mt-4">
               <div className="rounded-lg border bg-card p-4 space-y-4 max-w-md">
                 <p className="text-sm text-muted-foreground">
-                  โหลดรายชื่อผู้เรียน (mock ข้อมูล — ภายหลังจะ fetch API)
+                  เลือก cohort แล้วกดโหลดรายชื่อผู้เรียน
                 </p>
-                <Button
-                  type="button"
-                  onClick={fetchLearners}
-                  disabled={learnersLoading}
-                  variant="secondary"
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  {learnersLoading ? "กำลังโหลด..." : "โหลดรายชื่อผู้เรียน"}
-                </Button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={cohort} onValueChange={setCohort}>
+                    <SelectTrigger id="cohort-select" className="w-[100px]">
+                      <SelectValue placeholder="Cohort" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="9">9</SelectItem>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="11">11</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    onClick={fetchUsers}
+                    disabled={learnersLoading}
+                    variant="secondary"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    {learnersLoading ? "กำลังโหลด..." : "โหลดรายชื่อผู้เรียน"}
+                  </Button>
+                </div>
                 {learnerOptions.length > 0 && (
                   <ul className="space-y-1 text-sm text-muted-foreground">
                     <li className="font-medium text-foreground">
@@ -276,6 +303,8 @@ const SpinWheelPage = () => {
                   radiusLineColor="#333"
                   radiusLineWidth={2}
                   spinDuration={0.8}
+                  textDistance={mode === "learner" ? 88 : 60}
+                  fontSize={mode === "learner" && wheelData.length > 25 ? 14 : 20}
                 />
               </div>
               <div className="flex gap-3">
