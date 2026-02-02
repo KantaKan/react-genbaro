@@ -24,7 +24,7 @@ export function AllUsers() {
 
   if (error) return <div>Error loading users</div>;
 
-  const users = response?.data;
+  const users = response ?? [];
 
   return (
     <Card>

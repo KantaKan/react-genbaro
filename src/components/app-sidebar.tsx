@@ -1,11 +1,28 @@
 import * as React from "react";
-import { GalleryVerticalEnd, SquareTerminal, BookOpen, FileText, MessageSquare, Table, Users, Calendar, User } from "lucide-react"; // Import MessageSquare and additional icons
+import {
+  GalleryVerticalEnd,
+  SquareTerminal,
+  BookOpen,
+  FileText,
+  MessageSquare,
+  Table,
+  Users,
+  Calendar,
+  User,
+  Hammer,
+} from "lucide-react"; // Import MessageSquare and additional icons
 import { motion } from "framer-motion"; // New import for animation
 import { Badge } from "@/components/ui/badge"; // New import for the 'New' badge
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "@/components/ui/sidebar";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarRail,
+} from "@/components/ui/sidebar";
 import { useAuth } from "../AuthContext";
 
 const teams = [
@@ -47,6 +64,11 @@ const navigationConfig = {
           title: "Weekly Summary",
           url: "/admin/weekly-summary",
           icon: Calendar, // Add icon for sub-menu item
+        },
+        {
+          title: "Tools",
+          url: "/tools",
+          icon: Hammer, // Add icon for sub-menu item
         },
       ],
     },
@@ -135,7 +157,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }
 
   // Get navigation items based on user role
-  const navItems = userRole ? navigationConfig[userRole as keyof typeof navigationConfig] : [];
+  const navItems = userRole
+    ? navigationConfig[userRole as keyof typeof navigationConfig]
+    : [];
 
   return (
     <Sidebar collapsible="icon" {...props}>

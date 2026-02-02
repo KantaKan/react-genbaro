@@ -26,14 +26,20 @@ export const getReflectionsByWeek = async (): Promise<WeeklyReflection[]> => {
   return response.data;
 };
 
+interface GetAllUsersResponse {
+  status: string;
+  message: string;
+  data: { limit: number; page: number; total: number; users: User[] };
+}
+
 export const getAllUsers = async (): Promise<User[]> => {
-  const response = await api.get<User[]>("admin/users");
-  return response.data;
+  const response = await api.get<GetAllUsersResponse>("admin/users");
+  return response.data.data.users;
 };
 
 export const getCohort = async (cohort: string): Promise<User[]> => {
-  const response = await api.get<User[]>(`admin/users?cohort=${cohort}`);
-  return response.data;
+  const response = await api.get<GetAllUsersResponse>(`admin/users?cohort=${cohort}`);
+  return response.data.data.users;
 };
 
 export const getUsersByBarometer = async (barometer: string): Promise<User[]> => {
