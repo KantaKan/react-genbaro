@@ -21,18 +21,28 @@ import SplashCursor from "./components/SplashCursor";
 import { DashboardMetrics } from "./components/dashboard-metrics";
 import LatestWeeklySummary from "./components/latest-weekly-summary";
 import { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import ToolsPage from "./pages/ToolPage";
+import SpinWheelPage from "./pages/SpinWheelPage";
 
 function AdminDashboard() {
-  const [selectedCohort, setSelectedCohort] = useState<string | undefined>(() => {
-    const saved = localStorage.getItem('selectedCohort');
-    return saved ? (saved === 'all' ? undefined : saved) : undefined;
-  });
+  const [selectedCohort, setSelectedCohort] = useState<string | undefined>(
+    () => {
+      const saved = localStorage.getItem("selectedCohort");
+      return saved ? (saved === "all" ? undefined : saved) : undefined;
+    }
+  );
 
   const handleCohortChange = (value: string) => {
     const cohortValue = value === "all" ? undefined : value;
     setSelectedCohort(cohortValue);
-    localStorage.setItem('selectedCohort', value);
+    localStorage.setItem("selectedCohort", value);
   };
 
   return (
@@ -40,9 +50,14 @@ function AdminDashboard() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Overview of learner progress and reflection data</p>
+          <p className="text-muted-foreground">
+            Overview of learner progress and reflection data
+          </p>
         </div>
-        <Select value={selectedCohort ?? "all"} onValueChange={handleCohortChange}>
+        <Select
+          value={selectedCohort ?? "all"}
+          onValueChange={handleCohortChange}
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select Cohort" />
           </SelectTrigger>
@@ -57,15 +72,21 @@ function AdminDashboard() {
           </SelectContent>
         </Select>
       </div>
-      
+
       <DashboardMetrics cohort={selectedCohort} />
-      
+
       <BaroChart cohort={selectedCohort} />
     </div>
   );
 }
 
-function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles: string[] }) {
+function ProtectedRoute({
+  children,
+  allowedRoles,
+}: {
+  children: React.ReactNode;
+  allowedRoles: string[];
+}) {
   const { isAuthenticated, userRole } = useAuth();
   const navigate = useNavigate();
 
@@ -83,6 +104,7 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
 }
 
 import WeeklySummaryPage from "./pages/weekly-summary-page";
+import ToolPage from "./pages/ToolPage";
 function AppContent() {
   const { isAuthenticated, userRole, error, login } = useAuth();
   const { refetchUserData } = useUserData();
@@ -98,7 +120,17 @@ function AppContent() {
     }
   };
 
-  const handleSignUp = async (first_name: string, last_name: string, email: string, password: string, cohort_number: number, jsd_number: string, project_group: string, genmate_group: string, zoom_name: string) => {
+  const handleSignUp = async (
+    first_name: string,
+    last_name: string,
+    email: string,
+    password: string,
+    cohort_number: number,
+    jsd_number: string,
+    project_group: string,
+    genmate_group: string,
+    zoom_name: string
+  ) => {
     try {
       const response = await api.post("register", {
         first_name,
@@ -126,15 +158,36 @@ function AppContent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <div
+            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+            role="alert"
+          >
             <strong className="font-bold">Error!</strong>
             <span className="block sm:inline"> {error}</span>
           </div>
         )}
 
         <Routes>
-          <Route path="/login" element={!isAuthenticated ? <Login onLogin={handleLogin} /> : <Navigate to="/" replace />} />
-          <Route path="/signupxdd" element={!isAuthenticated ? <SignUp onSignUp={handleSignUp} /> : <Navigate to="/" replace />} />
+          <Route
+            path="/login"
+            element={
+              !isAuthenticated ? (
+                <Login onLogin={handleLogin} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route
+            path="/signupxdd"
+            element={
+              !isAuthenticated ? (
+                <SignUp onSignUp={handleSignUp} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
 
           <Route
             path="/admin"
@@ -146,7 +199,6 @@ function AppContent() {
               </Page>
             }
           />
-
 
           <Route
             path="/admin/table"
@@ -227,7 +279,39 @@ function AppContent() {
             }
           />
 
-          <Route path="/" element={<Navigate to={isAuthenticated ? (userRole === "learner" ? "/learner" : "/admin") : "/login"} replace />} />
+          <Route
+            path="/tools"
+            element={
+              <Page>
+                <ToolsPage />
+              </Page>
+            }
+          />
+
+          <Route
+            path="/tools/spin-wheel"
+            element={
+              <Page>
+                <SpinWheelPage />
+              </Page>
+            }
+          />
+
+          <Route
+            path="/"
+            element={
+              <Navigate
+                to={
+                  isAuthenticated
+                    ? userRole === "learner"
+                      ? "/learner"
+                      : "/admin"
+                    : "/login"
+                }
+                replace
+              />
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </ThemeProvider>

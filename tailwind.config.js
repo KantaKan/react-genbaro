@@ -4,6 +4,15 @@ export default {
     content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
   	extend: {
+  		keyframes: {
+  			'rainbow-shimmer': {
+  				'0%': { backgroundPosition: '0% 50%' },
+  				'100%': { backgroundPosition: '200% 50%' }
+  			}
+  		},
+  		animation: {
+  			'rainbow-shimmer': 'rainbow-shimmer 6s linear infinite'
+  		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
