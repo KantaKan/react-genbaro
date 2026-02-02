@@ -147,6 +147,14 @@ const SpinWheelPage = () => {
     });
   };
 
+  const handleModeChange = (v: string) => {
+    const newMode = v as SpinMode;
+    setMode(newMode);
+    if (newMode === "custom") setCustomOptions([]);
+    else if (newMode === "genmate") setGenmateOptions([]);
+    else setLearnerOptions([]);
+  };
+
   // --- Learner mode (mock fetch, ภายหลังเป็น API) ---
 
   return (
@@ -158,7 +166,7 @@ const SpinWheelPage = () => {
         <div className="w-full max-w-md">
           <Tabs
             value={mode}
-            onValueChange={(v) => setMode(v as SpinMode)}
+            onValueChange={handleModeChange}
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-3">
@@ -292,6 +300,7 @@ const SpinWheelPage = () => {
             <>
               <div className="relative">
                 <Wheel
+                  key={mode}
                   mustStartSpinning={mustSpin}
                   prizeNumber={prizeNumber}
                   data={wheelData}
