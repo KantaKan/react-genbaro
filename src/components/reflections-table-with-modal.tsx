@@ -815,7 +815,7 @@ export default function ReflectionsTableWithModal() {
                       {(() => {
                         const zone = reflectionZones.find((z) => z.label === reflection.reflection.barometer);
                         const isCurrent = todaysReflection?.reflection.barometer === reflection.reflection.barometer;
-                        return zone ? <BarometerVisual zone={zone} isCurrent={isCurrent} /> : reflection.reflection.barometer;
+                        return zone ? <BarometerVisual zone={zone} size="sm" isCurrent={isCurrent} /> : reflection.reflection.barometer;
                       })()}
                     </TableCell>
                   )}

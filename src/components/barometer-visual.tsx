@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const reflectionZones = [
   {
@@ -38,25 +39,27 @@ export const reflectionZones = [
   },
 ] as const;
 
+type ReflectionZone = typeof reflectionZones[number];
+
 type BarometerVisualProps = {
-  barometer: string;
-  /**
-   * - `inline`: current behavior (fits content)
-   * - `full`: fills available width (useful in tables for consistent sizing)
-   */
+  barometer?: string;
+  zone?: ReflectionZone;
   variant?: "inline" | "full";
   size?: "sm" | "md";
+  showTooltip?: boolean;
   className?: string;
 };
 
 export const BarometerVisual = ({
   barometer,
+  zone: zoneProp,
   variant = "inline",
   size = "md",
+  showTooltip = true,
   className,
 }: BarometerVisualProps) => {
-  const zone = reflectionZones.find((z) => z.label === barometer);
-  if (!zone || barometer === "-") return <span>{barometer}</span>;
+  const zone = zoneProp || (barometer ? reflectionZones.find((z) => z.label === barometer) : null);
+  if (!zone || barometer === "-") return <span>{barometer || "-"}</span>;
 
   const layoutClass =
     variant === "full"
@@ -64,43 +67,63 @@ export const BarometerVisual = ({
       : "inline-flex";
 
   const sizeClass =
-    size === "sm" ? "gap-1.5 px-2 py-1" : "gap-2 px-3 py-1.5";
+    size === "sm" ? "gap-1.5 px-2 py-0.5 text-xs" : "gap-2 px-3 py-1.5";
 
   const emojiClass = size === "sm" ? "text-sm" : "text-base";
-  const labelClass = size === "sm" ? "text-xs" : "text-sm";
+
+  const barometerContent = (
+    <div className="cursor-pointer">
+      <motion.div
+        className={`${layoutClass} items-center ${sizeClass} rounded-md ${zone.bgColor} bg-opacity-15 transition-all duration-300 ${className || ""}`}
+        whileHover={{
+          scale: 1.05,
+        }}
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+      >
+        <motion.span
+          className={emojiClass}
+          animate={{
+            rotate: [0, 10, 0, -10, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Number.POSITIVE_INFINITY,
+            repeatType: "loop",
+          }}
+        >
+          {zone.emoji}
+        </motion.span>
+        {size !== "sm" && (
+          <span
+            className={`font-medium text-sm ${variant === "full" ? "truncate" : ""}`}
+          >
+            {zone.label}
+          </span>
+        )}
+      </motion.div>
+    </div>
+  );
+
+  if (!showTooltip) {
+    return barometerContent;
+  }
 
   return (
-    <motion.div
-      className={`${layoutClass} items-center ${sizeClass} rounded-md ${zone.bgColor} bg-opacity-15 transition-all duration-300 ${className || ""}`}
-      whileHover={{
-        scale: 1.05,
-        backgroundColor: `var(--${zone.bgColor.replace("bg-", "")})`,
-        backgroundOpacity: 0.25,
-      }}
-      initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-    >
-      <motion.span
-        className={emojiClass}
-        animate={{
-          rotate: [0, 10, 0, -10, 0],
-          scale: [1, 1.1, 1],
-        }}
-        transition={{
-          duration: 2,
-          repeat: Number.POSITIVE_INFINITY,
-          repeatType: "loop",
-        }}
-      >
-        {zone.emoji}
-      </motion.span>
-      <span
-        className={`font-medium ${labelClass} ${variant === "full" ? "truncate" : ""}`}
-        title={zone.label}
-      >
-        {zone.label}
-      </span>
-    </motion.div>
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {barometerContent}
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs">
+          <div className="space-y-1">
+            <p className="font-semibold">{zone.emoji} {zone.label}</p>
+            <p className="text-sm text-muted-foreground">{zone.description}</p>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };

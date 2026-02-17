@@ -262,8 +262,8 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
 
     if (column === "Last Barometer") {
       return (
-        <TableCell key={column} className="min-w-[260px]">
-          <BarometerVisual barometer={value as string} variant="full" />
+        <TableCell key={column} className="min-w-[100px]">
+          <BarometerVisual barometer={value as string} variant="full" size="sm" />
         </TableCell>
       );
     }

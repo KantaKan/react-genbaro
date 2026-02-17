@@ -1,73 +1,28 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { motion } from "framer-motion";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronDown, ChevronUp, Search } from "lucide-react";
-import type { Reflection, TechSession, NonTechSession, ReflectionData } from "@/hooks/use-reflections";
+import { Card, CardContent } from "@/components/ui/card";
+import { Search, ChevronDown, ChevronUp, MessageSquareText, X } from "lucide-react";
+import type { Reflection } from "@/hooks/use-reflections";
 import { reflectionZones } from "./reflection-zones";
 import { BarometerVisual } from "./barometer-visual";
-import { FeedbackButton } from "./feedback-button"; // Import the new component
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"; // Import Dialog components
-import { MessageSquareText } from "lucide-react"; // Import for feedback icon
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface ReflectionsTableProps {
   reflections: Reflection[];
   todaysReflection?: Reflection;
-  isAdmin?: boolean; // New prop to indicate if the table is used in an admin context
-  userId?: string; // New prop to pass the user ID for feedback
+  isAdmin?: boolean;
+  userId?: string;
 }
 
-export const ReflectionsTable = ({ reflections, todaysReflection, isAdmin = false, userId }: ReflectionsTableProps) => {
-  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: "ascending" | "descending";
-  }>({
-    key: "date",
-    direction: "descending",
-  });
+export const ReflectionsTable = ({ reflections, isAdmin = false }: ReflectionsTableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [timeFilter, setTimeFilter] = useState("all");
-
-  const ALL_REFLECTION_COLUMNS = useMemo(() => {
-    const columns = ["Date", "Tech Happy", "Tech Improve", "Non-Tech Happy", "Non-Tech Improve", "Barometer"];
-    if (isAdmin) {
-      columns.push("Feedback");
-    }
-    return columns;
-  }, [isAdmin]);
-
-  const sortReflections = useCallback(
-    (reflectionsToSort: Reflection[]) => {
-      return [...reflectionsToSort].sort((a, b) => {
-        const extractValue = (item: Reflection, key: string) => {
-          if (key === "date") return new Date(item.date).getTime();
-          if (key.startsWith("tech_sessions.")) {
-            const field = key.split(".")[1] as keyof TechSession;
-            return item.reflection.tech_sessions[field] || "";
-          }
-          if (key.startsWith("non_tech_sessions.")) {
-            const field = key.split(".")[1] as keyof NonTechSession;
-            return item.reflection.non_tech_sessions[field] || "";
-          }
-          return item.reflection[key as keyof ReflectionData] || "";
-        };
-
-        const aValue = extractValue(a, sortConfig.key);
-        const bValue = extractValue(b, sortConfig.key);
-
-        if (aValue < bValue) return sortConfig.direction === "ascending" ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === "ascending" ? 1 : -1;
-        return 0;
-      });
-    },
-    [sortConfig],
-  );
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
   const filteredReflections = useMemo(() => {
     let filtered = [...reflections];
@@ -115,161 +70,275 @@ export const ReflectionsTable = ({ reflections, todaysReflection, isAdmin = fals
       }
     }
 
-    return sortReflections(filtered);
-  }, [reflections, searchQuery, timeFilter, sortReflections]);
+    return filtered.sort((a, b) => new Date(b.day || b.date).getTime() - new Date(a.day || a.date).getTime());
+  }, [reflections, searchQuery, timeFilter]);
 
-  const toggleColumn = (columnId: string) => {
-    setHiddenColumns((prev) => (prev.includes(columnId) ? prev.filter((id) => id !== columnId) : [...prev, columnId]));
+  const zoneStats = useMemo(() => {
+    const stats = reflections.reduce(
+      (acc, reflection) => {
+        const zone = reflectionZones.find((z) => z.label === reflection.reflection.barometer);
+        if (zone) {
+          acc[zone.id] = (acc[zone.id] || 0) + 1;
+        }
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+    return stats;
+  }, [reflections]);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const dateOnly = new Date(date);
+    dateOnly.setHours(0, 0, 0, 0);
+
+    if (dateOnly.getTime() === today.getTime()) {
+      return "Today";
+    } else if (dateOnly.getTime() === yesterday.getTime()) {
+      return "Yesterday";
+    } else {
+      return date.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      });
+    }
   };
 
-  const requestSort = (key: string) => {
-    setSortConfig((prev) => ({
-      key,
-      direction: prev.key === key && prev.direction === "ascending" ? "descending" : "ascending",
-    }));
+  const toggleCard = (id: string) => {
+    setExpandedCards((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   };
+
+  const expandAll = () => {
+    setExpandedCards(new Set(filteredReflections.map((r, i) => r._id || `${i}`)));
+  };
+
+  const collapseAll = () => {
+    setExpandedCards(new Set());
+  };
+
+  const isAllExpanded = filteredReflections.length > 0 && filteredReflections.every((r, i) => expandedCards.has(r._id || `${i}`));
+  const isAllCollapsed = filteredReflections.length > 0 && filteredReflections.every((r, i) => !expandedCards.has(r._id || `${i}`));
 
   return (
-    <div className="space-y-6">
-      {/* Table Controls */}
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="relative w-full sm:w-auto">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search reflections..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 w-full sm:w-[200px]" />
-          </div>
-          <Tabs value={timeFilter} onValueChange={setTimeFilter} className="w-full sm:w-auto">
-            <TabsList className="w-full sm:w-auto grid grid-cols-4 sm:flex">
-              <TabsTrigger value="all">All Time</TabsTrigger>
-              <TabsTrigger value="month">Month</TabsTrigger>
-              <TabsTrigger value="week">Week</TabsTrigger>
-              <TabsTrigger value="today">Today</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                Visible Columns <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {ALL_REFLECTION_COLUMNS.map((column) => (
-                <DropdownMenuCheckboxItem key={column} className="capitalize" checked={!hiddenColumns.includes(column)} onCheckedChange={() => toggleColumn(column)}>
-                  {column}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+    <div className="space-y-4">
+      {/* Stats Row */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="text-sm text-muted-foreground">
+          {filteredReflections.length} {filteredReflections.length === 1 ? "reflection" : "reflections"}
+        </span>
+        <div className="flex gap-1">
+          {reflectionZones.slice(0, 4).map((zone) => {
+            const count = zoneStats[zone.id] || 0;
+            if (count === 0) return null;
+            return (
+              <span
+                key={zone.id}
+                className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground"
+              >
+                {zone.emoji} {count}
+              </span>
+            );
+          })}
         </div>
       </div>
 
-      {/* Table */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="rounded-md border overflow-x-auto">
-        <Table className="[&_td]:align-top">
-          <TableHeader>
-            <TableRow>
-              {!hiddenColumns.includes("Date") && (
-                <TableHead>
-                  <Button variant="ghost" onClick={() => requestSort("date")} className="font-semibold h-auto py-4">
-                    Date
-                    {sortConfig.key === "date" && (
-                      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
-                        {sortConfig.direction === "ascending" ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
-                      </motion.span>
+      {/* Search & Filters Row */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search reflections..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-9 h-9"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Tabs value={timeFilter} onValueChange={setTimeFilter}>
+            <TabsList className="h-9">
+              <TabsTrigger value="all" className="text-xs px-3">All</TabsTrigger>
+              <TabsTrigger value="month" className="text-xs px-3">Month</TabsTrigger>
+              <TabsTrigger value="week" className="text-xs px-3">Week</TabsTrigger>
+              <TabsTrigger value="today" className="text-xs px-3">Today</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          
+          {isAllExpanded ? (
+            <Button variant="outline" size="sm" onClick={collapseAll} className="h-9 gap-1">
+              <ChevronUp className="h-3 w-3" />
+              Collapse
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={expandAll} className="h-9 gap-1">
+              <ChevronDown className="h-3 w-3" />
+              Expand
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Cards List */}
+      {filteredReflections.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed rounded-lg">
+          <p className="text-muted-foreground mb-2">No reflections found</p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setSearchQuery("");
+              setTimeFilter("all");
+            }}
+          >
+            Clear filters
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filteredReflections.map((reflection, index) => {
+            const barometerValue = reflection?.reflection?.barometer || "";
+            const zone = reflectionZones.find(
+              (z) =>
+                z.label.toLowerCase() === barometerValue.toLowerCase() ||
+                z.aliases?.some((alias) => alias.toLowerCase() === barometerValue.toLowerCase()),
+            );
+            const cardId = reflection._id || `${index}`;
+            const isExpanded = expandedCards.has(cardId);
+
+            const zoneBgColor = zone?.bgColor || "bg-muted";
+            const bgOpacityClass = zone ? "bg-opacity-20" : "";
+
+            return (
+              <motion.div
+                key={cardId}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2, delay: index * 0.03 }}
+              >
+                <Card className={`overflow-hidden ${zoneBgColor} ${bgOpacityClass}`}>
+                  {/* Card Header - Always Visible */}
+                  <div
+                    className="flex items-center justify-between p-3 cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => toggleCard(cardId)}
+                  >
+                    <span className="text-sm font-medium">
+                      {formatDate(reflection.day || reflection.date)}
+                    </span>
+                    
+                    <div className="flex items-center gap-2">
+                      {zone && (
+                        <span className="text-sm font-medium">
+                          {zone.label}
+                        </span>
+                      )}
+                      <span className="text-lg">
+                        {zone?.emoji || "❓"}
+                      </span>
+                      <motion.div
+                        animate={{ rotate: isExpanded ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      </motion.div>
+                    </div>
+                  </div>
+
+                  {/* Card Content - Expandable */}
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: "auto" }}
+                        exit={{ height: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <CardContent className="pt-0 pb-3 px-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-black/10">
+                            {/* Tech Session */}
+                            <div>
+                              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                                Tech Session
+                              </h4>
+                              <div className="space-y-2 text-sm">
+                                <div>
+                                  <span className="text-green-700 text-xs font-medium">Went well</span>
+                                  <p>{reflection.reflection.tech_sessions.happy || "—"}</p>
+                                </div>
+                                <div>
+                                  <span className="text-amber-700 text-xs font-medium">To improve</span>
+                                  <p>{reflection.reflection.tech_sessions.improve || "—"}</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Non-Tech Session */}
+                            <div>
+                              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                                Non-Tech Session
+                              </h4>
+                              <div className="space-y-2 text-sm">
+                                <div>
+                                  <span className="text-green-700 text-xs font-medium">Went well</span>
+                                  <p>{reflection.reflection.non_tech_sessions.happy || "—"}</p>
+                                </div>
+                                <div>
+                                  <span className="text-amber-700 text-xs font-medium">To improve</span>
+                                  <p>{reflection.reflection.non_tech_sessions.improve || "—"}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Admin Feedback */}
+                          {!isAdmin && reflection.admin_feedback && (
+                            <div className="mt-3 pt-3 border-t border-black/10">
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm" className="w-full text-xs bg-white/50">
+                                    <MessageSquareText className="h-3 w-3 mr-1" />
+                                    View Admin Feedback
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Admin Feedback</DialogTitle>
+                                  </DialogHeader>
+                                  <p className="py-2 whitespace-pre-wrap text-sm">{reflection.admin_feedback}</p>
+                                </DialogContent>
+                              </Dialog>
+                            </div>
+                          )}
+                        </CardContent>
+                      </motion.div>
                     )}
-                  </Button>
-                </TableHead>
-              )}
-              {!hiddenColumns.includes("Tech Happy") && <TableHead>Tech Happy</TableHead>}
-              {!hiddenColumns.includes("Tech Improve") && <TableHead>Tech Improve</TableHead>}
-              {!hiddenColumns.includes("Non-Tech Happy") && <TableHead>Non-Tech Happy</TableHead>}
-              {!hiddenColumns.includes("Non-Tech Improve") && <TableHead>Non-Tech Improve</TableHead>}
-              {!hiddenColumns.includes("Barometer") && <TableHead>Barometer</TableHead>}
-              {isAdmin && !hiddenColumns.includes("Feedback") && <TableHead>Feedback</TableHead>}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredReflections.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center">
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="flex flex-col items-center gap-2">
-                    <p className="text-muted-foreground">No reflections found</p>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setSearchQuery("");
-                        setTimeFilter("all");
-                      }}
-                    >
-                      Clear filters
-                    </Button>
-                  </motion.div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredReflections.map((reflection, index) => (
-                <motion.tr
-                  key={`${reflection._id || "no-id"}-${reflection.date || "no-date"}-${index}`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="group hover:bg-muted/50 transition-colors"
-                >
-                  {!hiddenColumns.includes("Date") && <TableCell className="whitespace-normal py-4 group-hover:text-primary transition-colors">{new Date(reflection.day || reflection.date).toLocaleDateString()}</TableCell>}
-                  {!hiddenColumns.includes("Tech Happy") && <TableCell className="whitespace-normal py-4">{reflection?.reflection?.tech_sessions?.happy || ""}</TableCell>}
-                  {!hiddenColumns.includes("Tech Improve") && <TableCell className="whitespace-normal py-4">{reflection?.reflection?.tech_sessions?.improve || ""}</TableCell>}
-                  {!hiddenColumns.includes("Non-Tech Happy") && <TableCell className="whitespace-normal py-4">{reflection?.reflection?.non_tech_sessions?.happy || ""}</TableCell>}
-                  {!hiddenColumns.includes("Non-Tech Improve") && <TableCell className="whitespace-normal py-4">{reflection?.reflection?.non_tech_sessions?.improve || ""}</TableCell>}
-                  {!hiddenColumns.includes("Barometer") && (
-                    <TableCell>
-                      {(() => {
-                        const barometerValue = reflection?.reflection?.barometer || reflection?.barometer || "";
-                        const zone = reflectionZones.find((z) => z.label.toLowerCase() === barometerValue.toLowerCase() || z.aliases?.some((alias) => alias.toLowerCase() === barometerValue.toLowerCase()));
-                        if (!zone) {
-                          return <span className="text-muted-foreground">{barometerValue}</span>;
-                        }
-                        return <BarometerVisual barometer={zone.label} />;
-                      })()}
-                    </TableCell>
-                  )}
-                  {isAdmin && !hiddenColumns.includes("Feedback") && userId && reflection._id && (
-                    <TableCell>
-                      <FeedbackButton
-                        userId={userId}
-                        reflectionId={reflection._id}
-                        initialFeedback={reflection.admin_feedback}
-                        onFeedbackUpdated={() => {
-                          /* Consider a way to refresh reflections if needed */
-                        }}
-                      />
-                    </TableCell>
-                  )}
-                  {!isAdmin && !hiddenColumns.includes("Feedback") && reflection.admin_feedback && (
-                    <TableCell>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="icon" className="h-8 w-8">
-                            <MessageSquareText className="h-4 w-4" />
-                            <span className="sr-only">View Feedback</span>
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Admin Feedback</DialogTitle>
-                          </DialogHeader>
-                          <p className="py-4 whitespace-pre-wrap">{reflection.admin_feedback}</p>
-                        </DialogContent>
-                      </Dialog>
-                    </TableCell>
-                  )}
-                </motion.tr>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </motion.div>
+                  </AnimatePresence>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
