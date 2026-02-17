@@ -2,14 +2,15 @@ import React, { createContext, useState, useContext, useEffect } from "react";
 import Cookies from "js-cookie";
 
 import { api } from "./lib/api";
+import { isUserRole, type UserRole } from "./types/auth";
 
 type AuthContextType = {
   isAuthenticated: boolean;
-  userRole: string | null;
+  userRole: UserRole | null;
   userId: string | null;
   error: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<string>;
+  login: (email: string, password: string) => Promise<UserRole>;
   logout: () => void;
 };
 
@@ -25,7 +26,10 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!Cookies.get("authToken"));
-  const [userRole, setUserRole] = useState<string | null>(() => Cookies.get("userRole") || null);
+  const [userRole, setUserRole] = useState<UserRole | null>(() => {
+    const saved = Cookies.get("userRole");
+    return saved && isUserRole(saved) ? saved : null;
+  });
   const [userId, setUserId] = useState<string | null>(() => Cookies.get("userId") || null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,7 +47,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const role = response.data.data.role || "";
             const fetchedUserId = response.data.data.userId || "";
 
-            if (!role || role === "invalidRole") {
+            if (!isUserRole(role)) {
               throw new Error("Invalid role in response");
             }
 
@@ -74,12 +78,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     verifyToken();
   }, []);
 
-  const login = async (email: string, password: string): Promise<string> => {
+  const login = async (email: string, password: string): Promise<UserRole> => {
     try {
       const response = await api.post("/login", { email, password });
 
       if (response.data?.data?.token) {
-        const role = response.data.data.role || "learner";
+        const rawRole = response.data.data.role || "learner";
+        if (!isUserRole(rawRole)) {
+          throw new Error("Invalid role in login response");
+        }
+        const role = rawRole;
         const token = response.data.data.token;
         const fetchedUserId = response.data.data.userId || ""; // Assuming userId is returned on login
 

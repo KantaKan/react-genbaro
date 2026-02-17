@@ -1,27 +1,30 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Filter } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import FeedbackForm from "./feedback-form";
 import { api } from "@/lib/api";
 import { useConfig } from "@/hooks/use-config";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BarometerVisual, reflectionZones } from "@/components/barometer-visual";
 
 interface Reflection {
   _id: string;
-  user_id: string;
+  user_id?: string;
   FirstName: string;
   LastName: string;
   JsdNumber: string;
   Date: string;
-  id: string;
+  id?: string;
   Reflection: {
     Barometer: string;
     TechSessions?: {
@@ -37,93 +40,15 @@ interface Reflection {
   };
 }
 
-const reflectionZones = [
-  {
-    id: "comfort",
-    label: "Comfort Zone",
-    bgColor: "bg-emerald-500",
-    emoji: "😸",
-    description: "Where you feel safe and in control. Tasks are easy and familiar.",
-  },
-  {
-    id: "stretch-enjoying",
-    label: "Stretch zone - Enjoying the challenges",
-    bgColor: "bg-amber-500",
-    emoji: "😺",
-    description: "Pushing your boundaries, feeling challenged but excited.",
-  },
-  {
-    id: "stretch-overwhelmed",
-    label: "Stretch zone - Overwhelmed",
-    bgColor: "bg-red-500",
-    emoji: "😿",
-    description: "Feeling stressed, but still learning and growing.",
-  },
-  {
-    id: "panic",
-    label: "Panic Zone",
-    bgColor: "bg-violet-500",
-    emoji: "🙀",
-    description: "Feeling extreme stress or fear. Learning is difficult here.",
-  },
-  {
-    id: "no-data",
-    label: "No Data",
-    bgColor: "bg-gray-200",
-    emoji: "❌",
-    description: "Insufficient information to categorize the experience.",
-  },
-] as const;
-
-const BarometerVisual = ({ barometer }: { barometer: string }) => {
-  const zone = reflectionZones.find((z) => z.label === barometer);
-  if (!zone) return <span>{barometer}</span>;
-
-  return (
-    <motion.div
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md ${zone.bgColor} bg-opacity-15 transition-all duration-300`}
-      whileHover={{
-        scale: 1.05,
-        backgroundColor: `var(--${zone.bgColor.replace("bg-", "")})`,
-        backgroundOpacity: 0.25,
-      }}
-      initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-    >
-      <motion.span
-        className="text-base"
-        animate={{
-          rotate: [0, 10, 0, -10, 0],
-          scale: [1, 1.1, 1],
-        }}
-        transition={{
-          duration: 2,
-          repeat: Number.POSITIVE_INFINITY,
-          repeatType: "loop",
-        }}
-      >
-        {zone.emoji}
-      </motion.span>
-      <span className="font-medium text-sm">{zone.label}</span>
-    </motion.div>
-  );
-};
-
 const LoadingRow = () => (
   <TableRow>
-    <TableCell colSpan={9}>
+    <TableCell colSpan={99}>
       <div className="flex items-center justify-center p-8">
         <motion.div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
       </div>
     </TableCell>
   </TableRow>
 );
-
-const getColorForBarometer = (barometer: string) => {
-  const zone = reflectionZones.find((zone) => zone.label === barometer);
-  return zone ? zone.bgColor : "";
-};
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -148,12 +73,13 @@ export default function AdminReflectionsTable() {
   );
 
   const [originalReflections, setOriginalReflections] = useState<Reflection[]>([]);
-  const [displayedReflections, setDisplayedReflections] = useState<Reflection[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const itemsPerPage = 20;
+  const [searchQuery, setSearchQuery] = useState("");
+  const [barometerFilter, setBarometerFilter] = useState<string>("all");
 
   useEffect(() => {
     const fetchReflections = async () => {
@@ -163,32 +89,14 @@ export default function AdminReflectionsTable() {
         if (response.data.success && Array.isArray(response.data.data)) {
           const fetchedReflections = response.data.data;
           setOriginalReflections(fetchedReflections);
-
-          // Apply current sorting to new data
-          const sortedReflections = [...fetchedReflections].sort((a, b) => {
-            const aValue = getValueByKey(a, sortConfig.key);
-            const bValue = getValueByKey(b, sortConfig.key);
-
-            if (typeof aValue === "string" && typeof bValue === "string") {
-              return sortConfig.direction === "ascending" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-            }
-
-            if (aValue < bValue) return sortConfig.direction === "ascending" ? -1 : 1;
-            if (aValue > bValue) return sortConfig.direction === "ascending" ? 1 : -1;
-            return 0;
-          });
-
-          setDisplayedReflections(sortedReflections);
           setTotalPages(Math.ceil(response.data.total / itemsPerPage));
         } else {
           setOriginalReflections([]);
-          setDisplayedReflections([]);
           setTotalPages(1);
         }
       } catch (error) {
         console.error("Error fetching reflections:", error);
         setOriginalReflections([]);
-        setDisplayedReflections([]);
         setTotalPages(1);
       } finally {
         setIsLoading(false);
@@ -196,7 +104,7 @@ export default function AdminReflectionsTable() {
     };
 
     fetchReflections();
-  }, [currentPage, sortConfig.key, sortConfig.direction]);
+  }, [currentPage]);
 
   const toggleColumn = (columnId: string) => {
     setVisibleColumns(prev => {
@@ -231,21 +139,6 @@ export default function AdminReflectionsTable() {
     setSortConfig((prev) => {
       const newDirection = prev.key === key && prev.direction === "ascending" ? "descending" : "ascending";
 
-      const sortedReflections = [...displayedReflections].sort((a, b) => {
-        const aValue = getValueByKey(a, key);
-        const bValue = getValueByKey(b, key);
-
-        if (typeof aValue === "string" && typeof bValue === "string") {
-          return newDirection === "ascending" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-        }
-
-        if (aValue < bValue) return newDirection === "ascending" ? -1 : 1;
-        if (aValue > bValue) return newDirection === "ascending" ? 1 : -1;
-        return 0;
-      });
-
-      setDisplayedReflections(sortedReflections);
-
       // Update config with new sort settings
       const newSortConfig = { key, direction: newDirection };
       updateAdminReflectionsSort(key, newDirection);
@@ -261,7 +154,6 @@ export default function AdminReflectionsTable() {
         const refreshResponse = await api.get(`/admin/reflections?page=${currentPage}&limit=${itemsPerPage}`);
         if (refreshResponse.data.success && Array.isArray(refreshResponse.data.data)) {
           setOriginalReflections(refreshResponse.data.data);
-          setDisplayedReflections(refreshResponse.data.data);
           setTotalPages(Math.ceil(refreshResponse.data.total / itemsPerPage));
         }
         setIsDialogOpen(false);
@@ -272,13 +164,73 @@ export default function AdminReflectionsTable() {
     }
   };
 
-  const handleRowClick = (userId: string) => {
+  const handleRowClick = (userId: string | undefined) => {
+    if (!userId) return;
     navigate(`/admin/table/${userId}`);
   };
 
+  const filteredReflections = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const matchesQuery = (r: Reflection) => {
+      if (!query) return true;
+      return (
+        (r.FirstName || "").toLowerCase().includes(query) ||
+        (r.LastName || "").toLowerCase().includes(query) ||
+        (r.JsdNumber || "").toLowerCase().includes(query) ||
+        (r.Reflection?.Barometer || "").toLowerCase().includes(query)
+      );
+    };
+
+    const matchesBarometer = (r: Reflection) => {
+      if (barometerFilter === "all") return true;
+      return (r.Reflection?.Barometer || "") === barometerFilter;
+    };
+
+    const sorted = [...originalReflections]
+      .filter((r) => matchesQuery(r) && matchesBarometer(r))
+      .sort((a, b) => {
+        const aValue = getValueByKey(a, sortConfig.key);
+        const bValue = getValueByKey(b, sortConfig.key);
+
+        if (typeof aValue === "string" && typeof bValue === "string") {
+          return sortConfig.direction === "ascending"
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        }
+
+        if (aValue < bValue) return sortConfig.direction === "ascending" ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === "ascending" ? 1 : -1;
+        return 0;
+      });
+
+    return sorted;
+  }, [originalReflections, searchQuery, barometerFilter, sortConfig.key, sortConfig.direction]);
+
+  const clamp2 =
+    "overflow-hidden [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]";
+
   if (isLoading) {
     return (
-      <div className="container mx-auto py-10">
+      <div className="py-4">
+        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            <Button variant="outline" disabled>
+              Columns <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+            <Badge variant="outline" className="text-sm">
+              Loading…
+            </Badge>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative">
+              <Filter className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input disabled placeholder="Search…" className="w-64 pl-8" />
+            </div>
+            <Button variant="outline" disabled className="w-48 justify-between">
+              All Zones <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -300,8 +252,8 @@ export default function AdminReflectionsTable() {
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="flex justify-between items-center mb-6">
+    <div className="py-4">
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -318,8 +270,32 @@ export default function AdminReflectionsTable() {
             </DropdownMenuContent>
           </DropdownMenu>
           <Badge variant="outline" className="text-sm">
-            {displayedReflections.length} reflections
+            {filteredReflections.length} reflections
           </Badge>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative">
+            <Filter className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search name / JSD / zone…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-64 pl-8"
+            />
+          </div>
+          <Select value={barometerFilter} onValueChange={setBarometerFilter}>
+            <SelectTrigger className="w-56">
+              <SelectValue placeholder="All Zones" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Zones</SelectItem>
+              {reflectionZones.map((zone) => (
+                <SelectItem key={zone.id} value={zone.label}>
+                  {zone.emoji} {zone.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>{/* <Button variant="outline">Add Reflection</Button> */}</DialogTrigger>
@@ -330,12 +306,16 @@ export default function AdminReflectionsTable() {
       </div>
 
       <div className="rounded-md border">
-        <Table>
+        <Table className="table-fixed w-full">
           <TableHeader>
             <TableRow>
               {visibleColumns.includes("First Name") && (
-                <TableHead>
-                  <Button variant="ghost" onClick={() => requestSort("FirstName")} className="font-semibold">
+                <TableHead className="w-[140px] text-center">
+                  <Button
+                    variant="ghost"
+                    onClick={() => requestSort("FirstName")}
+                    className="w-full justify-center font-semibold"
+                  >
                     First Name
                     {sortConfig.key === "FirstName" && (
                       <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
@@ -346,8 +326,12 @@ export default function AdminReflectionsTable() {
                 </TableHead>
               )}
               {visibleColumns.includes("Last Name") && (
-                <TableHead>
-                  <Button variant="ghost" onClick={() => requestSort("LastName")} className="font-semibold">
+                <TableHead className="w-[140px] text-center">
+                  <Button
+                    variant="ghost"
+                    onClick={() => requestSort("LastName")}
+                    className="w-full justify-center font-semibold"
+                  >
                     Last Name
                     {sortConfig.key === "LastName" && (
                       <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
@@ -358,8 +342,12 @@ export default function AdminReflectionsTable() {
                 </TableHead>
               )}
               {visibleColumns.includes("JSD Number") && (
-                <TableHead>
-                  <Button variant="ghost" onClick={() => requestSort("JsdNumber")} className="font-semibold">
+                <TableHead className="w-[130px] text-center">
+                  <Button
+                    variant="ghost"
+                    onClick={() => requestSort("JsdNumber")}
+                    className="w-full justify-center font-semibold"
+                  >
                     JSD Number
                     {sortConfig.key === "JsdNumber" && (
                       <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
@@ -370,8 +358,12 @@ export default function AdminReflectionsTable() {
                 </TableHead>
               )}
               {visibleColumns.includes("Date") && (
-                <TableHead>
-                  <Button variant="ghost" onClick={() => requestSort("Date")} className="font-semibold">
+                <TableHead className="w-[120px]">
+                  <Button
+                    variant="ghost"
+                    onClick={() => requestSort("Date")}
+                    className="w-full justify-start font-semibold"
+                  >
                     Date
                     {sortConfig.key === "Date" && (
                       <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
@@ -385,32 +377,92 @@ export default function AdminReflectionsTable() {
               {visibleColumns.includes("Tech Improve") && <TableHead>Tech Improve</TableHead>}
               {visibleColumns.includes("Non-Tech Happy") && <TableHead>Non-Tech Happy</TableHead>}
               {visibleColumns.includes("Non-Tech Improve") && <TableHead>Non-Tech Improve</TableHead>}
-              {visibleColumns.includes("Barometer") && <TableHead>Barometer</TableHead>}
+              {visibleColumns.includes("Barometer") && (
+                <TableHead className="w-[220px] text-center">Barometer</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             <AnimatePresence>
-              {displayedReflections.map((reflection, index) => (
+              {filteredReflections.map((reflection, index) => (
                 <motion.tr
-                  key={reflection._id || `reflection-${reflection.user_id || 'unknown'}-${reflection.date || 'nodate'}-${index}`}
+                  key={
+                    reflection._id ||
+                    `reflection-${reflection.user_id || reflection.id || "unknown"}-${reflection.Date || "nodate"}-${index}`
+                  }
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2, delay: index * 0.03 }}
-                  onClick={() => handleRowClick(reflection.id)}
+                  onClick={() => handleRowClick(reflection.user_id || reflection.id)}
                   className="cursor-pointer hover:bg-muted/50 transition-colors"
                 >
-                  {visibleColumns.includes("First Name") && <TableCell className="text-center">{reflection.FirstName}</TableCell>}
-                  {visibleColumns.includes("Last Name") && <TableCell className="text-center">{reflection.LastName}</TableCell>}
-                  {visibleColumns.includes("JSD Number") && <TableCell className="text-center">{reflection.JsdNumber}</TableCell>}
-                  {visibleColumns.includes("Date") && <TableCell>{formatDate(reflection.Date)}</TableCell>}
-                  {visibleColumns.includes("Tech Happy") && <TableCell>{reflection.Reflection?.TechSessions?.Happy || ""}</TableCell>}
-                  {visibleColumns.includes("Tech Improve") && <TableCell>{reflection.Reflection?.TechSessions?.Improve || ""}</TableCell>}
-                  {visibleColumns.includes("Non-Tech Happy") && <TableCell>{reflection.Reflection?.NonTechSessions?.Happy || ""}</TableCell>}
-                  {visibleColumns.includes("Non-Tech Improve") && <TableCell>{reflection.Reflection?.NonTechSessions?.Improve || ""}</TableCell>}
+                  {visibleColumns.includes("First Name") && (
+                    <TableCell className="w-[140px] text-center">
+                      {reflection.FirstName}
+                    </TableCell>
+                  )}
+                  {visibleColumns.includes("Last Name") && (
+                    <TableCell className="w-[140px] text-center">
+                      {reflection.LastName}
+                    </TableCell>
+                  )}
+                  {visibleColumns.includes("JSD Number") && (
+                    <TableCell className="w-[130px] text-center font-mono">
+                      {reflection.JsdNumber}
+                    </TableCell>
+                  )}
+                  {visibleColumns.includes("Date") && (
+                    <TableCell className="w-[120px]">
+                      {formatDate(reflection.Date)}
+                    </TableCell>
+                  )}
+                  {visibleColumns.includes("Tech Happy") && (
+                    <TableCell className="align-top">
+                      <div
+                        className={`${clamp2} max-w-[520px] whitespace-pre-wrap break-words text-sm text-muted-foreground`}
+                        title={reflection.Reflection?.TechSessions?.Happy || ""}
+                      >
+                        {reflection.Reflection?.TechSessions?.Happy || ""}
+                      </div>
+                    </TableCell>
+                  )}
+                  {visibleColumns.includes("Tech Improve") && (
+                    <TableCell className="align-top">
+                      <div
+                        className={`${clamp2} max-w-[520px] whitespace-pre-wrap break-words text-sm text-muted-foreground`}
+                        title={reflection.Reflection?.TechSessions?.Improve || ""}
+                      >
+                        {reflection.Reflection?.TechSessions?.Improve || ""}
+                      </div>
+                    </TableCell>
+                  )}
+                  {visibleColumns.includes("Non-Tech Happy") && (
+                    <TableCell className="align-top">
+                      <div
+                        className={`${clamp2} max-w-[520px] whitespace-pre-wrap break-words text-sm text-muted-foreground`}
+                        title={reflection.Reflection?.NonTechSessions?.Happy || ""}
+                      >
+                        {reflection.Reflection?.NonTechSessions?.Happy || ""}
+                      </div>
+                    </TableCell>
+                  )}
+                  {visibleColumns.includes("Non-Tech Improve") && (
+                    <TableCell className="align-top">
+                      <div
+                        className={`${clamp2} max-w-[520px] whitespace-pre-wrap break-words text-sm text-muted-foreground`}
+                        title={reflection.Reflection?.NonTechSessions?.Improve || ""}
+                      >
+                        {reflection.Reflection?.NonTechSessions?.Improve || ""}
+                      </div>
+                    </TableCell>
+                  )}
                   {visibleColumns.includes("Barometer") && (
-                    <TableCell>
-                      <BarometerVisual barometer={reflection.Reflection?.Barometer || ""} />
+                    <TableCell className="w-[220px] text-center">
+                      <BarometerVisual
+                        barometer={reflection.Reflection?.Barometer || ""}
+                        size="sm"
+                      />
                     </TableCell>
                   )}
                 </motion.tr>

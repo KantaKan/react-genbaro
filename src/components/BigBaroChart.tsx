@@ -28,7 +28,12 @@ const CustomizedXAxisTick = ({ x, y, payload }) => {
 };
 
 
-export default function BaroChart({ userId, cohort }) {
+type BaroChartProps = {
+  userId?: string;
+  cohort?: string;
+};
+
+export default function BaroChart({ userId, cohort }: BaroChartProps) {
   const [timeRange, setTimeRange] = React.useState("7d");
   const [view, setView] = React.useState<"chart" | "summary">("chart");
 

@@ -24,6 +24,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { useAuth } from "../AuthContext";
+import type { UserRole } from "../types/auth";
 
 const teams = [
   {
@@ -37,7 +38,7 @@ const teams = [
 const showNewTalkBoardIndicator = true; // Set to false to hide the 'New' indicator
 
 // Navigation configurations for different roles
-const navigationConfig = {
+const navigationConfig: Record<UserRole, any[]> = {
   admin: [
     {
       title: "Dashboard Panel",
@@ -157,9 +158,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }
 
   // Get navigation items based on user role
-  const navItems = userRole
-    ? navigationConfig[userRole as keyof typeof navigationConfig]
-    : [];
+  const navItems = userRole ? navigationConfig[userRole] : [];
 
   return (
     <Sidebar collapsible="icon" {...props}>

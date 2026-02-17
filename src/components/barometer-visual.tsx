@@ -38,13 +38,40 @@ export const reflectionZones = [
   },
 ] as const;
 
-export const BarometerVisual = ({ barometer }: { barometer: string }) => {
+type BarometerVisualProps = {
+  barometer: string;
+  /**
+   * - `inline`: current behavior (fits content)
+   * - `full`: fills available width (useful in tables for consistent sizing)
+   */
+  variant?: "inline" | "full";
+  size?: "sm" | "md";
+  className?: string;
+};
+
+export const BarometerVisual = ({
+  barometer,
+  variant = "inline",
+  size = "md",
+  className,
+}: BarometerVisualProps) => {
   const zone = reflectionZones.find((z) => z.label === barometer);
   if (!zone || barometer === "-") return <span>{barometer}</span>;
 
+  const layoutClass =
+    variant === "full"
+      ? "flex w-full justify-center min-w-0"
+      : "inline-flex";
+
+  const sizeClass =
+    size === "sm" ? "gap-1.5 px-2 py-1" : "gap-2 px-3 py-1.5";
+
+  const emojiClass = size === "sm" ? "text-sm" : "text-base";
+  const labelClass = size === "sm" ? "text-xs" : "text-sm";
+
   return (
     <motion.div
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md ${zone.bgColor} bg-opacity-15 transition-all duration-300`}
+      className={`${layoutClass} items-center ${sizeClass} rounded-md ${zone.bgColor} bg-opacity-15 transition-all duration-300 ${className || ""}`}
       whileHover={{
         scale: 1.05,
         backgroundColor: `var(--${zone.bgColor.replace("bg-", "")})`,
@@ -55,7 +82,7 @@ export const BarometerVisual = ({ barometer }: { barometer: string }) => {
       transition={{ duration: 0.2 }}
     >
       <motion.span
-        className="text-base"
+        className={emojiClass}
         animate={{
           rotate: [0, 10, 0, -10, 0],
           scale: [1, 1.1, 1],
@@ -68,7 +95,12 @@ export const BarometerVisual = ({ barometer }: { barometer: string }) => {
       >
         {zone.emoji}
       </motion.span>
-      <span className="font-medium text-sm">{zone.label}</span>
+      <span
+        className={`font-medium ${labelClass} ${variant === "full" ? "truncate" : ""}`}
+        title={zone.label}
+      >
+        {zone.label}
+      </span>
     </motion.div>
   );
 };

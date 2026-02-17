@@ -198,7 +198,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-10">
+      <div className="py-4">
         <div className="flex justify-between mb-6 flex-wrap gap-4">
           <Button variant="outline" disabled>
             Columns <ChevronDown className="ml-2 h-4 w-4" />
@@ -262,8 +262,8 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
 
     if (column === "Last Barometer") {
       return (
-        <TableCell key={column}>
-          <BarometerVisual barometer={value as string} />
+        <TableCell key={column} className="min-w-[260px]">
+          <BarometerVisual barometer={value as string} variant="full" />
         </TableCell>
       );
     }
@@ -282,7 +282,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
   };
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="py-4">
       <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
         <div className="flex items-center gap-4 flex-wrap">
           <DropdownMenu>
