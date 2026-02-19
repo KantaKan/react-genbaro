@@ -10,6 +10,7 @@ import {
   Calendar,
   User,
   Hammer,
+  ClipboardCheck,
 } from "lucide-react"; // Import MessageSquare and additional icons
 import { motion } from "framer-motion"; // New import for animation
 import { Badge } from "@/components/ui/badge"; // New import for the 'New' badge
@@ -67,6 +68,11 @@ const navigationConfig: Record<UserRole, any[]> = {
           icon: Calendar, // Add icon for sub-menu item
         },
         {
+          title: "Attendance",
+          url: "/admin/attendance",
+          icon: ClipboardCheck,
+        },
+        {
           title: "Tools",
           url: "/tools",
           icon: Hammer, // Add icon for sub-menu item
@@ -114,6 +120,11 @@ const navigationConfig: Record<UserRole, any[]> = {
           title: "My Reflections",
           url: "/learner",
           icon: User, // Add icon for sub-menu item
+        },
+        {
+          title: "Attendance",
+          url: "/learner/attendance",
+          icon: ClipboardCheck,
         },
       ],
     },

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, FileSpreadsheet, MessageSquare, Award, Eye, Filter } from "lucide-react";
+import { ChevronDown, ChevronUp, FileSpreadsheet, MessageSquare, Award, Eye, Filter, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "react-toastify";
@@ -239,6 +239,9 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
           <div className="flex items-center justify-center gap-1">
             <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleQuickAction("view", user._id, user); }} title="View Details">
               <Eye className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); navigate(`/admin/attendance/student/${user._id}`); }} title="View Attendance">
+              <Calendar className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleQuickAction("message", user._id, user); }} title="Send Message">
               <MessageSquare className="h-4 w-4" />
