@@ -78,7 +78,7 @@ export default function AdminReflectionsTable() {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const itemsPerPage = 20;
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [barometerFilter, setBarometerFilter] = useState<string>("all");
 
   useEffect(() => {

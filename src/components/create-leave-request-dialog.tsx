@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -40,8 +40,10 @@ const SESSIONS = [
 
 const getLocalDate = () => {
   const now = new Date();
-  const offset = now.getTimezoneOffset() * 60000;
-  return new Date(now.getTime() - offset).toISOString().split("T")[0];
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 export function CreateLeaveRequestDialog({
@@ -52,12 +54,19 @@ export function CreateLeaveRequestDialog({
   defaultDate,
   onSuccess,
 }: CreateLeaveRequestDialogProps) {
-  const [selectedUserId, setSelectedUserId] = useState<string>(preselectedStudent?.user_id || "");
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [leaveType, setLeaveType] = useState<"late" | "half_day" | "full_day">("late");
-  const [date, setDate] = useState(defaultDate || getLocalDate());
+  const [date, setDate] = useState<string>(defaultDate || getLocalDate());
   const [session, setSession] = useState<"morning" | "afternoon">("morning");
-  const [reason, setReason] = useState("");
+  const [reason, setReason] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Update selectedUserId when preselectedStudent changes
+  useEffect(() => {
+    if (preselectedStudent?.user_id) {
+      setSelectedUserId(preselectedStudent.user_id);
+    }
+  }, [preselectedStudent]);
 
   const resetForm = () => {
     setSelectedUserId("");

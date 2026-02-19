@@ -174,6 +174,8 @@ export interface TodayOverview {
     last_name: string;
     morning: string;
     afternoon: string;
+    morning_record_id?: string;
+    afternoon_record_id?: string;
   }[];
 }
 

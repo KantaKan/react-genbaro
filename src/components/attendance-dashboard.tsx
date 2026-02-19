@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +31,7 @@ import {
   type DailyStats,
   type User
 } from "@/lib/api";
-import { Trash2, RefreshCw, Clock, AlertTriangle, TrendingUp, Calendar, X, CalendarClock, Check, ChevronDown, Users, Eye, CalendarDays } from "lucide-react";
+import { Trash2, RefreshCw, Clock, AlertTriangle, TrendingUp, Calendar, X, CalendarClock, Check, ChevronDown, Users, Eye, CalendarDays, Loader2 } from "lucide-react";
 import { LeaveRequestsTable } from "./leave-requests-table";
 import { CreateLeaveRequestDialog } from "./create-leave-request-dialog";
 import { AdminAttendanceCalendar } from "./admin-attendance-calendar";
@@ -46,8 +46,50 @@ const COHORTS = Array.from({ length: 12 }, (_, i) => i + 7);
 // Get today's date in YYYY-MM-DD format (local timezone)
 const getLocalDate = () => {
   const now = new Date();
-  const offset = now.getTimezoneOffset() * 60000;
-  return new Date(now.getTime() - offset).toISOString().split("T")[0];
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// Request queue item type
+interface QueueItem {
+  id: string;
+  userId: string;
+  session: "morning" | "afternoon";
+  status: "present" | "late" | "absent" | "late_excused" | "absent_excused";
+  date: string;
+  attempts: number;
+}
+
+// Retry helper with exponential backoff
+const withRetry = async <T,>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  baseDelay = 1000
+): Promise<T> => {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Check if it's a rate limit error (429)
+      if (error?.response?.status === 429 && attempt < maxRetries) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.log(`Rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      
+      // For other errors or if max retries reached, throw
+      throw error;
+    }
+  }
+  
+  throw lastError;
 };
 
 export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
@@ -77,6 +119,32 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
   const [daySummaryOpen, setDaySummaryOpen] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>("");
   const [activeTab, setActiveTab] = useState("overview");
+  
+  // Request queue state
+  const [requestQueue, setRequestQueue] = useState<QueueItem[]>([]);
+  const [isProcessingQueue, setIsProcessingQueue] = useState(false);
+  const [pendingOperations, setPendingOperations] = useState<Set<string>>(new Set());
+  const queueRef = useRef<QueueItem[]>([]);
+  const batchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Local storage for record IDs to enable reliable clearing
+  const [recordIdMap, setRecordIdMap] = useState<Map<string, string>>(new Map());
+  
+  // Mark All Present loading state
+  const [isMarkingAllPresent, setIsMarkingAllPresent] = useState(false);
+
+  // Cleanup stale pending operations every 30 seconds
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      if (!isProcessingQueue && pendingOperations.size > 0) {
+        console.log("Cleaning up stale pending operations:", pendingOperations.size);
+        setPendingOperations(new Set());
+        toast.warn("Cleared stale attendance operations");
+      }
+    }, 30000);
+
+    return () => clearInterval(cleanupInterval);
+  }, [isProcessingQueue, pendingOperations]);
 
   // Load cohort from localStorage on mount
   useEffect(() => {
@@ -93,6 +161,228 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
     setSelectedCohort(value);
     localStorage.setItem("attendance_cohort", value);
   };
+
+  // Process the request queue with batching
+  const processQueue = useCallback(async () => {
+    if (isProcessingQueue || queueRef.current.length === 0) return;
+    
+    setIsProcessingQueue(true);
+    
+    try {
+      // Group similar requests by session, status, and date for batching
+      const batches: Map<string, QueueItem[]> = new Map();
+      
+      queueRef.current.forEach(item => {
+        const key = `${item.session}-${item.status}-${item.date}`;
+        if (!batches.has(key)) {
+          batches.set(key, []);
+        }
+        batches.get(key)!.push(item);
+      });
+      
+      // Process batches
+      for (const [key, items] of batches) {
+        if (items.length >= 3) {
+          // Use bulk API for 3+ items
+          try {
+            const result = await withRetry(() => 
+              bulkMarkAttendance(
+                items.map(i => i.userId),
+                items[0].date,
+                items[0].session,
+                items[0].status
+              )
+            );
+            
+            // Store record IDs for reliable clearing
+            setRecordIdMap(prev => {
+              const next = new Map(prev);
+              if (result.records) {
+                result.records.forEach((record: AttendanceRecord) => {
+                  next.set(`${record.user_id}-${record.session}`, record._id);
+                });
+              }
+              return next;
+            });
+            
+            // Optimistically update the UI immediately
+            setTodayOverview(prev => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                students: prev.students.map(s => {
+                  const updatedItem = items.find(i => i.userId === s.user_id && i.session === items[0].session);
+                  if (updatedItem) {
+                    return {
+                      ...s,
+                      [updatedItem.session]: items[0].status,
+                      [`${updatedItem.session}_record_id`]: result.records?.find((r: AttendanceRecord) => r.user_id === s.user_id)?._id
+                    };
+                  }
+                  return s;
+                })
+              };
+            });
+            
+            // Clear processed items from queue
+            const itemIds = new Set(items.map(i => i.id));
+            queueRef.current = queueRef.current.filter(i => !itemIds.has(i.id));
+            
+            // Update pending operations
+            setPendingOperations(prev => {
+              const next = new Set(prev);
+              items.forEach(i => {
+                next.delete(`${i.userId}-${i.session}`);
+              });
+              return next;
+            });
+            
+            toast.success(`Marked ${items.length} students as ${items[0].status}`);
+          } catch (error) {
+            console.error("Batch operation failed:", error);
+            // Don't remove from queue - will retry
+            items.forEach(item => {
+              item.attempts++;
+            });
+          }
+        } else {
+          // Process individually with delay
+          for (const item of items) {
+            try {
+              const result = await withRetry(() => 
+                manualMarkAttendance(item.userId, item.date, item.session, item.status)
+              );
+              
+              // Store record ID for reliable clearing
+              if (result && result._id) {
+                setRecordIdMap(prev => {
+                  const next = new Map(prev);
+                  next.set(`${item.userId}-${item.session}`, result._id);
+                  return next;
+                });
+              }
+              
+              // Optimistically update the UI immediately
+              setTodayOverview(prev => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  students: prev.students.map(s => {
+                    if (s.user_id === item.userId) {
+                      return {
+                        ...s,
+                        [item.session]: item.status,
+                        [`${item.session}_record_id`]: result?._id
+                      };
+                    }
+                    return s;
+                  })
+                };
+              });
+              
+              // Remove from queue
+              queueRef.current = queueRef.current.filter(i => i.id !== item.id);
+              
+              // Update pending operations
+              setPendingOperations(prev => {
+                const next = new Set(prev);
+                next.delete(`${item.userId}-${item.session}`);
+                return next;
+              });
+              
+              // Small delay between requests to avoid rate limiting
+              await new Promise(resolve => setTimeout(resolve, 150));
+            } catch (error: any) {
+              console.error(`Failed to mark attendance for ${item.userId}:`, error);
+              item.attempts++;
+              
+              if (item.attempts >= 3) {
+                // Remove from queue after max retries
+                queueRef.current = queueRef.current.filter(i => i.id !== item.id);
+                setPendingOperations(prev => {
+                  const next = new Set(prev);
+                  next.delete(`${item.userId}-${item.session}`);
+                  return next;
+                });
+                toast.error(`Failed to mark attendance for student after retries`);
+              }
+            }
+          }
+        }
+      }
+      
+      // Refresh overview after a small delay to ensure DB consistency
+      if (queueRef.current.length === 0) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        loadTodayOverview();
+      }
+    } finally {
+      setIsProcessingQueue(false);
+      setRequestQueue([...queueRef.current]);
+    }
+  }, [isProcessingQueue]);
+
+  // Toast ID for queue updates
+  const queueToastRef = useRef<string | null>(null);
+  
+  // Add item to queue and trigger processing
+  const addToQueue = useCallback((item: Omit<QueueItem, 'id' | 'attempts'>) => {
+    const queueItem: QueueItem = {
+      ...item,
+      id: `${item.userId}-${item.session}-${Date.now()}`,
+      attempts: 0
+    };
+    
+    queueRef.current.push(queueItem);
+    const queueLength = queueRef.current.length;
+    setRequestQueue([...queueRef.current]);
+    
+    // Add to pending operations for optimistic UI
+    setPendingOperations(prev => new Set(prev).add(`${item.userId}-${item.session}`));
+    
+    // Clear any existing batch timeout
+    if (batchTimeoutRef.current) {
+      clearTimeout(batchTimeoutRef.current);
+    }
+    
+    // Show queue status toast
+    if (queueToastRef.current) {
+      toast.dismiss(queueToastRef.current);
+    }
+    
+    const isSingleItem = queueLength === 1;
+    queueToastRef.current = toast.info(
+      isSingleItem 
+        ? "⏱️ Queuing attendance update... (Processing in 300ms)"
+        : `📦 ${queueLength} updates queued... (Processing in 300ms)`,
+      { autoClose: 300, hideProgressBar: true }
+    );
+    
+    // Debounce: wait for more items to accumulate, then process
+    batchTimeoutRef.current = setTimeout(() => {
+      if (queueRef.current.length > 0) {
+        const count = queueRef.current.length;
+        toast.info(`🚀 Processing ${count} attendance update${count > 1 ? 's' : ''}...`, {
+          autoClose: 2000,
+          hideProgressBar: false
+        });
+        processQueue();
+      }
+    }, 300);
+  }, [processQueue]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (batchTimeoutRef.current) {
+        clearTimeout(batchTimeoutRef.current);
+      }
+      // Process any remaining items
+      if (queueRef.current.length > 0) {
+        processQueue();
+      }
+    };
+  }, [processQueue]);
 
   const loadTodayOverview = useCallback(async () => {
     const cohortNum = parseInt(selectedCohort);
@@ -141,21 +431,35 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
   const loadLogs = async () => {
     try {
       const data = await getAttendanceLogs(parseInt(selectedCohort), selectedDate);
-      setLogs(Array.isArray(data.logs) ? data.logs : []);
+      const logsData = Array.isArray(data.logs) ? data.logs : [];
+      setLogs(logsData);
+      return logsData;
     } catch (error) {
       console.error("Error loading logs:", error);
       setLogs([]);
+      return [];
     }
   };
 
-  // Load data when cohort, date, or selectedDays changes
+  // Load data when cohort or date changes - only essential data
   useEffect(() => {
     loadTodayOverview();
-    loadStats();
-    loadDailyStats();
-    loadLogs();
-    loadStudents();
-  }, [selectedCohort, selectedDate, selectedDays, loadTodayOverview, loadStats]);
+  }, [selectedCohort, selectedDate, loadTodayOverview]);
+
+  // Load stats and daily stats only when needed (stats tab or summary tab)
+  useEffect(() => {
+    if (activeTab === "stats" || activeTab === "summary") {
+      loadStats();
+      loadDailyStats();
+    }
+  }, [activeTab, selectedCohort, selectedDays]);
+
+  // Load logs only when logs tab is active
+  useEffect(() => {
+    if (activeTab === "logs") {
+      loadLogs();
+    }
+  }, [activeTab, selectedCohort, selectedDate, selectedDays]);
 
   // Countdown timers
   useEffect(() => {
@@ -212,16 +516,22 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
     }
   };
 
-  const handleManualMark = async (userId: string, session: "morning" | "afternoon", status: "present" | "late" | "absent" | "late_excused" | "absent_excused") => {
-    try {
-      await manualMarkAttendance(userId, selectedDate, session, status);
-      toast.success("Attendance marked");
-      loadTodayOverview();
-      loadLogs();
-      loadStats();
-    } catch (error) {
-      toast.error("Failed to mark attendance");
+  const handleManualMark = (userId: string, session: "morning" | "afternoon", status: "present" | "late" | "absent" | "late_excused" | "absent_excused") => {
+    // Check if already pending
+    if (pendingOperations.has(`${userId}-${session}`)) {
+      toast.info("Attendance update already in progress...");
+      return;
     }
+    
+    // Add to queue instead of making immediate API call
+    addToQueue({
+      userId,
+      session,
+      status,
+      date: selectedDate
+    });
+    
+    toast.info("Attendance queued for update...");
   };
 
   const handleDeleteRecord = async () => {
@@ -233,8 +543,9 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
       setDeleteConfirmOpen(false);
       setRecordToDelete(null);
       loadTodayOverview();
-      loadLogs();
-      loadStats();
+      if (activeTab === "logs") {
+        loadLogs();
+      }
     } catch (error) {
       toast.error("Failed to remove attendance");
     } finally {
@@ -243,22 +554,84 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
   };
 
   const handleClearAttendance = async (userId: string, session: "morning" | "afternoon") => {
-    const record = logs.find(l => l.user_id === userId && l.session === session && l.date === selectedDate);
-    if (record) {
-      setRecordToDelete({ id: record._id, name: "", session, date: selectedDate });
-      setIsDeleting(true);
-      try {
-        await deleteAttendanceRecord(record._id);
-        toast.success("Attendance cleared");
-        loadTodayOverview();
-        loadLogs();
-        loadStats();
-      } catch (error) {
-        toast.error("Failed to clear attendance");
-      } finally {
-        setIsDeleting(false);
-        setRecordToDelete(null);
+    // Optimistic UI update - immediately show "-" in the UI
+    setTodayOverview(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        students: prev.students.map(s => {
+          if (s.user_id === userId) {
+            return {
+              ...s,
+              [session]: "-",
+              [`${session}_record_id`]: undefined
+            };
+          }
+          return s;
+        })
+      };
+    });
+
+    // Priority 1: Check local record ID map (most reliable)
+    let recordId = recordIdMap.get(`${userId}-${session}`);
+    
+    // Priority 2: Check todayOverview data from backend
+    if (!recordId) {
+      const student = todayOverview?.students.find(s => s.user_id === userId);
+      recordId = session === "morning" ? student?.morning_record_id : student?.afternoon_record_id;
+    }
+    
+    // Priority 3: Try to find in logs as fallback
+    if (!recordId) {
+      if (!logs || logs.length === 0) {
+        await loadLogs();
       }
+      
+      const record = logs.find(l => 
+        l.user_id === userId && 
+        l.session === session && 
+        l.date === selectedDate && 
+        !l.deleted
+      );
+      
+      if (record) {
+        recordId = record._id;
+      }
+    }
+    
+    if (!recordId) {
+      toast.error("Attendance record not found. Please refresh the page and try again.");
+      // Revert optimistic UI update
+      loadTodayOverview();
+      return;
+    }
+    
+    await performDelete(recordId, session, userId);
+  };
+
+  const performDelete = async (recordId: string, session: string, userId: string) => {
+    setIsDeleting(true);
+    try {
+      await withRetry(() => deleteAttendanceRecord(recordId));
+      
+      // Remove from local record ID map
+      setRecordIdMap(prev => {
+        const next = new Map(prev);
+        next.delete(`${userId}-${session}`);
+        return next;
+      });
+      
+      toast.success("Attendance cleared");
+      
+      // Add delay before refresh to ensure DB consistency
+      await new Promise(resolve => setTimeout(resolve, 300));
+      await loadTodayOverview();
+    } catch (error) {
+      toast.error("Failed to clear attendance");
+      // Revert optimistic UI update on error
+      loadTodayOverview();
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -271,28 +644,51 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
       return;
     }
     
-    setIsLoading(true);
+    setIsMarkingAllPresent(true);
     try {
-      const userIds = unmarkedStudents.map(s => s.user_id);
-      
       const morningUnmarked = unmarkedStudents.filter(s => s.morning === "-").map(s => s.user_id);
       const afternoonUnmarked = unmarkedStudents.filter(s => s.afternoon === "-").map(s => s.user_id);
       
+      let morningResults: AttendanceRecord[] = [];
+      let afternoonResults: AttendanceRecord[] = [];
+      
       if (morningUnmarked.length > 0) {
-        await bulkMarkAttendance(morningUnmarked, selectedDate, "morning", "present");
+        const result = await bulkMarkAttendance(morningUnmarked, selectedDate, "morning", "present");
+        morningResults = result.records || [];
       }
       if (afternoonUnmarked.length > 0) {
-        await bulkMarkAttendance(afternoonUnmarked, selectedDate, "afternoon", "present");
+        const result = await bulkMarkAttendance(afternoonUnmarked, selectedDate, "afternoon", "present");
+        afternoonResults = result.records || [];
       }
       
+      // Optimistically update the UI
+      setTodayOverview(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          students: prev.students.map(s => {
+            const morningRecord = morningResults.find((r: AttendanceRecord) => r.user_id === s.user_id);
+            const afternoonRecord = afternoonResults.find((r: AttendanceRecord) => r.user_id === s.user_id);
+            return {
+              ...s,
+              morning: morningRecord ? "present" : s.morning,
+              morning_record_id: morningRecord?._id || s.morning_record_id,
+              afternoon: afternoonRecord ? "present" : s.afternoon,
+              afternoon_record_id: afternoonRecord?._id || s.afternoon_record_id
+            };
+          })
+        };
+      });
+      
       toast.success(`Marked ${unmarkedStudents.length} students as present`);
+      
+      // Delay before refresh
+      await new Promise(resolve => setTimeout(resolve, 300));
       loadTodayOverview();
-      loadLogs();
-      loadStats();
     } catch (error) {
       toast.error("Failed to mark all present");
     } finally {
-      setIsLoading(false);
+      setIsMarkingAllPresent(false);
     }
   };
 
@@ -465,13 +861,30 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Attendance - {selectedDate}
-                </CardTitle>
-                <Button onClick={handleMarkAllPresent} size="sm" variant="outline">
-                  <Users className="h-4 w-4 mr-2" />
-                  Mark All Present
+                <div className="flex items-center gap-3">
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Attendance - {selectedDate}
+                  </CardTitle>
+                  {requestQueue.length > 0 && (
+                    <Badge variant="outline" className="bg-blue-50 text-blue-600 animate-pulse">
+                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                      {requestQueue.length} pending
+                    </Badge>
+                  )}
+                </div>
+                <Button onClick={handleMarkAllPresent} size="sm" variant="outline" disabled={isMarkingAllPresent || requestQueue.length > 0}>
+                  {isMarkingAllPresent ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Marking...
+                    </>
+                  ) : (
+                    <>
+                      <Users className="h-4 w-4 mr-2" />
+                      Mark All Present
+                    </>
+                  )}
                 </Button>
               </div>
             </CardHeader>
@@ -493,12 +906,26 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
                       <TableCell>{student.first_name} {student.last_name}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {getStatusBadge(student.morning)}
+                          {pendingOperations.has(`${student.user_id}-morning`) ? (
+                            <Badge variant="outline" className="animate-pulse">
+                              <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                              Updating...
+                            </Badge>
+                          ) : (
+                            getStatusBadge(student.morning)
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {getStatusBadge(student.afternoon)}
+                          {pendingOperations.has(`${student.user_id}-afternoon`) ? (
+                            <Badge variant="outline" className="animate-pulse">
+                              <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                              Updating...
+                            </Badge>
+                          ) : (
+                            getStatusBadge(student.afternoon)
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
@@ -523,8 +950,12 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
                           </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant={student.morning !== "-" ? "default" : "outline"} size="sm">
-                                AM {student.morning !== "-" ? "✓" : ""} <ChevronDown className="h-3 w-3 ml-1" />
+                              <Button 
+                                variant={student.morning !== "-" ? "default" : "outline"} 
+                                size="sm"
+                                disabled={pendingOperations.has(`${student.user_id}-morning`) || isDeleting}
+                              >
+                                AM {student.morning !== "-" ? "✓" : ""} {pendingOperations.has(`${student.user_id}-morning`) && <Loader2 className="h-3 w-3 animate-spin ml-1" />} <ChevronDown className="h-3 w-3 ml-1" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -555,8 +986,12 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
                           </DropdownMenu>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant={student.afternoon !== "-" ? "default" : "outline"} size="sm">
-                                PM {student.afternoon !== "-" ? "✓" : ""} <ChevronDown className="h-3 w-3 ml-1" />
+                              <Button 
+                                variant={student.afternoon !== "-" ? "default" : "outline"} 
+                                size="sm"
+                                disabled={pendingOperations.has(`${student.user_id}-afternoon`) || isDeleting}
+                              >
+                                PM {student.afternoon !== "-" ? "✓" : ""} {pendingOperations.has(`${student.user_id}-afternoon`) && <Loader2 className="h-3 w-3 animate-spin ml-1" />} <ChevronDown className="h-3 w-3 ml-1" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -658,7 +1093,7 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
           />
         </TabsContent>
 
-        <TabsContent value="logs" className="space-y-4">
+        <TabsContent value="summary" className="space-y-4">
           <div className="flex items-center gap-4 mb-4">
             <Select value={selectedDays.toString()} onValueChange={(v) => setSelectedDays(parseInt(v) as 7 | 30)}>
               <SelectTrigger className="w-[150px]">
@@ -671,7 +1106,7 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
             </Select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
@@ -691,16 +1126,93 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-blue-500">{dailyStats.reduce((sum, d) => sum + d.total, 0)}</p>
-                  <p className="text-sm text-muted-foreground">Total Records</p>
+                  <p className="text-3xl font-bold text-blue-500">{dailyStats.reduce((sum, d) => sum + d.late, 0)}</p>
+                  <p className="text-sm text-muted-foreground">Late Days</p>
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-3xl font-bold">{dailyStats.length}</p>
-                  <p className="text-sm text-muted-foreground">Days Tracked</p>
+                  <p className="text-3xl font-bold text-yellow-500">{dailyStats.reduce((sum, d) => sum + d.late_excused + d.absent_excused, 0)}</p>
+                  <p className="text-sm text-muted-foreground">Excused</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Daily Trend
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px] flex items-end gap-2">
+                  {dailyStats.map((day) => (
+                    <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
+                      <div 
+                        className="w-full bg-green-500 rounded-t transition-all hover:bg-green-600"
+                        style={{ height: `${(day.present / maxDailyTotal) * 200}px`, minHeight: day.present > 0 ? '4px' : '0' }}
+                      />
+                      <div 
+                        className="w-full bg-yellow-500"
+                        style={{ height: `${(day.late / maxDailyTotal) * 200}px`, minHeight: day.late > 0 ? '4px' : '0' }}
+                      />
+                      <div 
+                        className="w-full bg-red-500"
+                        style={{ height: `${(day.absent / maxDailyTotal) * 200}px`, minHeight: day.absent > 0 ? '4px' : '0' }}
+                      />
+                      <p className="text-[10px] text-muted-foreground rotate-45 mt-2">
+                        {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center justify-center gap-4 mt-4 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded" />
+                    <span className="text-sm">Present</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-yellow-500 rounded" />
+                    <span className="text-sm">Late</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-500 rounded" />
+                    <span className="text-sm">Absent</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  Daily Breakdown
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                  {dailyStats.map((day) => (
+                    <div key={day.date} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div>
+                        <p className="font-medium">{new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                        <p className="text-sm text-muted-foreground">{day.total} total records</p>
+                      </div>
+                      <div className="flex gap-3 text-sm">
+                        <span className="text-green-600 font-medium">{day.present} P</span>
+                        <span className="text-yellow-600 font-medium">{day.late} L</span>
+                        <span className="text-red-600 font-medium">{day.absent} A</span>
+                        {day.absent > 0 && (
+                          <span className="text-red-500 font-bold">({day.absent} absent)</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -709,38 +1221,47 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Daily Trend
+                <Users className="h-5 w-5" />
+                High Absence Students
               </CardTitle>
+              <CardDescription>Students with absence warnings in the selected period</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] flex items-end gap-2">
-                {dailyStats.map((day) => (
-                  <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
-                    <div 
-                      className="w-full bg-green-500 rounded-t transition-all hover:bg-green-600"
-                      style={{ height: `${(day.present / maxDailyTotal) * 200}px`, minHeight: day.present > 0 ? '4px' : '0' }}
-                    />
-                    <div 
-                      className="w-full bg-red-500"
-                      style={{ height: `${(day.absent / maxDailyTotal) * 200}px`, minHeight: day.absent > 0 ? '4px' : '0' }}
-                    />
-                    <p className="text-[10px] text-muted-foreground rotate-45 mt-2">
-                      {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center justify-center gap-6 mt-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded" />
-                  <span className="text-sm">Present</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-500 rounded" />
-                  <span className="text-sm">Absent</span>
-                </div>
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>JSD</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="text-center">Present</TableHead>
+                    <TableHead className="text-center">Late</TableHead>
+                    <TableHead className="text-center">Absent</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {stats
+                    .filter(s => s.absent >= 2 || s.warning_level !== "normal")
+                    .sort((a, b) => b.absent - a.absent)
+                    .slice(0, 10)
+                    .map((stat) => (
+                    <TableRow key={stat.user_id}>
+                      <TableCell className="font-medium">{stat.jsd_number}</TableCell>
+                      <TableCell>{stat.first_name} {stat.last_name}</TableCell>
+                      <TableCell className="text-center text-green-600 font-bold">{stat.present}</TableCell>
+                      <TableCell className="text-center text-yellow-600 font-bold">{stat.late}</TableCell>
+                      <TableCell className="text-center text-red-600 font-bold">{stat.absent}</TableCell>
+                      <TableCell>{getWarningBadge(stat.warning_level)}</TableCell>
+                    </TableRow>
+                  ))}
+                  {stats.filter(s => s.absent >= 2 || s.warning_level !== "normal").length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                        No students with absence warnings in this period
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>

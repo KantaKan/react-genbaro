@@ -116,12 +116,13 @@ export function AdminAttendanceCalendar({ cohort, onDayClick }: AdminAttendanceC
         onClick={() => !isWeekend && onDayClick(dateStr)}
         disabled={isWeekend}
         className={`
-          h-20 rounded-md flex flex-col items-center justify-center text-sm font-medium
-          transition-colors
+          h-24 rounded-md flex flex-col items-center justify-center text-sm font-medium
+          transition-colors relative
           ${isWeekend ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}
           ${isToday ? "ring-2 ring-primary ring-offset-1" : ""}
           ${isWeekend ? "bg-muted/20" : getDayColorClass(rate)}
         `}
+        title={stats ? `Present: ${stats.present}, Late: ${stats.late}, Absent: ${stats.absent}, Excused: ${stats.late_excused + stats.absent_excused}` : "No data"}
       >
         <span className="text-xs font-bold mb-1">{day}</span>
         {!isWeekend && (
@@ -132,6 +133,21 @@ export function AdminAttendanceCalendar({ cohort, onDayClick }: AdminAttendanceC
         )}
         {!isWeekend && rate >= 0 && (
           <span className="text-[9px] mt-0.5">{rate}%</span>
+        )}
+        {!isWeekend && stats && (
+          (() => {
+            const absentCount = Number(stats.absent) || 0;
+            const absentExcusedCount = Number(stats.absent_excused) || 0;
+            const totalAbsent = absentCount + absentExcusedCount;
+            if (totalAbsent > 0) {
+              return (
+                <span className="absolute bottom-1 right-1 text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded-full font-bold">
+                  {totalAbsent} A
+                </span>
+              );
+            }
+            return null;
+          })()
         )}
       </button>
     );
@@ -187,6 +203,10 @@ export function AdminAttendanceCalendar({ cohort, onDayClick }: AdminAttendanceC
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded bg-muted/30" />
                 <span>Not marked</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="px-1.5 py-0.5 bg-red-600 text-white rounded-full font-bold text-[9px]">A</span>
+                <span>Absent count</span>
               </div>
             </div>
           </>

@@ -38,8 +38,10 @@ import { AttendanceChart } from "./attendance-chart";
 
 const getLocalDate = () => {
   const now = new Date();
-  const offset = now.getTimezoneOffset() * 60000;
-  return new Date(now.getTime() - offset).toISOString().split("T")[0];
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 export function StudentAttendance() {
@@ -98,9 +100,10 @@ export function StudentAttendance() {
   const loadLeaveRequests = async () => {
     try {
       const requests = await getMyLeaveRequests();
-      setLeaveRequests(requests);
+      setLeaveRequests(requests || []);
     } catch (error) {
       console.error("Error loading leave requests:", error);
+      setLeaveRequests([]);
     }
   };
 
@@ -186,7 +189,7 @@ export function StudentAttendance() {
     }
   };
 
-  const pendingLeaveRequests = leaveRequests.filter((r) => r.status === "pending");
+  const pendingLeaveRequests = (leaveRequests || []).filter((r) => r.status === "pending");
 
   const present = attendanceStatus?.present || 0;
   const late = attendanceStatus?.late || 0;
