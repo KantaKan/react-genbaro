@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { getTodayOverview, type TodayOverview } from "@/lib/api";
-import { Sun, Sunset, Users, Calendar, Loader2 } from "lucide-react";
+import { getTodayOverview, type TodayOverview, type Holiday } from "@/lib/api";
+import { Sun, Sunset, Users, Calendar, Loader2, Star, Trash2 } from "lucide-react";
 
 interface DaySummaryDialogProps {
   open: boolean;
@@ -13,6 +13,9 @@ interface DaySummaryDialogProps {
   date: string;
   cohort: number;
   onMarkAttendance: () => void;
+  holiday?: Holiday | null;
+  onMarkAsHoliday?: (date: string) => void;
+  onRemoveHoliday?: (holidayId: string) => void;
 }
 
 export function DaySummaryDialog({
@@ -21,9 +24,14 @@ export function DaySummaryDialog({
   date,
   cohort,
   onMarkAttendance,
+  holiday,
+  onMarkAsHoliday,
+  onRemoveHoliday,
 }: DaySummaryDialogProps) {
   const [overview, setOverview] = useState<TodayOverview | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const isHoliday = !!holiday;
 
   useEffect(() => {
     if (open && date && cohort) {
@@ -71,6 +79,16 @@ export function DaySummaryDialog({
     onOpenChange(false);
   };
 
+  const handleMarkAsHoliday = () => {
+    onMarkAsHoliday?.(date);
+  };
+
+  const handleRemoveHoliday = () => {
+    if (holiday?._id) {
+      onRemoveHoliday?.(holiday._id);
+    }
+  };
+
   const morningStats = overview ? getSessionStats(overview.students, "morning") : null;
   const afternoonStats = overview ? getSessionStats(overview.students, "afternoon") : null;
 
@@ -81,13 +99,42 @@ export function DaySummaryDialog({
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
             {formatDate(date)}
+            {isHoliday && (
+              <Badge className="bg-purple-500 text-white ml-2">
+                <Star className="h-3 w-3 mr-1 fill-yellow-300 text-yellow-300" />
+                Holiday
+              </Badge>
+            )}
           </DialogTitle>
-          <DialogDescription>Cohort {cohort}</DialogDescription>
+          <DialogDescription>
+            Cohort {cohort}
+            {isHoliday && holiday && ` • ${holiday.name}`}
+          </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : isHoliday ? (
+          <div className="space-y-4 py-4">
+            <div className="text-center p-6 bg-purple-50 dark:bg-purple-950 rounded-lg">
+              <Star className="h-12 w-12 mx-auto mb-3 text-purple-500 fill-purple-200" />
+              <h3 className="text-lg font-semibold text-purple-700 dark:text-purple-300">
+                {holiday?.name || "Holiday"}
+              </h3>
+              {holiday?.description && (
+                <p className="text-sm text-muted-foreground mt-2">{holiday.description}</p>
+              )}
+              {holiday?.start_date !== holiday?.end_date && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  {holiday?.start_date} to {holiday?.end_date}
+                </p>
+              )}
+            </div>
+            <p className="text-center text-sm text-muted-foreground">
+              Attendance is disabled for this day.
+            </p>
           </div>
         ) : overview ? (
           <div className="space-y-6">
@@ -136,7 +183,7 @@ export function DaySummaryDialog({
                     </div>
                   )}
                   {morningStats.absentStudents.length === 0 && morningStats.attended > 0 && (
-                    <p className="text-sm text-green-600">All students attended! 🎉</p>
+                    <p className="text-sm text-green-600">All students attended!</p>
                   )}
                 </>
               )}
@@ -187,7 +234,7 @@ export function DaySummaryDialog({
                     </div>
                   )}
                   {afternoonStats.absentStudents.length === 0 && afternoonStats.attended > 0 && (
-                    <p className="text-sm text-green-600">All students attended! 🎉</p>
+                    <p className="text-sm text-green-600">All students attended!</p>
                   )}
                 </>
               )}
@@ -208,13 +255,26 @@ export function DaySummaryDialog({
           </div>
         )}
 
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
-          <Button onClick={handleMarkAttendance}>
-            Mark/Edit Attendance
-          </Button>
+          {isHoliday ? (
+            <Button variant="destructive" onClick={handleRemoveHoliday}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Remove Holiday
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" onClick={handleMarkAsHoliday}>
+                <Star className="h-4 w-4 mr-2" />
+                Mark as Holiday
+              </Button>
+              <Button onClick={handleMarkAttendance}>
+                Mark/Edit Attendance
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

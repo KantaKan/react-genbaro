@@ -1,12 +1,29 @@
 import axios, { AxiosError } from "axios";
 import type { Todo, CreateTodoInput, UpdateTodoInput, WeeklyReflection, User, CreateReflectionPayload, BarometerData } from "./types";
 import Cookies from "js-cookie";
-// Retrieve the token from Cookies
-const getAuthToken = () => Cookies.get("authToken");
+
+const getAuthToken = () => {
+  const fromCookie = Cookies.get("authToken");
+  if (fromCookie) return fromCookie;
+  return localStorage.getItem("authToken");
+};
+
+const setAuthToken = (token: string) => {
+  Cookies.set("authToken", token, { sameSite: "Lax" });
+  localStorage.setItem("authToken", token);
+};
+
+const removeAuthToken = () => {
+  Cookies.remove("authToken");
+  localStorage.removeItem("authToken");
+};
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:3000/", // Fallback to localhost if env var is not set
+  baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:3000/",
+  withCredentials: true,
 });
+
+export { setAuthToken, removeAuthToken };
 
 api.interceptors.request.use(
   (config) => {
@@ -278,9 +295,17 @@ export interface DailyStats {
   total: number;
 }
 
-export const getDailyAttendanceStats = async (cohort?: number, days = 7): Promise<DailyStats[]> => {
-  let url = `/admin/attendance/daily-stats?days=${days}`;
-  if (cohort) url += `&cohort=${cohort}`;
+export const getDailyAttendanceStats = async (
+  cohort?: number,
+  startDate?: string,
+  endDate?: string
+): Promise<DailyStats[]> => {
+  let url = `/admin/attendance/daily-stats?`;
+  const queryParams = new URLSearchParams();
+  if (cohort) queryParams.append("cohort", cohort.toString());
+  if (startDate) queryParams.append("start_date", startDate);
+  if (endDate) queryParams.append("end_date", endDate);
+  if (queryParams.toString()) url += queryParams.toString();
   const response = await api.get(url);
   return response.data.data;
 };
@@ -385,4 +410,42 @@ export const bulkMarkAttendance = async (
     status,
   });
   return response.data.data;
+};
+
+export interface Holiday {
+  _id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  description?: string;
+  created_at: string;
+  created_by: string;
+}
+
+export const getHolidays = async (startDate?: string, endDate?: string): Promise<Holiday[]> => {
+  let url = "/admin/holidays";
+  if (startDate && endDate) {
+    url += `?start_date=${startDate}&end_date=${endDate}`;
+  }
+  const response = await api.get(url);
+  return response.data.data || [];
+};
+
+export const createHoliday = async (
+  name: string,
+  startDate: string,
+  endDate: string,
+  description?: string
+): Promise<Holiday> => {
+  const response = await api.post("/admin/holidays", {
+    name,
+    start_date: startDate,
+    end_date: endDate,
+    description,
+  });
+  return response.data.data;
+};
+
+export const deleteHoliday = async (holidayId: string): Promise<void> => {
+  await api.delete(`/admin/holidays/${holidayId}`);
 };

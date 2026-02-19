@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import Cookies from "js-cookie";
 
-import { api } from "./lib/api";
+import { api, setAuthToken, removeAuthToken } from "./lib/api";
 import { isUserRole, type UserRole } from "./types/auth";
 
 type AuthContextType = {
@@ -25,20 +25,23 @@ type VerifyTokenResponse = {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => !!Cookies.get("authToken"));
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!(Cookies.get("authToken") || localStorage.getItem("authToken")));
   const [userRole, setUserRole] = useState<UserRole | null>(() => {
-    const saved = Cookies.get("userRole");
+    const saved = Cookies.get("userRole") || localStorage.getItem("userRole");
     return saved && isUserRole(saved) ? saved : null;
   });
-  const [userId, setUserId] = useState<string | null>(() => Cookies.get("userId") || null);
+  const [userId, setUserId] = useState<string | null>(() => Cookies.get("userId") || localStorage.getItem("userId"));
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const verifyToken = async () => {
-      const token = Cookies.get("authToken");
+      setLoading(true);
+      const token = Cookies.get("authToken") || localStorage.getItem("authToken");
+      console.log("[AuthContext useEffect] Checking for authToken:", token ? "Token present" : "No token");
       if (token) {
         try {
+          console.log("[AuthContext useEffect] Attempting to verify token...");
           const response = await api.get<VerifyTokenResponse>("/api/verify-token", {
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -54,29 +57,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setIsAuthenticated(true);
             setUserRole(role);
             setUserId(fetchedUserId);
-            Cookies.set("userRole", role);
-            Cookies.set("userId", fetchedUserId);
+            localStorage.setItem("userRole", role);
+            localStorage.setItem("userId", fetchedUserId);
+            console.log("[AuthContext useEffect] Token verification SUCCESS. User:", fetchedUserId, "Role:", role);
           } else {
+            console.error("[AuthContext useEffect] Token verification failed: Invalid status in response", response.data);
             throw new Error("Token verification failed: Invalid status in response");
           }
-        } catch (error) {
-          console.error("Token verification failed:", error);
+        } catch (error: any) {
+          console.error("[AuthContext useEffect] Token verification failed in catch block:", error.message, error);
           Cookies.remove("authToken");
           Cookies.remove("userRole");
           Cookies.remove("userId");
           setIsAuthenticated(false);
           setUserRole(null);
           setUserId(null);
+          setError(error.message || "Token verification failed.");
         } finally {
           setLoading(false);
+          console.log("[AuthContext useEffect] Finished verifyToken. IsAuthenticated:", isAuthenticated);
         }
       } else {
+        console.log("[AuthContext useEffect] No authToken found, skipping verification.");
         setLoading(false);
       }
     };
 
     verifyToken();
-  }, []);
+  }, []); // <-- Empty dependency array means it runs ONLY ONCE on component mount.
 
   const login = async (email: string, password: string): Promise<UserRole> => {
     try {
@@ -89,12 +97,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
         const role = rawRole;
         const token = response.data.data.token;
-        const fetchedUserId = response.data.data.userId || ""; // Assuming userId is returned on login
+        const fetchedUserId = response.data.data.userId || "";
 
-        // Set token first
-        Cookies.set("authToken", token);
-        Cookies.set("userRole", role);
-        Cookies.set("userId", fetchedUserId);
+        // Set token in both cookie and localStorage for reliability
+        const isProduction = import.meta.env.MODE === "production";
+        Cookies.set("authToken", token, { sameSite: isProduction ? "None" : "Lax", secure: isProduction });
+        localStorage.setItem("authToken", token);
+        console.log("[AuthContext login] authToken set:", token ? "SUCCESS" : "FAILED");
+        Cookies.set("userRole", role, { sameSite: isProduction ? "None" : "Lax", secure: isProduction });
+        localStorage.setItem("userRole", role);
+        Cookies.set("userId", fetchedUserId, { sameSite: isProduction ? "None" : "Lax", secure: isProduction });
+        localStorage.setItem("userId", fetchedUserId);
 
         // Update auth state
         setIsAuthenticated(true);
@@ -120,6 +133,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     Cookies.remove("authToken");
     Cookies.remove("userRole");
     Cookies.remove("userId");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userId");
     setIsAuthenticated(false);
     setUserRole(null);
     setUserId(null);

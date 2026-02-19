@@ -3,48 +3,58 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { getDailyAttendanceStats, type DailyStats } from "@/lib/api";
+import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { getDailyAttendanceStats, getHolidays, type DailyStats, type Holiday } from "@/lib/api";
+import { AppErrorBanner } from "@/components/AppErrorBanner"; // Import AppErrorBanner
 
 interface AdminAttendanceCalendarProps {
   cohort: number;
-  onDayClick: (date: string) => void;
+  onDayClick: (date: string, isHoliday: boolean, holiday?: Holiday) => void;
+  holidays?: Holiday[];
 }
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export function AdminAttendanceCalendar({ cohort, onDayClick }: AdminAttendanceCalendarProps) {
+export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: externalHolidays }: AdminAttendanceCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
   const [dailyStats, setDailyStats] = useState<DailyStats[]>([]);
+  const [internalHolidays, setInternalHolidays] = useState<Holiday[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Use external holidays if provided, otherwise use internal state
+  const holidays = externalHolidays || internalHolidays;
 
   useEffect(() => {
-    loadStats();
-  }, [cohort, currentMonth]);
+    loadData();
+  }, [cohort, currentMonth, externalHolidays]);
 
-  const loadStats = async () => {
+  const loadData = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const [year, month] = currentMonth.split("-").map(Number);
-      const firstDay = new Date(year, month - 1, 1);
+      const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
       const lastDay = new Date(year, month, 0);
-      const today = new Date();
+      const endDate = `${year}-${String(month).padStart(2, "0")}-${String(lastDay.getDate()).padStart(2, "0")}`;
       
-      const daysDiff = Math.ceil((today.getTime() - firstDay.getTime()) / (1000 * 60 * 60 * 24)) + 31;
+      const [stats] = await Promise.all([
+        getDailyAttendanceStats(cohort, startDate, endDate),
+      ]);
       
-      const stats = await getDailyAttendanceStats(cohort, Math.min(daysDiff, 365));
+      setDailyStats(stats);
       
-      const monthStats = stats.filter((s) => {
-        const statDate = new Date(s.date);
-        return statDate.getFullYear() === year && statDate.getMonth() === month - 1;
-      });
-      
-      setDailyStats(monthStats);
-    } catch (error) {
-      console.error("Error loading daily stats:", error);
+      // Only fetch holidays internally if external holidays not provided
+      if (!externalHolidays) {
+        const holidaysData = await getHolidays(startDate, endDate);
+        setInternalHolidays(holidaysData);
+      }
+    } catch (err: any) {
+      console.error("Error loading calendar data:", err);
+      setError(err.message || "Failed to load calendar data.");
     } finally {
       setIsLoading(false);
     }
@@ -62,9 +72,15 @@ export function AdminAttendanceCalendar({ cohort, onDayClick }: AdminAttendanceC
     setCurrentMonth(`${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, "0")}`);
   };
 
-  const getStatsForDate = (date: number): DailyStats | null => {
-    const dateStr = `${currentMonth}-${String(date).padStart(2, "0")}`;
-    return dailyStats.find((s) => s.date === dateStr) || null;
+  const getStatsForDate = (date: string): DailyStats | null => {
+    return dailyStats.find((s) => s.date === date) || null;
+  };
+
+  const getHolidayForDate = (date: string): Holiday | null => {
+    if (!holidays) return null;
+    return holidays.find((h) => {
+      return date >= h.start_date && date <= h.end_date;
+    }) || null;
   };
 
   const getAttendanceRate = (stats: DailyStats | null): number => {
@@ -73,7 +89,8 @@ export function AdminAttendanceCalendar({ cohort, onDayClick }: AdminAttendanceC
     return Math.round((attended / stats.total) * 100);
   };
 
-  const getDayColorClass = (rate: number): string => {
+  const getDayColorClass = (rate: number, isHoliday: boolean): string => {
+    if (isHoliday) return "bg-purple-500 text-white hover:bg-purple-600";
     if (rate < 0) return "bg-muted/30 hover:bg-muted/50";
     if (rate >= 90) return "bg-green-500 text-white hover:bg-green-600";
     if (rate >= 70) return "bg-yellow-500 text-white hover:bg-yellow-600";
@@ -94,7 +111,7 @@ export function AdminAttendanceCalendar({ cohort, onDayClick }: AdminAttendanceC
   const calendarDays: JSX.Element[] = [];
 
   for (let i = 0; i < startDayOfWeek; i++) {
-    calendarDays.push(<div key={`empty-${i}`} className="h-20" />);
+    calendarDays.push(<div key={`empty-${i}`} className="h-24" />);
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
@@ -102,39 +119,45 @@ export function AdminAttendanceCalendar({ cohort, onDayClick }: AdminAttendanceC
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     const dateStr = `${currentMonth}-${String(day).padStart(2, "0")}`;
     const isToday = dateStr === todayStr;
-    const stats = getStatsForDate(day);
+    const stats = getStatsForDate(dateStr);
+    const holiday = getHolidayForDate(dateStr);
+    const isHoliday = !!holiday;
     const rate = getAttendanceRate(stats);
 
-    const morningCount = stats ? stats.present + stats.late + stats.late_excused + stats.absent_excused : 0;
-    const afternoonCount = stats ? stats.present + stats.late + stats.late_excused + stats.absent_excused : 0;
     const totalSessions = stats ? stats.total : 0;
     const studentsPerSession = totalSessions > 0 ? Math.ceil(totalSessions / 2) : 0;
 
     calendarDays.push(
       <button
         key={day}
-        onClick={() => !isWeekend && onDayClick(dateStr)}
+        onClick={() => onDayClick(dateStr, isHoliday, holiday || undefined)}
         disabled={isWeekend}
         className={`
           h-24 rounded-md flex flex-col items-center justify-center text-sm font-medium
           transition-colors relative
           ${isWeekend ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}
           ${isToday ? "ring-2 ring-primary ring-offset-1" : ""}
-          ${isWeekend ? "bg-muted/20" : getDayColorClass(rate)}
+          ${isWeekend ? "bg-muted/20" : getDayColorClass(rate, isHoliday)}
         `}
-        title={stats ? `Present: ${stats.present}, Late: ${stats.late}, Absent: ${stats.absent}, Excused: ${stats.late_excused + stats.absent_excused}` : "No data"}
+        title={holiday ? `${holiday.name}${holiday.description ? ` - ${holiday.description}` : ""}` : stats ? `Present: ${stats.present}, Late: ${stats.late}, Absent: ${stats.absent}, Excused: ${stats.late_excused + stats.absent_excused}` : "No data"}
       >
         <span className="text-xs font-bold mb-1">{day}</span>
-        {!isWeekend && (
+        {isHoliday && !isWeekend && (
+          <Star className="h-3 w-3 mb-0.5 fill-yellow-300 text-yellow-300" />
+        )}
+        {!isWeekend && !isHoliday && (
           <div className="text-[10px] space-y-0.5">
             <div>AM: {stats ? `${Math.round(rate * studentsPerSession / 100)}/${studentsPerSession}` : "-"}</div>
             <div>PM: {stats ? `${Math.round(rate * studentsPerSession / 100)}/${studentsPerSession}` : "-"}</div>
           </div>
         )}
-        {!isWeekend && rate >= 0 && (
+        {isHoliday && !isWeekend && (
+          <span className="text-[9px] font-semibold truncate max-w-[90%]">{holiday?.name || "Holiday"}</span>
+        )}
+        {!isWeekend && !isHoliday && rate >= 0 && (
           <span className="text-[9px] mt-0.5">{rate}%</span>
         )}
-        {!isWeekend && stats && (
+        {!isWeekend && !isHoliday && stats && (
           (() => {
             const absentCount = Number(stats.absent) || 0;
             const absentExcusedCount = Number(stats.absent_excused) || 0;
@@ -159,7 +182,7 @@ export function AdminAttendanceCalendar({ cohort, onDayClick }: AdminAttendanceC
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Monthly Overview</CardTitle>
-            <CardDescription>Click on a day to see details</CardDescription>
+            <CardDescription>Click on a day to see details or mark as holiday</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={prevMonth}>
@@ -175,6 +198,10 @@ export function AdminAttendanceCalendar({ cohort, onDayClick }: AdminAttendanceC
       <CardContent>
         {isLoading ? (
           <div className="text-center py-8 text-muted-foreground">Loading calendar...</div>
+        ) : error ? ( // Display error if present
+          <div className="p-4">
+            <AppErrorBanner error={error} />
+          </div>
         ) : (
           <>
             <div className="grid grid-cols-7 gap-1 mb-2">
@@ -203,6 +230,12 @@ export function AdminAttendanceCalendar({ cohort, onDayClick }: AdminAttendanceC
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded bg-muted/30" />
                 <span>Not marked</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-purple-500 flex items-center justify-center">
+                  <Star className="h-2 w-2 fill-yellow-300 text-yellow-300" />
+                </div>
+                <span>Holiday/Break</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="px-1.5 py-0.5 bg-red-600 text-white rounded-full font-bold text-[9px]">A</span>

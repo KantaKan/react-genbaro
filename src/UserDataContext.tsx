@@ -75,7 +75,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
       setLoading(true);
       setError(null);
 
-      const token = Cookies.get("authToken");
+      const token = Cookies.get("authToken") || localStorage.getItem("authToken");
       if (!token) {
         throw new Error("Authentication required");
       }
@@ -120,7 +120,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
   useEffect(() => {
     const requestInterceptor = api.interceptors.request.use(
       (config) => {
-        const token = Cookies.get("authToken");
+        const token = Cookies.get("authToken") || localStorage.getItem("authToken");
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -134,6 +134,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
       async (error) => {
         if (error.response?.status === 401) {
           Cookies.remove("authToken");
+          localStorage.removeItem("authToken");
           setUserData(null);
           setError("Session expired. Please log in again.");
         }

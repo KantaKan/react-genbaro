@@ -24,18 +24,22 @@ import {
   getDailyAttendanceStats,
   getCohort,
   bulkMarkAttendance,
+  getHolidays,
+  deleteHoliday,
   type AttendanceCode,
   type AttendanceRecord,
   type AttendanceStats,
   type TodayOverview,
   type DailyStats,
-  type User
+  type User,
+  type Holiday
 } from "@/lib/api";
-import { Trash2, RefreshCw, Clock, AlertTriangle, TrendingUp, Calendar, X, CalendarClock, Check, ChevronDown, Users, Eye, CalendarDays, Loader2 } from "lucide-react";
+import { Trash2, RefreshCw, Clock, AlertTriangle, TrendingUp, Calendar, X, CalendarClock, Check, ChevronDown, Users, Eye, CalendarDays, Loader2, Star } from "lucide-react";
 import { LeaveRequestsTable } from "./leave-requests-table";
 import { CreateLeaveRequestDialog } from "./create-leave-request-dialog";
 import { AdminAttendanceCalendar } from "./admin-attendance-calendar";
 import { DaySummaryDialog } from "./day-summary-dialog";
+import { CreateHolidayDialog } from "./create-holiday-dialog";
 
 interface AttendanceDashboardProps {
   cohort?: string;
@@ -119,6 +123,12 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
   const [daySummaryOpen, setDaySummaryOpen] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>("");
   const [activeTab, setActiveTab] = useState("overview");
+  
+  // Holiday state
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [createHolidayDialogOpen, setCreateHolidayDialogOpen] = useState(false);
+  const [holidayDate, setHolidayDate] = useState<string>("");
+  const [selectedHoliday, setSelectedHoliday] = useState<Holiday | null>(null);
   
   // Request queue state
   const [requestQueue, setRequestQueue] = useState<QueueItem[]>([]);
@@ -441,9 +451,25 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
     }
   };
 
+  const loadHolidays = async () => {
+    try {
+      const data = await getHolidays();
+      setHolidays(data);
+    } catch (error) {
+      console.error("Error loading holidays:", error);
+      setHolidays([]);
+    }
+  };
+
+  const isHoliday = (date: string): Holiday | null => {
+    if (!holidays || holidays.length === 0) return null;
+    return holidays.find((h) => date >= h.start_date && date <= h.end_date) || null;
+  };
+
   // Load data when cohort or date changes - only essential data
   useEffect(() => {
     loadTodayOverview();
+    loadHolidays();
   }, [selectedCohort, selectedDate, loadTodayOverview]);
 
   // Load stats and daily stats only when needed (stats tab or summary tab)
@@ -710,9 +736,39 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
     setCreateLeaveDialogOpen(true);
   };
 
-  const handleCalendarDayClick = (date: string) => {
-    setSelectedCalendarDate(date);
-    setDaySummaryOpen(true);
+  const handleCalendarDayClick = (date: string, isHoliday: boolean, holiday?: Holiday) => {
+    if (isHoliday && holiday) {
+      setSelectedHoliday(holiday);
+      setHolidayDate(date);
+      setDaySummaryOpen(true);
+    } else {
+      setSelectedCalendarDate(date);
+      setDaySummaryOpen(true);
+    }
+  };
+
+  const handleMarkAsHoliday = (date: string) => {
+    setHolidayDate(date);
+    setSelectedHoliday(null);
+    setCreateHolidayDialogOpen(true);
+    setDaySummaryOpen(false);
+  };
+
+  const handleRemoveHoliday = async (holidayId: string) => {
+    try {
+      await deleteHoliday(holidayId);
+      toast.success("Holiday removed");
+      loadHolidays();
+      setDaySummaryOpen(false);
+      setSelectedHoliday(null);
+    } catch (error) {
+      toast.error("Failed to remove holiday");
+    }
+  };
+
+  const handleHolidayCreated = (holiday: Holiday) => {
+    loadHolidays();
+    setDaySummaryOpen(false);
   };
 
   const handleGoToAttendance = () => {
@@ -866,6 +922,12 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
                     <Calendar className="h-5 w-5" />
                     Attendance - {selectedDate}
                   </CardTitle>
+                  {isHoliday(selectedDate) && (
+                    <Badge className="bg-purple-500 text-white">
+                      <Star className="h-3 w-3 mr-1 fill-yellow-300 text-yellow-300" />
+                      {isHoliday(selectedDate)?.name || "Holiday"}
+                    </Badge>
+                  )}
                   {requestQueue.length > 0 && (
                     <Badge variant="outline" className="bg-blue-50 text-blue-600 animate-pulse">
                       <Loader2 className="h-3 w-3 animate-spin mr-1" />
@@ -873,8 +935,18 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
                     </Badge>
                   )}
                 </div>
-                <Button onClick={handleMarkAllPresent} size="sm" variant="outline" disabled={isMarkingAllPresent || requestQueue.length > 0}>
-                  {isMarkingAllPresent ? (
+                <Button 
+                  onClick={handleMarkAllPresent} 
+                  size="sm" 
+                  variant="outline" 
+                  disabled={isMarkingAllPresent || requestQueue.length > 0 || !!isHoliday(selectedDate)}
+                >
+                  {isHoliday(selectedDate) ? (
+                    <>
+                      <Star className="h-4 w-4 mr-2" />
+                      Holiday
+                    </>
+                  ) : isMarkingAllPresent ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Marking...
@@ -953,25 +1025,25 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
                               <Button 
                                 variant={student.morning !== "-" ? "default" : "outline"} 
                                 size="sm"
-                                disabled={pendingOperations.has(`${student.user_id}-morning`) || isDeleting}
+                                disabled={pendingOperations.has(`${student.user_id}-morning`) || isDeleting || !!isHoliday(selectedDate)}
                               >
                                 AM {student.morning !== "-" ? "✓" : ""} {pendingOperations.has(`${student.user_id}-morning`) && <Loader2 className="h-3 w-3 animate-spin ml-1" />} <ChevronDown className="h-3 w-3 ml-1" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "morning", "present")}>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "morning", "present")} disabled={!!isHoliday(selectedDate)}>
                                 <Check className="h-4 w-4 mr-2 text-green-500" /> Present
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "morning", "late")}>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "morning", "late")} disabled={!!isHoliday(selectedDate)}>
                                 <Clock className="h-4 w-4 mr-2 text-yellow-500" /> Late
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "morning", "absent")}>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "morning", "absent")} disabled={!!isHoliday(selectedDate)}>
                                 <X className="h-4 w-4 mr-2 text-red-500" /> Absent
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "morning", "late_excused")}>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "morning", "late_excused")} disabled={!!isHoliday(selectedDate)}>
                                 <Clock className="h-4 w-4 mr-2 text-blue-500" /> Late (Excused)
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "morning", "absent_excused")}>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "morning", "absent_excused")} disabled={!!isHoliday(selectedDate)}>
                                 <Calendar className="h-4 w-4 mr-2 text-gray-500" /> Absent (Excused)
                               </DropdownMenuItem>
                               {student.morning !== "-" && (
@@ -989,25 +1061,25 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
                               <Button 
                                 variant={student.afternoon !== "-" ? "default" : "outline"} 
                                 size="sm"
-                                disabled={pendingOperations.has(`${student.user_id}-afternoon`) || isDeleting}
+                                disabled={pendingOperations.has(`${student.user_id}-afternoon`) || isDeleting || !!isHoliday(selectedDate)}
                               >
                                 PM {student.afternoon !== "-" ? "✓" : ""} {pendingOperations.has(`${student.user_id}-afternoon`) && <Loader2 className="h-3 w-3 animate-spin ml-1" />} <ChevronDown className="h-3 w-3 ml-1" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "afternoon", "present")}>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "afternoon", "present")} disabled={!!isHoliday(selectedDate)}>
                                 <Check className="h-4 w-4 mr-2 text-green-500" /> Present
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "afternoon", "late")}>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "afternoon", "late")} disabled={!!isHoliday(selectedDate)}>
                                 <Clock className="h-4 w-4 mr-2 text-yellow-500" /> Late
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "afternoon", "absent")}>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "afternoon", "absent")} disabled={!!isHoliday(selectedDate)}>
                                 <X className="h-4 w-4 mr-2 text-red-500" /> Absent
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "afternoon", "late_excused")}>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "afternoon", "late_excused")} disabled={!!isHoliday(selectedDate)}>
                                 <Clock className="h-4 w-4 mr-2 text-blue-500" /> Late (Excused)
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "afternoon", "absent_excused")}>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "afternoon", "absent_excused")} disabled={!!isHoliday(selectedDate)}>
                                 <Calendar className="h-4 w-4 mr-2 text-gray-500" /> Absent (Excused)
                               </DropdownMenuItem>
                               {student.afternoon !== "-" && (
@@ -1090,6 +1162,7 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
           <AdminAttendanceCalendar
             cohort={parseInt(selectedCohort)}
             onDayClick={handleCalendarDayClick}
+            holidays={holidays}
           />
         </TabsContent>
 
@@ -1404,9 +1477,19 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
       <DaySummaryDialog
         open={daySummaryOpen}
         onOpenChange={setDaySummaryOpen}
-        date={selectedCalendarDate}
+        date={selectedCalendarDate || holidayDate}
         cohort={parseInt(selectedCohort)}
         onMarkAttendance={handleGoToAttendance}
+        holiday={selectedHoliday}
+        onMarkAsHoliday={handleMarkAsHoliday}
+        onRemoveHoliday={handleRemoveHoliday}
+      />
+
+      <CreateHolidayDialog
+        open={createHolidayDialogOpen}
+        onOpenChange={setCreateHolidayDialogOpen}
+        selectedDate={holidayDate}
+        onSuccess={handleHolidayCreated}
       />
     </div>
   );

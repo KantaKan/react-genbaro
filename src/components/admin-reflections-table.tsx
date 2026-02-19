@@ -278,7 +278,7 @@ export default function AdminReflectionsTable() {
             <Filter className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search name / JSD / zone…"
-              value={searchQuery}
+              value={searchQuery ?? ""}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-64 pl-8"
             />
