@@ -286,10 +286,11 @@ export function StudentAttendance() {
       </Card>
 
       <Tabs defaultValue="today" className="space-y-4" onValueChange={handleTabChange}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
           <TabsTrigger value="today">Today</TabsTrigger>
           <TabsTrigger value="week">This Week</TabsTrigger>
           <TabsTrigger value="month">This Month</TabsTrigger>
+          <TabsTrigger value="leave">Leave</TabsTrigger>
         </TabsList>
 
         <TabsContent value="today" className="space-y-4">
@@ -383,6 +384,66 @@ export function StudentAttendance() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="leave" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarClock className="h-5 w-5" />
+                My Leave Requests
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {leaveRequests.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No leave requests found
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {leaveRequests.map((request) => (
+                    <div
+                      key={request._id}
+                      className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium capitalize">
+                            {request.type.replace("_", " ")}
+                          </span>
+                          {request.session && (
+                            <Badge variant="outline" className="text-xs">
+                              {request.session}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(request.date).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </p>
+                        {request.reason && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {request.reason}
+                          </p>
+                        )}
+                      </div>
+                      {request.status === "approved" && (
+                        <Badge className="bg-green-500">Approved</Badge>
+                      )}
+                      {request.status === "rejected" && (
+                        <Badge className="bg-red-500">Rejected</Badge>
+                      )}
+                      {request.status === "pending" && (
+                        <Badge className="bg-yellow-500">Pending</Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       <Card>
@@ -412,55 +473,6 @@ export function StudentAttendance() {
           </div>
         </CardContent>
       </Card>
-
-      {leaveRequests.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CalendarClock className="h-5 w-5" />
-              My Leave Requests
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {leaveRequests.slice(0, 5).map((request) => (
-                <div
-                  key={request._id}
-                  className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium capitalize">
-                        {request.type.replace("_", " ")}
-                      </span>
-                      {request.session && (
-                        <Badge variant="outline" className="text-xs">
-                          {request.session}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(request.date).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                  {request.status === "approved" && (
-                    <Badge className="bg-green-500">Approved</Badge>
-                  )}
-                  {request.status === "rejected" && (
-                    <Badge className="bg-red-500">Rejected</Badge>
-                  )}
-                  {request.status === "pending" && (
-                    <Badge className="bg-yellow-500">Pending</Badge>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       <LeaveRequestForm
         open={leaveDialogOpen}
