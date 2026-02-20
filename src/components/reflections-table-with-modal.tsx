@@ -15,8 +15,6 @@ import FeedbackForm from "./feedback-form";
 import { useUserData } from "@/UserDataContext";
 import { api } from "@/lib/api";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { ToastContainer } from "react-toastify";
 import { ReflectionPreview } from "./reflection-preview";
 import { AlertDialogContent, AlertDialogAction, AlertDialogCancel, AlertDialog } from "./ui/alert-dialog";
 import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflection-zones";
@@ -465,8 +463,6 @@ export default function ReflectionsTableWithModal() {
 
   return (
     <div className="container mx-auto py-10">
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
-
       {/* Hero section */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-8 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 rounded-lg border">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">

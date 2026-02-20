@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { Plus, BookOpen, Sparkles, CheckCircle } from "lucide-react";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 import { useReflections, type Reflection } from "@/hooks/use-reflections";
 import { useStreakCalculation } from "@/hooks/use-streak-calculation";
@@ -218,8 +216,6 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
 
   return (
     <div className="container mx-auto py-10">
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
-
       {/* Hero section */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-8 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 rounded-lg border">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">

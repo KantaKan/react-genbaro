@@ -223,7 +223,7 @@ export const ReflectionsTable = ({ reflections, isAdmin = false }: ReflectionsTa
                 z.label.toLowerCase() === barometerValue.toLowerCase() ||
                 z.aliases?.some((alias) => alias.toLowerCase() === barometerValue.toLowerCase()),
             );
-            const cardId = reflection._id || `${index}`;
+            const cardId = reflection._id ? `${reflection._id}-${index}` : `unknown-${index}`;
             const isExpanded = expandedCards.has(cardId);
 
             const zoneBgColor = zone?.bgColor || "bg-muted";

@@ -1,9 +1,11 @@
 import "./App.css";
+import "react-toastify/dist/ReactToastify.css";
 
 import { Routes, Route, Navigate } from "react-router-dom";
 import { QueryClientProvider } from "react-query";
 import { queryClient } from "./lib/queryClient";
 import { ThemeProvider } from "./components/theme-provider";
+import { ToastContainer } from "react-toastify";
 import { Login } from "./components/auth/login";
 import { SignUp } from "./components/auth/signup";
 import { AuthProvider, useAuth } from "./AuthContext";
@@ -116,6 +118,8 @@ function AppContent() {
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+
+        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
       </ThemeProvider>
     </QueryClientProvider>
   );
