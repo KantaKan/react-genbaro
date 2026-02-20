@@ -175,7 +175,8 @@ export interface AttendanceStats {
   absent: number;
   late_excused: number;
   absent_excused: number;
-  total_days: number;
+  present_days: number;
+  absent_days: number;
   warning_level: "normal" | "yellow" | "red";
 }
 
@@ -202,7 +203,6 @@ export interface AttendanceStatus {
   absent: number;
   late_excused: number;
   absent_excused: number;
-  total_days: number;
   warning_level: "normal" | "yellow" | "red";
 }
 
@@ -249,8 +249,12 @@ export const getAttendanceLogs = async (cohort?: number, date?: string, page = 1
   return response.data.data;
 };
 
-export const getAttendanceStats = async (cohort?: number): Promise<AttendanceStats[]> => {
-  const url = cohort ? `/admin/attendance/stats?cohort=${cohort}` : "/admin/attendance/stats";
+export const getAttendanceStats = async (cohort?: number, startDate?: string, endDate?: string): Promise<AttendanceStats[]> => {
+  const params = new URLSearchParams();
+  if (cohort) params.append("cohort", cohort.toString());
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
+  const url = `/admin/attendance/stats${params.toString() ? "?" + params.toString() : ""}`;
   const response = await api.get(url);
   return response.data.data;
 };

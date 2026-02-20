@@ -11,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { toast } from "react-toastify";
 import {
   getStudentAttendanceHistory,
-  getMyLeaveRequests,
+  getAllLeaveRequests,
   manualMarkAttendance,
   deleteAttendanceRecord,
   type AttendanceRecord,
@@ -102,7 +102,7 @@ export function StudentAttendanceDetail() {
       }
 
       try {
-        const leaves = await getMyLeaveRequests();
+        const leaves = await getAllLeaveRequests();
         const studentLeaves = leaves.filter((l) => l.user_id === id);
         setLeaveRequests(studentLeaves);
       } catch {

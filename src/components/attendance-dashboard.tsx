@@ -5,9 +5,11 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -17,24 +19,24 @@ import {
   getActiveAttendanceCode, 
   manualMarkAttendance,
   getAttendanceLogs,
-  getAttendanceStats,
   getStudentAttendanceHistory,
   getTodayOverview,
   deleteAttendanceRecord,
   getDailyAttendanceStats,
+  getAttendanceStats,
   getCohort,
   bulkMarkAttendance,
   getHolidays,
   deleteHoliday,
   type AttendanceCode,
   type AttendanceRecord,
-  type AttendanceStats,
   type TodayOverview,
   type DailyStats,
   type User,
-  type Holiday
+  type Holiday,
+  type AttendanceStats
 } from "@/lib/api";
-import { Trash2, RefreshCw, Clock, AlertTriangle, TrendingUp, Calendar, X, CalendarClock, Check, ChevronDown, Users, Eye, CalendarDays, Loader2, Star } from "lucide-react";
+import { Trash2, RefreshCw, Clock, AlertTriangle, Calendar, X, CalendarClock, Check, ChevronDown, Loader2, Star, Users, Eye } from "lucide-react";
 import { LeaveRequestsTable } from "./leave-requests-table";
 import { CreateLeaveRequestDialog } from "./create-leave-request-dialog";
 import { AdminAttendanceCalendar } from "./admin-attendance-calendar";
@@ -111,11 +113,20 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
   const [selectedStudent, setSelectedStudent] = useState<AttendanceStats | null>(null);
   const [studentHistory, setStudentHistory] = useState<AttendanceRecord[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  const [selectedDays, setSelectedDays] = useState<7 | 30>(7);
+  const [selectedDays, setSelectedDays] = useState<number>(30);
   const [dailyStats, setDailyStats] = useState<DailyStats[]>([]);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<{id: string; name: string; session: string; date: string} | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Date range for stats
+  const getDefaultStartDate = () => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date.toISOString().split('T')[0];
+  };
+  const [statsStartDate, setStatsStartDate] = useState<string>(getDefaultStartDate());
+  const [statsEndDate, setStatsEndDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
   const [isLoading, setIsLoading] = useState(false);
   const [students, setStudents] = useState<User[]>([]);
   const [createLeaveDialogOpen, setCreateLeaveDialogOpen] = useState(false);
@@ -413,12 +424,17 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
   const loadStats = useCallback(async () => {
     const cohortNum = parseInt(selectedCohort);
     try {
-      const statsData = await getAttendanceStats(cohortNum);
+      let statsData;
+      if (selectedDays > 0 || (statsStartDate && statsEndDate)) {
+        statsData = await getAttendanceStats(cohortNum, statsStartDate, statsEndDate);
+      } else {
+        statsData = await getAttendanceStats(cohortNum);
+      }
       setStats(statsData);
     } catch (error) {
       console.error("Error loading stats:", error);
     }
-  }, [selectedCohort]);
+  }, [selectedCohort, selectedDays, statsStartDate, statsEndDate]);
 
   const loadDailyStats = async () => {
     try {
@@ -472,13 +488,20 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
     loadHolidays();
   }, [selectedCohort, selectedDate, loadTodayOverview]);
 
-  // Load stats and daily stats only when needed (stats tab or summary tab)
+  // Load stats and daily stats only when needed (all-students tab or at-risk tab)
   useEffect(() => {
-    if (activeTab === "stats" || activeTab === "summary") {
-      loadStats();
+    if (activeTab === "all-students" || activeTab === "at-risk") {
+      const cohort = selectedCohort;
+      // Pass dates when a quick filter is selected (7/15/30 days) or when dates are manually set
+      if (selectedDays > 0 || (statsStartDate && statsEndDate)) {
+        getAttendanceStats(parseInt(cohort), statsStartDate, statsEndDate).then(setStats).catch(console.error);
+      } else {
+        // Show all records (no date filter)
+        getAttendanceStats(parseInt(cohort)).then(setStats).catch(console.error);
+      }
       loadDailyStats();
     }
-  }, [activeTab, selectedCohort, selectedDays]);
+  }, [activeTab, selectedCohort, selectedDays, statsStartDate, statsEndDate]);
 
   // Load logs only when logs tab is active
   useEffect(() => {
@@ -842,12 +865,11 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6 lg:w-[850px]">
+        <TabsList className="grid w-full grid-cols-5 lg:w-[750px]">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="stats">Stats</TabsTrigger>
+          <TabsTrigger value="all-students">All Students</TabsTrigger>
           <TabsTrigger value="calendar">Calendar</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
-          <TabsTrigger value="summary">Summary</TabsTrigger>
           <TabsTrigger value="leave-requests">Leave</TabsTrigger>
         </TabsList>
 
@@ -876,7 +898,7 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">Active Code</p>
                     <p className="text-3xl font-bold font-mono tracking-wider">{activeCodeMorning.code}</p>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Expires in: <span className="font-semibold text-primary">{timeLeftMorning}</span>
+                      Valid for: <span className="font-semibold text-primary">{timeLeftMorning}</span>
                     </p>
                   </div>
                 )}
@@ -906,7 +928,7 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">Active Code</p>
                     <p className="text-3xl font-bold font-mono tracking-wider">{activeCodeAfternoon.code}</p>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Expires in: <span className="font-semibold text-primary">{timeLeftAfternoon}</span>
+                      Valid for: <span className="font-semibold text-primary">{timeLeftAfternoon}</span>
                     </p>
                   </div>
                 )}
@@ -1102,56 +1124,78 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="stats" className="space-y-4">
+        <TabsContent value="all-students" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                Absence Stats
+                <Users className="h-5 w-5" />
+                All Students - Cohort {selectedCohort}
               </CardTitle>
-              <CardDescription>Present = Morning + Afternoon attended</CardDescription>
+              <CardDescription>
+                Attendance summary for all students in this cohort
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>JSD</TableHead>
+                    <TableHead className="w-[80px]">JSD</TableHead>
                     <TableHead>Name</TableHead>
-                    <TableHead className="text-center">Present Days</TableHead>
+                    <TableHead className="text-center">Present</TableHead>
+                    <TableHead className="text-center">Late</TableHead>
+                    <TableHead className="text-center">Absent Sessions</TableHead>
                     <TableHead className="text-center">Absent Days</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="text-center">Excused</TableHead>
+                    <TableHead className="text-center">Warning</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {stats.map((stat) => (
-                    <TableRow key={stat.user_id}>
-                      <TableCell className="font-medium">{stat.jsd_number}</TableCell>
-                      <TableCell>{stat.first_name} {stat.last_name}</TableCell>
-                      <TableCell className="text-center text-green-600 font-bold">{stat.present}</TableCell>
-                      <TableCell className="text-center text-red-600 font-bold">{stat.absent}</TableCell>
-                      <TableCell>{getWarningBadge(stat.warning_level)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-1 justify-end">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => navigate(`/admin/attendance/student/${stat.user_id}`)}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            Details
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleViewStudentHistory(stat)}
-                          >
-                            History
-                          </Button>
-                        </div>
+                  {stats.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center text-muted-foreground">
+                        No attendance data available
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    stats
+                      .sort((a, b) => b.absent - a.absent)
+                      .map((student) => (
+                        <TableRow key={student.user_id}>
+                          <TableCell className="font-medium">{student.jsd_number}</TableCell>
+                          <TableCell>{student.first_name} {student.last_name}</TableCell>
+                          <TableCell className="text-center">
+                            <span className="text-green-600 font-medium">{student.present}</span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="text-yellow-600 font-medium">{student.late}</span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="text-red-600 font-medium">{student.absent}</span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="text-red-700 font-bold">{student.absent_days}</span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="text-blue-600 font-medium">{student.late_excused + student.absent_excused}</span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {getWarningBadge(student.warning_level)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                              onClick={() => navigate(`/admin/attendance/student/${student.user_id}`)}
+                              title="View full details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -1164,179 +1208,6 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
             onDayClick={handleCalendarDayClick}
             holidays={holidays}
           />
-        </TabsContent>
-
-        <TabsContent value="summary" className="space-y-4">
-          <div className="flex items-center gap-4 mb-4">
-            <Select value={selectedDays.toString()} onValueChange={(v) => setSelectedDays(parseInt(v) as 7 | 30)}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">Last 7 Days</SelectItem>
-                <SelectItem value="30">Last 30 Days</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-green-500">{dailyStats.reduce((sum, d) => sum + d.present, 0)}</p>
-                  <p className="text-sm text-muted-foreground">Present Days</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-red-500">{dailyStats.reduce((sum, d) => sum + d.absent, 0)}</p>
-                  <p className="text-sm text-muted-foreground">Absent Days</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-blue-500">{dailyStats.reduce((sum, d) => sum + d.late, 0)}</p>
-                  <p className="text-sm text-muted-foreground">Late Days</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-yellow-500">{dailyStats.reduce((sum, d) => sum + d.late_excused + d.absent_excused, 0)}</p>
-                  <p className="text-sm text-muted-foreground">Excused</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Daily Trend
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px] flex items-end gap-2">
-                  {dailyStats.map((day) => (
-                    <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
-                      <div 
-                        className="w-full bg-green-500 rounded-t transition-all hover:bg-green-600"
-                        style={{ height: `${(day.present / maxDailyTotal) * 200}px`, minHeight: day.present > 0 ? '4px' : '0' }}
-                      />
-                      <div 
-                        className="w-full bg-yellow-500"
-                        style={{ height: `${(day.late / maxDailyTotal) * 200}px`, minHeight: day.late > 0 ? '4px' : '0' }}
-                      />
-                      <div 
-                        className="w-full bg-red-500"
-                        style={{ height: `${(day.absent / maxDailyTotal) * 200}px`, minHeight: day.absent > 0 ? '4px' : '0' }}
-                      />
-                      <p className="text-[10px] text-muted-foreground rotate-45 mt-2">
-                        {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-center justify-center gap-4 mt-4 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded" />
-                    <span className="text-sm">Present</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-yellow-500 rounded" />
-                    <span className="text-sm">Late</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-500 rounded" />
-                    <span className="text-sm">Absent</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5" />
-                  Daily Breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                  {dailyStats.map((day) => (
-                    <div key={day.date} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                      <div>
-                        <p className="font-medium">{new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                        <p className="text-sm text-muted-foreground">{day.total} total records</p>
-                      </div>
-                      <div className="flex gap-3 text-sm">
-                        <span className="text-green-600 font-medium">{day.present} P</span>
-                        <span className="text-yellow-600 font-medium">{day.late} L</span>
-                        <span className="text-red-600 font-medium">{day.absent} A</span>
-                        {day.absent > 0 && (
-                          <span className="text-red-500 font-bold">({day.absent} absent)</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                High Absence Students
-              </CardTitle>
-              <CardDescription>Students with absence warnings in the selected period</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>JSD</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead className="text-center">Present</TableHead>
-                    <TableHead className="text-center">Late</TableHead>
-                    <TableHead className="text-center">Absent</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {stats
-                    .filter(s => s.absent >= 2 || s.warning_level !== "normal")
-                    .sort((a, b) => b.absent - a.absent)
-                    .slice(0, 10)
-                    .map((stat) => (
-                    <TableRow key={stat.user_id}>
-                      <TableCell className="font-medium">{stat.jsd_number}</TableCell>
-                      <TableCell>{stat.first_name} {stat.last_name}</TableCell>
-                      <TableCell className="text-center text-green-600 font-bold">{stat.present}</TableCell>
-                      <TableCell className="text-center text-yellow-600 font-bold">{stat.late}</TableCell>
-                      <TableCell className="text-center text-red-600 font-bold">{stat.absent}</TableCell>
-                      <TableCell>{getWarningBadge(stat.warning_level)}</TableCell>
-                    </TableRow>
-                  ))}
-                  {stats.filter(s => s.absent >= 2 || s.warning_level !== "normal").length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                        No students with absence warnings in this period
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="logs" className="space-y-4">
