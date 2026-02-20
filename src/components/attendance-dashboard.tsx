@@ -153,6 +153,9 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
   
   // Mark All Present loading state
   const [isMarkingAllPresent, setIsMarkingAllPresent] = useState(false);
+  
+  // Sort option for all-students tab
+  const [sortOption, setSortOption] = useState<string>("absent_days_desc");
 
   // Cleanup stale pending operations every 30 seconds
   useEffect(() => {
@@ -829,6 +832,29 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
 
   const maxDailyTotal = Math.max(...dailyStats.map(d => d.total), 1);
 
+  const getSortedStats = (data: AttendanceStats[]) => {
+    const sorted = [...data];
+    switch (sortOption) {
+      case "absent_days_desc":
+        return sorted.sort((a, b) => b.absent_days - a.absent_days);
+      case "absent_desc":
+        return sorted.sort((a, b) => b.absent - a.absent);
+      case "present_desc":
+        return sorted.sort((a, b) => b.present - a.present);
+      case "name_asc":
+        return sorted.sort((a, b) => a.first_name.localeCompare(b.first_name));
+      case "name_desc":
+        return sorted.sort((a, b) => b.first_name.localeCompare(a.first_name));
+      case "warning_asc":
+        const warningOrder = { red: 0, yellow: 1, normal: 2 };
+        return sorted.sort((a, b) => warningOrder[a.warning_level] - warningOrder[b.warning_level]);
+      case "jsd_asc":
+        return sorted.sort((a, b) => a.jsd_number.localeCompare(b.jsd_number));
+      default:
+        return sorted.sort((a, b) => b.absent_days - a.absent_days);
+    }
+  };
+
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between flex-wrap gap-4">
@@ -1127,13 +1153,31 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
         <TabsContent value="all-students" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                All Students - Cohort {selectedCohort}
-              </CardTitle>
-              <CardDescription>
-                Attendance summary for all students in this cohort
-              </CardDescription>
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    All Students - Cohort {selectedCohort}
+                  </CardTitle>
+                  <CardDescription>
+                    Attendance summary for all students in this cohort
+                  </CardDescription>
+                </div>
+                <Select value={sortOption} onValueChange={setSortOption}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Sort by..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="absent_days_desc">Most Absent Days</SelectItem>
+                    <SelectItem value="absent_desc">Most Absent Sessions</SelectItem>
+                    <SelectItem value="present_desc">Most Present</SelectItem>
+                    <SelectItem value="name_asc">Name A-Z</SelectItem>
+                    <SelectItem value="name_desc">Name Z-A</SelectItem>
+                    <SelectItem value="warning_asc">Warning (Critical first)</SelectItem>
+                    <SelectItem value="jsd_asc">JSD Number</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
               <Table>
@@ -1158,39 +1202,37 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    stats
-                      .sort((a, b) => b.absent - a.absent)
-                      .map((student) => (
-                        <TableRow key={student.user_id}>
-                          <TableCell className="font-medium">{student.jsd_number}</TableCell>
-                          <TableCell>{student.first_name} {student.last_name}</TableCell>
-                          <TableCell className="text-center">
-                            <span className="text-green-600 font-medium">{student.present}</span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <span className="text-yellow-600 font-medium">{student.late}</span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <span className="text-red-600 font-medium">{student.absent}</span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <span className="text-red-700 font-bold">{student.absent_days}</span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <span className="text-blue-600 font-medium">{student.late_excused + student.absent_excused}</span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {getWarningBadge(student.warning_level)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                              onClick={() => navigate(`/admin/attendance/student/${student.user_id}`)}
-                              title="View full details"
-                            >
-                              <Eye className="h-4 w-4" />
+                    getSortedStats(stats).map((student) => (
+                      <TableRow key={student.user_id}>
+                        <TableCell className="font-medium">{student.jsd_number}</TableCell>
+                        <TableCell>{student.first_name} {student.last_name}</TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-green-600 font-medium">{student.present}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-yellow-600 font-medium">{student.late}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-red-600 font-medium">{student.absent}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-red-700 font-bold">{student.absent_days}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-blue-600 font-medium">{student.late_excused + student.absent_excused}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {getWarningBadge(student.warning_level)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                            onClick={() => navigate(`/admin/attendance/student/${student.user_id}`)}
+                            title="View full details"
+                          >
+                            <Eye className="h-4 w-4" />
                             </Button>
                           </TableCell>
                         </TableRow>

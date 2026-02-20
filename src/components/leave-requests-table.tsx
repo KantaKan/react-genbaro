@@ -333,12 +333,16 @@ export function LeaveRequestsTable({ cohort }: LeaveRequestsTableProps) {
             <DialogDescription>
               {selectedRequest && (
                 <span>
-                  {selectedRequest.first_name} {selectedRequest.last_name} -{" "}
-                  {getTypeBadge(selectedRequest.type, selectedRequest.session)} on{" "}
+                  {selectedRequest.first_name} {selectedRequest.last_name} on{" "}
                   {new Date(selectedRequest.date).toLocaleDateString()}
                 </span>
               )}
             </DialogDescription>
+            {selectedRequest && (
+              <div className="mt-2">
+                {getTypeBadge(selectedRequest.type, selectedRequest.session)}
+              </div>
+            )}
           </DialogHeader>
           <div className="space-y-4">
             <div className="p-3 bg-muted rounded-md">
