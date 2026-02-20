@@ -85,7 +85,6 @@ const withRetry = async <T,>(
       // Check if it's a rate limit error (429)
       if (error?.response?.status === 429 && attempt < maxRetries) {
         const delay = baseDelay * Math.pow(2, attempt);
-        console.log(`Rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
@@ -161,7 +160,6 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
   useEffect(() => {
     const cleanupInterval = setInterval(() => {
       if (!isProcessingQueue && pendingOperations.size > 0) {
-        console.log("Cleaning up stale pending operations:", pendingOperations.size);
         setPendingOperations(new Set());
         toast.warn("Cleared stale attendance operations");
       }

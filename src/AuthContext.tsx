@@ -38,10 +38,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const verifyToken = async () => {
       setLoading(true);
       const token = Cookies.get("authToken") || localStorage.getItem("authToken");
-      console.log("[AuthContext useEffect] Checking for authToken:", token ? "Token present" : "No token");
       if (token) {
         try {
-          console.log("[AuthContext useEffect] Attempting to verify token...");
           const response = await api.get<VerifyTokenResponse>("/api/verify-token", {
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -59,13 +57,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setUserId(fetchedUserId);
             localStorage.setItem("userRole", role);
             localStorage.setItem("userId", fetchedUserId);
-            console.log("[AuthContext useEffect] Token verification SUCCESS. User:", fetchedUserId, "Role:", role);
           } else {
-            console.error("[AuthContext useEffect] Token verification failed: Invalid status in response", response.data);
             throw new Error("Token verification failed: Invalid status in response");
           }
         } catch (error: any) {
-          console.error("[AuthContext useEffect] Token verification failed in catch block:", error.message, error);
+          console.error("[AuthContext] Token verification failed:", error.message);
           Cookies.remove("authToken");
           Cookies.remove("userRole");
           Cookies.remove("userId");
@@ -75,16 +71,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setError(error.message || "Token verification failed.");
         } finally {
           setLoading(false);
-          console.log("[AuthContext useEffect] Finished verifyToken. IsAuthenticated:", isAuthenticated);
         }
       } else {
-        console.log("[AuthContext useEffect] No authToken found, skipping verification.");
         setLoading(false);
       }
     };
 
     verifyToken();
-  }, []); // <-- Empty dependency array means it runs ONLY ONCE on component mount.
+  }, []);
 
   const login = async (email: string, password: string): Promise<UserRole> => {
     try {
@@ -103,7 +97,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const isProduction = import.meta.env.MODE === "production";
         Cookies.set("authToken", token, { sameSite: isProduction ? "None" : "Lax", secure: isProduction });
         localStorage.setItem("authToken", token);
-        console.log("[AuthContext login] authToken set:", token ? "SUCCESS" : "FAILED");
         Cookies.set("userRole", role, { sameSite: isProduction ? "None" : "Lax", secure: isProduction });
         localStorage.setItem("userRole", role);
         Cookies.set("userId", fetchedUserId, { sameSite: isProduction ? "None" : "Lax", secure: isProduction });

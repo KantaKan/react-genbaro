@@ -107,9 +107,33 @@ export function StudentAttendance() {
     }
   };
 
+  const getCurrentSession = (): "morning" | "afternoon" | null => {
+    const hour = new Date().getHours();
+    if (hour >= 9 && hour < 13) return "morning";
+    if (hour >= 13 && hour < 17) return "afternoon";
+    return null;
+  };
+
+  const getSessionFromCode = (code: string): "morning" | "afternoon" | null => {
+    const upperCode = code.toUpperCase();
+    if (upperCode.startsWith("MORN")) return "morning";
+    if (upperCode.startsWith("AFTN") || upperCode.startsWith("AFTER")) return "afternoon";
+    return getCurrentSession();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!code.trim() || !userData?.cohort_number) return;
+
+    const session = getSessionFromCode(code.trim());
+    if (session) {
+      const existingRecord = todayRecords.find((r) => r.session === session);
+      if (existingRecord && ["present", "late", "late_excused"].includes(existingRecord.status)) {
+        toast.info(`You're already marked as ${existingRecord.status} for ${session} session!`);
+        setCode("");
+        return;
+      }
+    }
 
     setIsSubmitting(true);
     try {
