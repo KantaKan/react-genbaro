@@ -58,18 +58,21 @@ const formatDate = (dateString: string) => {
   return date.toLocaleDateString();
 };
 
+const DEFAULT_SORT_CONFIG = { key: "Date", direction: "descending" as const };
+const DEFAULT_VISIBLE_COLUMNS = ["First Name", "Last Name", "JSD Number", "Date", "Barometer"];
+
 export default function AdminReflectionsTable() {
   const { config, updateAdminReflectionsSort, updateAdminReflectionsVisibleColumns } = useConfig();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // Initialize state from config
+  // Initialize state from config with defaults to avoid undefined
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "ascending" | "descending" }>(
-    config.adminTables.reflections.sortConfig
+    config?.adminTables?.reflections?.sortConfig ?? DEFAULT_SORT_CONFIG
   );
 
   // Convert hidden columns to visible columns for easier management
   const [visibleColumns, setVisibleColumns] = useState<string[]>(
-    config.adminTables.reflections.visibleColumns
+    config?.adminTables?.reflections?.visibleColumns ?? DEFAULT_VISIBLE_COLUMNS
   );
 
   const [originalReflections, setOriginalReflections] = useState<Reflection[]>([]);
@@ -137,7 +140,7 @@ export default function AdminReflectionsTable() {
 
   const requestSort = (key: string) => {
     setSortConfig((prev) => {
-      const newDirection = prev.key === key && prev.direction === "ascending" ? "descending" : "ascending";
+      const newDirection: "ascending" | "descending" = prev.key === key && prev.direction === "ascending" ? "descending" : "ascending";
 
       // Update config with new sort settings
       const newSortConfig = { key, direction: newDirection };
@@ -224,7 +227,7 @@ export default function AdminReflectionsTable() {
           <div className="flex items-center gap-2 flex-wrap">
             <div className="relative">
               <Filter className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input disabled placeholder="Search…" className="w-64 pl-8" />
+              <Input disabled value="" placeholder="Search…" className="w-64 pl-8" />
             </div>
             <Button variant="outline" disabled className="w-48 justify-between">
               All Zones <ChevronDown className="ml-2 h-4 w-4" />
