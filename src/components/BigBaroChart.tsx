@@ -45,10 +45,16 @@ export default function BaroChart({ userId, cohort }: BaroChartProps) {
     refetchOnWindowFocus: false,
   });
 
+  const chartDataArray = React.useMemo(() => {
+    if (!rawChartData) return null;
+    const data = Array.isArray(rawChartData) ? rawChartData : rawChartData.data;
+    return Array.isArray(data) ? data : null;
+  }, [rawChartData]);
+
   const chartConfig = React.useMemo(() => {
-    if (!rawChartData) return {} as ChartConfig;
+    if (!chartDataArray) return {} as ChartConfig;
     const allZoneKeys = new Set<string>();
-    rawChartData.forEach((dataPoint) => {
+    chartDataArray.forEach((dataPoint) => {
       Object.keys(dataPoint).forEach((key) => {
         if (key !== "date") {
           allZoneKeys.add(key);
@@ -67,12 +73,12 @@ export default function BaroChart({ userId, cohort }: BaroChartProps) {
         },
       ])
     ) as ChartConfig;
-  }, [rawChartData]);
+  }, [chartDataArray]);
 
   const chartData = React.useMemo(() => {
-    if (!rawChartData) return [];
-    return [...rawChartData].sort((a, b) => new Date(a.date) - new Date(b.date));
-  }, [rawChartData]);
+    if (!chartDataArray) return [];
+    return [...chartDataArray].sort((a, b) => new Date(a.date) - new Date(b.date));
+  }, [chartDataArray]);
 
   const totalReflections = React.useMemo(() => {
     if (!chartData) return 0;
