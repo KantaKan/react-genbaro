@@ -3,9 +3,9 @@ import type { Todo, CreateTodoInput, UpdateTodoInput, WeeklyReflection, User, Cr
 import Cookies from "js-cookie";
 
 const getAuthToken = () => {
-  const fromCookie = Cookies.get("authToken");
-  if (fromCookie) return fromCookie;
-  return localStorage.getItem("authToken");
+  const fromLocalStorage = localStorage.getItem("authToken");
+  if (fromLocalStorage) return fromLocalStorage;
+  return Cookies.get("authToken");
 };
 
 const setAuthToken = (token: string) => {

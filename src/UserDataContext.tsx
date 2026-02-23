@@ -75,7 +75,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
       setLoading(true);
       setError(null);
 
-      const token = Cookies.get("authToken") || localStorage.getItem("authToken");
+        const token = localStorage.getItem("authToken") || Cookies.get("authToken");
       if (!token) {
         throw new Error("Authentication required");
       }
@@ -120,7 +120,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
   useEffect(() => {
     const requestInterceptor = api.interceptors.request.use(
       (config) => {
-        const token = Cookies.get("authToken") || localStorage.getItem("authToken");
+      const token = localStorage.getItem("authToken") || Cookies.get("authToken");
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }

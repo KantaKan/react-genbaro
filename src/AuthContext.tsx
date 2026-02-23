@@ -15,7 +15,8 @@ type AuthContextType = {
 };
 
 type VerifyTokenResponse = {
-  status: string;
+  success: boolean;
+  message: string;
   data: {
     role: string;
     userId: string;
@@ -37,14 +38,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const verifyToken = async () => {
       setLoading(true);
-      const token = Cookies.get("authToken") || localStorage.getItem("authToken");
+      const token = localStorage.getItem("authToken") || Cookies.get("authToken");
       if (token) {
         try {
           const response = await api.get<VerifyTokenResponse>("/api/verify-token", {
             headers: { Authorization: `Bearer ${token}` },
           });
 
-          if (response.data.status === "success") {
+          if (response.data.success === true) {
             const role = response.data.data.role || "";
             const fetchedUserId = response.data.data.userId || "";
 
