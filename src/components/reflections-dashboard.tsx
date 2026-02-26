@@ -80,15 +80,21 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   const [showCloseWarning, setShowCloseWarning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Helper function to get local date string (YYYY-MM-DD)
+  const getLocalDateString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Memoize today's reflection check to prevent re-renders
   const todaysReflection = useMemo(() => {
-    const today = new Date();
-    const todayString = today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    const todayString = getLocalDateString(new Date());
 
     return reflections.find((reflection) => {
-      // Check both day and date fields for compatibility
       const reflectionDay = reflection.day || reflection.date;
-      const reflectionDateString = new Date(reflectionDay).toISOString().split('T')[0];
+      const reflectionDateString = getLocalDateString(new Date(reflectionDay));
 
       return reflectionDateString === todayString;
     });
@@ -102,8 +108,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   // Memoize submission date
   const submissionDate = useMemo(() => {
     if (todaysReflection) {
-      const today = new Date();
-      return today.toISOString().split("T")[0];
+      return getLocalDateString(new Date());
     }
     return null;
   }, [todaysReflection]);
@@ -115,7 +120,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
         ...newReflection,
         _id: undefined,
         createdAt: new Date().toISOString(),
-        day: new Date().toISOString().split("T")[0],
+        day: getLocalDateString(new Date()),
       });
       setFormData(undefined);
       setIsDialogOpen(false);
@@ -264,52 +269,54 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
               </motion.p>
             </div>
             <div className="flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
-                <DialogTrigger asChild>
-                  <motion.div
-                    whileHover={{ scale: hasSubmittedToday ? 1 : 1.02 }}
-                    whileTap={{ scale: hasSubmittedToday ? 1 : 0.98 }}
+              {hasSubmittedToday ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="relative"
+                >
+                  <div className="absolute -inset-1 rounded-full bg-amber-500/20" style={{ filter: 'blur(8px)' }} />
+                  <Button
+                    size="lg"
+                    className="relative shadow-lg font-medium px-6 py-6 text-base bg-amber-600/80 text-amber-100 cursor-default"
+                    disabled
                   >
-                    <div className="relative">
-                      {/* Warm amber glow effect */}
-                      <div
-                        className={`absolute -inset-1 rounded-full ${!hasSubmittedToday ? 'block' : 'hidden'}`}
-                        style={{
-                          background: 'linear-gradient(45deg, #d97706, #f59e0b, #fbbf24, #f59e0b, #d97706)',
-                          filter: 'blur(16px)',
-                          opacity: '0.5',
-                          animation: 'warmGlow 4s ease-in-out infinite',
-                        }}
-                      />
-                      <style>{`
-                        @keyframes warmGlow {
-                          0%, 100% { opacity: 0.4; transform: scale(1); }
-                          50% { opacity: 0.7; transform: scale(1.03); }
-                        }
-                      `}</style>
-                      <Button
-                        size="lg"
-                        className={`relative shadow-lg font-medium px-6 py-6 text-base ${!hasSubmittedToday ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-muted text-muted-foreground cursor-not-allowed"}`}
-                        disabled={hasSubmittedToday || isSubmitting}
-                        onClick={(e) => {
-                          if (hasSubmittedToday || isSubmitting) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            return false;
+                    <CheckCircle className="mr-2 h-5 w-5" />
+                    <span>Completed for Today</span>
+                  </Button>
+                </motion.div>
+              ) : (
+                <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+                  <DialogTrigger asChild>
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="relative">
+                        <div
+                          className="absolute -inset-1 rounded-full"
+                          style={{
+                            background: 'linear-gradient(45deg, #d97706, #f59e0b, #fbbf24, #f59e0b, #d97706)',
+                            filter: 'blur(16px)',
+                            opacity: '0.5',
+                            animation: 'warmGlow 4s ease-in-out infinite',
+                          }}
+                        />
+                        <style>{`
+                          @keyframes warmGlow {
+                            0%, 100% { opacity: 0.4; transform: scale(1); }
+                            50% { opacity: 0.7; transform: scale(1.03); }
                           }
-                        }}
-                      >
-                      {isSubmitting ? (
-                        <motion.div className="absolute inset-0 flex items-center justify-center bg-amber-700 rounded-md overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                          <motion.div className="h-5 w-5 rounded-full border-2 border-t-transparent border-white" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
-                        </motion.div>
-                      ) : (
-                        <>
-                          {hasSubmittedToday ? (
-                            <>
-                              <CheckCircle className="mr-2 h-5 w-5" />
-                              <span>Completed for Today</span>
-                            </>
+                        `}</style>
+                        <Button
+                          size="lg"
+                          className="relative shadow-lg font-medium px-6 py-6 text-base bg-amber-600 hover:bg-amber-700 text-white"
+                          disabled={isSubmitting}
+                        >
+                          {isSubmitting ? (
+                            <motion.div className="absolute inset-0 flex items-center justify-center bg-amber-700 rounded-md overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                              <motion.div className="h-5 w-5 rounded-full border-2 border-t-transparent border-white" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
+                            </motion.div>
                           ) : (
                             <>
                               <Plus className="mr-2 h-5 w-5" />
@@ -327,33 +334,29 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                               })()}
                             </>
                           )}
-                        </>
-                      )}
-                    </Button>
-                    </div>
-                  </motion.div>
-                </DialogTrigger>
-                  {/* DialogContent inside Dialog */}
-                  {!hasSubmittedToday && (
-                    <DialogContent className="w-screen h-screen md:w-full md:h-auto sm:max-w-[1000px] max-h-[90vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>Add Daily Reflection</DialogTitle>
-                      </DialogHeader>
-                      <div className="overflow-y-auto">
-                        <FeedbackForm
-                          initialData={formData}
-                          onSubmit={handleSubmit}
-                          onChange={setFormData}
-                          onSuccess={() => {
-                            setFormData(undefined);
-                            setIsDialogOpen(false);
-                          }}
-                          isLoading={isSubmitting}
-                        />
+                        </Button>
                       </div>
-                    </DialogContent>
-                  )}
+                    </motion.div>
+                  </DialogTrigger>
+                  <DialogContent className="w-screen h-screen md:w-full md:h-auto sm:max-w-[1000px] max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Add Daily Reflection</DialogTitle>
+                    </DialogHeader>
+                    <div className="overflow-y-auto">
+                      <FeedbackForm
+                        initialData={formData}
+                        onSubmit={handleSubmit}
+                        onChange={setFormData}
+                        onSuccess={() => {
+                          setFormData(undefined);
+                          setIsDialogOpen(false);
+                        }}
+                        isLoading={isSubmitting}
+                      />
+                    </div>
+                  </DialogContent>
                 </Dialog>
+              )}
               </div>
             </div>
           </div>
