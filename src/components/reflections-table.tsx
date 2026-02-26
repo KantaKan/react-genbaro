@@ -23,6 +23,10 @@ export const ReflectionsTable = ({ reflections, isAdmin = false }: ReflectionsTa
   const [searchQuery, setSearchQuery] = useState("");
   const [timeFilter, setTimeFilter] = useState("all");
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [singleExpandMode, setSingleExpandMode] = useState(false);
+
+  const getCardId = (reflection: Reflection, index: number) => 
+    reflection._id ? `${reflection._id}-${index}` : `unknown-${index}`;
 
   const filteredReflections = useMemo(() => {
     let filtered = [...reflections];
@@ -112,6 +116,9 @@ export const ReflectionsTable = ({ reflections, isAdmin = false }: ReflectionsTa
   const toggleCard = (id: string) => {
     setExpandedCards((prev) => {
       const next = new Set(prev);
+      if (singleExpandMode) {
+        next.clear();
+      }
       if (next.has(id)) {
         next.delete(id);
       } else {
@@ -122,15 +129,15 @@ export const ReflectionsTable = ({ reflections, isAdmin = false }: ReflectionsTa
   };
 
   const expandAll = () => {
-    setExpandedCards(new Set(filteredReflections.map((r, i) => r._id || `${i}`)));
+    setExpandedCards(new Set(filteredReflections.map((r, i) => getCardId(r, i))));
   };
 
   const collapseAll = () => {
     setExpandedCards(new Set());
   };
 
-  const isAllExpanded = filteredReflections.length > 0 && filteredReflections.every((r, i) => expandedCards.has(r._id || `${i}`));
-  const isAllCollapsed = filteredReflections.length > 0 && filteredReflections.every((r, i) => !expandedCards.has(r._id || `${i}`));
+  const isAllExpanded = filteredReflections.length > 0 && filteredReflections.every((r, i) => expandedCards.has(getCardId(r, i)));
+  const isAllCollapsed = filteredReflections.length > 0 && filteredReflections.every((r, i) => !expandedCards.has(getCardId(r, i)));
 
   return (
     <div className="space-y-4">
@@ -196,6 +203,20 @@ export const ReflectionsTable = ({ reflections, isAdmin = false }: ReflectionsTa
               Expand
             </Button>
           )}
+          
+          <Button
+            variant={singleExpandMode ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSingleExpandMode(!singleExpandMode)}
+            className="h-9 gap-1"
+            title="Single expand mode - only one card open at a time"
+          >
+            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <line x1="9" y1="3" x2="9" y2="21" />
+            </svg>
+            1-at-a-time
+          </Button>
         </div>
       </div>
 
@@ -223,11 +244,19 @@ export const ReflectionsTable = ({ reflections, isAdmin = false }: ReflectionsTa
                 z.label.toLowerCase() === barometerValue.toLowerCase() ||
                 z.aliases?.some((alias) => alias.toLowerCase() === barometerValue.toLowerCase()),
             );
-            const cardId = reflection._id ? `${reflection._id}-${index}` : `unknown-${index}`;
+            const cardId = getCardId(reflection, index);
             const isExpanded = expandedCards.has(cardId);
 
             const zoneBgColor = zone?.bgColor || "bg-muted";
             const bgOpacityClass = zone ? "bg-opacity-20" : "";
+
+            const isToday = (() => {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const reflectionDate = new Date(reflection.day || reflection.date);
+              reflectionDate.setHours(0, 0, 0, 0);
+              return reflectionDate.getTime() === today.getTime();
+            })();
 
             return (
               <motion.div
@@ -236,14 +265,28 @@ export const ReflectionsTable = ({ reflections, isAdmin = false }: ReflectionsTa
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.2, delay: index * 0.03 }}
               >
-                <Card className={`overflow-hidden ${zoneBgColor} ${bgOpacityClass}`}>
+                <Card className={`overflow-hidden ${zoneBgColor} ${bgOpacityClass} transition-all duration-200 hover:shadow-md ${isToday ? 'ring-2 ring-amber-500/50' : ''}`}>
                   {/* Card Header - Always Visible */}
                   <div
-                    className="flex items-center justify-between p-3 cursor-pointer hover:opacity-90 transition-opacity"
+                    className="flex items-center justify-between p-3 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                     onClick={() => toggleCard(cardId)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleCard(cardId);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isExpanded}
                   >
-                    <span className="text-sm font-medium">
+                    <span className="text-sm font-medium flex items-center gap-2">
                       {formatDate(reflection.day || reflection.date)}
+                      {isToday && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold">
+                          TODAY
+                        </span>
+                      )}
                     </span>
                     
                     <div className="flex items-center gap-2">

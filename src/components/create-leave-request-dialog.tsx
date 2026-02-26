@@ -141,8 +141,8 @@ export function CreateLeaveRequestDialog({
                   <SelectValue placeholder="Select student" />
                 </SelectTrigger>
                 <SelectContent>
-                  {students.map((student) => (
-                    <SelectItem key={student.user_id} value={student.user_id}>
+                  {students.map((student, index) => (
+                    <SelectItem key={student.user_id ?? `student-${index}`} value={student.user_id ?? ""}>
                       {student.jsd_number} - {student.first_name} {student.last_name}
                     </SelectItem>
                   ))}

@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../AuthContext";
-import { useUserData } from "../../UserDataContext";
-import { api } from "../../lib/api";
+import { useAuth } from "../../application/contexts/AuthContext";
+import { useUserData } from "../../application/contexts/UserDataContext";
+import { api } from "../../infrastructure/api";
 import { getHomeRoute } from "../../routes/getHomeRoute";
 
 type SignUpArgs = {

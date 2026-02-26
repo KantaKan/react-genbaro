@@ -3,7 +3,7 @@
 import { useRef, useEffect } from "react"
 import { motion, useAnimation } from "framer-motion"
 import { FlameIcon as Fire } from "lucide-react"
-import type { StreakData } from "@/hooks/use-reflections"
+import type { StreakData } from "@/hooks/use-streak-calculation"
 
 export const FireBar = ({ value, max = 100 }: { value: number; max?: number }) => {
   const progress = (value / max) * 100
@@ -19,7 +19,7 @@ export const FireBar = ({ value, max = 100 }: { value: number; max?: number }) =
     if (fireRef.current && value > 0) {
       const particles = Array.from({ length: Math.min(value, 10) }, () => {
         const particle = document.createElement("div")
-        particle.className = "absolute bottom-0 rounded-full bg-orange-500 opacity-70"
+        particle.className = "absolute bottom-0 rounded-full bg-amber-500 opacity-70"
         particle.style.width = `${Math.random() * 6 + 4}px`
         particle.style.height = `${Math.random() * 6 + 4}px`
         particle.style.left = `${Math.random() * 100}%`
@@ -59,9 +59,9 @@ export const FireBar = ({ value, max = 100 }: { value: number; max?: number }) =
   }, [controls, progress, value])
 
   return (
-    <div className="relative w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+    <div className="relative w-full h-2 bg-muted rounded-full overflow-hidden">
       <motion.div
-        className="absolute top-0 left-0 h-full bg-gradient-to-r from-orange-500 to-red-500"
+        className="absolute top-0 left-0 h-full bg-gradient-to-r from-amber-500 to-amber-400"
         initial={{ width: 0 }}
         animate={controls}
       />
@@ -86,7 +86,7 @@ export const StreakCounter = ({ count }: { count: number }) => {
 
   return (
     <motion.div className="flex items-center gap-1" animate={countAnimation}>
-      <Fire className="h-4 w-4 text-orange-500" />
+      <Fire className="h-4 w-4 text-amber-500" />
       <motion.span initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
         {count} day streak
       </motion.span>
@@ -107,14 +107,14 @@ export const StreakIcon = ({ streakData }: { streakData: StreakData }) => {
         className="flex items-center gap-1"
       >
         <Fire
-          className={`h-5 w-5 ${hasCurrentStreak ? "text-orange-500" : oldStreak > 0 ? "text-gray-500" : "text-gray-400"}`}
+          className={`h-5 w-5 ${hasCurrentStreak ? "text-amber-500" : oldStreak > 0 ? "text-muted-foreground" : "text-muted-foreground/60"}`}
         />
         <span
-          className={`text-sm font-medium ${hasCurrentStreak ? "" : oldStreak > 0 ? "text-gray-500" : "text-gray-400"}`}
+          className={`text-sm font-medium ${hasCurrentStreak ? "text-amber-600 dark:text-amber-400" : oldStreak > 0 ? "text-muted-foreground" : "text-muted-foreground/60"}`}
         >
           {displayStreak}
         </span>
-        {!hasCurrentStreak && oldStreak > 0 && <span className="text-xs text-gray-500 ml-1">(previous)</span>}
+        {!hasCurrentStreak && oldStreak > 0 && <span className="text-xs text-muted-foreground ml-1">(previous)</span>}
       </motion.div>
     </div>
   )
