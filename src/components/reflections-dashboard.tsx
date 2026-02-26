@@ -156,9 +156,9 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
     return (
       <div className="container mx-auto py-10 space-y-8">
         <div className="space-y-4">
-          <div className="h-20 w-full">
+          <div className="h-24 w-full">
             <motion.div
-              className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-lg"
+              className="h-full w-full bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 rounded-xl"
               animate={{
                 backgroundPosition: ["0% 0%", "100% 0%", "0% 0%"],
               }}
@@ -175,7 +175,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
               .map((_, i) => (
                 <motion.div
                   key={i}
-                  className="h-32 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-lg"
+                  className="h-36 bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 rounded-xl"
                   animate={{
                     backgroundPosition: ["0% 0%", "100% 0%", "0% 0%"],
                   }}
@@ -197,11 +197,16 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
     return (
       <div className="container mx-auto py-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <Card className="border-destructive">
-            <CardContent className="p-6">
-              <div className="text-center text-destructive">
-                <h2 className="text-lg font-semibold">Error Loading Data</h2>
-                <p>{totalError}</p>
+          <Card className="border-destructive/30 bg-destructive/5">
+            <CardContent className="p-8">
+              <div className="text-center">
+                <h2 
+                  className="text-xl font-semibold mb-2"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
+                  Unable to Load Data
+                </h2>
+                <p className="text-muted-foreground">{totalError}</p>
               </div>
             </CardContent>
           </Card>
@@ -216,177 +221,168 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
 
   return (
     <div className="container mx-auto py-10">
-      {/* Hero section */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-8 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 rounded-lg border">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <motion.h1 className="text-3xl font-bold" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
-                Daily Reflections
-              </motion.h1>
-              <StreakIcon streakData={streakData} />
-            </div>
-            <motion.p className="text-muted-foreground" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.3 }}>
-              {streakData.hasCurrentStreak && streakData.currentStreak > 0 ? (
-                <>
-                  🎯 You've been reflecting consistently for {streakData.currentStreak} day
-                  {streakData.currentStreak !== 1 ? "s" : ""}
-                </>
-              ) : streakData.oldStreak > 0 ? (
-                <>
-                  <span className="inline-flex items-center">
-                    <span className="bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 bg-clip-text text-transparent">Your last streak was {streakData.oldStreak} days.</span> Add today's reflection to start a new streak!
-                  </span>
-                </>
-              ) : (
-                "Track your learning journey during work days"
-              )}
-            </motion.p>
-          </div>
-          <div className="flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
-              <DialogTrigger asChild>
-                <motion.div
-                  whileHover={{ scale: hasSubmittedToday ? 1 : 1.03 }}
-                  whileTap={{ scale: hasSubmittedToday ? 1 : 0.97 }}
-                  animate={{
-                    y: [0, -3, 0], // Subtle floating animation
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    repeatType: "reverse",
-                  }}
+      {/* Hero section - Editorial Style */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.6, ease: "easeOut" }} 
+        className="mb-10 relative"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-amber-300/5 to-transparent rounded-2xl -z-10" />
+        <div className="p-8 md:p-10">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                <motion.h1 
+                  className="text-4xl md:text-5xl font-bold tracking-tight"
+                  initial={{ opacity: 0, x: -20 }} 
+                  animate={{ opacity: 1, x: 0 }} 
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                 >
-                  <div className="relative">
-                    {/* Glow effect */}
-                    <div
-                      className={`absolute -inset-0.5 rounded-full ${!hasSubmittedToday ? 'block' : 'hidden'}`}
-                      style={{
-                        background: 'linear-gradient(45deg, #6366f1, #8b5cf6, #d946ef, #ec4899, #f43f5e)',
-                        filter: 'blur(12px)',
-                        opacity: '0.7',
-                        animation: 'glowPulse 3s ease-in-out infinite',
-                        borderRadius: 'calc(var(--radius) + 0.25rem)',
-                      }}
-                    />
-                    <style>{`
-                      @keyframes glowPulse {
-                        0%, 100% { opacity: 0.5; transform: scale(1); }
-                        50% { opacity: 0.8; transform: scale(1.05); }
-                      }
-                    `}</style>
-                    <Button
-                      size="lg"
-                      className={`relative shadow-lg ${!hasSubmittedToday ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white" : "bg-gray-400 cursor-not-allowed text-gray-200"}`}
-                      disabled={hasSubmittedToday || isSubmitting}
-                      onClick={(e) => {
-                        if (hasSubmittedToday || isSubmitting) {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          return false;
+                  Daily Reflections
+                </motion.h1>
+                <StreakIcon streakData={streakData} />
+              </div>
+              <motion.p 
+                className="text-lg text-muted-foreground max-w-xl leading-relaxed"
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                {streakData.hasCurrentStreak && streakData.currentStreak > 0 ? (
+                  <>
+                    You've been reflecting consistently for <span className="text-primary font-semibold">{streakData.currentStreak} day{streakData.currentStreak !== 1 ? "s" : ""}</span>. Keep the momentum going.
+                  </>
+                ) : streakData.oldStreak > 0 ? (
+                  <>
+                    Your last streak was <span className="text-primary font-semibold">{streakData.oldStreak} days</span>. Add today's reflection to start fresh.
+                  </>
+                ) : (
+                  "Track your learning journey and grow through daily reflection"
+                )}
+              </motion.p>
+            </div>
+            <div className="flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+                <DialogTrigger asChild>
+                  <motion.div
+                    whileHover={{ scale: hasSubmittedToday ? 1 : 1.02 }}
+                    whileTap={{ scale: hasSubmittedToday ? 1 : 0.98 }}
+                  >
+                    <div className="relative">
+                      {/* Warm amber glow effect */}
+                      <div
+                        className={`absolute -inset-1 rounded-full ${!hasSubmittedToday ? 'block' : 'hidden'}`}
+                        style={{
+                          background: 'linear-gradient(45deg, #d97706, #f59e0b, #fbbf24, #f59e0b, #d97706)',
+                          filter: 'blur(16px)',
+                          opacity: '0.5',
+                          animation: 'warmGlow 4s ease-in-out infinite',
+                        }}
+                      />
+                      <style>{`
+                        @keyframes warmGlow {
+                          0%, 100% { opacity: 0.4; transform: scale(1); }
+                          50% { opacity: 0.7; transform: scale(1.03); }
                         }
-                      }}
-                    >
-                    {isSubmitting ? (
-                      <motion.div className="absolute inset-0 flex items-center justify-center bg-primary rounded-md overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                        <motion.div className="h-5 w-5 rounded-full border-2 border-t-transparent border-white" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
-                      </motion.div>
-                    ) : (
-                      <>
-                        {hasSubmittedToday ? (
-                          <>
-                            <CheckCircle className="mr-2 h-5 w-5" />
-                            <span className="flex items-center">
-                              <span className="mr-1">🎉</span> Reflection Completed!
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <motion.div
-                              animate={{
-                                rotate: [0, 10, -10, 0],
-                                scale: [1, 1.1, 1]
-                              }}
-                              transition={{
-                                duration: 2,
-                                repeat: Infinity,
-                                repeatType: "reverse",
-                              }}
-                            >
+                      `}</style>
+                      <Button
+                        size="lg"
+                        className={`relative shadow-lg font-medium px-6 py-6 text-base ${!hasSubmittedToday ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-muted text-muted-foreground cursor-not-allowed"}`}
+                        disabled={hasSubmittedToday || isSubmitting}
+                        onClick={(e) => {
+                          if (hasSubmittedToday || isSubmitting) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            return false;
+                          }
+                        }}
+                      >
+                      {isSubmitting ? (
+                        <motion.div className="absolute inset-0 flex items-center justify-center bg-amber-700 rounded-md overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                          <motion.div className="h-5 w-5 rounded-full border-2 border-t-transparent border-white" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
+                        </motion.div>
+                      ) : (
+                        <>
+                          {hasSubmittedToday ? (
+                            <>
+                              <CheckCircle className="mr-2 h-5 w-5" />
+                              <span>Completed for Today</span>
+                            </>
+                          ) : (
+                            <>
                               <Plus className="mr-2 h-5 w-5" />
-                            </motion.div>
-                            {(() => {
-                              const hour = new Date().getHours();
-                              if (hour >= 5 && hour < 12) {
-                                return "Good Morning! Add Today's Reflection";
-                              } else if (hour >= 12 && hour < 17) {
-                                return "Good Afternoon! Reflect on Your Day";
-                              } else if (hour >= 17 && hour < 21) {
-                                return "Good Evening! Reflect on Today";
-                              } else {
-                                return "Add Night Reflection";
-                              }
-                            })()}
-                          </>
-                        )}
-                        {!hasSubmittedToday && (
-                          <motion.span
-                            className="absolute inset-0 rounded-md bg-white"
-                            initial={{ opacity: 0 }}
-                            animate={{
-                              opacity: [0, 0.1, 0],
-                              scale: [1, 1.05, 1],
-                            }}
-                            transition={{
-                              duration: 2,
-                              repeat: Number.POSITIVE_INFINITY,
-                              repeatType: "reverse",
-                            }}
-                          />
-                        )}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </motion.div>
-              </DialogTrigger>
-              {/* Only render DialogContent if user hasn't submitted today */}
-              {!hasSubmittedToday && (
-                <DialogContent className="w-screen h-screen md:w-full md:h-auto sm:max-w-[1000px] max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Add Daily Reflection</DialogTitle>
-                  </DialogHeader>
-                  <div className="overflow-y-auto">
-                    <FeedbackForm
-                      initialData={formData}
-                      onSubmit={handleSubmit}
-                      onChange={setFormData}
-                      onSuccess={() => {
-                        setFormData(undefined);
-                        setIsDialogOpen(false);
-                      }}
-                      isLoading={isSubmitting}
-                    />
-                  </div>
-                </DialogContent>
-              )}
-            </Dialog>
+                              {(() => {
+                                const hour = new Date().getHours();
+                                if (hour >= 5 && hour < 12) {
+                                  return "Add Morning Reflection";
+                                } else if (hour >= 12 && hour < 17) {
+                                  return "Add Afternoon Reflection";
+                                } else if (hour >= 17 && hour < 21) {
+                                  return "Add Evening Reflection";
+                                } else {
+                                  return "Add Night Reflection";
+                                }
+                              })()}
+                            </>
+                          )}
+                        </>
+                      )}
+                    </Button>
+                    </div>
+                  </motion.div>
+                </DialogTrigger>
+                  {/* DialogContent inside Dialog */}
+                  {!hasSubmittedToday && (
+                    <DialogContent className="w-screen h-screen md:w-full md:h-auto sm:max-w-[1000px] max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Add Daily Reflection</DialogTitle>
+                      </DialogHeader>
+                      <div className="overflow-y-auto">
+                        <FeedbackForm
+                          initialData={formData}
+                          onSubmit={handleSubmit}
+                          onChange={setFormData}
+                          onSuccess={() => {
+                            setFormData(undefined);
+                            setIsDialogOpen(false);
+                          }}
+                          isLoading={isSubmitting}
+                        />
+                      </div>
+                    </DialogContent>
+                  )}
+                </Dialog>
+              </div>
+            </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
 
       {/* Submission Status Card */}
       <SubmissionStatusCard hasSubmitted={hasSubmittedToday} submissionDate={submissionDate} todaysReflection={todaysReflection} />
 
-      {/* Achievements Section */}
+      {/* Achievements Section - Editorial Header */}
       {user && user.badges && user.badges.length > 0 && (
-        <AchievementsSection badges={user.badges} />
+        <div className="mt-12">
+          <h2 
+            className="text-2xl md:text-3xl font-bold mb-6"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            Your Achievements
+          </h2>
+          <AchievementsSection badges={user.badges} />
+        </div>
       )}
 
-      {/* Zone Statistics */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Your Zone Breakdown</h2>
+      {/* Zone Statistics - Editorial Header */}
+      <div className="flex items-center justify-between mb-6 mt-12">
+        <h2 
+          className="text-2xl md:text-3xl font-bold"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+        >
+          Your Zone Journey
+        </h2>
         <Dialog>
           <DialogTrigger asChild>
             <Button variant="outline" size="icon">
@@ -443,52 +439,58 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
         </AnimatePresence>
       </div>
 
-      {/* Today's Reflection */}
+      {/* Today's Reflection - Editorial Card */}
       {todaysReflection && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-8">
-          <Card className="overflow-hidden border-2 hover:border-primary/5 transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ duration: 0.5 }} 
+          className="mb-10"
+        >
+          <Card className="overflow-hidden border-2 border-amber-500/20 bg-gradient-to-br from-card to-amber-500/5">
+            <CardHeader className="pb-2">
+              <CardTitle 
+                className="flex items-center gap-3 text-xl"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              >
+                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/20 text-amber-600">
+                  ✦
+                </span>
                 Today's Reflection
-                <motion.div animate={{ rotate: [0, 5, 0, -5, 0] }} transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, repeatType: "loop", ease: "easeInOut" }}>
-                  <Sparkles className="h-5 w-5 text-amber-500" />
-                </motion.div>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                 <div className="space-y-4">
-                  <motion.p className="text-lg font-medium flex items-center gap-2" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
-                    You're in the {currentZone?.label}
-                    <motion.span
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        rotate: [0, 10, 0, -10, 0],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Number.POSITIVE_INFINITY,
-                        repeatType: "loop",
-                      }}
-                    >
-                      {currentZone?.emoji}
-                    </motion.span>
+                  <motion.p 
+                    className="text-xl font-medium flex items-center gap-3" 
+                    initial={{ opacity: 0, x: -10 }} 
+                    animate={{ opacity: 1, x: 0 }} 
+                    transition={{ duration: 0.3, delay: 0.2 }}
+                  >
+                    <span className="text-3xl">{currentZone?.emoji}</span>
+                    <span>You're in the <span className="text-primary font-semibold">{currentZone?.label}</span> zone</span>
                   </motion.p>
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <FireBar value={streakData.currentStreak} max={20} />
                       <div className="flex items-center gap-1">
-                        <span className="tabular-nums">{streakData.currentStreak} day streak</span>
+                        <span className="tabular-nums font-medium">{streakData.currentStreak} day streak</span>
                       </div>
                     </div>
                     {streakData.currentStreak >= 5 && (
-                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} transition={{ duration: 0.3 }} className="text-sm text-emerald-600 font-medium">
-                        Great job maintaining your reflection streak! 🎉
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }} 
+                        animate={{ opacity: 1, height: "auto" }} 
+                        transition={{ duration: 0.3 }} 
+                        className="text-sm text-amber-700 font-medium dark:text-amber-400"
+                      >
+                        Excellent consistency! Keep reflecting daily.
                       </motion.div>
                     )}
                   </div>
                 </div>
-                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="w-full md:w-auto">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full md:w-auto">
                   <ReflectionPreview reflection={todaysReflection} />
                 </motion.div>
               </div>
@@ -499,33 +501,55 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
 
       {/* Streak History Card */}
       {!streakData.hasCurrentStreak && streakData.oldStreak > 0 && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mb-8">
-          <Card className="overflow-hidden border border-gray-200">
-            <CardHeader className="bg-gray-50">
-              <CardTitle className="text-gray-700 flex items-center gap-2">Previous Streak</CardTitle>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ duration: 0.5, delay: 0.2 }} 
+          className="mb-10"
+        >
+          <Card className="overflow-hidden border border-border/50">
+            <CardHeader className="pb-4">
+              <CardTitle 
+                className="text-xl flex items-center gap-2"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              >
+                <span className="text-muted-foreground">Previous Streak</span>
+              </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="space-y-2">
-                  <p className="text-lg font-medium text-gray-600">
-                    Your last streak was {streakData.oldStreak} day{streakData.oldStreak !== 1 ? "s" : ""}
+                  <p className="text-lg font-medium">
+                    Your last streak was <span className="text-primary font-semibold">{streakData.oldStreak} day{streakData.oldStreak !== 1 ? "s" : ""}</span>
                   </p>
-                  {streakData.lastActiveDate && <p className="text-sm text-gray-500">Last active: {streakData.lastActiveDate.toLocaleDateString()}</p>}
+                  {streakData.lastActiveDate && (
+                    <p className="text-sm text-muted-foreground">
+                      Last active: {streakData.lastActiveDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    </p>
+                  )}
                   <div className="mt-4">
-                    <Button variant="outline" onClick={() => !hasSubmittedToday && setIsDialogOpen(true)} disabled={hasSubmittedToday} className="group">
-                      <Plus className="mr-2 h-4 w-4 group-hover:text-primary transition-colors" />
-                      {hasSubmittedToday ? "Reflection Added Today" : "Add Today's Reflection"}
+                    <Button 
+                      variant="outline" 
+                      onClick={() => !hasSubmittedToday && setIsDialogOpen(true)} 
+                      disabled={hasSubmittedToday} 
+                      className="border-amber-500/30 hover:bg-amber-500/10"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      {hasSubmittedToday ? "Added for Today" : "Start New Streak"}
                     </Button>
                   </div>
                 </div>
                 <div className="w-full md:w-1/3">
-                  <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="absolute top-0 left-0 h-full bg-gray-400" style={{ width: `${(streakData.oldStreak / 20) * 100}%` }} />
+                  <div className="relative h-3 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-amber-500 to-amber-400" 
+                      style={{ width: `${(streakData.oldStreak / 20) * 100}%` }} 
+                    />
                   </div>
-                  <div className="flex justify-between mt-1 text-xs text-gray-500">
+                  <div className="flex justify-between mt-2 text-xs text-muted-foreground">
                     <span>0</span>
                     <span>10</span>
-                    <span>20</span>
+                    <span>20 days</span>
                   </div>
                 </div>
               </div>
@@ -534,8 +558,16 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
         </motion.div>
       )}
 
-      {/* Reflections Table */}
-      <ReflectionsTable reflections={reflections} todaysReflection={todaysReflection} isAdmin={false} />
+      {/* Reflections Table - Editorial Header */}
+      <div className="mt-12">
+        <h2 
+          className="text-2xl md:text-3xl font-bold mb-6"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+        >
+          Your Reflection History
+        </h2>
+        <ReflectionsTable reflections={reflections} todaysReflection={todaysReflection} isAdmin={false} />
+      </div>
 
       {/* Warning Dialog */}
       <AlertDialog open={showCloseWarning} onOpenChange={setShowCloseWarning}>

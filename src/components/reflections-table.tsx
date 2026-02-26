@@ -250,6 +250,14 @@ export const ReflectionsTable = ({ reflections, isAdmin = false }: ReflectionsTa
             const zoneBgColor = zone?.bgColor || "bg-muted";
             const bgOpacityClass = zone ? "bg-opacity-20" : "";
 
+            const isToday = (() => {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const reflectionDate = new Date(reflection.day || reflection.date);
+              reflectionDate.setHours(0, 0, 0, 0);
+              return reflectionDate.getTime() === today.getTime();
+            })();
+
             return (
               <motion.div
                 key={cardId}
@@ -257,7 +265,7 @@ export const ReflectionsTable = ({ reflections, isAdmin = false }: ReflectionsTa
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.2, delay: index * 0.03 }}
               >
-                <Card className={`overflow-hidden ${zoneBgColor} ${bgOpacityClass} transition-all duration-200 hover:shadow-md`}>
+                <Card className={`overflow-hidden ${zoneBgColor} ${bgOpacityClass} transition-all duration-200 hover:shadow-md ${isToday ? 'ring-2 ring-amber-500/50' : ''}`}>
                   {/* Card Header - Always Visible */}
                   <div
                     className="flex items-center justify-between p-3 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
@@ -272,8 +280,13 @@ export const ReflectionsTable = ({ reflections, isAdmin = false }: ReflectionsTa
                     tabIndex={0}
                     aria-expanded={isExpanded}
                   >
-                    <span className="text-sm font-medium">
+                    <span className="text-sm font-medium flex items-center gap-2">
                       {formatDate(reflection.day || reflection.date)}
+                      {isToday && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold">
+                          TODAY
+                        </span>
+                      )}
                     </span>
                     
                     <div className="flex items-center gap-2">
