@@ -606,9 +606,9 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
           initial={{ opacity: 0, y: 20 }} 
           animate={{ opacity: 1, y: 0 }} 
           transition={{ duration: 0.5 }} 
-          className="mb-10"
+          className="mb-16"
         >
-          <Card className="overflow-hidden border-2 border-amber-500/20 bg-gradient-to-br from-card to-amber-500/5">
+          <Card className="overflow-hidden border-2 border-amber-500/20 bg-gradient-to-br from-card to-amber-500/5 mt-4">
             <CardHeader className="pb-2">
               <CardTitle 
                 className="flex items-center gap-3 text-xl"
