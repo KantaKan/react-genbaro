@@ -6,13 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
-import { Plus, BookOpen, Sparkles, CheckCircle } from "lucide-react";
+import { Plus, BookOpen, CheckCircle } from "lucide-react";
 
 import { useReflections, type Reflection } from "@/hooks/use-reflections";
 import { useStreakCalculation } from "@/hooks/use-streak-calculation";
 import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflection-zones";
 import { StreakIcon, FireBar } from "./streak-components";
-import { ZoneStatCard } from "./zone-stat-card";
 import { ReflectionsTable } from "./reflections-table";
 import FeedbackForm from "./linear-feedback-form";
 import { ReflectionPreview } from "./reflection-preview";
@@ -378,68 +377,227 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
         </div>
       )}
 
-      {/* Zone Statistics - Editorial Header */}
-      <div className="flex items-center justify-between mb-6 mt-12">
-        <h2 
-          className="text-2xl md:text-3xl font-bold"
-          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-        >
-          Your Zone Journey
-        </h2>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="icon">
-              <BookOpen className="h-4 w-4" />
-              <span className="sr-only">About learning zones</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Understanding Learning Zones</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-6 p-6">
-              <img src="/baronzone.png" alt="Learning Barometer Zones" className="w-full rounded-lg shadow-md" />
-              <div className="grid gap-4">
-                {reflectionZones.map((zone) => (
-                  <motion.div key={zone.id} whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300 }}>
-                    <Card className="overflow-hidden">
-                      <CardContent className={`p-4 flex items-center gap-4 ${zone.bgColor} bg-opacity-10`}>
-                        <div className="text-2xl">{zone.emoji}</div>
-                        <div>
-                          <h3 className="font-semibold">{zone.label}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {zone.id === "comfort" && "You're confident and can work independently"}
-                            {zone.id === "stretch-enjoying" && "You're challenged but growing and learning"}
-                            {zone.id === "stretch-overwhelmed" && "You're finding the challenges difficult"}
-                            {zone.id === "panic" && "You're feeling stuck and need support"}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
+      {/* Zone Journey - Editorial Insights */}
+      <div className="mt-12">
+        <div className="flex items-center justify-between mb-6">
+          <h2 
+            className="text-2xl md:text-3xl font-bold"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            Your Zone Journey
+          </h2>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <BookOpen className="h-4 w-4" />
+                Learn about zones
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Understanding Learning Zones</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6 p-6">
+                <img src="/baronzone.png" alt="Learning Barometer Zones" className="w-full rounded-lg shadow-md" />
+                <div className="grid gap-4">
+                  {reflectionZones.map((zone) => (
+                    <motion.div key={zone.id} whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300 }}>
+                      <Card className="overflow-hidden">
+                        <CardContent className={`p-4 flex items-center gap-4 ${zone.bgColor} bg-opacity-10`}>
+                          <div className="text-2xl">{zone.emoji}</div>
+                          <div>
+                            <h3 className="font-semibold">{zone.label}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {zone.id === "comfort" && "You're confident and can work independently"}
+                              {zone.id === "stretch-enjoying" && "You're challenged but growing and learning"}
+                              {zone.id === "stretch-overwhelmed" && "You're finding the challenges difficult"}
+                              {zone.id === "panic" && "You're feeling stuck and need support"}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <AnimatePresence>
-          {reflectionZones.map((zone, index) => {
-            const isDominant = zone.id === dominantZoneId;
-            const isCurrent = currentZone?.id === zone.id;
-            const stats = {
-              count: zone.id === "comfort" ? zoneStats.comfort : zone.id === "stretch-enjoying" ? zoneStats.stretchEnjoying : zone.id === "stretch-overwhelmed" ? zoneStats.stretchOverwhelmed : zoneStats.panic,
-              total: zoneStats.total,
-            };
+            </DialogContent>
+          </Dialog>
+        </div>
 
+        {/* Progress Bar - Zone Distribution */}
+        {zoneStats.total > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            className="mb-8"
+          >
+            <div className="flex h-4 rounded-full overflow-hidden">
+              {reflectionZones.map((zone) => {
+                const count = zone.id === "comfort" ? zoneStats.comfort : 
+                              zone.id === "stretch-enjoying" ? zoneStats.stretchEnjoying : 
+                              zone.id === "stretch-overwhelmed" ? zoneStats.stretchOverwhelmed : 
+                              zoneStats.panic;
+                const percentage = (count / zoneStats.total) * 100;
+                if (percentage === 0) return null;
+                return (
+                  <div
+                    key={zone.id}
+                    className={zone.bgColor}
+                    style={{ width: `${percentage}%` }}
+                    title={`${zone.label}: ${count} (${Math.round(percentage)}%)`}
+                  />
+                );
+              })}
+            </div>
+            <div className="flex flex-wrap gap-3 mt-3 justify-center">
+              {reflectionZones.map((zone) => {
+                const count = zone.id === "comfort" ? zoneStats.comfort : 
+                              zone.id === "stretch-enjoying" ? zoneStats.stretchEnjoying : 
+                              zone.id === "stretch-overwhelmed" ? zoneStats.stretchOverwhelmed : 
+                              zoneStats.panic;
+                const percentage = Math.round((count / zoneStats.total) * 100) || 0;
+                return (
+                  <div key={zone.id} className="flex items-center gap-1.5 text-sm">
+                    <span className={zone.bgColor + " w-3 h-3 rounded-full"} />
+                    <span className="text-muted-foreground">{zone.id === "comfort" ? "Comfort" : zone.id === "stretch-enjoying" ? "Stretch+" : zone.id === "stretch-overwhelmed" ? "Stretch-" : "Panic"}</span>
+                    <span className="font-medium">{percentage}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Insight Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Dominant Zone Card */}
+          {(() => {
+            const dominantZone = reflectionZones.find(z => z.id === dominantZoneId);
+            const dominantCount = dominantZone?.id === "comfort" ? zoneStats.comfort : 
+                                  dominantZone?.id === "stretch-enjoying" ? zoneStats.stretchEnjoying : 
+                                  dominantZone?.id === "stretch-overwhelmed" ? zoneStats.stretchOverwhelmed : 
+                                  zoneStats.panic;
+            const dominantPercentage = Math.round((dominantCount / zoneStats.total) * 100) || 0;
+            
             return (
-              <motion.div key={zone.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ delay: index * 0.1, duration: 0.4 }} layout>
-                <ZoneStatCard zone={zone} stats={stats} isDominant={isDominant} isCurrent={isCurrent} />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <Card className="h-full border-2 border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                      Most Common Zone
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex items-center gap-4 mb-4">
+                      <span className="text-5xl">{dominantZone?.emoji}</span>
+                      <div>
+                        <div className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+                          {dominantZone?.label.split(' - ')[0]}
+                        </div>
+                        <div className="text-amber-600 font-medium">{dominantPercentage}% of time</div>
+                      </div>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <motion.div 
+                        className={`h-full ${dominantZone?.bgColor}`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${dominantPercentage}%` }}
+                        transition={{ delay: 0.3, duration: 0.8 }}
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-3">
+                      {dominantCount} out of {zoneStats.total} reflections
+                    </p>
+                  </CardContent>
+                </Card>
               </motion.div>
             );
-          })}
-        </AnimatePresence>
+          })()}
+
+          {/* Today's Zone Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="h-full border-2 border-amber-500/40 bg-amber-500/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-amber-700 uppercase tracking-wider flex items-center gap-2" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                  <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                  Today's Zone
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {currentZone ? (
+                  <>
+                    <div className="flex items-center gap-4 mb-4">
+                      <span className="text-5xl">{currentZone.emoji}</span>
+                      <div>
+                        <div className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+                          {currentZone.label.split(' - ')[0]}
+                        </div>
+                        <div className="text-amber-600 text-sm">
+                          {currentZone.id === "comfort" && "You're feeling confident"}
+                          {currentZone.id === "stretch-enjoying" && "You're growing & learning"}
+                          {currentZone.id === "stretch-overwhelmed" && "It's getting challenging"}
+                          {currentZone.id === "panic" && "You need support"}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <span className="text-4xl">❓</span>
+                    <div>
+                      <div className="text-lg font-medium">No reflection yet</div>
+                      <p className="text-sm text-muted-foreground">Add your reflection to see your zone</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Quick Stats Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card className="h-full">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                  Quick Stats
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Total Reflections</span>
+                  <span className="font-bold text-lg">{zoneStats.total}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Current Streak</span>
+                  <span className="font-bold text-lg flex items-center gap-1">
+                    <span className="text-amber-500">🔥</span>
+                    {streakData.currentStreak}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Days in Comfort</span>
+                  <span className="font-bold text-lg text-green-600">{zoneStats.comfort}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Days Need Support</span>
+                  <span className="font-bold text-lg text-purple-600">{zoneStats.panic}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
       </div>
 
       {/* Today's Reflection - Editorial Card */}
