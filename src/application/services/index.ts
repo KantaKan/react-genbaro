@@ -5,3 +5,4 @@ export { attendanceService, default as attendanceServiceDefault } from "./attend
 export { leaveService, default as leaveServiceDefault } from "./leaveService";
 export { badgeService, default as badgeServiceDefault } from "./badgeService";
 export { boardService, default as boardServiceDefault } from "./boardService";
+export { notificationService, default as notificationServiceDefault } from "./notificationService";

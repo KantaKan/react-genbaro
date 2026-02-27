@@ -29,6 +29,7 @@ import { AttendanceDashboard } from "./components/attendance-dashboard";
 import { StudentAttendance } from "./components/student-attendance";
 import { LeaveRequestsTable } from "./components/leave-requests-table";
 import { StudentAttendanceDetail } from "./pages/student-attendance-detail";
+import { AdminNotificationManager } from "./components/admin-notification-manager";
 
 function AppContent() {
   const { isAuthenticated, error } = useAuth();
@@ -94,6 +95,7 @@ function AppContent() {
             <Route path="attendance" element={<AttendanceDashboard />} />
             <Route path="attendance/student/:id" element={<StudentAttendanceDetail />} />
             <Route path="leave-requests" element={<LeaveRequestsTable />} />
+            <Route path="notifications" element={<AdminNotificationManager />} />
           </Route>
 
           <Route path="/learner" element={<LearnerLayout />}>
