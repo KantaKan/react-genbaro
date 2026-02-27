@@ -11,7 +11,8 @@ import {
   User,
   Hammer,
   ClipboardCheck,
-} from "lucide-react"; // Import MessageSquare and additional icons
+  Bell,
+} from "lucide-react";
 import { motion } from "framer-motion"; // New import for animation
 import { Badge } from "@/components/ui/badge"; // New import for the 'New' badge
 import { NavMain } from "@/components/nav-main";
@@ -71,6 +72,11 @@ const navigationConfig: Record<UserRole, any[]> = {
           title: "Attendance",
           url: "/admin/attendance",
           icon: ClipboardCheck,
+        },
+        {
+          title: "Notifications",
+          url: "/admin/notifications",
+          icon: Bell,
         },
         {
           title: "Tools",
