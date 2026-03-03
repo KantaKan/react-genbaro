@@ -83,6 +83,13 @@ export interface DailyStats {
   late_excused: number;
   absent_excused: number;
   total: number;
+  rate?: number;
+  am_present?: number;
+  pm_present?: number;
+  am_late?: number;
+  pm_late?: number;
+  am_total?: number;
+  pm_total?: number;
 }
 
 export interface LeaveRequest {

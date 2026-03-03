@@ -99,7 +99,9 @@ const withRetry = async <T,>(
 
 export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
   const navigate = useNavigate();
-  const [selectedCohort, setSelectedCohort] = useState<string>("11");
+  const [selectedCohort, setSelectedCohort] = useState<string>(
+    () => localStorage.getItem("attendance_cohort") || cohort || "11"
+  );
   const [selectedDate, setSelectedDate] = useState<string>(getLocalDate());
   const [activeCodeMorning, setActiveCodeMorning] = useState<AttendanceCode | null>(null);
   const [activeCodeAfternoon, setActiveCodeAfternoon] = useState<AttendanceCode | null>(null);
@@ -168,13 +170,11 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
     return () => clearInterval(cleanupInterval);
   }, [isProcessingQueue, pendingOperations]);
 
-  // Load cohort from localStorage on mount
+  // Sync with cohort prop when it changes (e.g., navigation from external link)
   useEffect(() => {
-    const savedCohort = localStorage.getItem("attendance_cohort");
-    if (savedCohort) {
-      setSelectedCohort(savedCohort);
-    } else if (cohort) {
+    if (cohort) {
       setSelectedCohort(cohort);
+      localStorage.setItem("attendance_cohort", cohort);
     }
   }, [cohort]);
 

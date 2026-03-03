@@ -84,6 +84,11 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
   };
 
   const getAttendanceRate = (stats: DailyStats | null): number => {
+    // Use backend-provided rate if available
+    if (stats && typeof stats.rate === 'number') {
+      return Math.round(stats.rate);
+    }
+    // Fallback to calculation
     if (!stats || stats.total === 0) return -1;
     const attended = stats.present + stats.late + stats.late_excused + stats.absent_excused;
     return Math.round((attended / stats.total) * 100);
@@ -124,8 +129,12 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
     const isHoliday = !!holiday;
     const rate = getAttendanceRate(stats);
 
-    const totalSessions = stats ? stats.total : 0;
-    const studentsPerSession = totalSessions > 0 ? Math.ceil(totalSessions / 2) : 0;
+    // Use actual AM/PM counts from backend
+    const cohortTotal = stats?.total || 0;
+    const amPresent = stats?.am_present || 0;
+    const pmPresent = stats?.pm_present || 0;
+    const amTotal = stats?.am_total || 0;
+    const pmTotal = stats?.pm_total || 0;
 
     calendarDays.push(
       <button
@@ -147,8 +156,8 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
         )}
         {!isWeekend && !isHoliday && (
           <div className="text-[10px] space-y-0.5">
-            <div>AM: {stats ? `${Math.round(rate * studentsPerSession / 100)}/${studentsPerSession}` : "-"}</div>
-            <div>PM: {stats ? `${Math.round(rate * studentsPerSession / 100)}/${studentsPerSession}` : "-"}</div>
+            <div>AM: {amTotal > 0 ? `${amPresent}/${amTotal}` : "-"}</div>
+            <div>PM: {pmTotal > 0 ? `${pmPresent}/${pmTotal}` : "-"}</div>
           </div>
         )}
         {isHoliday && !isWeekend && (
