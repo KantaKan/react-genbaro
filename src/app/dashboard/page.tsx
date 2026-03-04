@@ -66,16 +66,20 @@ export default function Page({ children }: { children: React.ReactNode }, props:
       items.push(
         <BreadcrumbItem key="talkboard">
           {pathSegments[1] ? (
-            <>
-              <BreadcrumbLink href="/talk-board" className="text-primary hover:underline">Talk Board</BreadcrumbLink>
-              <BreadcrumbSeparator />
-              <BreadcrumbPage>Discussion</BreadcrumbPage>
-            </>
+            <BreadcrumbLink href="/talk-board" className="text-primary hover:underline">Talk Board</BreadcrumbLink>
           ) : (
             <BreadcrumbPage>Talk Board</BreadcrumbPage>
           )}
         </BreadcrumbItem>
       );
+      if (pathSegments[1]) {
+        items.push(<BreadcrumbSeparator key="talkboard-sep" />);
+        items.push(
+          <BreadcrumbItem key="discussion">
+            <BreadcrumbPage>Discussion</BreadcrumbPage>
+          </BreadcrumbItem>
+        );
+      }
     }
 
     return items;

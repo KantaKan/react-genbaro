@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, MessageSquare, Smile } from "lucide-react";
 import { useAuth } from "@/AuthContext";
+import { useUserData } from "@/application/contexts/UserDataContext";
 import { addReaction, removeReaction, addCommentReaction, removeCommentReaction } from "@/lib/api";
 
 // Types (should be in a types file)
@@ -65,15 +66,18 @@ const fetchPost = async (postId: string): Promise<Post> => {
   return response.data.data;
 };
 
-const createComment = async ({ postId, content }: { postId: string; content: string }) => {
-  const response = await api.post(`/board/posts/${postId}/comments`, { content });
+const createComment = async ({ postId, content, zoomName, cohort }: { postId: string; content: string; zoomName: string; cohort: number }) => {
+  const response = await api.post(`/board/posts/${postId}/comments`, { content, zoomName, cohort });
   return response.data.data;
 };
 
 const PostCard: React.FC<{ post: Post; addReactionMutation: AddReactionMutation; removeReactionMutation: RemoveReactionMutation }> = ({ post, addReactionMutation, removeReactionMutation }) => {
   const { userId } = useAuth();
+  const queryClient = useQueryClient();
   const [showReactionPicker, setShowReactionPicker] = useState(false);
-  const userReaction = post.reactions.find(reaction => reaction.userId === userId);
+  const postReactions = post.reactions || [];
+  const postComments = post.comments || [];
+  const userReaction = postReactions.find(reaction => reaction.userId === userId);
   const hasUserReacted = !!userReaction;
 
   const handleReact = (e: React.MouseEvent, reaction: string) => {
@@ -83,11 +87,19 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: AddReactionMutation;
     if (hasUserReacted) {
       removeReactionMutation.mutate(post.id, {
         onSuccess: () => {
-          addReactionMutation.mutate({ postId: post.id, reaction });
+          addReactionMutation.mutate({ postId: post.id, reaction }, {
+            onSuccess: () => {
+              queryClient.invalidateQueries(["talkBoardPost", post.id]);
+            }
+          });
         }
       });
     } else {
-      addReactionMutation.mutate({ postId: post.id, reaction });
+      addReactionMutation.mutate({ postId: post.id, reaction }, {
+        onSuccess: () => {
+          queryClient.invalidateQueries(["talkBoardPost", post.id]);
+        }
+      });
     }
     setShowReactionPicker(false);
   };
@@ -95,7 +107,11 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: AddReactionMutation;
   const handleRemoveReaction = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    removeReactionMutation.mutate(post.id);
+    removeReactionMutation.mutate(post.id, {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["talkBoardPost", post.id]);
+      }
+    });
     setShowReactionPicker(false);
   };
 
@@ -173,14 +189,14 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: AddReactionMutation;
           )}
           <Button variant="ghost" size="sm">
             <MessageSquare className="mr-2 h-4 w-4" />
-            Comment ({post.comments.length})
+            Comment ({postComments.length})
           </Button>
         </div>
         <div>
-          {post.reactions.length > 0 && (
+          {postReactions.length > 0 && (
             <div className="flex items-center gap-2">
               {Object.entries(
-                post.reactions.reduce((acc, reaction) => {
+                postReactions.reduce((acc, reaction) => {
                   acc[reaction.value] = (acc[reaction.value] || 0) + 1;
                   return acc;
                 }, {} as Record<string, number>)
@@ -205,7 +221,8 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: AddReactionMutation;
 const CommentCard: React.FC<{ comment: Comment; addCommentReactionMutation: AddCommentReactionMutation; removeCommentReactionMutation: RemoveCommentReactionMutation }> = ({ comment, addCommentReactionMutation, removeCommentReactionMutation }) => {
   const { userId } = useAuth();
   const [showReactionPicker, setShowReactionPicker] = useState(false);
-  const userReaction = comment.reactions.find(reaction => reaction.userId === userId);
+  const commentReactions = comment.reactions || [];
+  const userReaction = commentReactions.find(reaction => reaction.userId === userId);
   const hasUserReacted = !!userReaction;
 
   const handleReact = (e: React.MouseEvent, reaction: string) => {
@@ -305,10 +322,10 @@ const CommentCard: React.FC<{ comment: Comment; addCommentReactionMutation: AddC
           )}
         </div>
         <div>
-          {comment.reactions.length > 0 && (
+          {commentReactions.length > 0 && (
             <div className="flex items-center gap-2">
               {Object.entries(
-                comment.reactions.reduce((acc, reaction) => {
+                commentReactions.reduce((acc, reaction) => {
                   acc[reaction.value] = (acc[reaction.value] || 0) + 1;
                   return acc;
                 }, {} as Record<string, number>)
@@ -333,6 +350,7 @@ const CommentCard: React.FC<{ comment: Comment; addCommentReactionMutation: AddC
 const PostPage: React.FC = () => {
   const { postId } = useParams<{ postId: string }>();
   const queryClient = useQueryClient();
+  const { userData } = useUserData();
   const [newComment, setNewComment] = useState("");
 
   const { data: post, isLoading, error } = useQuery(
@@ -373,8 +391,13 @@ const PostPage: React.FC = () => {
   });
 
   const handleAddComment = () => {
-    if (newComment.trim() && postId) {
-      createCommentMutation.mutate({ postId, content: newComment });
+    if (newComment.trim() && postId && userData) {
+      createCommentMutation.mutate({ 
+        postId, 
+        content: newComment,
+        zoomName: userData.zoomName || "Unknown",
+        cohort: userData.cohort || 0
+      });
     }
   };
 
@@ -418,7 +441,7 @@ const PostPage: React.FC = () => {
       
       <div className="space-y-4">
         <AnimatePresence>
-          {post.comments.map((comment) => (
+          {post.comments?.map((comment) => (
             <motion.div
               key={comment.id}
               initial={{ opacity: 0, y: 20 }}

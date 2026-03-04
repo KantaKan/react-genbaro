@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, MessageSquare, Smile } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/AuthContext";
+import { useUserData } from "@/application/contexts/UserDataContext";
 
 // Types (should be in a types file)
 interface Reaction {
@@ -44,8 +45,8 @@ const fetchPosts = async (): Promise<Post[]> => {
   return response.data.data;
 };
 
-const createPost = async (content: string) => {
-  const response = await api.post("/board/posts", { content });
+const createPost = async ({ content, zoomName, cohort }: { content: string; zoomName: string; cohort: number }) => {
+  const response = await api.post("/board/posts", { content, zoomName, cohort });
   return response.data.data;
 };
 
@@ -61,6 +62,7 @@ const removeReaction = async (postId: string) => {
 
 const TalkBoardPage: React.FC = () => {
   const queryClient = useQueryClient();
+  const { userData } = useUserData();
   const [newPostContent, setNewPostContent] = useState("");
 
   const { data: posts, isLoading, error } = useQuery("talkBoardPosts", fetchPosts);
@@ -85,8 +87,12 @@ const TalkBoardPage: React.FC = () => {
   });
 
   const handleCreatePost = () => {
-    if (newPostContent.trim()) {
-      createPostMutation.mutate(newPostContent);
+    if (newPostContent.trim() && userData) {
+      createPostMutation.mutate({ 
+        content: newPostContent, 
+        zoomName: userData.zoom_name || "Unknown", 
+        cohort: userData.cohort_number || 0 
+      });
     }
   };
 
@@ -143,9 +149,13 @@ const TalkBoardPage: React.FC = () => {
 
 const PostCard: React.FC<{ post: Post; addReactionMutation: any; removeReactionMutation: any }> = ({ post, addReactionMutation, removeReactionMutation }) => {
   const { userId } = useAuth();
+  const queryClient = useQueryClient();
   const [showReactionPicker, setShowReactionPicker] = useState(false);
 
-  const userReaction = post.reactions.find(reaction => reaction.userId === userId);
+  const postReactions = post.reactions || [];
+  const postComments = post.comments || [];
+
+  const userReaction = postReactions.find(reaction => reaction.userId === userId);
   const hasUserReacted = !!userReaction;
 
   const handleReact = (e: React.MouseEvent, reaction: string) => {
@@ -256,14 +266,14 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: any; removeReactionM
             )}
             <Button variant="ghost" size="sm">
               <MessageSquare className="mr-2 h-4 w-4" />
-              Comment ({post.comments.length})
+              Comment ({postComments.length})
             </Button>
           </div>
           <div>
-            {post.reactions.length > 0 && (
+            {postReactions.length > 0 && (
               <div className="flex items-center gap-2">
                 {Object.entries(
-                  post.reactions.reduce((acc, reaction) => {
+                  postReactions.reduce((acc, reaction) => {
                     acc[reaction.value] = (acc[reaction.value] || 0) + 1;
                     return acc;
                   }, {} as Record<string, number>)
