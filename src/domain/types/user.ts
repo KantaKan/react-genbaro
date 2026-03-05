@@ -16,6 +16,7 @@ export interface User {
   zoom_name?: string;
   reflections?: Reflection[];
   badges?: Badge[];
+  salesforce_id?: string;
 }
 
 export interface UserData extends User {
