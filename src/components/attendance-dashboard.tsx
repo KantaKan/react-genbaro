@@ -166,7 +166,7 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
 
     const jsdNum = (jsd?: string) => {
       if (!jsd) return 9999;
-      const match = jsd.match(/^(\d+)/);
+      const match = jsd.match(/GEN\d+_(\d+)/i);
       return match ? parseInt(match[1], 10) : 9999;
     };
 
@@ -868,7 +868,7 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
       case "jsd_desc":
         const jsdNum = (jsd?: string) => {
           if (!jsd) return 9999;
-          const match = jsd.match(/^(\d+)/);
+          const match = jsd.match(/GEN\d+_(\d+)/i);
           return match ? parseInt(match[1], 10) : 9999;
         };
         return sorted.sort((a, b) => {

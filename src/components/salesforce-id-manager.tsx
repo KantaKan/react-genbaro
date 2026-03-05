@@ -27,10 +27,10 @@ export function SalesforceIDManager({ users, onUpdate }: SalesforceIDManagerProp
   const [rowStates, setRowStates] = useState<Record<string, RowState>>({});
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
-  // Parse the leading number from jsd_number (e.g. "01_Akkarawin..." → 1)
+  // Parse the trailing number from jsd_number (e.g. "GEN12_1" → 1, "GEN12_10" → 10)
   const jsdNum = (jsd?: string) => {
     if (!jsd) return 9999;
-    const match = jsd.match(/^(\d+)/);
+    const match = jsd.match(/GEN\d+_(\d+)/i);
     return match ? parseInt(match[1], 10) : 9999;
   };
 
