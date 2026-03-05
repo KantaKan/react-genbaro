@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,7 +36,7 @@ import {
   type Holiday,
   type AttendanceStats
 } from "@/lib/api";
-import { Trash2, RefreshCw, Clock, AlertTriangle, Calendar, X, CalendarClock, Check, ChevronDown, Loader2, Star, Users, Eye } from "lucide-react";
+import { Trash2, RefreshCw, Clock, AlertTriangle, Calendar, X, CalendarClock, Check, ChevronDown, Loader2, Star, Users, Eye, ArrowUpDown } from "lucide-react";
 import { LeaveRequestsTable } from "./leave-requests-table";
 import { CreateLeaveRequestDialog } from "./create-leave-request-dialog";
 import { AdminAttendanceCalendar } from "./admin-attendance-calendar";
@@ -157,6 +157,24 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
   
   // Sort option for all-students tab
   const [sortOption, setSortOption] = useState<string>("absent_days_desc");
+
+  // Overview Table Sorting
+  const [overviewSortDir, setOverviewSortDir] = useState<"asc" | "desc">("asc");
+
+  const sortedOverviewStudents = useMemo(() => {
+    if (!todayOverview?.students) return [];
+
+    const jsdNum = (jsd?: string) => {
+      if (!jsd) return 9999;
+      const match = jsd.match(/GEN\d+_(\d+)/i);
+      return match ? parseInt(match[1], 10) : 9999;
+    };
+
+    return [...todayOverview.students].sort((a, b) => {
+      const diff = jsdNum(a.jsd_number) - jsdNum(b.jsd_number);
+      return overviewSortDir === "asc" ? diff : -diff;
+    });
+  }, [todayOverview?.students, overviewSortDir]);
 
   // Cleanup stale pending operations every 30 seconds
   useEffect(() => {
@@ -847,7 +865,22 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
         const warningOrder = { red: 0, yellow: 1, normal: 2 };
         return sorted.sort((a, b) => warningOrder[a.warning_level] - warningOrder[b.warning_level]);
       case "jsd_asc":
-        return sorted.sort((a, b) => a.jsd_number.localeCompare(b.jsd_number));
+      case "jsd_desc":
+        const jsdNum = (jsd?: string) => {
+          if (!jsd) return 9999;
+          const match = jsd.match(/GEN\d+_(\d+)/i);
+          return match ? parseInt(match[1], 10) : 9999;
+        };
+        return sorted.sort((a, b) => {
+          const diff = jsdNum(a.jsd_number) - jsdNum(b.jsd_number);
+          return sortOption === "jsd_asc" ? diff : -diff;
+        });
+      case "absent_days_asc":
+        return sorted.sort((a, b) => a.absent_days - b.absent_days);
+      case "absent_asc":
+        return sorted.sort((a, b) => a.absent - b.absent);
+      case "present_asc":
+        return sorted.sort((a, b) => a.present - b.present);
       default:
         return sorted.sort((a, b) => b.absent_days - a.absent_days);
     }
@@ -1010,7 +1043,17 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[100px]">JSD</TableHead>
+                    <TableHead className="w-[120px]">
+                      <button
+                        onClick={() => setOverviewSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+                        className="flex items-center gap-1.5 hover:text-foreground/70 transition-colors"
+                        title={`Sort ${overviewSortDir === "asc" ? "descending" : "ascending"}`}
+                      >
+                        JSD #
+                        <ArrowUpDown className="w-3 h-3 text-muted-foreground ml-1" />
+                        <span className="text-muted-foreground/50 ml-1 text-[10px] normal-case font-normal whitespace-nowrap">{overviewSortDir === "asc" ? "↑" : "↓"}</span>
+                      </button>
+                    </TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Morning</TableHead>
                     <TableHead>Afternoon</TableHead>
@@ -1018,7 +1061,7 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {todayOverview?.students.map((student) => (
+                  {sortedOverviewStudents.map((student) => (
                     <TableRow key={student.user_id}>
                       <TableCell className="font-medium">{student.jsd_number}</TableCell>
                       <TableCell>{student.first_name} {student.last_name}</TableCell>
@@ -1181,12 +1224,67 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[80px]">JSD</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead className="text-center">Present</TableHead>
+                    <TableHead className="w-[120px]">
+                      <button
+                        onClick={() => setSortOption((prev) => (prev === "jsd_asc" ? "jsd_desc" : "jsd_asc"))}
+                        className="flex items-center gap-1.5 hover:text-foreground/70 transition-colors"
+                        title={`Sort by JSD ${sortOption === "jsd_asc" ? "descending" : "ascending"}`}
+                      >
+                        JSD #
+                        <ArrowUpDown className="w-3 h-3 text-muted-foreground ml-1" />
+                        {sortOption.includes("jsd") && (
+                          <span className="text-muted-foreground/50 ml-1 text-[10px] normal-case font-normal whitespace-nowrap">
+                            {sortOption === "jsd_asc" ? "↑" : "↓"}
+                          </span>
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        onClick={() => setSortOption((prev) => (prev === "name_asc" ? "name_desc" : "name_asc"))}
+                        className="flex items-center gap-1.5 hover:text-foreground/70 transition-colors"
+                        title="Sort by Name"
+                      >
+                        Name
+                        <ArrowUpDown className="w-3 h-3 text-muted-foreground ml-1" />
+                        {sortOption.includes("name") && (
+                          <span className="text-muted-foreground/50 ml-1 text-[10px] normal-case font-normal whitespace-nowrap">
+                            {sortOption === "name_asc" ? "A-Z" : "Z-A"}
+                          </span>
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-center">
+                      <button
+                        onClick={() => setSortOption((prev) => (prev === "present_desc" ? "present_asc" : "present_desc"))}
+                        className="flex items-center justify-center gap-1.5 hover:text-foreground/70 transition-colors mx-auto"
+                        title="Sort by Present"
+                      >
+                        Present
+                        <ArrowUpDown className="w-3 h-3 text-muted-foreground ml-1" />
+                      </button>
+                    </TableHead>
                     <TableHead className="text-center">Late</TableHead>
-                    <TableHead className="text-center">Absent Sessions</TableHead>
-                    <TableHead className="text-center">Absent Days</TableHead>
+                    <TableHead className="text-center">
+                      <button
+                        onClick={() => setSortOption((prev) => (prev === "absent_desc" ? "absent_asc" : "absent_desc"))}
+                        className="flex items-center justify-center gap-1.5 hover:text-foreground/70 transition-colors mx-auto"
+                        title="Sort by Absent Sessions"
+                      >
+                        Absent Sessions
+                        <ArrowUpDown className="w-3 h-3 text-muted-foreground ml-1" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-center">
+                      <button
+                        onClick={() => setSortOption((prev) => (prev === "absent_days_desc" ? "absent_days_asc" : "absent_days_desc"))}
+                        className="flex items-center justify-center gap-1.5 hover:text-foreground/70 transition-colors mx-auto"
+                        title="Sort by Absent Days"
+                      >
+                        Absent Days
+                        <ArrowUpDown className="w-3 h-3 text-muted-foreground ml-1" />
+                      </button>
+                    </TableHead>
                     <TableHead className="text-center">Excused</TableHead>
                     <TableHead className="text-center">Warning</TableHead>
                     <TableHead className="text-right">Actions</TableHead>

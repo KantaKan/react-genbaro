@@ -163,6 +163,29 @@ export const attendanceService = {
     });
     return response.data.data;
   },
+
+  async exportSalesforceCSV(
+    cohort: number,
+    startDate: string,
+    endDate: string
+  ): Promise<Blob> {
+    const params = new URLSearchParams({
+      cohort: cohort.toString(),
+      start_date: startDate,
+      end_date: endDate,
+    });
+    const response = await api.get(
+      `/admin/attendance/export/salesforce?${params.toString()}`,
+      { responseType: "blob" }
+    );
+    return response.data;
+  },
+
+  async updateSalesforceID(userId: string, salesforceId: string): Promise<void> {
+    await api.patch(`/admin/users/${userId}/salesforce-id`, {
+      salesforce_id: salesforceId,
+    });
+  },
 };
 
 export const generateAttendanceCode = attendanceService.generateAttendanceCode;
@@ -181,5 +204,7 @@ export const getDailyAttendanceStats = attendanceService.getDailyAttendanceStats
 export const getMyAttendanceHistory = attendanceService.getMyAttendanceHistory;
 export const getMyDailyStats = attendanceService.getMyDailyStats;
 export const bulkMarkAttendance = attendanceService.bulkMarkAttendance;
+export const exportSalesforceCSV = attendanceService.exportSalesforceCSV;
+export const updateSalesforceID = attendanceService.updateSalesforceID;
 
 export default attendanceService;
