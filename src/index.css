@@ -1,76 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 @layer base {
   :root {
-    --background: 40 20% 97%;
+    --background: 40 15% 96%;
     --foreground: 40 30% 15%;
-    --card: 40 30% 98%;
+    --card: 40 10% 98%;
     --card-foreground: 40 30% 15%;
-    --popover: 40 30% 98%;
+    --popover: 40 10% 98%;
     --popover-foreground: 40 30% 15%;
-    --primary: 38 75% 45%;
+    --primary: 38 65% 45%;
     --primary-foreground: 40 20% 98%;
     --secondary: 40 15% 92%;
     --secondary-foreground: 40 30% 15%;
     --muted: 40 10% 90%;
     --muted-foreground: 40 10% 40%;
-    --accent: 38 75% 90%;
-    --accent-foreground: 38 75% 25%;
+    --accent: 25 70% 55%;
+    --accent-foreground: 40 20% 98%;
     --destructive: 0 60% 45%;
     --destructive-foreground: 0 0% 98%;
     --border: 40 15% 80%;
     --input: 40 15% 80%;
-    --ring: 38 75% 45%;
+    --ring: 38 65% 45%;
     --radius: 0.5rem;
+    
+    /* Cozy additional tokens */
+    --reactions-bg: 38 30% 95%;
+    --cohort-1: 150 40% 45%;
+    --cohort-2: 200 40% 55%;
+    --cohort-3: 25 60% 50%;
+    --cohort-4: 270 40% 50%;
+    --paper-texture: 40 10% 92%;
+    
     --sidebar-background: 40 20% 95%;
     --sidebar-foreground: 40 30% 15%;
-    --sidebar-primary: 38 75% 45%;
+    --sidebar-primary: 38 65% 45%;
     --sidebar-primary-foreground: 40 20% 98%;
     --sidebar-accent: 40 15% 90%;
     --sidebar-accent-foreground: 40 30% 15%;
     --sidebar-border: 40 15% 80%;
-    --sidebar-ring: 38 75% 45%;
-    --chart-1: 38 75% 45%;
+    --sidebar-ring: 38 65% 45%;
+    --chart-1: 38 65% 45%;
     --chart-2: 160 60% 35%;
-    --chart-3: 30 70% 50%;
+    --chart-3: 25 60% 50%;
     --chart-4: 280 50% 45%;
     --chart-5: 340 65% 50%;
   }
+  
   .dark {
     --background: 40 15% 8%;
     --foreground: 40 20% 95%;
-    --card: 40 15% 12%;
+    --card: 40 12% 12%;
     --card-foreground: 40 20% 95%;
-    --popover: 40 15% 12%;
+    --popover: 40 12% 12%;
     --popover-foreground: 40 20% 95%;
-    --primary: 38 85% 55%;
+    --primary: 38 75% 55%;
     --primary-foreground: 40 15% 8%;
     --secondary: 40 10% 18%;
     --secondary-foreground: 40 20% 95%;
     --muted: 40 10% 18%;
     --muted-foreground: 40 10% 60%;
-    --accent: 38 75% 25%;
+    --accent: 25 70% 55%;
     --accent-foreground: 40 20% 95%;
     --destructive: 0 60% 40%;
     --destructive-foreground: 0 0% 98%;
     --border: 40 10% 22%;
     --input: 40 10% 22%;
-    --ring: 38 85% 55%;
+    --ring: 38 75% 55%;
+    
+    /* Cozy additional tokens - dark */
+    --reactions-bg: 40 10% 20%;
+    --cohort-1: 150 35% 35%;
+    --cohort-2: 200 35% 45%;
+    --cohort-3: 25 55% 40%;
+    --cohort-4: 270 35% 40%;
+    --paper-texture: 40 10% 15%;
+    
     --sidebar-background: 40 15% 10%;
     --sidebar-foreground: 40 20% 90%;
-    --sidebar-primary: 38 85% 55%;
+    --sidebar-primary: 38 75% 55%;
     --sidebar-primary-foreground: 40 15% 8%;
     --sidebar-accent: 40 10% 18%;
     --sidebar-accent-foreground: 40 20% 90%;
     --sidebar-border: 40 10% 22%;
-    --sidebar-ring: 38 85% 55%;
-    --chart-1: 38 85% 55%;
+    --sidebar-ring: 38 75% 55%;
+    --chart-1: 38 75% 55%;
     --chart-2: 160 55% 40%;
-    --chart-3: 30 75% 55%;
+    --chart-3: 25 65% 45%;
     --chart-4: 280 50% 50%;
     --chart-5: 340 65% 55%;
   }
+}
+
+/* Dot grid background pattern */
+.dot-grid-bg {
+  background-image: radial-gradient(circle, hsl(var(--border) / 0.4) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Paper texture overlay */
+.paper-texture {
+  position: relative;
+}
+
+.paper-texture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.02;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Reaction bounce animation */
+@keyframes reaction-bounce {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.4); }
+  50% { transform: scale(0.9); }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.reaction-bounce {
+  animation: reaction-bounce 0.4s ease-out;
+}
+
+/* Stagger animation for masonry */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+/* Handwritten font utility */
+.font-handwriting {
+  font-family: 'Caveat', cursive;
 }
 @layer base {
   * {
