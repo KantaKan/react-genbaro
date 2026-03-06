@@ -22,6 +22,7 @@ interface User {
   genmate_group?: string;
   zoom_name?: string;
   salesforce_id?: string;
+  attendance_status?: string;
   reflections?: Array<{ reflection: { barometer: string } }>;
 }
 
@@ -63,6 +64,12 @@ export function AdminUsersPage() {
   const handleSalesforceIDUpdate = (userId: string, newId: string) => {
     setUsers((prev) =>
       prev.map((u) => (u._id === userId ? { ...u, salesforce_id: newId } : u))
+    );
+  };
+
+  const handleAttendanceStatusUpdate = (userId: string, status: string) => {
+    setUsers((prev) =>
+      prev.map((u) => (u._id === userId ? { ...u, attendance_status: status } : u))
     );
   };
 
@@ -133,6 +140,7 @@ export function AdminUsersPage() {
         <SalesforceIDManager
           users={users}
           onUpdate={handleSalesforceIDUpdate}
+          onAttendanceStatusUpdate={handleAttendanceStatusUpdate}
         />
       )}
     </div>

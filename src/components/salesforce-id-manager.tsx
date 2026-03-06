@@ -1,8 +1,15 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link2, Edit3, Check, X, AlertCircle, ArrowUpDown } from "lucide-react";
+import { Link2, Edit3, Check, X, AlertCircle, ArrowUpDown, UserMinus, UserX, UserCheck } from "lucide-react";
 import { toast } from "react-toastify";
 import { attendanceService } from "@/application/services/attendanceService";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface User {
   _id: string;
@@ -10,11 +17,13 @@ interface User {
   last_name: string;
   jsd_number?: string;
   salesforce_id?: string;
+  attendance_status?: string;
 }
 
 interface SalesforceIDManagerProps {
   users: User[];
   onUpdate: (userId: string, newSalesforceId: string) => void;
+  onAttendanceStatusUpdate?: (userId: string, status: string) => void;
 }
 
 interface RowState {
@@ -23,9 +32,10 @@ interface RowState {
   saving: boolean;
 }
 
-export function SalesforceIDManager({ users, onUpdate }: SalesforceIDManagerProps) {
+export function SalesforceIDManager({ users, onUpdate, onAttendanceStatusUpdate }: SalesforceIDManagerProps) {
   const [rowStates, setRowStates] = useState<Record<string, RowState>>({});
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [statusSaving, setStatusSaving] = useState<Record<string, boolean>>({});
 
   // Parse the trailing number from jsd_number (e.g. "GEN12_1" → 1, "GEN12_10" → 10)
   const jsdNum = (jsd?: string) => {
@@ -73,6 +83,21 @@ export function SalesforceIDManager({ users, onUpdate }: SalesforceIDManagerProp
     } catch {
       toast.error("Failed to update Salesforce ID.");
       setRowStates((prev) => ({ ...prev, [userId]: { ...state, saving: false } }));
+    }
+  };
+
+  const handleAttendanceStatusChange = async (userId: string, status: string) => {
+    setStatusSaving((prev) => ({ ...prev, [userId]: true }));
+    try {
+      await attendanceService.updateAttendanceStatus(userId, status);
+      if (onAttendanceStatusUpdate) {
+        onAttendanceStatusUpdate(userId, status);
+      }
+      toast.success("Attendance status updated!");
+    } catch {
+      toast.error("Failed to update attendance status.");
+    } finally {
+      setStatusSaving((prev) => ({ ...prev, [userId]: false }));
     }
   };
 
@@ -141,6 +166,9 @@ export function SalesforceIDManager({ users, onUpdate }: SalesforceIDManagerProp
               </th>
               <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">
                 Salesforce ID
+              </th>
+              <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">
+                Status
               </th>
               <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">
                 Action
@@ -214,6 +242,53 @@ export function SalesforceIDManager({ users, onUpdate }: SalesforceIDManagerProp
                           {user.salesforce_id || "Not set"}
                         </span>
                       )}
+                    </td>
+
+                    {/* Attendance Status */}
+                    <td className="px-6 py-3">
+                      <Select
+                        value={user.attendance_status || "active"}
+                        onValueChange={(value) => handleAttendanceStatusChange(user._id, value)}
+                        disabled={statusSaving[user._id]}
+                      >
+                        <SelectTrigger
+                          className="w-[140px] h-8 text-xs"
+                          style={{
+                            background: user.attendance_status === "dropout" 
+                              ? "rgba(239,68,68,0.15)" 
+                              : user.attendance_status === "dismissed"
+                              ? "rgba(245,158,11,0.15)"
+                              : "rgba(255,255,255,0.06)",
+                            borderColor: user.attendance_status === "dropout"
+                              ? "rgba(239,68,68,0.3)"
+                              : user.attendance_status === "dismissed"
+                              ? "rgba(245,158,11,0.3)"
+                              : "rgba(255,255,255,0.1)",
+                          }}
+                        >
+                          <SelectValue placeholder="Active" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">
+                            <div className="flex items-center gap-2">
+                              <UserCheck className="w-3 h-3 text-green-400" />
+                              Active
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="dropout">
+                            <div className="flex items-center gap-2">
+                              <UserMinus className="w-3 h-3 text-red-400" />
+                              Dropout
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="dismissed">
+                            <div className="flex items-center gap-2">
+                              <UserX className="w-3 h-3 text-amber-400" />
+                              Dismissed
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                     </td>
 
                     {/* Action */}
