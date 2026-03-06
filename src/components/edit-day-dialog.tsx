@@ -27,6 +27,10 @@ const STATUS_OPTIONS = [
   { value: "absent", label: "Absent", color: "text-red-600" },
   { value: "late_excused", label: "Late (Excused)", color: "text-blue-600" },
   { value: "absent_excused", label: "Absent (Excused)", color: "text-gray-600" },
+  { value: "no_class", label: "No Class", color: "text-purple-600" },
+  { value: "holiday", label: "Holiday", color: "text-orange-600" },
+  { value: "dropout", label: "Dropout", color: "text-red-700" },
+  { value: "dismissed", label: "Dismissed", color: "text-red-800" },
   { value: "", label: "Clear / Unset", color: "text-muted-foreground" },
 ];
 

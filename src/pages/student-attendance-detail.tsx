@@ -27,6 +27,8 @@ import {
   ChevronDown,
   Trash2,
   User,
+  UserX,
+  UserMinus,
 } from "lucide-react";
 import { AttendanceCalendar } from "@/components/attendance-calendar";
 import { EditDayDialog } from "@/components/edit-day-dialog";
@@ -48,6 +50,14 @@ const getStatusBadge = (status: string) => {
       return <Badge className="bg-blue-500 hover:bg-blue-600">Late (Excused)</Badge>;
     case "absent_excused":
       return <Badge className="bg-gray-500 hover:bg-gray-600">Absent (Excused)</Badge>;
+    case "no_class":
+      return <Badge className="bg-purple-500 hover:bg-purple-600">No Class</Badge>;
+    case "holiday":
+      return <Badge className="bg-orange-500 hover:bg-orange-600">Holiday</Badge>;
+    case "dropout":
+      return <Badge className="bg-red-700 hover:bg-red-800">Dropout</Badge>;
+    case "dismissed":
+      return <Badge className="bg-red-800 hover:bg-red-900">Dismissed</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
@@ -139,7 +149,7 @@ export function StudentAttendanceDetail() {
   const handleManualMark = async (
     recordId: string,
     session: "morning" | "afternoon",
-    status: "present" | "late" | "absent" | "late_excused" | "absent_excused"
+    status: "present" | "late" | "absent" | "late_excused" | "absent_excused" | "no_class" | "holiday" | "dropout" | "dismissed"
   ) => {
     try {
       await manualMarkAttendance(id!, records.find((r) => r._id === recordId)?.date || "", session, status);
@@ -343,6 +353,26 @@ export function StudentAttendanceDetail() {
                                 onClick={() => handleManualMark(record._id, record.session, "absent_excused")}
                               >
                                 <Calendar className="h-4 w-4 mr-2 text-gray-500" /> Absent (Excused)
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleManualMark(record._id, record.session, "no_class")}
+                              >
+                                <Calendar className="h-4 w-4 mr-2 text-purple-500" /> No Class
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleManualMark(record._id, record.session, "holiday")}
+                              >
+                                <Calendar className="h-4 w-4 mr-2 text-orange-500" /> Holiday
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleManualMark(record._id, record.session, "dropout")}
+                              >
+                                <UserX className="h-4 w-4 mr-2 text-red-700" /> Dropout
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleManualMark(record._id, record.session, "dismissed")}
+                              >
+                                <UserMinus className="h-4 w-4 mr-2 text-red-800" /> Dismissed
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem

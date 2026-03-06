@@ -208,6 +208,14 @@ export function StudentAttendance() {
         return <Badge className="bg-blue-500 hover:bg-blue-600">Late (Excused)</Badge>;
       case "absent_excused":
         return <Badge className="bg-gray-500 hover:bg-gray-600">Absent (Excused)</Badge>;
+      case "no_class":
+        return <Badge className="bg-purple-500 hover:bg-purple-600">No Class</Badge>;
+      case "holiday":
+        return <Badge className="bg-orange-500 hover:bg-orange-600">Holiday</Badge>;
+      case "dropout":
+        return <Badge className="bg-red-700 hover:bg-red-800">Dropout</Badge>;
+      case "dismissed":
+        return <Badge className="bg-red-800 hover:bg-red-900">Dismissed</Badge>;
       default:
         return <Badge variant="outline">{record.status}</Badge>;
     }

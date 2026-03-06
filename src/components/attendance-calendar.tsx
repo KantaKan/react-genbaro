@@ -61,6 +61,16 @@ export function AttendanceCalendar({ records, currentMonth, onMonthChange, onDay
     if (isAbsent(morning) || isAbsent(afternoon)) return "bg-yellow-500 text-white";
     if (isPresent(morning) && isPresent(afternoon)) return "bg-green-500 text-white";
     
+    // Handle no_class and holiday
+    const hasNoClass = morning === "no_class" || afternoon === "no_class";
+    const hasHoliday = morning === "holiday" || afternoon === "holiday";
+    const hasDropout = morning === "dropout" || afternoon === "dropout";
+    const hasDismissed = morning === "dismissed" || afternoon === "dismissed";
+    
+    if (hasNoClass) return "bg-purple-500 text-white";
+    if (hasHoliday) return "bg-orange-500 text-white";
+    if (hasDropout || hasDismissed) return "bg-red-700 text-white";
+    
     return "bg-muted";
   };
 

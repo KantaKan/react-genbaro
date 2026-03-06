@@ -36,7 +36,7 @@ import {
   type Holiday,
   type AttendanceStats
 } from "@/lib/api";
-import { Trash2, RefreshCw, Clock, AlertTriangle, Calendar, X, CalendarClock, Check, ChevronDown, Loader2, Star, Users, Eye, ArrowUpDown } from "lucide-react";
+import { Trash2, RefreshCw, Clock, AlertTriangle, Calendar, X, CalendarClock, Check, ChevronDown, Loader2, Star, Users, Eye, ArrowUpDown, UserX, UserMinus } from "lucide-react";
 import { LeaveRequestsTable } from "./leave-requests-table";
 import { CreateLeaveRequestDialog } from "./create-leave-request-dialog";
 import { AdminAttendanceCalendar } from "./admin-attendance-calendar";
@@ -63,7 +63,7 @@ interface QueueItem {
   id: string;
   userId: string;
   session: "morning" | "afternoon";
-  status: "present" | "late" | "absent" | "late_excused" | "absent_excused";
+  status: "present" | "late" | "absent" | "late_excused" | "absent_excused" | "no_class" | "holiday" | "dropout" | "dismissed";
   date: string;
   attempts: number;
 }
@@ -584,7 +584,7 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
     }
   };
 
-  const handleManualMark = (userId: string, session: "morning" | "afternoon", status: "present" | "late" | "absent" | "late_excused" | "absent_excused") => {
+  const handleManualMark = (userId: string, session: "morning" | "afternoon", status: "present" | "late" | "absent" | "late_excused" | "absent_excused" | "no_class" | "holiday" | "dropout" | "dismissed") => {
     // Check if already pending
     if (pendingOperations.has(`${userId}-${session}`)) {
       toast.info("Attendance update already in progress...");
@@ -830,6 +830,14 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
         return <Badge className="bg-blue-500 hover:bg-blue-600">Late Excused</Badge>;
       case "absent_excused":
         return <Badge className="bg-gray-500 hover:bg-gray-600">Absent Excused</Badge>;
+      case "no_class":
+        return <Badge className="bg-purple-500 hover:bg-purple-600">No Class</Badge>;
+      case "holiday":
+        return <Badge className="bg-orange-500 hover:bg-orange-600">Holiday</Badge>;
+      case "dropout":
+        return <Badge className="bg-red-700 hover:bg-red-800">Dropout</Badge>;
+      case "dismissed":
+        return <Badge className="bg-red-800 hover:bg-red-900">Dismissed</Badge>;
       default:
         return <Badge variant="outline">-</Badge>;
     }
@@ -1135,6 +1143,18 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
                               <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "morning", "absent_excused")} disabled={!!isHoliday(selectedDate)}>
                                 <Calendar className="h-4 w-4 mr-2 text-gray-500" /> Absent (Excused)
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "morning", "no_class")}>
+                                <Calendar className="h-4 w-4 mr-2 text-purple-500" /> No Class
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "morning", "holiday")}>
+                                <Calendar className="h-4 w-4 mr-2 text-orange-500" /> Holiday
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "morning", "dropout")}>
+                                <UserX className="h-4 w-4 mr-2 text-red-700" /> Dropout
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "morning", "dismissed")}>
+                                <UserMinus className="h-4 w-4 mr-2 text-red-800" /> Dismissed
+                              </DropdownMenuItem>
                               {student.morning !== "-" && (
                                 <>
                                   <DropdownMenuSeparator />
@@ -1170,6 +1190,18 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "afternoon", "absent_excused")} disabled={!!isHoliday(selectedDate)}>
                                 <Calendar className="h-4 w-4 mr-2 text-gray-500" /> Absent (Excused)
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "afternoon", "no_class")}>
+                                <Calendar className="h-4 w-4 mr-2 text-purple-500" /> No Class
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "afternoon", "holiday")}>
+                                <Calendar className="h-4 w-4 mr-2 text-orange-500" /> Holiday
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "afternoon", "dropout")}>
+                                <UserX className="h-4 w-4 mr-2 text-red-700" /> Dropout
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleManualMark(student.user_id, "afternoon", "dismissed")}>
+                                <UserMinus className="h-4 w-4 mr-2 text-red-800" /> Dismissed
                               </DropdownMenuItem>
                               {student.afternoon !== "-" && (
                                 <>

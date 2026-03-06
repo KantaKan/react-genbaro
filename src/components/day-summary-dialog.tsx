@@ -66,12 +66,16 @@ export function DaySummaryDialog({
     const absent = students.filter((s) => s[session] === "absent").length;
     const lateExcused = students.filter((s) => s[session] === "late_excused").length;
     const absentExcused = students.filter((s) => s[session] === "absent_excused").length;
+    const noClass = students.filter((s) => s[session] === "no_class").length;
+    const holiday = students.filter((s) => s[session] === "holiday").length;
+    const dropout = students.filter((s) => s[session] === "dropout").length;
+    const dismissed = students.filter((s) => s[session] === "dismissed").length;
     const total = students.length;
     const attended = present + late + lateExcused + absentExcused;
     const rate = total > 0 ? Math.round((attended / total) * 100) : 0;
     const absentStudents = students.filter((s) => s[session] === "absent");
 
-    return { present, late, absent, lateExcused, absentExcused, total, attended, rate, absentStudents };
+    return { present, late, absent, lateExcused, absentExcused, noClass, holiday, dropout, dismissed, total, attended, rate, absentStudents };
   };
 
   const handleMarkAttendance = () => {
@@ -162,6 +166,14 @@ export function DaySummaryDialog({
                       <p className="text-lg font-bold text-blue-600">{morningStats.lateExcused + morningStats.absentExcused}</p>
                       <p className="text-xs text-muted-foreground">Excused</p>
                     </div>
+                    <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded">
+                      <p className="text-lg font-bold text-purple-600">{morningStats.noClass}</p>
+                      <p className="text-xs text-muted-foreground">No Class</p>
+                    </div>
+                    <div className="p-2 bg-orange-50 dark:bg-orange-950 rounded">
+                      <p className="text-lg font-bold text-orange-600">{morningStats.holiday}</p>
+                      <p className="text-xs text-muted-foreground">Holiday</p>
+                    </div>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Attendance Rate</span>
@@ -212,6 +224,14 @@ export function DaySummaryDialog({
                     <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded">
                       <p className="text-lg font-bold text-blue-600">{afternoonStats.lateExcused + afternoonStats.absentExcused}</p>
                       <p className="text-xs text-muted-foreground">Excused</p>
+                    </div>
+                    <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded">
+                      <p className="text-lg font-bold text-purple-600">{afternoonStats.noClass}</p>
+                      <p className="text-xs text-muted-foreground">No Class</p>
+                    </div>
+                    <div className="p-2 bg-orange-50 dark:bg-orange-950 rounded">
+                      <p className="text-lg font-bold text-orange-600">{afternoonStats.holiday}</p>
+                      <p className="text-xs text-muted-foreground">Holiday</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between text-sm">

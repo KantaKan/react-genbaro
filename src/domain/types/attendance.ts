@@ -1,5 +1,5 @@
 export type AttendanceSession = "morning" | "afternoon";
-export type AttendanceStatusType = "present" | "late" | "absent" | "late_excused" | "absent_excused";
+export type AttendanceStatusType = "present" | "late" | "absent" | "late_excused" | "absent_excused" | "no_class" | "holiday" | "dropout" | "dismissed";
 export type WarningLevel = "normal" | "yellow" | "red";
 
 export interface AttendanceCode {

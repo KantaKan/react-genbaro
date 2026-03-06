@@ -186,6 +186,12 @@ export const attendanceService = {
       salesforce_id: salesforceId,
     });
   },
+
+  async updateAttendanceStatus(userId: string, attendanceStatus: string): Promise<void> {
+    await api.patch(`/admin/users/${userId}/attendance-status`, {
+      attendance_status: attendanceStatus,
+    });
+  },
 };
 
 export const generateAttendanceCode = attendanceService.generateAttendanceCode;
@@ -206,5 +212,6 @@ export const getMyDailyStats = attendanceService.getMyDailyStats;
 export const bulkMarkAttendance = attendanceService.bulkMarkAttendance;
 export const exportSalesforceCSV = attendanceService.exportSalesforceCSV;
 export const updateSalesforceID = attendanceService.updateSalesforceID;
+export const updateAttendanceStatus = attendanceService.updateAttendanceStatus;
 
 export default attendanceService;
