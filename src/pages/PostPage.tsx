@@ -5,43 +5,13 @@ import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/user-avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, MessageSquare, Smile } from "lucide-react";
 import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/application/contexts/UserDataContext";
 import { addReaction, removeReaction, addCommentReaction, removeCommentReaction } from "@/lib/api";
-import { getAvatarFallback, getUserAvatarUrl } from "@/lib/avatar";
-
-// Types (should be in a types file)
-interface Reaction {
-  id: string;
-  userId: string;
-  type: "emoji" | "image";
-  value: string;
-}
-
-interface Comment {
-  id: string;
-  userId: string;
-  zoomName: string;
-  cohort: number;
-  content: string;
-  reactions: Reaction[];
-  createdAt: string;
-}
-
-interface Post {
-  id: string;
-  userId: string;
-  zoomName: string;
-  cohort: number;
-  content: string;
-  reactions: Reaction[];
-  comments: Comment[];
-  createdAt: string;
-}
-
+import { BOARD_REACTIONS, BOARD_REACTION_URLS, getBoardReactionCounts, getBoardUserPayload, type BoardComment, type BoardPost } from "@/lib/board";
 interface AddReactionMutation {
   mutate: (variables: { postId: string; reaction: string }) => void;
   isLoading: boolean;
@@ -62,7 +32,7 @@ interface RemoveCommentReactionMutation {
   isLoading: boolean;
 }
 
-const fetchPost = async (postId: string): Promise<Post> => {
+const fetchPost = async (postId: string): Promise<BoardPost> => {
   const response = await api.get(`/board/posts/${postId}`);
   return response.data.data;
 };
@@ -72,7 +42,7 @@ const createComment = async ({ postId, content, zoomName, cohort }: { postId: st
   return response.data.data;
 };
 
-const PostCard: React.FC<{ post: Post; addReactionMutation: AddReactionMutation; removeReactionMutation: RemoveReactionMutation }> = ({ post, addReactionMutation, removeReactionMutation }) => {
+const PostCard: React.FC<{ post: BoardPost; addReactionMutation: AddReactionMutation; removeReactionMutation: RemoveReactionMutation }> = ({ post, addReactionMutation, removeReactionMutation }) => {
   const { userId } = useAuth();
   const queryClient = useQueryClient();
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -122,27 +92,10 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: AddReactionMutation;
     setShowReactionPicker(!showReactionPicker);
   };
 
-  const reactions = [
-    { name: "peepolike", url: "/reaction/peepoLIKE-2x.webp" },
-    { name: "pepelaugh", url: "/reaction/PepeLaugh-2x.webp" },
-    { name: "sadge", url: "/reaction/Sadge-2x.png" },
-    { name: "peepoheart", url: "/reaction/peepoHeart-2x.webp" },
-  ];
-
-  const reactionMap: { [key: string]: string } = {
-    "peepolike": "/reaction/peepoLIKE-2x.webp",
-    "pepelaugh": "/reaction/PepeLaugh-2x.webp",
-    "sadge": "/reaction/Sadge-2x.png",
-    "peepoheart": "/reaction/peepoHeart-2x.webp",
-  };
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-center gap-4">
-        <Avatar>
-          <AvatarImage src={getUserAvatarUrl(post.userId, post.zoomName)} alt={post.zoomName || "User"} />
-          <AvatarFallback>{getAvatarFallback(post.zoomName)}</AvatarFallback>
-        </Avatar>
+        <UserAvatar userId={post.userId} name={post.zoomName} />
         <div>
           <p className="font-semibold">{post.zoomName}</p>
           <p className="text-sm text-muted-foreground">
@@ -166,7 +119,7 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: AddReactionMutation;
           </Button>
           {showReactionPicker && (
             <div className="absolute bottom-10 flex gap-2 bg-card p-2 rounded-lg border">
-              {reactions.map((r) => (
+              {BOARD_REACTIONS.map((r) => (
                 <button
                   key={r.name}
                   onClick={(e) => handleReact(e, r.name)}
@@ -198,14 +151,11 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: AddReactionMutation;
           {postReactions.length > 0 && (
             <div className="flex items-center gap-2">
               {Object.entries(
-                postReactions.reduce((acc, reaction) => {
-                  acc[reaction.value] = (acc[reaction.value] || 0) + 1;
-                  return acc;
-                }, {} as Record<string, number>)
+                getBoardReactionCounts(postReactions)
               ).map(([reactionType, count]) => (
                 <div key={reactionType} className="flex items-center gap-1">
-                  {reactionMap[reactionType] ? (
-                    <img src={reactionMap[reactionType]} alt={reactionType} className="w-5 h-5" />
+                  {BOARD_REACTION_URLS[reactionType] ? (
+                    <img src={BOARD_REACTION_URLS[reactionType]} alt={reactionType} className="w-5 h-5" />
                   ) : (
                     <span>{reactionType}</span>
                   )}
@@ -220,7 +170,7 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: AddReactionMutation;
   );
 };
 
-const CommentCard: React.FC<{ comment: Comment; addCommentReactionMutation: AddCommentReactionMutation; removeCommentReactionMutation: RemoveCommentReactionMutation }> = ({ comment, addCommentReactionMutation, removeCommentReactionMutation }) => {
+const CommentCard: React.FC<{ comment: BoardComment; addCommentReactionMutation: AddCommentReactionMutation; removeCommentReactionMutation: RemoveCommentReactionMutation }> = ({ comment, addCommentReactionMutation, removeCommentReactionMutation }) => {
   const { userId } = useAuth();
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const commentReactions = comment.reactions || [];
@@ -256,27 +206,10 @@ const CommentCard: React.FC<{ comment: Comment; addCommentReactionMutation: AddC
     setShowReactionPicker(!showReactionPicker);
   };
 
-  const reactions = [
-    { name: "peepolike", url: "/reaction/peepoLIKE-2x.webp" },
-    { name: "pepelaugh", url: "/reaction/PepeLaugh-2x.webp" },
-    { name: "sadge", url: "/reaction/Sadge-2x.png" },
-    { name: "peepoheart", url: "/reaction/peepoHeart-2x.webp" },
-  ];
-
-  const reactionMap: { [key: string]: string } = {
-    "peepolike": "/reaction/peepoLIKE-2x.webp",
-    "pepelaugh": "/reaction/PepeLaugh-2x.webp",
-    "sadge": "/reaction/Sadge-2x.png",
-    "peepoheart": "/reaction/peepoHeart-2x.webp",
-  };
-
   return (
     <Card className="ml-12">
       <CardHeader className="flex flex-row items-center gap-4">
-        <Avatar>
-          <AvatarImage src={getUserAvatarUrl(comment.userId, comment.zoomName)} alt={comment.zoomName || "User"} />
-          <AvatarFallback>{getAvatarFallback(comment.zoomName)}</AvatarFallback>
-        </Avatar>
+        <UserAvatar userId={comment.userId} name={comment.zoomName} />
         <div>
           <p className="font-semibold">{comment.zoomName}</p>
           <p className="text-sm text-muted-foreground">
@@ -300,7 +233,7 @@ const CommentCard: React.FC<{ comment: Comment; addCommentReactionMutation: AddC
           </Button>
           {showReactionPicker && (
             <div className="absolute bottom-10 flex gap-2 bg-card p-2 rounded-lg border">
-              {reactions.map((r) => (
+              {BOARD_REACTIONS.map((r) => (
                 <button
                   key={r.name}
                   onClick={(e) => handleReact(e, r.name)}
@@ -328,14 +261,11 @@ const CommentCard: React.FC<{ comment: Comment; addCommentReactionMutation: AddC
           {commentReactions.length > 0 && (
             <div className="flex items-center gap-2">
               {Object.entries(
-                commentReactions.reduce((acc, reaction) => {
-                  acc[reaction.value] = (acc[reaction.value] || 0) + 1;
-                  return acc;
-                }, {} as Record<string, number>)
+                getBoardReactionCounts(commentReactions)
               ).map(([reactionType, count]) => (
                 <div key={reactionType} className="flex items-center gap-1">
-                  {reactionMap[reactionType] ? (
-                    <img src={reactionMap[reactionType]} alt={reactionType} className="w-5 h-5" />
+                  {BOARD_REACTION_URLS[reactionType] ? (
+                    <img src={BOARD_REACTION_URLS[reactionType]} alt={reactionType} className="w-5 h-5" />
                   ) : (
                     <span>{reactionType}</span>
                   )}
@@ -395,11 +325,12 @@ const PostPage: React.FC = () => {
 
   const handleAddComment = () => {
     if (newComment.trim() && postId && userData) {
+      const { zoomName, cohort } = getBoardUserPayload(userData);
       createCommentMutation.mutate({ 
         postId, 
         content: newComment,
-        zoomName: userData.zoomName || "Unknown",
-        cohort: userData.cohort || 0
+        zoomName,
+        cohort
       });
     }
   };

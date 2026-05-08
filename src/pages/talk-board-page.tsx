@@ -1,58 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "react-query";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, MessageSquare, Smile, X, Pin, StickyNote } from "lucide-react";
+import { Send, MessageSquare, Smile, X, StickyNote } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/application/contexts/UserDataContext";
-import { getAvatarFallback, getUserAvatarUrl } from "@/lib/avatar";
-
-interface Reaction {
-  id: string;
-  userId: string;
-  type: "emoji" | "image";
-  value: string;
-}
-
-interface Comment {
-  id: string;
-  userId: string;
-  zoomName: string;
-  cohort: number;
-  content: string;
-  reactions: Reaction[];
-  createdAt: string;
-}
-
-interface Post {
-  id: string;
-  userId: string;
-  zoomName: string;
-  cohort: number;
-  content: string;
-  reactions: Reaction[];
-  comments: Comment[];
-  createdAt: string;
-}
-
-const REACTION_EMOJIS = [
-  { name: "peepolike", url: "/reaction/peepoLIKE-2x.webp" },
-  { name: "pepelaugh", url: "/reaction/PepeLaugh-2x.webp" },
-  { name: "sadge", url: "/reaction/Sadge-2x.png" },
-  { name: "peepoheart", url: "/reaction/peepoHeart-2x.webp" },
-];
-
-const REACTION_MAP: { [key: string]: string } = {
-  "peepolike": "/reaction/peepoLIKE-2x.webp",
-  "pepelaugh": "/reaction/PepeLaugh-2x.webp",
-  "sadge": "/reaction/Sadge-2x.png",
-  "peepoheart": "/reaction/peepoHeart-2x.webp",
-};
+import { UserAvatar } from "@/components/user-avatar";
+import { BOARD_REACTIONS, BOARD_REACTION_URLS, getBoardReactionCounts, getBoardUserPayload, type BoardPost } from "@/lib/board";
 
 const COHORT_COLORS: { [key: number]: string } = {
   1: "border-l-[hsl(var(--cohort-1))]",
@@ -63,7 +21,7 @@ const COHORT_COLORS: { [key: number]: string } = {
 
 const getCohortColor = (cohort: number) => COHORT_COLORS[cohort % 4] || COHORT_COLORS[1];
 
-const fetchPosts = async (): Promise<Post[]> => {
+const fetchPosts = async (): Promise<BoardPost[]> => {
   const response = await api.get("/board/posts");
   return response.data.data;
 };
@@ -113,16 +71,16 @@ const TalkBoardPage: React.FC = () => {
 
   const handleCreatePost = () => {
     if (newPostContent.trim() && userData) {
+      const { zoomName, cohort } = getBoardUserPayload(userData);
       createPostMutation.mutate({ 
         content: newPostContent, 
-        zoomName: userData.zoom_name || "Unknown", 
-        cohort: userData.cohort_number || 0 
+        zoomName, 
+        cohort 
       });
     }
   };
 
-  const composerName = userData?.zoom_name || userData?.first_name || "User";
-  const composerAvatarUrl = getUserAvatarUrl(userData?._id, userData?.email, composerName);
+  const composerUser = getBoardUserPayload(userData);
 
   if (isLoading) {
     return (
@@ -194,12 +152,15 @@ const TalkBoardPage: React.FC = () => {
                 
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
-                    <Avatar className="h-10 w-10 border-2 border-primary/30">
-                      <AvatarImage src={composerAvatarUrl} alt={composerName} />
-                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                        {getAvatarFallback(composerName)}
-                      </AvatarFallback>
-                    </Avatar>
+                    <UserAvatar
+                      userId={composerUser.userId}
+                      name={composerUser.zoomName}
+                      firstName={composerUser.firstName}
+                      lastName={composerUser.lastName}
+                      email={composerUser.email}
+                      className="h-10 w-10 border-2 border-primary/30"
+                      fallbackClassName="bg-primary/10 text-primary font-semibold"
+                    />
                     <div className="flex-1">
                       <Textarea
                         value={newPostContent}
@@ -282,9 +243,15 @@ const TalkBoardPage: React.FC = () => {
 };
 
 interface PostCardProps {
-  post: Post;
-  addReactionMutation: any;
-  removeReactionMutation: any;
+  post: BoardPost;
+  addReactionMutation: {
+    mutate: (variables: { postId: string; reaction: string }) => void;
+    isLoading: boolean;
+  };
+  removeReactionMutation: {
+    mutate: (variables: string) => void;
+    isLoading: boolean;
+  };
 }
 
 const PostCard: React.FC<PostCardProps> = ({ post, addReactionMutation, removeReactionMutation }) => {
@@ -329,10 +296,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, addReactionMutation, removeRe
     setShowReactionPicker(!showReactionPicker);
   };
 
-  const reactionCounts = postReactions.reduce((acc, reaction) => {
-    acc[reaction.value] = (acc[reaction.value] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const reactionCounts = getBoardReactionCounts(postReactions);
 
   return (
     <Link to={`/talk-board/${post.id}`} className="block">
@@ -352,12 +316,12 @@ const PostCard: React.FC<PostCardProps> = ({ post, addReactionMutation, removeRe
           <CardContent className="p-5">
             {/* Header */}
             <div className="flex items-center gap-3 mb-4">
-              <Avatar className="h-10 w-10 border-2 border-primary/20">
-                <AvatarImage src={getUserAvatarUrl(post.userId, post.zoomName)} alt={post.zoomName || "User"} />
-                <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
-                  {getAvatarFallback(post.zoomName)}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar
+                userId={post.userId}
+                name={post.zoomName}
+                className="h-10 w-10 border-2 border-primary/20"
+                fallbackClassName="bg-primary/10 text-primary font-semibold text-sm"
+              />
               <div>
                 <p className="font-semibold text-sm">{post.zoomName}</p>
                 <p className="text-xs text-muted-foreground">
@@ -382,9 +346,9 @@ const PostCard: React.FC<PostCardProps> = ({ post, addReactionMutation, removeRe
                   `}
                   whileTap={{ scale: 0.95 }}
                 >
-                  {REACTION_MAP[type] ? (
+                  {BOARD_REACTION_URLS[type] ? (
                     <img 
-                      src={REACTION_MAP[type]} 
+                      src={BOARD_REACTION_URLS[type]} 
                       alt={type} 
                       className={`w-5 h-5 ${bouncingReaction === type ? 'reaction-bounce' : ''}`}
                     />
@@ -426,7 +390,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, addReactionMutation, removeRe
                     className="absolute bottom-full left-0 mb-2 flex items-center gap-1 p-2 bg-card/95 backdrop-blur-md rounded-xl border shadow-lg"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {REACTION_EMOJIS.map((r) => (
+                    {BOARD_REACTIONS.map((r) => (
                       <motion.button
                         key={r.name}
                         onClick={(e) => handleReact(e, r.name)}
