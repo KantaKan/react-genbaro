@@ -13,6 +13,10 @@ export {
 
 export { awardBadge } from "../application/services/badgeService";
 export {
+  getPosts,
+  getPost,
+  createPost,
+  createComment,
   addReaction,
   removeReaction,
   addCommentReaction,
