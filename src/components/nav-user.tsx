@@ -7,6 +7,7 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/c
 import { useAuth } from "@/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useUserData } from "@/UserDataContext";
+import { getAvatarFallback, getUserAvatarUrl } from "@/lib/avatar";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
@@ -28,8 +29,9 @@ export function NavUser() {
     return <div>Error loading user data</div>;
   }
 
-  // Access userData directly since it's already the UserData object
-  const { first_name, email } = userData || {};
+  const { _id, first_name, last_name, email } = userData || {};
+  const avatarUrl = getUserAvatarUrl(_id, email, first_name);
+  const avatarFallback = getAvatarFallback(first_name, last_name, email);
 
   return (
     <SidebarMenu>
@@ -38,8 +40,8 @@ export function NavUser() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src="" alt={first_name || "User"} />
-                <AvatarFallback className="rounded-lg">😁</AvatarFallback>
+                <AvatarImage src={avatarUrl} alt={first_name || "User"} />
+                <AvatarFallback className="rounded-lg">{avatarFallback}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{first_name || "User"}</span>
@@ -52,8 +54,8 @@ export function NavUser() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src="" alt={first_name || "User"} />
-                  <AvatarFallback className="rounded-lg">🥰</AvatarFallback>
+                  <AvatarImage src={avatarUrl} alt={first_name || "User"} />
+                  <AvatarFallback className="rounded-lg">{avatarFallback}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{first_name || "User"}</span>
