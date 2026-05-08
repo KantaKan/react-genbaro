@@ -11,6 +11,7 @@ import { Send, MessageSquare, Smile } from "lucide-react";
 import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/application/contexts/UserDataContext";
 import { addReaction, removeReaction, addCommentReaction, removeCommentReaction } from "@/lib/api";
+import { getAvatarFallback, getUserAvatarUrl } from "@/lib/avatar";
 
 // Types (should be in a types file)
 interface Reaction {
@@ -139,7 +140,8 @@ const PostCard: React.FC<{ post: Post; addReactionMutation: AddReactionMutation;
     <Card>
       <CardHeader className="flex flex-row items-center gap-4">
         <Avatar>
-          <AvatarFallback>{post.zoomName.charAt(0)}</AvatarFallback>
+          <AvatarImage src={getUserAvatarUrl(post.userId, post.zoomName)} alt={post.zoomName || "User"} />
+          <AvatarFallback>{getAvatarFallback(post.zoomName)}</AvatarFallback>
         </Avatar>
         <div>
           <p className="font-semibold">{post.zoomName}</p>
@@ -272,7 +274,8 @@ const CommentCard: React.FC<{ comment: Comment; addCommentReactionMutation: AddC
     <Card className="ml-12">
       <CardHeader className="flex flex-row items-center gap-4">
         <Avatar>
-          <AvatarFallback>{comment.zoomName.charAt(0)}</AvatarFallback>
+          <AvatarImage src={getUserAvatarUrl(comment.userId, comment.zoomName)} alt={comment.zoomName || "User"} />
+          <AvatarFallback>{getAvatarFallback(comment.zoomName)}</AvatarFallback>
         </Avatar>
         <div>
           <p className="font-semibold">{comment.zoomName}</p>

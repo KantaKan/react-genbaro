@@ -4,12 +4,13 @@ import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, MessageSquare, Smile, X, Pin, StickyNote } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/application/contexts/UserDataContext";
+import { getAvatarFallback, getUserAvatarUrl } from "@/lib/avatar";
 
 interface Reaction {
   id: string;
@@ -120,6 +121,9 @@ const TalkBoardPage: React.FC = () => {
     }
   };
 
+  const composerName = userData?.zoom_name || userData?.first_name || "User";
+  const composerAvatarUrl = getUserAvatarUrl(userData?._id, userData?.email, composerName);
+
   if (isLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -191,8 +195,9 @@ const TalkBoardPage: React.FC = () => {
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     <Avatar className="h-10 w-10 border-2 border-primary/30">
+                      <AvatarImage src={composerAvatarUrl} alt={composerName} />
                       <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                        {userData?.zoom_name?.charAt(0) || "?"}
+                        {getAvatarFallback(composerName)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
@@ -348,8 +353,9 @@ const PostCard: React.FC<PostCardProps> = ({ post, addReactionMutation, removeRe
             {/* Header */}
             <div className="flex items-center gap-3 mb-4">
               <Avatar className="h-10 w-10 border-2 border-primary/20">
+                <AvatarImage src={getUserAvatarUrl(post.userId, post.zoomName)} alt={post.zoomName || "User"} />
                 <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
-                  {post.zoomName?.charAt(0) || "?"}
+                  {getAvatarFallback(post.zoomName)}
                 </AvatarFallback>
               </Avatar>
               <div>
