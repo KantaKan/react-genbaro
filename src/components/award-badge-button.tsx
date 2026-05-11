@@ -46,7 +46,7 @@ export function AwardBadgeButton({ userId, onBadgeAwarded }: AwardBadgeButtonPro
      emoji: "",
      imageUrl: "",
      color: "#3B82F6", // Default blue
-     style: "pixel" as "pixel" | "rounded" | "minimal",
+     style: "pixel" as "pixel" | "rounded" | "minimal" | "image",
    });
 
 
@@ -267,8 +267,8 @@ export function AwardBadgeButton({ userId, onBadgeAwarded }: AwardBadgeButtonPro
                  <Label>Badge Style *</Label>
                  <RadioGroup
                    value={customBadge.style}
-                   onValueChange={(v) => setCustomBadge({ ...customBadge, style: v as "pixel" | "rounded" | "minimal" })}
-                   className="grid grid-cols-3 gap-3"
+onValueChange={(v) => setCustomBadge({ ...customBadge, style: v as "pixel" | "rounded" | "minimal" | "image" })}
+                    className="grid grid-cols-2 gap-3"
                  >
                    <div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-muted transition-colors">
                      <RadioGroupItem value="pixel" id="pixel" />
@@ -284,14 +284,21 @@ export function AwardBadgeButton({ userId, onBadgeAwarded }: AwardBadgeButtonPro
                        <div className="text-xs text-muted-foreground">Picture-only badge</div>
                      </Label>
                    </div>
-                   <div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-muted transition-colors">
-                     <RadioGroupItem value="minimal" id="minimal" />
-                     <Label htmlFor="minimal" className="cursor-pointer flex-1">
-                       <div className="text-sm font-medium">Dot</div>
-                       <div className="text-xs text-muted-foreground">Minimal indicator</div>
-                     </Label>
-                   </div>
-                 </RadioGroup>
+<div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-muted transition-colors">
+                      <RadioGroupItem value="minimal" id="minimal" />
+                      <Label htmlFor="minimal" className="cursor-pointer flex-1">
+                        <div className="text-sm font-medium">Dot</div>
+                        <div className="text-xs text-muted-foreground">Minimal indicator</div>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-muted transition-colors">
+                      <RadioGroupItem value="image" id="image" />
+                      <Label htmlFor="image" className="cursor-pointer flex-1">
+                        <div className="text-sm font-medium">Image</div>
+                        <div className="text-xs text-muted-foreground">Pure PNG upload</div>
+                      </Label>
+                    </div>
+                  </RadioGroup>
                </div>
 
                <div className="space-y-3">

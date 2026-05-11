@@ -207,6 +207,45 @@ function MinimalBadge({ badge, className = "", showTooltip = true }: BadgeRender
   );
 }
 
+// Pure PNG Image Badge Component (no styling, just the image)
+function ImageBadge({ badge, className = "", showTooltip = true }: BadgeRendererProps) {
+  if (!badge.imageUrl) {
+    // Fallback to emoji if no image URL
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className={`inline-flex items-center justify-center ${className}`}
+        title={showTooltip ? `${badge.type}: ${badge.name}` : undefined}
+      >
+        <span className="text-3xl">{badge.emoji || "🎖️"}</span>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
+      className={`inline-flex items-center justify-center ${className}`}
+      title={showTooltip ? `${badge.type}: ${badge.name}` : undefined}
+    >
+      <img
+        src={badge.imageUrl}
+        alt={badge.name}
+        className="max-w-none"
+        style={{
+          width: "auto",
+          height: "auto",
+          maxWidth: "100px",
+          maxHeight: "100px",
+        }}
+      />
+    </motion.div>
+  );
+}
+
 // Main BadgeRenderer Component
 export function BadgeRenderer({ badge, className = "", showTooltip = true }: BadgeRendererProps) {
   // Defensive programming - ensure badge exists and has required properties
@@ -222,6 +261,8 @@ export function BadgeRenderer({ badge, className = "", showTooltip = true }: Bad
       return <RoundedBadge badge={badge} className={`${className} top-2 `} showTooltip={showTooltip} />;
     case "minimal":
       return <MinimalBadge badge={badge} className={className} showTooltip={showTooltip} />;
+    case "image":
+      return <ImageBadge badge={badge} className={className} showTooltip={showTooltip} />;
     case "pixel":
     default:
       return <PixelBadge badge={badge} className={className} showTooltip={showTooltip} />;
