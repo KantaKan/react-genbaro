@@ -13,6 +13,9 @@ import UserDataProvider from "./application/contexts/UserDataContext";
 import { AdminTablePage } from "./components/AdminTablePage";
 import { AdminUsersPage } from "./pages/admin-users-page";
 import UserReflectionsPage from "./pages/UserReflectionsPage";
+import UserProfilePage from "./pages/UserProfilePage";
+import LearnerDirectoryPage from "./pages/LearnerDirectoryPage";
+import MyProfileWrapper from "./pages/MyProfileWrapper";
 import TalkBoardPage from "./pages/talk-board-page";
 import PostPage from "./pages/PostPage";
 import ReflectionsPage from "./pages/user-reflection";
@@ -101,11 +104,14 @@ function AppContent() {
           <Route path="/learner" element={<LearnerLayout />}>
             <Route index element={<ReflectionsPage />} />
             <Route path="attendance" element={<StudentAttendance />} />
+            <Route path="directory" element={<LearnerDirectoryPage />} />
+            <Route path="my-profile" element={<MyProfileWrapper />} />
           </Route>
 
           <Route
             element={<AuthedPageLayout allowedRoles={["admin", "learner"]} />}
           >
+            <Route path="/profile/:id" element={<UserProfilePage />} />
             <Route path="/talk-board" element={<TalkBoardPage />} />
             <Route path="/talk-board/:postId" element={<PostPage />} />
             <Route path="/tools" element={<ToolsPage />} />

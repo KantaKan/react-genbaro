@@ -17,6 +17,36 @@ export interface User {
   reflections?: Reflection[];
   badges?: Badge[];
   salesforce_id?: string;
+  profile_comments?: ProfileComment[];
+  profile_reactions?: ProfileReaction[];
+  bio?: string;
+  social_links?: SocialLinks;
+  pinned_badge_ids?: string[];
+}
+
+export interface SocialLinks {
+  instagram?: string;
+  linkedin?: string;
+  github?: string;
+}
+
+export interface ProfileReaction {
+  id: string;
+  userId: string;
+  type: string;
+  value: string;
+  createdAt: string;
+}
+
+export interface ProfileComment {
+  id: string;
+  userId: string;
+  zoomName: string;
+  cohort: number;
+  content: string;
+  reactions?: ProfileReaction[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface UserData extends User {
@@ -44,6 +74,8 @@ export interface GetAllUsersResponse {
 
 export interface JWTPayload {
   user_id: string;
+  cohort?: number;
+  role?: string;
   iat?: number;
   exp?: number;
 }

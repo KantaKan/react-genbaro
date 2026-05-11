@@ -128,9 +128,19 @@ const navigationConfig: Record<UserRole, any[]> = {
           icon: User, // Add icon for sub-menu item
         },
         {
+          title: "My Profile",
+          url: "/learner/my-profile",
+          icon: User,
+        },
+        {
           title: "Attendance",
           url: "/learner/attendance",
           icon: ClipboardCheck,
+        },
+        {
+          title: "Learner Directory",
+          url: "/learner/directory",
+          icon: Users,
         },
       ],
     },
