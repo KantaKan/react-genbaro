@@ -108,18 +108,18 @@ function PixelBadge({ badge, className = "", showTooltip = true }: BadgeRenderer
       />
 
       {/* Icon/Emoji area with pixelated rendering */}
-      <div className="flex items-center justify-center w-8 h-8 shrink-0">
+      <div className="flex items-center justify-center w-10 h-10 shrink-0">
         {badge.imageUrl ? (
           <img
             src={badge.imageUrl}
             alt={badge.name}
-            className="w-full h-full object-contain"
+            className="w-full h-full object-cover"
             style={{
               imageRendering: "pixelated",
             }}
           />
         ) : (
-          <span className="text-xl">{badge.emoji}</span>
+          <span className="text-2xl">{badge.emoji}</span>
         )}
       </div>
 
