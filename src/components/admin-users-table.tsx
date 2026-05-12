@@ -36,8 +36,11 @@ interface AdminUsersTableProps {
 }
 
 import { BarometerVisual, reflectionZones } from "@/components/barometer-visual";
-
+import { BulkActionsBar } from "@/components/bulk-actions-bar";
+import { AwardBadgeBulkDialog } from "@/components/award-badge-bulk-dialog";
+import { BulkAttendanceDialog } from "@/components/bulk-attendance-dialog";
 import { LoadingRow } from "@/components/loading-row";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Define all available columns in their desired order
 const ALL_COLUMNS = ["Zoom Name", "Project Group", "Genmate Group", "First Name", "Last Name", "JSD Number", "Email", "Cohort", "Total Reflections", "Last Barometer", "Actions"] as const;
@@ -59,6 +62,10 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [barometerFilter, setBarometerFilter] = useState<string>("all");
   const [projectGroupFilter, setProjectGroupFilter] = useState<string>("all");
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [bulkBadgeOpen, setBulkBadgeOpen] = useState(false);
+  const [bulkAttendanceOpen, setBulkAttendanceOpen] = useState(false);
+  const [isBulkExporting, setIsBulkExporting] = useState(false);
 
   const toggleColumn = (column: string) => {
     setVisibleColumns((current) => {
@@ -167,6 +174,52 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
   });
 
   const uniqueProjectGroups = Array.from(new Set(users.map(u => u.project_group).filter(Boolean)));
+
+  const handleSelectAll = () => {
+    if (selectedUserIds.size === filteredUsers.length) {
+      setSelectedUserIds(new Set());
+    } else {
+      setSelectedUserIds(new Set(filteredUsers.map(u => u._id)));
+    }
+  };
+
+  const handleSelectUser = (userId: string, checked: boolean) => {
+    const newSelected = new Set(selectedUserIds);
+    if (checked) {
+      newSelected.add(userId);
+    } else {
+      newSelected.delete(userId);
+    }
+    setSelectedUserIds(newSelected);
+  };
+
+  const handleBulkExport = async () => {
+    setIsBulkExporting(true);
+    const selectedUsers = users.filter(u => selectedUserIds.has(u._id));
+    const csv = [
+      ["First Name", "Last Name", "Email", "Zoom Name", "Project Group", "JSD Number", "Total Reflections", "Last Barometer"].join(","),
+      ...selectedUsers.map(u => [
+        u.first_name,
+        u.last_name,
+        u.email,
+        u.zoom_name || "",
+        u.project_group || "",
+        u.jsd_number || "",
+        getTotalReflections(u.reflections),
+        getLastBarometer(u.reflections),
+      ].join(","))
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `baro-users-export-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setIsBulkExporting(false);
+    setSelectedUserIds(new Set());
+  };
 
   const handleQuickAction = (action: string, userId: string, user: User) => {
     if (action === "view") {
@@ -354,6 +407,16 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
         </div>
       </div>
 
+      <BulkActionsBar
+        selectedCount={selectedUserIds.size}
+        totalCount={filteredUsers.length}
+        onClearSelection={() => setSelectedUserIds(new Set())}
+        onBulkBadge={() => setBulkBadgeOpen(true)}
+        onBulkAttendance={() => setBulkAttendanceOpen(true)}
+        onBulkExport={handleBulkExport}
+        isExporting={isBulkExporting}
+      />
+
       {filteredUsers.length === 0 && searchQuery && (
         <div className="text-center py-8 text-muted-foreground">
           No users found matching your filters. Try adjusting your search or filters.
@@ -364,6 +427,13 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={selectedUserIds.size === filteredUsers.length && filteredUsers.length > 0}
+                  onCheckedChange={handleSelectAll}
+                  aria-label="Select all"
+                />
+              </TableHead>
               {visibleColumns.map((column) => (
                 <TableHead key={column} className="text-center">
                   <Button variant="ghost" onClick={() => requestSort(column)} className="w-full justify-center font-bold">
@@ -388,8 +458,15 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2, delay: index * 0.03 }}
                   onClick={() => handleRowClick(user._id)}
-                  className="cursor-pointer hover:bg-muted/50 transition-colors text-center even:bg-muted/25"
+                  className={`cursor-pointer hover:bg-muted/50 transition-colors text-center even:bg-muted/25 ${selectedUserIds.has(user._id) ? "bg-primary/10" : ""}`}
                 >
+                  <TableCell className="w-12" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={selectedUserIds.has(user._id)}
+                      onCheckedChange={(checked) => handleSelectUser(user._id, checked as boolean)}
+                      aria-label={`Select ${user.first_name}`}
+                    />
+                  </TableCell>
                   {visibleColumns.map((column) => renderTableCell(user, column))}
                 </motion.tr>
               ))}
@@ -397,6 +474,20 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
           </TableBody>
         </Table>
       </div>
+
+      <AwardBadgeBulkDialog
+        isOpen={bulkBadgeOpen}
+        onClose={() => setBulkBadgeOpen(false)}
+        userIds={Array.from(selectedUserIds)}
+        onSuccess={() => setSelectedUserIds(new Set())}
+      />
+
+      <BulkAttendanceDialog
+        isOpen={bulkAttendanceOpen}
+        onClose={() => setBulkAttendanceOpen(false)}
+        userIds={Array.from(selectedUserIds)}
+        onSuccess={() => setSelectedUserIds(new Set())}
+      />
     </div>
   );
 }
