@@ -108,18 +108,18 @@ function PixelBadge({ badge, className = "", showTooltip = true }: BadgeRenderer
       />
 
       {/* Icon/Emoji area with pixelated rendering */}
-      <div className="flex items-center justify-center w-10 h-10 shrink-0">
+      <div className="flex items-center justify-center w-16 h-16 shrink-0">
         {badge.imageUrl ? (
           <img
             src={badge.imageUrl}
             alt={badge.name}
-            className="w-full h-full object-cover"
+            className="w-16 h-16 object-cover"
             style={{
               imageRendering: "pixelated",
             }}
           />
         ) : (
-          <span className="text-2xl">{badge.emoji}</span>
+          <span className="text-3xl">{badge.emoji}</span>
         )}
       </div>
 
@@ -148,7 +148,7 @@ function RoundedBadge({ badge, className = "", showTooltip = true }: BadgeRender
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3, type: "spring" }}
-      className={`relative inline-flex items-center justify-center w-12 h-12 rounded-full border-2 ${className}`}
+      className={`relative inline-flex items-center justify-center w-16 h-16 rounded-full border-2 ${className}`}
       style={{
         backgroundColor: badgeColor,
         borderColor: badgeColor,
@@ -160,7 +160,7 @@ function RoundedBadge({ badge, className = "", showTooltip = true }: BadgeRender
         <img
           src={badge.imageUrl}
           alt={badge.name}
-          className="w-10 h-10 rounded-full object-cover"
+          className="w-12 h-12 rounded-full object-cover"
           style={{
             objectPosition: "center",
             objectFit: "cover",
