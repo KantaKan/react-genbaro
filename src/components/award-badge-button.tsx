@@ -36,7 +36,7 @@ const emojiOptions = [
 export function AwardBadgeButton({ userId, onBadgeAwarded }: AwardBadgeButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState<"predefined" | "custom">("predefined");
+  const [activeTab, setActiveTab] = useState<"predefined" | "custom">("custom");
   
   const [selectedPredefinedBadge, setSelectedPredefinedBadge] = useState<string | null>(null);
   
@@ -148,8 +148,8 @@ export function AwardBadgeButton({ userId, onBadgeAwarded }: AwardBadgeButtonPro
         
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "predefined" | "custom")} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="predefined">Predefined Badges</TabsTrigger>
             <TabsTrigger value="custom">Custom Badge</TabsTrigger>
+            <TabsTrigger value="predefined">Predefined Badges</TabsTrigger>
           </TabsList>
           
           <TabsContent value="predefined" className="space-y-4">
