@@ -52,6 +52,7 @@ const UserProfilePage: React.FC = () => {
   const { userData: currentUserData } = useUserData();
   
   const [newComment, setNewComment] = useState("");
+  const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   
@@ -91,11 +92,12 @@ const UserProfilePage: React.FC = () => {
   );
 
   const addCommentMutation = useMutation(
-    (payload: { content: string; zoomName: string; cohort: number }) => addProfileComment(id!, payload),
+    (payload: { content: string; zoomName: string; cohort: number; parentId?: string }) => addProfileComment(id!, payload),
     {
       onSuccess: () => {
         queryClient.invalidateQueries(["userProfile", id]);
         setNewComment("");
+        setReplyToCommentId(null);
       },
     }
   );
@@ -128,7 +130,7 @@ const UserProfilePage: React.FC = () => {
   const handleAddComment = () => {
     if (newComment.trim() && currentUserData) {
       const { zoomName, cohort } = getBoardUserPayload(currentUserData);
-      addCommentMutation.mutate({ content: newComment, zoomName, cohort });
+      addCommentMutation.mutate({ content: newComment, zoomName, cohort, parentId: replyToCommentId || undefined });
     }
   };
 
@@ -360,7 +362,34 @@ const UserProfilePage: React.FC = () => {
                       </CardHeader>
                       <CardContent className="pb-6 px-6">
                         <p className="text-lg leading-snug">"{comment.content}"</p>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="mt-2 text-xs font-bold text-muted-foreground"
+                          onClick={() => setReplyToCommentId(comment.id)}
+                        >
+                          Reply
+                        </Button>
+                        {replyToCommentId === comment.id && (
+                          <div className="mt-4 p-4 bg-muted/20 rounded-lg space-y-2">
+                             <Textarea 
+                               value={newComment} 
+                               onChange={(e) => setNewComment(e.target.value)} 
+                               placeholder="Write a reply..."
+                             />
+                             <div className="flex justify-end gap-2">
+                               <Button variant="ghost" size="sm" onClick={() => setReplyToCommentId(null)}>Cancel</Button>
+                               <Button size="sm" onClick={handleAddComment}>Post Reply</Button>
+                             </div>
+                          </div>
+                        )}
                       </CardContent>
+                      {comment.replies && comment.replies.map(reply => (
+                        <div key={reply.id} className="ml-12 border-l-2 border-primary/20 pl-4 py-2 mb-2">
+                           <p className="text-sm font-bold uppercase italic">{reply.zoomName}</p>
+                           <p className="text-sm leading-snug">"{reply.content}"</p>
+                        </div>
+                      ))}
                     </Card>
                   </motion.div>
                 ))
