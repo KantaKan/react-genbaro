@@ -47,7 +47,7 @@ export function AdminUsersPage() {
     setIsLoading(true);
     try {
       const response = await api.get<ApiResponse>(
-        `/admin/users?cohort=${cohortValue}&role=learner&limit=200`
+        `/admin/users?cohort=${cohortValue}&role=learner&limit=1000`
       );
       setUsers(response.data.data.users);
     } catch (error) {
@@ -94,9 +94,10 @@ export function AdminUsersPage() {
                 <SelectValue placeholder="Select cohort" />
               </SelectTrigger>
               <SelectContent>
-                {[9, 10, 11, 12, 13].map((n) => (
+                <SelectItem value="0">All Cohorts</SelectItem>
+                {[9, 10, 11, 12, 13, 14, 15, 16].map((n) => (
                   <SelectItem key={n} value={String(n)}>
-                    {n}
+                    Cohort {n}
                   </SelectItem>
                 ))}
               </SelectContent>

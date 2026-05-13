@@ -64,6 +64,11 @@ const navigationConfig: Record<UserRole, any[]> = {
           icon: Users, // Add icon for sub-menu item
         },
         {
+          title: "Learner Directory",
+          url: "/learner/directory",
+          icon: Users,
+        },
+        {
           title: "Weekly Summary",
           url: "/admin/weekly-summary",
           icon: Calendar, // Add icon for sub-menu item

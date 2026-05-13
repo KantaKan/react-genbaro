@@ -52,8 +52,8 @@ export const boardService = {
     await api.delete(`/board/posts/${postId}`);
   },
 
-  async deleteComment(commentId: string) {
-    await api.delete(`/board/comments/${commentId}`);
+  async deleteComment(postId: string, commentId: string) {
+    await api.delete(`/board/posts/${postId}/comments/${commentId}`);
   },
 };
 

@@ -287,17 +287,20 @@ const PostPage: React.FC = () => {
     },
   });
 
-  const deleteCommentMutation = useMutation(deleteComment, {
-    onSuccess: () => {
-      queryClient.invalidateQueries(["talkBoardPost", postId]);
-      toast.success("Comment deleted successfully");
-      setDeleteCommentId(null);
-    },
-    onError: () => {
-      toast.error("Failed to delete comment");
-      setIsDeleting(false);
-    },
-  });
+  const deleteCommentMutation = useMutation(
+    (commentId: string) => deleteComment(postId!, commentId), 
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["talkBoardPost", postId]);
+        toast.success("Comment deleted successfully");
+        setDeleteCommentId(null);
+      },
+      onError: () => {
+        toast.error("Failed to delete comment");
+        setIsDeleting(false);
+      },
+    }
+  );
 
   const handleDeleteComment = () => {
     if (!deleteCommentId) return;
@@ -372,6 +375,23 @@ const PostPage: React.FC = () => {
           ))}
         </AnimatePresence>
       </div>
+      
+      <AlertDialog open={!!deleteCommentId} onOpenChange={() => !isDeleting && setDeleteCommentId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Comment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this comment? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteComment} disabled={isDeleting} className="bg-red-500 hover:bg-red-600 text-white">
+              {isDeleting ? "Deleting..." : "Delete Comment"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

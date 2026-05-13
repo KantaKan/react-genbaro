@@ -310,7 +310,10 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
       return (
         <TableCell key={column} className="text-center">
           <div className="flex items-center justify-center gap-1">
-            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleQuickAction("view", user._id, user); }} title="View Details">
+            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${user._id}`); }} title="View Social Profile" className="text-primary hover:text-primary hover:bg-primary/10">
+              <User className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleQuickAction("view", user._id, user); }} title="View Internal Details">
               <Eye className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); navigate(`/admin/attendance/student/${user._id}`); }} title="View Attendance">
