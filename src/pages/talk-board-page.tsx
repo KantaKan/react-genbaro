@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { MessageSquare, Send, Smile, StickyNote } from "lucide-react";
+import { MessageSquare, Send, Smile, StickyNote, Trash2 } from "lucide-react";
 
 import { BoardReactionPicker } from "@/components/board-reaction-picker";
 import { BoardReactionSummary } from "@/components/board-reaction-summary";
@@ -11,9 +11,11 @@ import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { toast } from "react-toastify";
 import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/application/contexts/UserDataContext";
-import { addReaction, createPost, getPosts, removeReaction } from "@/lib/api";
+import { addReaction, createPost, getPosts, removeReaction, deletePost } from "@/lib/api";
 import { getBoardUserPayload, type BoardPost } from "@/lib/board";
 
 const COHORT_COLORS: Record<number, string> = {
@@ -39,9 +41,11 @@ interface PostCardProps {
     mutate: (variables: string, options?: MutationOptions) => void;
     isLoading: boolean;
   };
+  isAdmin: boolean;
+  onDeleteClick: (postId: string) => void;
 }
 
-const PostCard: React.FC<PostCardProps> = ({ post, addReactionMutation, removeReactionMutation }) => {
+const PostCard: React.FC<PostCardProps> = ({ post, addReactionMutation, removeReactionMutation, isAdmin, onDeleteClick }) => {
   const { userId } = useAuth();
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [bouncingReaction, setBouncingReaction] = useState<string | null>(null);
@@ -135,6 +139,18 @@ const PostCard: React.FC<PostCardProps> = ({ post, addReactionMutation, removeRe
                   <MessageSquare className="mr-1.5 h-4 w-4" />
                   {postComments.length}
                 </Button>
+
+                {isAdmin && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-3 text-sm text-red-500 hover:text-red-700 hover:bg-red-50"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteClick(post.id); }}
+                  >
+                    <Trash2 className="mr-1.5 h-4 w-4" />
+                    Delete
+                  </Button>
+                )}
               </div>
 
               <AnimatePresence>
@@ -162,8 +178,11 @@ const PostCard: React.FC<PostCardProps> = ({ post, addReactionMutation, removeRe
 const TalkBoardPage: React.FC = () => {
   const queryClient = useQueryClient();
   const { userData } = useUserData();
+  const { isAdmin } = useAuth();
   const [newPostContent, setNewPostContent] = useState("");
   const [showComposer, setShowComposer] = useState(false);
+  const [deletePostId, setDeletePostId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data: posts, isLoading, error } = useQuery("talkBoardPosts", getPosts);
 
@@ -186,6 +205,24 @@ const TalkBoardPage: React.FC = () => {
       queryClient.invalidateQueries("talkBoardPosts");
     },
   });
+
+  const deletePostMutation = useMutation(deletePost, {
+    onSuccess: () => {
+      queryClient.invalidateQueries("talkBoardPosts");
+      toast.success("Post deleted successfully");
+      setDeletePostId(null);
+    },
+    onError: () => {
+      toast.error("Failed to delete post");
+      setIsDeleting(false);
+    },
+  });
+
+  const handleDeletePost = () => {
+    if (!deletePostId) return;
+    setIsDeleting(true);
+    deletePostMutation.mutate(deletePostId);
+  };
 
   const handleCreatePost = () => {
     if (newPostContent.trim() && userData) {
@@ -306,7 +343,7 @@ const TalkBoardPage: React.FC = () => {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.3, delay: index * 0.03 }}
               >
-                <PostCard post={post} addReactionMutation={addReactionMutation} removeReactionMutation={removeReactionMutation} />
+                <PostCard post={post} addReactionMutation={addReactionMutation} removeReactionMutation={removeReactionMutation} isAdmin={isAdmin} onDeleteClick={setDeletePostId} />
               </motion.div>
             ))}
           </AnimatePresence>
@@ -322,6 +359,23 @@ const TalkBoardPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      <AlertDialog open={!!deletePostId} onOpenChange={() => !isDeleting && setDeletePostId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Post</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this post? This action cannot be undone and all comments will be removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeletePost} disabled={isDeleting} className="bg-red-500 hover:bg-red-600">
+              {isDeleting ? "Deleting..." : "Delete Post"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

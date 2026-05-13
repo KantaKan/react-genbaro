@@ -5,13 +5,15 @@ import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, FileSpreadsheet, MessageSquare, Award, Eye, Filter, Calendar } from "lucide-react";
+import { ChevronDown, ChevronUp, FileSpreadsheet, MessageSquare, Award, Eye, Filter, Calendar, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "react-toastify";
 import { useConfig } from "@/hooks/use-config";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { deleteUserById } from "@/lib/api";
 
 interface User {
   _id: string;
@@ -66,6 +68,8 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
   const [bulkBadgeOpen, setBulkBadgeOpen] = useState(false);
   const [bulkAttendanceOpen, setBulkAttendanceOpen] = useState(false);
   const [isBulkExporting, setIsBulkExporting] = useState(false);
+  const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const toggleColumn = (column: string) => {
     setVisibleColumns((current) => {
@@ -228,6 +232,22 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
       toast.info(`Message feature coming soon for ${user.first_name}`);
     } else if (action === "badge") {
       toast.info(`Badge award feature coming soon for ${user.first_name}`);
+    } else if (action === "delete") {
+      setDeleteUserId(userId);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteUserId) return;
+    setIsDeleting(true);
+    try {
+      await deleteUserById(deleteUserId);
+      toast.success("User deleted successfully");
+      setDeleteUserId(null);
+    } catch (error) {
+      toast.error("Failed to delete user");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -301,6 +321,9 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
             </Button>
             <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleQuickAction("badge", user._id, user); }} title="Award Badge">
               <Award className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleQuickAction("delete", user._id, user); }} title="Delete User" className="text-red-500 hover:text-red-700 hover:bg-red-50">
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         </TableCell>
@@ -488,6 +511,23 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
         userIds={Array.from(selectedUserIds)}
         onSuccess={() => setSelectedUserIds(new Set())}
       />
+
+      <AlertDialog open={!!deleteUserId} onOpenChange={() => !isDeleting && setDeleteUserId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this user? This action cannot be undone and all user data will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteUser} disabled={isDeleting} className="bg-red-500 hover:bg-red-600">
+              {isDeleting ? "Deleting..." : "Delete User"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
