@@ -7,7 +7,7 @@ import { getAuthToken } from "@/infrastructure/storage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
-import { ArrowDownAZ, ArrowUpAZ, Users, GraduationCap } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, Users, GraduationCap, Crown } from "lucide-react";
 import SkeletonLoader from "@/components/ui/SkeletonLoader";
 import type { JWTPayload } from "@/domain/types";
 
@@ -15,17 +15,20 @@ export function AllUsers() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const { data: response, isLoading, error } = useQuery("allUsers", getAllUsers);
 
-  const currentCohort = useMemo(() => {
+  const { currentCohort, isAdmin } = useMemo(() => {
     try {
       const token = getAuthToken();
       if (token) {
         const decoded = jwtDecode<JWTPayload>(token);
-        return decoded.cohort ?? null;
+        return {
+          currentCohort: decoded.cohort ?? null,
+          isAdmin: decoded.role === "admin"
+        };
       }
     } catch (e) {
-      console.error("Failed to decode cohort from token:", e);
+      console.error("Failed to decode token:", e);
     }
-    return null;
+    return { currentCohort: null, isAdmin: false };
   }, []);
 
   if (isLoading)
@@ -41,7 +44,12 @@ export function AllUsers() {
 
   if (error) return <div className="text-center py-10 text-destructive">Error loading users</div>;
 
-  const users = [...(response ?? [])].sort((a, b) => {
+  const allUsers = response ?? [];
+  const users = isAdmin 
+    ? allUsers 
+    : allUsers.filter(u => u.cohort_number === currentCohort);
+
+  const sortedUsers = [...users].sort((a, b) => {
     const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
     const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
     return sortOrder === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
@@ -51,14 +59,23 @@ export function AllUsers() {
     <div className="space-y-6">
       <div className="flex justify-between items-center bg-muted/30 p-4 rounded-2xl border border-border/50">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-lg">
-            <GraduationCap className="w-4 h-4 text-primary" />
-            <span className="font-bold text-primary text-sm">
-              Cohort {currentCohort || "?"}
-            </span>
-          </div>
+          {isAdmin ? (
+            <div className="flex items-center gap-2 bg-amber-500/10 px-3 py-1.5 rounded-lg">
+              <Crown className="w-4 h-4 text-amber-500" />
+              <span className="font-bold text-amber-600 text-sm">
+                All Learners (Admin View)
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-lg">
+              <GraduationCap className="w-4 h-4 text-primary" />
+              <span className="font-bold text-primary text-sm">
+                Cohort {currentCohort || "?"}
+              </span>
+            </div>
+          )}
           <span className="text-muted-foreground text-sm">
-            {response?.length || 0} member{response?.length !== 1 ? "s" : ""}
+            {users.length} member{users.length !== 1 ? "s" : ""} {isAdmin && <span className="text-amber-500">(all cohorts)</span>}
           </span>
         </div>
         <Button 
@@ -104,7 +121,9 @@ export function AllUsers() {
               ))
             ) : (
               <div className="col-span-full text-center py-20 bg-muted/10 rounded-3xl border-2 border-dashed border-muted">
-                <p className="text-muted-foreground font-medium">No other learners found in your cohort.</p>
+                <p className="text-muted-foreground font-medium">
+                  {isAdmin ? "No learners found." : "No other learners found in your cohort."}
+                </p>
               </div>
             )}
           </div>
