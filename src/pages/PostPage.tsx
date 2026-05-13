@@ -375,6 +375,23 @@ const PostPage: React.FC = () => {
           ))}
         </AnimatePresence>
       </div>
+      
+      <AlertDialog open={!!deleteCommentId} onOpenChange={() => !isDeleting && setDeleteCommentId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Comment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this comment? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteComment} disabled={isDeleting} className="bg-red-500 hover:bg-red-600 text-white">
+              {isDeleting ? "Deleting..." : "Delete Comment"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
