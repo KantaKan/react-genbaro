@@ -179,7 +179,7 @@ const UserProfilePage: React.FC = () => {
             className="h-48 relative transition-all duration-700"
             style={{ background: coverGradient }}
           >
-             {isOwnProfile && (
+             {(isOwnProfile || isAdmin) && (
               <Button 
                 variant="secondary" 
                 size="sm" 
@@ -187,7 +187,7 @@ const UserProfilePage: React.FC = () => {
                 onClick={() => setIsEditing(!isEditing)}
               >
                 {isEditing ? <X className="w-4 h-4 mr-2" /> : <Edit2 className="w-4 h-4 mr-2" />}
-                {isEditing ? "Cancel" : "Edit Profile"}
+                {isEditing ? "Cancel" : isAdmin && !isOwnProfile ? "Edit Profile (Admin)" : "Edit Profile"}
               </Button>
             )}
           </div>
