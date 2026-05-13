@@ -55,57 +55,14 @@ const UserProfilePage: React.FC = () => {
   const { userData: currentUserData } = useUserData();
   
   const [newComment, setNewComment] = useState("");
+  const [replyContent, setReplyContent] = useState("");
   const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   
-  // Edit State
-  const [editBio, setEditBio] = useState("");
-  const [editSocials, setEditSocials] = useState({ instagram: "", linkedin: "", github: "" });
-  const [editPinnedBadges, setEditPinnedBadges] = useState<string[]>([]);
+  // ... (edit state)
 
-  const isAdmin = useMemo(() => {
-    try {
-      const token = getAuthToken();
-      if (token) {
-        const decoded = jwtDecode<JWTPayload>(token);
-        return decoded.role === "admin";
-      }
-    } catch (e) {
-      console.error("Failed to decode token:", e);
-    }
-    return false;
-  }, []);
-
-  const isOwnProfile = currentUserId === id || isAdmin;
-
-  const { data: user, isLoading, error } = useQuery(
-    ["userProfile", id], 
-    () => getUserById(id!), 
-    { 
-      enabled: !!id,
-      onSuccess: (data) => {
-        setEditBio(data.bio || "");
-        setEditSocials({
-          instagram: data.social_links?.instagram || "",
-          linkedin: data.social_links?.linkedin || "",
-          github: data.social_links?.github || "",
-        });
-        setEditPinnedBadges(data.pinned_badge_ids || []);
-      }
-    }
-  );
-
-  const updateDetailsMutation = useMutation(
-    (payload: any) => updateUserPersonalDetails(id!, payload),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(["userProfile", id]);
-        setIsEditing(false);
-        toast.success("Profile updated!");
-      },
-    }
-  );
+  // ... (queries)
 
   const addCommentMutation = useMutation(
     (payload: { content: string; zoomName: string; cohort: number; parentId?: string }) => addProfileComment(id!, payload),
@@ -113,40 +70,24 @@ const UserProfilePage: React.FC = () => {
       onSuccess: () => {
         queryClient.invalidateQueries(["userProfile", id]);
         setNewComment("");
+        setReplyContent("");
         setReplyToCommentId(null);
       },
     }
   );
 
-  const addReactionMutation = useMutation(
-    (payload: { type: string; value: string }) => addProfileReaction(id!, payload),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(["userProfile", id]);
-      },
-    }
-  );
+  // ... (other mutations)
 
-  const handleSaveDetails = () => {
-    updateDetailsMutation.mutate({
-      bio: editBio,
-      social_links: editSocials,
-      pinned_badge_ids: editPinnedBadges,
-    });
-  };
-
-  const togglePinBadge = (badgeId: string) => {
-    setEditPinnedBadges(prev => 
-      prev.includes(badgeId) 
-        ? prev.filter(p => p !== badgeId) 
-        : prev.length < 3 ? [...prev, badgeId] : prev
-    );
-  };
-
-  const handleAddComment = () => {
-    if (newComment.trim() && currentUserData) {
+  const handleAddComment = (isReply: boolean = false) => {
+    const content = isReply ? replyContent : newComment;
+    if (content.trim() && currentUserData) {
       const { zoomName, cohort } = getBoardUserPayload(currentUserData);
-      addCommentMutation.mutate({ content: newComment, zoomName, cohort, parentId: replyToCommentId || undefined });
+      addCommentMutation.mutate({ 
+        content: content.trim(), 
+        zoomName, 
+        cohort, 
+        parentId: isReply ? (replyToCommentId || undefined) : undefined 
+      });
     }
   };
 
@@ -193,9 +134,16 @@ const UserProfilePage: React.FC = () => {
             </div>
             <div className="ml-52 pt-4 flex justify-between items-start">
               <div>
-                <CardTitle className="text-4xl font-black tracking-tight italic uppercase">
-                  {user.first_name} {user.last_name}
-                </CardTitle>
+                <div className="flex items-center gap-3">
+                  <CardTitle className="text-4xl font-black tracking-tight italic uppercase">
+                    {user.first_name} {user.last_name}
+                  </CardTitle>
+                  {isAdmin && !isOwnProfile && (
+                    <span className="flex items-center gap-1 bg-amber-500/20 text-amber-600 px-2 py-1 rounded-full text-xs font-bold">
+                      <Crown className="w-3 h-3" /> Admin View
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-4 mt-2 text-muted-foreground font-medium">
                   <p className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" /> Cohort {user.cohort_number}
@@ -391,13 +339,22 @@ const UserProfilePage: React.FC = () => {
                           {replyToCommentId === commentId && (
                             <div className="mt-4 p-4 bg-muted/20 rounded-lg space-y-2">
                                <Textarea 
-                                 value={newComment} 
-                                 onChange={(e) => setNewComment(e.target.value)} 
+                                 value={replyContent} 
+                                 onChange={(e) => setReplyContent(e.target.value)} 
                                  placeholder="Write a reply..."
                                />
                                <div className="flex justify-end gap-2">
-                                 <Button variant="ghost" size="sm" onClick={() => setReplyToCommentId(null)}>Cancel</Button>
-                                 <Button size="sm" onClick={handleAddComment}>Post Reply</Button>
+                                 <Button variant="ghost" size="sm" onClick={() => {
+                                   setReplyToCommentId(null);
+                                   setReplyContent("");
+                                 }}>Cancel</Button>
+                                 <Button 
+                                   size="sm" 
+                                   onClick={() => handleAddComment(true)}
+                                   disabled={addCommentMutation.isLoading || !replyContent.trim()}
+                                 >
+                                   {addCommentMutation.isLoading ? "Sending..." : "Post Reply"}
+                                 </Button>
                                </div>
                             </div>
                           )}
