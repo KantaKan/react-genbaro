@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { jwtDecode } from "jwt-decode";
 import { 
   MessageSquare, Send, Smile, Award, Info, 
   Instagram, Linkedin, Github, Edit2, Check, X,
-  Pin, MapPin
+  Pin, MapPin, Crown
 } from "lucide-react";
 
 import { BoardReactionPicker } from "@/components/board-reaction-picker";
@@ -21,7 +22,9 @@ import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/application/contexts/UserDataContext";
 import { getUserById, addProfileComment, addProfileReaction, updateUserPersonalDetails } from "@/application/services/userService";
 import { getBoardUserPayload } from "@/lib/board";
+import { getAuthToken } from "@/infrastructure/storage";
 import { toast } from "react-toastify";
+import type { JWTPayload } from "@/domain/types";
 
 // Helper to generate a unique, deterministic gradient based on a string (user ID)
 const getDeterministicGradient = (str: string) => {
@@ -52,6 +55,7 @@ const UserProfilePage: React.FC = () => {
   const { userData: currentUserData } = useUserData();
   
   const [newComment, setNewComment] = useState("");
+  const [replyContent, setReplyContent] = useState("");
   const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -61,7 +65,20 @@ const UserProfilePage: React.FC = () => {
   const [editSocials, setEditSocials] = useState({ instagram: "", linkedin: "", github: "" });
   const [editPinnedBadges, setEditPinnedBadges] = useState<string[]>([]);
 
-  const isOwnProfile = currentUserId === id;
+  const isAdmin = useMemo(() => {
+    try {
+      const token = getAuthToken();
+      if (token) {
+        const decoded = jwtDecode<JWTPayload>(token);
+        return decoded.role === "admin";
+      }
+    } catch (e) {
+      console.error("Failed to decode token:", e);
+    }
+    return false;
+  }, []);
+
+  const isOwnProfile = currentUserId === id || isAdmin;
 
   const { data: user, isLoading, error } = useQuery(
     ["userProfile", id], 
@@ -97,6 +114,7 @@ const UserProfilePage: React.FC = () => {
       onSuccess: () => {
         queryClient.invalidateQueries(["userProfile", id]);
         setNewComment("");
+        setReplyContent("");
         setReplyToCommentId(null);
       },
     }
@@ -127,10 +145,16 @@ const UserProfilePage: React.FC = () => {
     );
   };
 
-  const handleAddComment = () => {
-    if (newComment.trim() && currentUserData) {
+  const handleAddComment = (isReply: boolean = false) => {
+    const content = isReply ? replyContent : newComment;
+    if (content.trim() && currentUserData) {
       const { zoomName, cohort } = getBoardUserPayload(currentUserData);
-      addCommentMutation.mutate({ content: newComment, zoomName, cohort, parentId: replyToCommentId || undefined });
+      addCommentMutation.mutate({ 
+        content: content.trim(), 
+        zoomName, 
+        cohort, 
+        parentId: isReply ? (replyToCommentId || undefined) : undefined 
+      });
     }
   };
 
@@ -177,9 +201,16 @@ const UserProfilePage: React.FC = () => {
             </div>
             <div className="ml-52 pt-4 flex justify-between items-start">
               <div>
-                <CardTitle className="text-4xl font-black tracking-tight italic uppercase">
-                  {user.first_name} {user.last_name}
-                </CardTitle>
+                <div className="flex items-center gap-3">
+                  <CardTitle className="text-4xl font-black tracking-tight italic uppercase">
+                    {user.first_name} {user.last_name}
+                  </CardTitle>
+                  {isAdmin && !isOwnProfile && (
+                    <span className="flex items-center gap-1 bg-amber-500/20 text-amber-600 px-2 py-1 rounded-full text-xs font-bold">
+                      <Crown className="w-3 h-3" /> Admin View
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-4 mt-2 text-muted-foreground font-medium">
                   <p className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" /> Cohort {user.cohort_number}
@@ -335,7 +366,7 @@ const UserProfilePage: React.FC = () => {
             </CardContent>
             <CardFooter className="justify-end">
               <Button 
-                onClick={handleAddComment} 
+                onClick={() => handleAddComment(false)} 
                 disabled={addCommentMutation.isLoading || !newComment.trim()}
                 className="rounded-full px-8"
               >
@@ -348,51 +379,63 @@ const UserProfilePage: React.FC = () => {
           <div className="space-y-4">
             <AnimatePresence>
               {user.profile_comments && user.profile_comments.length > 0 ? (
-                user.profile_comments.slice().reverse().map((comment) => (
-                  <motion.div key={comment.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-                    <Card className="bg-card/40 border-none shadow-md group">
-                      <CardHeader className="flex flex-row items-center gap-3 py-4">
-                        <UserAvatar userId={comment.userId} name={comment.zoomName} className="w-10 h-10 ring-2 ring-primary/20" />
-                        <div>
-                          <p className="font-black text-sm uppercase italic">{comment.zoomName}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
-                            {new Date(comment.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </p>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pb-6 px-6">
-                        <p className="text-lg leading-snug">"{comment.content}"</p>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="mt-2 text-xs font-bold text-muted-foreground"
-                          onClick={() => setReplyToCommentId(comment.id)}
-                        >
-                          Reply
-                        </Button>
-                        {replyToCommentId === comment.id && (
-                          <div className="mt-4 p-4 bg-muted/20 rounded-lg space-y-2">
-                             <Textarea 
-                               value={newComment} 
-                               onChange={(e) => setNewComment(e.target.value)} 
-                               placeholder="Write a reply..."
-                             />
-                             <div className="flex justify-end gap-2">
-                               <Button variant="ghost" size="sm" onClick={() => setReplyToCommentId(null)}>Cancel</Button>
-                               <Button size="sm" onClick={handleAddComment}>Post Reply</Button>
-                             </div>
+                user.profile_comments.slice().reverse().map((comment) => {
+                  const commentId = comment.id || comment._id;
+                  return (
+                    <motion.div key={commentId} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+                      <Card className="bg-card/40 border-none shadow-md group">
+                        <CardHeader className="flex flex-row items-center gap-3 py-4">
+                          <UserAvatar userId={comment.userId} name={comment.zoomName} className="w-10 h-10 ring-2 ring-primary/20" />
+                          <div>
+                            <p className="font-black text-sm uppercase italic">{comment.zoomName}</p>
+                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+                              {new Date(comment.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </p>
                           </div>
-                        )}
-                      </CardContent>
-                      {comment.replies && comment.replies.map(reply => (
-                        <div key={reply.id} className="ml-12 border-l-2 border-primary/20 pl-4 py-2 mb-2">
-                           <p className="text-sm font-bold uppercase italic">{reply.zoomName}</p>
-                           <p className="text-sm leading-snug">"{reply.content}"</p>
-                        </div>
-                      ))}
-                    </Card>
-                  </motion.div>
-                ))
+                        </CardHeader>
+                        <CardContent className="pb-6 px-6">
+                          <p className="text-lg leading-snug">"{comment.content}"</p>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="mt-2 text-xs font-bold text-muted-foreground"
+                            onClick={() => setReplyToCommentId(commentId || null)}
+                          >
+                            Reply
+                          </Button>
+                          {replyToCommentId === commentId && (
+                            <div className="mt-4 p-4 bg-muted/20 rounded-lg space-y-2">
+                               <Textarea 
+                                 value={replyContent} 
+                                 onChange={(e) => setReplyContent(e.target.value)} 
+                                 placeholder="Write a reply..."
+                               />
+                               <div className="flex justify-end gap-2">
+                                 <Button variant="ghost" size="sm" onClick={() => {
+                                   setReplyToCommentId(null);
+                                   setReplyContent("");
+                                 }}>Cancel</Button>
+                                 <Button 
+                                   size="sm" 
+                                   onClick={() => handleAddComment(true)}
+                                   disabled={addCommentMutation.isLoading || !replyContent.trim()}
+                                 >
+                                   {addCommentMutation.isLoading ? "Sending..." : "Post Reply"}
+                                 </Button>
+                               </div>
+                            </div>
+                          )}
+                        </CardContent>
+                        {comment.replies && comment.replies.map(reply => (
+                          <div key={reply.id || reply._id} className="ml-12 border-l-2 border-primary/20 pl-4 py-2 mb-2">
+                             <p className="text-sm font-bold uppercase italic">{reply.zoomName}</p>
+                             <p className="text-sm leading-snug">"{reply.content}"</p>
+                          </div>
+                        ))}
+                      </Card>
+                    </motion.div>
+                  );
+                })
               ) : (
                 <div className="text-center py-16 text-muted-foreground bg-muted/10 rounded-3xl border-2 border-dashed border-muted">
                    <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-20" />

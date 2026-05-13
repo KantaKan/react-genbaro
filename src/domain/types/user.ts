@@ -40,11 +40,14 @@ export interface ProfileReaction {
 
 export interface ProfileComment {
   id: string;
+  _id?: string;
   userId: string;
   zoomName: string;
   cohort: number;
   content: string;
   reactions?: ProfileReaction[];
+  replies?: ProfileComment[];
+  parentId?: string;
   createdAt: string;
   updatedAt: string;
 }
