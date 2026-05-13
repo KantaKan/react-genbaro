@@ -33,6 +33,10 @@ export const userService = {
   async updateUserPersonalDetails(userId: string, payload: { bio?: string; social_links?: SocialLinks; pinned_badge_ids?: string[] }): Promise<void> {
     await api.put(`/users/${userId}/personal-details`, payload);
   },
+
+  async deleteUserById(userId: string): Promise<void> {
+    await api.delete(`/admin/users/${userId}`);
+  },
 };
 
 export const getAllUsers = userService.getAllUsers;
@@ -42,5 +46,6 @@ export const addProfileComment = userService.addProfileComment;
 export const addProfileReaction = userService.addProfileReaction;
 export const getUserById = userService.getUserById;
 export const updateUserPersonalDetails = userService.updateUserPersonalDetails;
+export const deleteUserById = userService.deleteUserById;
 
 export default userService;

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { MessageSquare, Send, Smile } from "lucide-react";
+import { MessageSquare, Send, Smile, Trash2 } from "lucide-react";
 
 import { BoardReactionPicker } from "@/components/board-reaction-picker";
 import { BoardReactionSummary } from "@/components/board-reaction-summary";
@@ -11,9 +11,11 @@ import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { toast } from "react-toastify";
 import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/application/contexts/UserDataContext";
-import { addCommentReaction, addReaction, createComment, getPost, removeCommentReaction, removeReaction } from "@/lib/api";
+import { addCommentReaction, addReaction, createComment, deleteComment, getPost, removeCommentReaction, removeReaction } from "@/lib/api";
 import { getBoardUserPayload, type BoardComment, type BoardPost } from "@/lib/board";
 
 interface MutationOptions {
@@ -151,7 +153,9 @@ const CommentCard: React.FC<{
   comment: BoardComment;
   addCommentReactionMutation: AddCommentReactionMutation;
   removeCommentReactionMutation: RemoveCommentReactionMutation;
-}> = ({ comment, addCommentReactionMutation, removeCommentReactionMutation }) => {
+  isAdmin: boolean;
+  onDeleteClick: (commentId: string) => void;
+}> = ({ comment, addCommentReactionMutation, removeCommentReactionMutation, isAdmin, onDeleteClick }) => {
   const { userId } = useAuth();
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const commentReactions = comment.reactions || [];
@@ -223,6 +227,17 @@ const CommentCard: React.FC<{
               removeClassName="text-2xl hover:scale-125 transition-transform p-1 bg-red-100 hover:bg-red-200 rounded-full"
             />
           )}
+          {isAdmin && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              onClick={() => onDeleteClick(comment.id)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
+          )}
         </div>
         <BoardReactionSummary reactions={commentReactions} className="flex items-center gap-2" itemClassName="flex items-center gap-1" />
       </CardFooter>
@@ -234,7 +249,10 @@ const PostPage: React.FC = () => {
   const { postId } = useParams<{ postId: string }>();
   const queryClient = useQueryClient();
   const { userData } = useUserData();
+  const { isAdmin } = useAuth();
   const [newComment, setNewComment] = useState("");
+  const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data: post, isLoading, error } = useQuery(["talkBoardPost", postId], () => getPost(postId!), { enabled: !!postId });
 
@@ -268,6 +286,24 @@ const PostPage: React.FC = () => {
       queryClient.invalidateQueries(["talkBoardPost", postId]);
     },
   });
+
+  const deleteCommentMutation = useMutation(deleteComment, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(["talkBoardPost", postId]);
+      toast.success("Comment deleted successfully");
+      setDeleteCommentId(null);
+    },
+    onError: () => {
+      toast.error("Failed to delete comment");
+      setIsDeleting(false);
+    },
+  });
+
+  const handleDeleteComment = () => {
+    if (!deleteCommentId) return;
+    setIsDeleting(true);
+    deleteCommentMutation.mutate(deleteCommentId);
+  };
 
   const handleAddComment = () => {
     if (newComment.trim() && postId && userData) {
@@ -329,6 +365,8 @@ const PostPage: React.FC = () => {
                 comment={comment}
                 addCommentReactionMutation={addCommentReactionMutation}
                 removeCommentReactionMutation={removeCommentReactionMutation}
+                isAdmin={isAdmin}
+                onDeleteClick={setDeleteCommentId}
               />
             </motion.div>
           ))}

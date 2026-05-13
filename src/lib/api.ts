@@ -21,8 +21,10 @@ export {
   removeReaction,
   addCommentReaction,
   removeCommentReaction,
+  deletePost,
+  deleteComment,
 } from "../application/services/boardService";
-export { getAllUsers, getCohort, getUsersByBarometer } from "../application/services/userService";
+export { getAllUsers, getCohort, getUsersByBarometer, deleteUserById } from "../application/services/userService";
 export { getWeeklyReflections, createReflection, getBarometerData } from "../application/services/reflectionService";
 export {
   submitLeaveRequest,

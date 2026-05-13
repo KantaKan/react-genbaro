@@ -47,6 +47,14 @@ export const boardService = {
     const response = await api.delete(`/board/comments/${commentId}/reactions`);
     return response.data.data;
   },
+
+  async deletePost(postId: string) {
+    await api.delete(`/board/posts/${postId}`);
+  },
+
+  async deleteComment(commentId: string) {
+    await api.delete(`/board/comments/${commentId}`);
+  },
 };
 
 export const getPosts = boardService.getPosts;
@@ -57,5 +65,7 @@ export const addReaction = boardService.addReaction;
 export const removeReaction = boardService.removeReaction;
 export const addCommentReaction = boardService.addCommentReaction;
 export const removeCommentReaction = boardService.removeCommentReaction;
+export const deletePost = boardService.deletePost;
+export const deleteComment = boardService.deleteComment;
 
 export default boardService;
