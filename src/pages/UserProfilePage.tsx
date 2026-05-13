@@ -60,9 +60,53 @@ const UserProfilePage: React.FC = () => {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   
-  // ... (edit state)
+  // Edit State
+  const [editBio, setEditBio] = useState("");
+  const [editSocials, setEditSocials] = useState({ instagram: "", linkedin: "", github: "" });
+  const [editPinnedBadges, setEditPinnedBadges] = useState<string[]>([]);
 
-  // ... (queries)
+  const isAdmin = useMemo(() => {
+    try {
+      const token = getAuthToken();
+      if (token) {
+        const decoded = jwtDecode<JWTPayload>(token);
+        return decoded.role === "admin";
+      }
+    } catch (e) {
+      console.error("Failed to decode token:", e);
+    }
+    return false;
+  }, []);
+
+  const isOwnProfile = currentUserId === id || isAdmin;
+
+  const { data: user, isLoading, error } = useQuery(
+    ["userProfile", id], 
+    () => getUserById(id!), 
+    { 
+      enabled: !!id,
+      onSuccess: (data) => {
+        setEditBio(data.bio || "");
+        setEditSocials({
+          instagram: data.social_links?.instagram || "",
+          linkedin: data.social_links?.linkedin || "",
+          github: data.social_links?.github || "",
+        });
+        setEditPinnedBadges(data.pinned_badge_ids || []);
+      }
+    }
+  );
+
+  const updateDetailsMutation = useMutation(
+    (payload: any) => updateUserPersonalDetails(id!, payload),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["userProfile", id]);
+        setIsEditing(false);
+        toast.success("Profile updated!");
+      },
+    }
+  );
 
   const addCommentMutation = useMutation(
     (payload: { content: string; zoomName: string; cohort: number; parentId?: string }) => addProfileComment(id!, payload),
@@ -76,7 +120,30 @@ const UserProfilePage: React.FC = () => {
     }
   );
 
-  // ... (other mutations)
+  const addReactionMutation = useMutation(
+    (payload: { type: string; value: string }) => addProfileReaction(id!, payload),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["userProfile", id]);
+      },
+    }
+  );
+
+  const handleSaveDetails = () => {
+    updateDetailsMutation.mutate({
+      bio: editBio,
+      social_links: editSocials,
+      pinned_badge_ids: editPinnedBadges,
+    });
+  };
+
+  const togglePinBadge = (badgeId: string) => {
+    setEditPinnedBadges(prev => 
+      prev.includes(badgeId) 
+        ? prev.filter(p => p !== badgeId) 
+        : prev.length < 3 ? [...prev, badgeId] : prev
+    );
+  };
 
   const handleAddComment = (isReply: boolean = false) => {
     const content = isReply ? replyContent : newComment;
@@ -299,7 +366,7 @@ const UserProfilePage: React.FC = () => {
             </CardContent>
             <CardFooter className="justify-end">
               <Button 
-                onClick={handleAddComment} 
+                onClick={() => handleAddComment(false)} 
                 disabled={addCommentMutation.isLoading || !newComment.trim()}
                 className="rounded-full px-8"
               >
