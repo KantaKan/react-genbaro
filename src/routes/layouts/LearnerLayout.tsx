@@ -24,7 +24,7 @@ export function LearnerLayout() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={["learner"]}>
+    <ProtectedRoute allowedRoles={["learner", "admin"]}>
       {cursorEnabled && <SplashCursor />}
       <Page>
         <div className="flex items-center justify-between">

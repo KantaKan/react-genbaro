@@ -37,6 +37,14 @@ export const userService = {
   async deleteUserById(userId: string): Promise<void> {
     await api.delete(`/admin/users/${userId}`);
   },
+
+  async updateUser(userId: string, payload: Partial<User>): Promise<void> {
+    await api.put(`/users/${userId}`, payload);
+  },
+
+  async deleteProfileComment(userId: string, commentId: string): Promise<void> {
+    await api.delete(`/users/${userId}/profile/comments/${commentId}`);
+  },
 };
 
 export const getAllUsers = userService.getAllUsers;
@@ -47,5 +55,7 @@ export const addProfileReaction = userService.addProfileReaction;
 export const getUserById = userService.getUserById;
 export const updateUserPersonalDetails = userService.updateUserPersonalDetails;
 export const deleteUserById = userService.deleteUserById;
+export const updateUser = userService.updateUser;
+export const deleteProfileComment = userService.deleteProfileComment;
 
 export default userService;

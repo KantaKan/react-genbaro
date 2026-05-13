@@ -287,17 +287,20 @@ const PostPage: React.FC = () => {
     },
   });
 
-  const deleteCommentMutation = useMutation(deleteComment, {
-    onSuccess: () => {
-      queryClient.invalidateQueries(["talkBoardPost", postId]);
-      toast.success("Comment deleted successfully");
-      setDeleteCommentId(null);
-    },
-    onError: () => {
-      toast.error("Failed to delete comment");
-      setIsDeleting(false);
-    },
-  });
+  const deleteCommentMutation = useMutation(
+    (commentId: string) => deleteComment(postId!, commentId), 
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["talkBoardPost", postId]);
+        toast.success("Comment deleted successfully");
+        setDeleteCommentId(null);
+      },
+      onError: () => {
+        toast.error("Failed to delete comment");
+        setIsDeleting(false);
+      },
+    }
+  );
 
   const handleDeleteComment = () => {
     if (!deleteCommentId) return;

@@ -6,7 +6,7 @@ import { jwtDecode } from "jwt-decode";
 import { 
   MessageSquare, Send, Smile, Award, Info, 
   Instagram, Linkedin, Github, Edit2, Check, X,
-  Pin, MapPin, Crown
+  Pin, MapPin, Crown, Trash2
 } from "lucide-react";
 
 import { BoardReactionPicker } from "@/components/board-reaction-picker";
@@ -20,7 +20,8 @@ import { Input } from "@/components/ui/input";
 import { BadgeRenderer } from "@/components/badge-renderer";
 import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/application/contexts/UserDataContext";
-import { getUserById, addProfileComment, addProfileReaction, updateUserPersonalDetails } from "@/application/services/userService";
+import { getUserById, addProfileComment, addProfileReaction, updateUserPersonalDetails, deleteUserById, deleteProfileComment, updateUser } from "@/application/services/userService";
+import { deleteComment as deleteBoardComment } from "@/lib/api";
 import { getBoardUserPayload } from "@/lib/board";
 import { getAuthToken } from "@/infrastructure/storage";
 import { toast } from "react-toastify";
@@ -51,7 +52,7 @@ const getDeterministicGradient = (str: string) => {
 const UserProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
-  const { userId: currentUserId } = useAuth();
+  const { userId: currentUserId, userRole } = useAuth();
   const { userData: currentUserData } = useUserData();
   
   const [newComment, setNewComment] = useState("");
@@ -64,21 +65,22 @@ const UserProfilePage: React.FC = () => {
   const [editBio, setEditBio] = useState("");
   const [editSocials, setEditSocials] = useState({ instagram: "", linkedin: "", github: "" });
   const [editPinnedBadges, setEditPinnedBadges] = useState<string[]>([]);
+  
+  // Admin Edit State
+  const [adminEditData, setAdminEditData] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    cohort_number: 0,
+    jsd_number: "",
+    project_group: "",
+    genmate_group: "",
+    zoom_name: ""
+  });
 
-  const isAdmin = useMemo(() => {
-    try {
-      const token = getAuthToken();
-      if (token) {
-        const decoded = jwtDecode<JWTPayload>(token);
-        return decoded.role === "admin";
-      }
-    } catch (e) {
-      console.error("Failed to decode token:", e);
-    }
-    return false;
-  }, []);
+  const isAdmin = userRole === "admin";
 
-  const isOwnProfile = currentUserId === id || isAdmin;
+  const isOwnProfile = currentUserId === id;
 
   const { data: user, isLoading, error } = useQuery(
     ["userProfile", id], 
@@ -93,18 +95,46 @@ const UserProfilePage: React.FC = () => {
           github: data.social_links?.github || "",
         });
         setEditPinnedBadges(data.pinned_badge_ids || []);
+        setAdminEditData({
+          first_name: data.first_name || "",
+          last_name: data.last_name || "",
+          email: data.email || "",
+          cohort_number: data.cohort_number || 0,
+          jsd_number: data.jsd_number || "",
+          project_group: data.project_group || "",
+          genmate_group: data.genmate_group || "",
+          zoom_name: data.zoom_name || ""
+        });
       }
     }
   );
 
   const updateDetailsMutation = useMutation(
-    (payload: any) => updateUserPersonalDetails(id!, payload),
+    (payload: any) => isAdmin 
+      ? updateUser(id!, payload) 
+      : updateUserPersonalDetails(id!, payload),
     {
       onSuccess: () => {
         queryClient.invalidateQueries(["userProfile", id]);
         setIsEditing(false);
         toast.success("Profile updated!");
       },
+      onError: () => {
+        toast.error("Failed to update profile");
+      }
+    }
+  );
+
+  const deleteCommentMutation = useMutation(
+    (commentId: string) => deleteProfileComment(id!, commentId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["userProfile", id]);
+        toast.success("Comment deleted");
+      },
+      onError: () => {
+        toast.error("Failed to delete comment");
+      }
     }
   );
 
@@ -130,11 +160,20 @@ const UserProfilePage: React.FC = () => {
   );
 
   const handleSaveDetails = () => {
-    updateDetailsMutation.mutate({
-      bio: editBio,
-      social_links: editSocials,
-      pinned_badge_ids: editPinnedBadges,
-    });
+    if (isAdmin) {
+      updateDetailsMutation.mutate({
+        ...adminEditData,
+        bio: editBio,
+        social_links: editSocials,
+        pinned_badge_ids: editPinnedBadges,
+      });
+    } else {
+      updateDetailsMutation.mutate({
+        bio: editBio,
+        social_links: editSocials,
+        pinned_badge_ids: editPinnedBadges,
+      });
+    }
   };
 
   const togglePinBadge = (badgeId: string) => {
@@ -307,6 +346,46 @@ const UserProfilePage: React.FC = () => {
 
             {isEditing && (
               <div className="pt-6 border-t border-white/5 space-y-4">
+                {isAdmin && (
+                  <>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">Learner Information (Admin Only)</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold">First Name</label>
+                        <Input value={adminEditData.first_name} onChange={e => setAdminEditData({...adminEditData, first_name: e.target.value})} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold">Last Name</label>
+                        <Input value={adminEditData.last_name} onChange={e => setAdminEditData({...adminEditData, last_name: e.target.value})} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold">Email</label>
+                        <Input value={adminEditData.email} onChange={e => setAdminEditData({...adminEditData, email: e.target.value})} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold">Cohort Number</label>
+                        <Input type="number" value={adminEditData.cohort_number} onChange={e => setAdminEditData({...adminEditData, cohort_number: parseInt(e.target.value)})} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold">JSD Number</label>
+                        <Input value={adminEditData.jsd_number} onChange={e => setAdminEditData({...adminEditData, jsd_number: e.target.value})} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold">Zoom Name</label>
+                        <Input value={adminEditData.zoom_name} onChange={e => setAdminEditData({...adminEditData, zoom_name: e.target.value})} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold">Project Group</label>
+                        <Input value={adminEditData.project_group} onChange={e => setAdminEditData({...adminEditData, project_group: e.target.value})} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold">Genmate Group</label>
+                        <Input value={adminEditData.genmate_group} onChange={e => setAdminEditData({...adminEditData, genmate_group: e.target.value})} />
+                      </div>
+                    </div>
+                    <div className="h-px bg-white/5 my-6" />
+                  </>
+                )}
                 <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">Social Links</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1">
@@ -395,14 +474,30 @@ const UserProfilePage: React.FC = () => {
                         </CardHeader>
                         <CardContent className="pb-6 px-6">
                           <p className="text-lg leading-snug">"{comment.content}"</p>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="mt-2 text-xs font-bold text-muted-foreground"
-                            onClick={() => setReplyToCommentId(commentId || null)}
-                          >
-                            Reply
-                          </Button>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-xs font-bold text-muted-foreground"
+                              onClick={() => setReplyToCommentId(commentId || null)}
+                            >
+                              Reply
+                            </Button>
+                            {isAdmin && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-xs font-bold text-red-500 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => {
+                                  if (window.confirm("Delete this comment?")) {
+                                    deleteCommentMutation.mutate(commentId!);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-3 h-3 mr-1" /> Delete
+                              </Button>
+                            )}
+                          </div>
                           {replyToCommentId === commentId && (
                             <div className="mt-4 p-4 bg-muted/20 rounded-lg space-y-2">
                                <Textarea 

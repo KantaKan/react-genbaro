@@ -1,19 +1,30 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useQuery } from "react-query";
 import { Link } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import { getAllUsers } from "../lib/api";
+import { api } from "../lib/api";
 import { getAuthToken } from "@/infrastructure/storage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
-import { ArrowDownAZ, ArrowUpAZ, Users, GraduationCap, Crown } from "lucide-react";
+import { 
+  ArrowDownAZ, ArrowUpAZ, Users, GraduationCap, Crown, 
+  Filter, ChevronDown, Check
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import SkeletonLoader from "@/components/ui/SkeletonLoader";
-import type { JWTPayload } from "@/domain/types";
+import type { JWTPayload, User } from "@/domain/types";
 
 export function AllUsers() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const { data: response, isLoading, error } = useQuery("allUsers", getAllUsers);
+  const [selectedCohort, setSelectedCohort] = useState<number | "all">("all");
 
   const { currentCohort, isAdmin } = useMemo(() => {
     try {
@@ -31,6 +42,21 @@ export function AllUsers() {
     return { currentCohort: null, isAdmin: false };
   }, []);
 
+  // Fetch users with a high limit for admin to see everyone
+  const { data: response, isLoading, error } = useQuery(
+    ["allUsers", isAdmin ? "admin" : "learner"], 
+    async () => {
+      const response = await api.get(`/users?limit=1000${isAdmin ? "" : `&cohort=${currentCohort}`}`);
+      return response.data.data.users as User[];
+    }
+  );
+
+  const availableCohorts = useMemo(() => {
+    if (!response) return [];
+    const cohorts = Array.from(new Set(response.map(u => u.cohort_number))).sort((a, b) => b - a);
+    return cohorts;
+  }, [response]);
+
   if (isLoading)
     return (
       <Card className="border-none bg-transparent shadow-none">
@@ -45,9 +71,9 @@ export function AllUsers() {
   if (error) return <div className="text-center py-10 text-destructive">Error loading users</div>;
 
   const allUsers = response ?? [];
-  const users = isAdmin 
+  const users = selectedCohort === "all" 
     ? allUsers 
-    : allUsers.filter(u => u.cohort_number === currentCohort);
+    : allUsers.filter(u => u.cohort_number === selectedCohort);
 
   const sortedUsers = [...users].sort((a, b) => {
     const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
@@ -57,15 +83,32 @@ export function AllUsers() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-muted/30 p-4 rounded-2xl border border-border/50">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-muted/30 p-4 rounded-2xl border border-border/50 gap-4">
+        <div className="flex flex-wrap items-center gap-3">
           {isAdmin ? (
-            <div className="flex items-center gap-2 bg-amber-500/10 px-3 py-1.5 rounded-lg">
-              <Crown className="w-4 h-4 text-amber-500" />
-              <span className="font-bold text-amber-600 text-sm">
-                All Learners (Admin View)
-              </span>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/20 text-amber-700 h-9 px-3 rounded-lg font-bold transition-all">
+                  <Crown className="w-4 h-4 text-amber-500" />
+                  <span>
+                    {selectedCohort === "all" ? "All Learners" : `Cohort ${selectedCohort}`}
+                  </span>
+                  <ChevronDown className="w-3 h-3 ml-1 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuLabel>Filter by Cohort</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setSelectedCohort("all")} className="flex justify-between items-center">
+                  All Cohorts {selectedCohort === "all" && <Check className="w-4 h-4" />}
+                </DropdownMenuItem>
+                {availableCohorts.map(c => (
+                  <DropdownMenuItem key={c} onClick={() => setSelectedCohort(c)} className="flex justify-between items-center">
+                    Cohort {c} {selectedCohort === c && <Check className="w-4 h-4" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-lg">
               <GraduationCap className="w-4 h-4 text-primary" />
@@ -74,19 +117,23 @@ export function AllUsers() {
               </span>
             </div>
           )}
-          <span className="text-muted-foreground text-sm">
-            {users.length} member{users.length !== 1 ? "s" : ""} {isAdmin && <span className="text-amber-500">(all cohorts)</span>}
+          <span className="text-muted-foreground text-sm font-medium">
+            {users.length} member{users.length !== 1 ? "s" : ""} 
+            {isAdmin && selectedCohort === "all" && <span className="ml-1 text-amber-500/80 font-bold">(Global View)</span>}
           </span>
         </div>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="font-bold gap-2 hover:bg-primary/10 hover:text-primary"
-          onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-        >
-          {sortOrder === "asc" ? <ArrowDownAZ className="w-4 h-4" /> : <ArrowUpAZ className="w-4 h-4" />}
-          Sort Name {sortOrder === "asc" ? "(A-Z)" : "(Z-A)"}
-        </Button>
+        
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="font-bold gap-2 hover:bg-primary/10 hover:text-primary rounded-xl"
+            onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+          >
+            {sortOrder === "asc" ? <ArrowDownAZ className="w-4 h-4" /> : <ArrowUpAZ className="w-4 h-4" />}
+            <span className="hidden sm:inline">Sort Name</span> {sortOrder === "asc" ? "(A-Z)" : "(Z-A)"}
+          </Button>
+        </div>
       </div>
 
       <Card className="border-none bg-transparent shadow-none">
