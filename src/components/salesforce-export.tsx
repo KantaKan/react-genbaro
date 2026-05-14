@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, X, Calendar, ChevronDown, Cloud } from "lucide-react";
-import { toast } from "react-toastify";
+import { Download, X, Calendar, Cloud, FileSpreadsheet, Table, Columns3, Filter, Split } from "lucide-react";
+import { toast } from "sonner";
 import { attendanceService } from "@/application/services/attendanceService";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SalesforceExportModalProps {
   cohort: number;
@@ -30,6 +31,10 @@ export function SalesforceExportModal({ cohort, onClose }: SalesforceExportModal
   const today = toDateString(new Date());
   const [startDate, setStartDate] = useState(getDaysAgo(7));
   const [endDate, setEndDate] = useState(today);
+  const [format, setFormat] = useState("csv");
+  const [structure, setStructure] = useState("daily");
+  const [splitAMPM, setSplitAMPM] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
   const [isExporting, setIsExporting] = useState(false);
 
   const applyPreset = (days: number) => {
@@ -49,19 +54,22 @@ export function SalesforceExportModal({ cohort, onClose }: SalesforceExportModal
 
     setIsExporting(true);
     try {
-      const blob = await attendanceService.exportSalesforceCSV(cohort, startDate, endDate);
+      const blob = await attendanceService.exportAttendance(
+        cohort, startDate, endDate, format, structure, splitAMPM, statusFilter
+      );
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `salesforce_attendance_cohort${cohort}_${startDate}_${endDate}.csv`;
+      const structureLabel = structure === "daily" ? "daily" : structure === "summary" ? "summary" : "weekly";
+      link.download = `attendance_cohort${cohort}_${structureLabel}_${startDate}_${endDate}.${format}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      toast.success("Salesforce CSV exported successfully!");
+      toast.success("Export downloaded successfully!");
       onClose();
     } catch {
-      toast.error("Failed to export CSV. Please try again.");
+      toast.error("Failed to export. Please try again.");
     } finally {
       setIsExporting(false);
     }
@@ -78,7 +86,7 @@ export function SalesforceExportModal({ cohort, onClose }: SalesforceExportModal
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.92, y: 20 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
-        className="relative w-full max-w-md mx-4"
+        className="relative w-full max-w-lg mx-4"
         style={{
           background: "linear-gradient(135deg, #1a1f2e 0%, #151929 100%)",
           border: "1px solid rgba(99,102,241,0.3)",
@@ -86,7 +94,6 @@ export function SalesforceExportModal({ cohort, onClose }: SalesforceExportModal
           boxShadow: "0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(99,102,241,0.1)",
         }}
       >
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <div className="flex items-center gap-3">
             <div
@@ -96,8 +103,8 @@ export function SalesforceExportModal({ cohort, onClose }: SalesforceExportModal
               <Cloud className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-white font-semibold text-lg leading-tight">Export to Salesforce</h2>
-              <p className="text-white/50 text-xs mt-0.5">Cohort {cohort} · CSV format</p>
+              <h2 className="text-white font-semibold text-lg leading-tight">Export Attendance</h2>
+              <p className="text-white/50 text-xs mt-0.5">Cohort {cohort}</p>
             </div>
           </div>
           <button
@@ -108,9 +115,7 @@ export function SalesforceExportModal({ cohort, onClose }: SalesforceExportModal
           </button>
         </div>
 
-        {/* Body */}
         <div className="p-6 space-y-5">
-          {/* Quick presets */}
           <div className="space-y-2">
             <label className="text-white/60 text-xs font-medium uppercase tracking-wider">Quick Select</label>
             <div className="grid grid-cols-2 gap-2">
@@ -133,7 +138,7 @@ export function SalesforceExportModal({ cohort, onClose }: SalesforceExportModal
                   }}
                 >
                   <div className="flex items-center gap-2">
-                    <ChevronDown className="w-3 h-3 opacity-50" />
+                    <Calendar className="w-3 h-3 opacity-50" />
                     {preset.label}
                   </div>
                 </button>
@@ -141,79 +146,141 @@ export function SalesforceExportModal({ cohort, onClose }: SalesforceExportModal
             </div>
           </div>
 
-          {/* Custom date range */}
           <div className="space-y-2">
             <label className="text-white/60 text-xs font-medium uppercase tracking-wider">Custom Date Range</label>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-white/40 text-xs">Start Date</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
-                  <input
-                    type="date"
-                    id="salesforce-start-date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    max={endDate}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-lg text-sm text-white outline-none transition-all"
-                    style={{
-                      background: "rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      colorScheme: "dark",
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = "rgba(99,102,241,0.6)";
-                      e.currentTarget.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.15)";
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
-                  />
-                </div>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  max={endDate}
+                  className="w-full px-3 py-2.5 rounded-lg text-sm text-white outline-none transition-all"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    colorScheme: "dark",
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(99,102,241,0.6)";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.15)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                />
               </div>
               <div className="space-y-1">
                 <label className="text-white/40 text-xs">End Date</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
-                  <input
-                    type="date"
-                    id="salesforce-end-date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    min={startDate}
-                    max={today}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-lg text-sm text-white outline-none transition-all"
-                    style={{
-                      background: "rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      colorScheme: "dark",
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = "rgba(99,102,241,0.6)";
-                      e.currentTarget.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.15)";
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
-                  />
-                </div>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  min={startDate}
+                  max={today}
+                  className="w-full px-3 py-2.5 rounded-lg text-sm text-white outline-none transition-all"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    colorScheme: "dark",
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(99,102,241,0.6)";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.15)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                />
               </div>
             </div>
           </div>
 
-          {/* Info pill */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-white/60 text-xs font-medium uppercase tracking-wider flex items-center gap-1">
+                <FileSpreadsheet className="w-3 h-3" /> Format
+              </label>
+              <Select value={format} onValueChange={setFormat}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="csv">CSV</SelectItem>
+                  <SelectItem value="xlsx">Excel (.xlsx)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-white/60 text-xs font-medium uppercase tracking-wider flex items-center gap-1">
+                <Table className="w-3 h-3" /> Structure
+              </label>
+              <Select value={structure} onValueChange={setStructure}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily (per student per day)</SelectItem>
+                  <SelectItem value="summary">Summary (per student)</SelectItem>
+                  <SelectItem value="weekly">Weekly (per student per week)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-white/60 text-xs font-medium uppercase tracking-wider flex items-center gap-1">
+                <Split className="w-3 h-3" /> AM/PM Columns
+              </label>
+              <Select value={splitAMPM ? "true" : "false"} onValueChange={(v) => setSplitAMPM(v === "true")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="false">Combined daily status</SelectItem>
+                  <SelectItem value="true">Split AM/PM columns</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-white/60 text-xs font-medium uppercase tracking-wider flex items-center gap-1">
+                <Filter className="w-3 h-3" /> Student Filter
+              </label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Students</SelectItem>
+                  <SelectItem value="active">Active Only</SelectItem>
+                  <SelectItem value="dropout">Dropout Only</SelectItem>
+                  <SelectItem value="dismissed">Dismissed Only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div
-            className="px-4 py-3 rounded-xl text-xs text-white/50 leading-relaxed"
+            className="px-4 py-3 rounded-xl text-xs text-white/50 leading-relaxed space-y-1"
             style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)" }}
           >
-            📋 CSV will include: <span className="text-white/70">Learner ID, First Name, Last Name, Date, Attendance Status, Notes</span>.
-            One row per student per day. Status reflects worst session (Absent &gt; Late &gt; Present).
+            <p>
+              <span className="text-white/70">Structure:</span>{" "}
+              {structure === "daily" ? "One row per student per day" :
+               structure === "summary" ? "One row per student with totals" :
+               "One row per student per week"}
+            </p>
+            <p>
+              <span className="text-white/70">Format:</span> {format.toUpperCase()}
+              {splitAMPM && " with split AM/PM columns"}
+            </p>
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex gap-3 p-6 pt-0">
           <button
             onClick={onClose}
@@ -247,7 +314,7 @@ export function SalesforceExportModal({ cohort, onClose }: SalesforceExportModal
             ) : (
               <>
                 <Download className="w-4 h-4" />
-                Download CSV
+                Download {format.toUpperCase()}
               </>
             )}
           </button>
@@ -280,7 +347,7 @@ export function SalesforceExportButton({ cohort }: { cohort: number }) {
         }}
       >
         <Cloud className="w-4 h-4" />
-        Export to Salesforce
+        Export Attendance
       </button>
       <AnimatePresence>
         {showModal && (
