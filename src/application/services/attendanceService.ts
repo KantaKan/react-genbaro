@@ -181,6 +181,31 @@ export const attendanceService = {
     return response.data;
   },
 
+  async exportAttendance(
+    cohort: number,
+    startDate: string,
+    endDate: string,
+    format: string = "csv",
+    structure: string = "daily",
+    splitAMPM: boolean = false,
+    statusFilter: string = "all"
+  ): Promise<Blob> {
+    const params = new URLSearchParams({
+      cohort: cohort.toString(),
+      start_date: startDate,
+      end_date: endDate,
+      format,
+      structure,
+      split_am_pm: splitAMPM ? "true" : "false",
+      status_filter: statusFilter,
+    });
+    const response = await api.get(
+      `/admin/attendance/export?${params.toString()}`,
+      { responseType: "blob" }
+    );
+    return response.data;
+  },
+
   async updateSalesforceID(userId: string, salesforceId: string): Promise<void> {
     await api.patch(`/admin/users/${userId}/salesforce-id`, {
       salesforce_id: salesforceId,

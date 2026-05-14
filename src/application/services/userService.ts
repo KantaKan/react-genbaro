@@ -22,7 +22,7 @@ export const userService = {
     return response.data;
   },
 
-  async addProfileComment(userId: string, payload: { content: string; zoomName: string; cohort: number; parentId?: string }): Promise<void> {
+  async addProfileComment(userId: string, payload: { content: string; parentId?: string }): Promise<void> {
     await api.post(`/users/${userId}/profile/comments`, payload);
   },
 

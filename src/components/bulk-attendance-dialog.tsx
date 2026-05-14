@@ -1,11 +1,10 @@
-"use client";
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Calendar, Users, Check, Clock, XCircle, AlertCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, Users, Check, Clock, XCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,17 +16,18 @@ interface BulkAttendanceDialogProps {
   onSuccess?: () => void;
 }
 
-type AttendanceStatus = "present" | "late" | "absent" | "excused";
+type AttendanceStatus = "present" | "late" | "absent" | "absent_excused";
 
 const statusOptions: { value: AttendanceStatus; label: string; emoji: string; color: string; description: string }[] = [
   { value: "present", label: "Present", emoji: "✅", color: "text-green-600", description: "Mark as attended" },
   { value: "late", label: "Late", emoji: "⏰", color: "text-yellow-600", description: "Arrived late" },
   { value: "absent", label: "Absent", emoji: "❌", color: "text-red-600", description: "Did not attend" },
-  { value: "excused", label: "Excused", emoji: "📋", color: "text-blue-600", description: "Excused absence" },
+  { value: "absent_excused", label: "Excused", emoji: "📋", color: "text-blue-600", description: "Excused absence" },
 ];
 
 export function BulkAttendanceDialog({ isOpen, onClose, userIds, onSuccess }: BulkAttendanceDialogProps) {
   const [selectedStatus, setSelectedStatus] = useState<AttendanceStatus | null>(null);
+  const [selectedSession, setSelectedSession] = useState<string>("morning");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [results, setResults] = useState<{ success: number; failed: number } | null>(null);
@@ -39,38 +39,31 @@ export function BulkAttendanceDialog({ isOpen, onClose, userIds, onSuccess }: Bu
     }
 
     setIsSubmitting(true);
-    setProgress({ current: 0, total: userIds.length });
-
-    let successCount = 0;
-    let failCount = 0;
+    setProgress({ current: 0, total: 1 });
 
     const today = new Date().toISOString().split("T")[0];
 
-    for (let i = 0; i < userIds.length; i++) {
-      try {
-        await api.patch(`/admin/attendance/${userIds[i]}`, {
-          date: today,
-          status: selectedStatus,
-        });
-        successCount++;
-      } catch (error) {
-        console.error(`Failed to update attendance for user ${userIds[i]}:`, error);
-        failCount++;
+    try {
+      const response = await api.post("/admin/attendance/bulk", {
+        user_ids: userIds,
+        date: today,
+        session: selectedSession,
+        status: selectedStatus,
+      });
+      const markedCount = response.data?.data?.marked_count || 0;
+      setProgress({ current: 1, total: 1 });
+      setResults({ success: markedCount, failed: userIds.length - markedCount });
+
+      if (markedCount > 0) {
+        toast.success(`Updated attendance for ${markedCount} learner${markedCount !== 1 ? "s" : ""}`);
       }
-      setProgress({ current: i + 1, total: userIds.length });
+    } catch (error) {
+      console.error("Bulk attendance failed:", error);
+      toast.error("Failed to update attendance.");
+      setResults({ success: 0, failed: userIds.length });
     }
 
     setIsSubmitting(false);
-    setResults({ success: successCount, failed: failCount });
-
-    if (successCount > 0) {
-      toast.success(`Updated attendance for ${successCount} learner${successCount !== 1 ? "s" : ""}`);
-      if (failCount > 0) {
-        toast.warning(`Failed to update ${failCount} learner${failCount !== 1 ? "s" : ""}`);
-      }
-    } else {
-      toast.error("Failed to update attendance for any learners.");
-    }
   };
 
   const handleClose = () => {
@@ -102,6 +95,19 @@ export function BulkAttendanceDialog({ isOpen, onClose, userIds, onSuccess }: Bu
         {!results ? (
           <>
             <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Session</Label>
+                <Select value={selectedSession} onValueChange={setSelectedSession}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select session" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="morning">Morning</SelectItem>
+                    <SelectItem value="afternoon">Afternoon</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Label className="text-base font-semibold">Select attendance status:</Label>
               <RadioGroup
                 value={selectedStatus || ""}
