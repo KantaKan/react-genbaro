@@ -139,7 +139,7 @@ const UserProfilePage: React.FC = () => {
   );
 
   const addCommentMutation = useMutation(
-    (payload: { content: string; zoomName: string; cohort: number; parentId?: string }) => addProfileComment(id!, payload),
+    (payload: { content: string; parentId?: string }) => addProfileComment(id!, payload),
     {
       onSuccess: () => {
         queryClient.invalidateQueries(["userProfile", id]);
@@ -187,11 +187,8 @@ const UserProfilePage: React.FC = () => {
   const handleAddComment = (isReply: boolean = false) => {
     const content = isReply ? replyContent : newComment;
     if (content.trim() && currentUserData) {
-      const { zoomName, cohort } = getBoardUserPayload(currentUserData);
       addCommentMutation.mutate({ 
         content: content.trim(), 
-        zoomName, 
-        cohort, 
         parentId: isReply ? (replyToCommentId || undefined) : undefined 
       });
     }
