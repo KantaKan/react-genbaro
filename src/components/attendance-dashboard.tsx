@@ -3,13 +3,11 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -36,12 +34,15 @@ import {
   type Holiday,
   type AttendanceStats
 } from "@/lib/api";
-import { Trash2, RefreshCw, Clock, AlertTriangle, Calendar, X, CalendarClock, Check, ChevronDown, Loader2, Star, Users, Eye, ArrowUpDown, UserX, UserMinus } from "lucide-react";
+import { Trash2, RefreshCw, Clock, Calendar, X, CalendarClock, Check, ChevronDown, Loader2, Star, Users, Eye, ArrowUpDown, UserX, UserMinus } from "lucide-react";
 import { LeaveRequestsTable } from "./leave-requests-table";
 import { CreateLeaveRequestDialog } from "./create-leave-request-dialog";
 import { AdminAttendanceCalendar } from "./admin-attendance-calendar";
 import { DaySummaryDialog } from "./day-summary-dialog";
 import { CreateHolidayDialog } from "./create-holiday-dialog";
+import { AttendanceCodeCard } from "./attendance/attendance-code-card";
+import { AttendanceStudentTable } from "./attendance/attendance-student-table";
+import { AttendanceLogsSection } from "./attendance/attendance-logs-section";
 
 interface AttendanceDashboardProps {
   cohort?: string;
@@ -155,9 +156,6 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
   // Mark All Present loading state
   const [isMarkingAllPresent, setIsMarkingAllPresent] = useState(false);
   
-  // Sort option for all-students tab
-  const [sortOption, setSortOption] = useState<string>("absent_days_desc");
-
   // Overview Table Sorting
   const [overviewSortDir, setOverviewSortDir] = useState<"asc" | "desc">("asc");
 
@@ -854,46 +852,6 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
     }
   };
 
-  const maxDailyTotal = Math.max(...dailyStats.map(d => d.total), 1);
-
-  const getSortedStats = (data: AttendanceStats[]) => {
-    const sorted = [...data];
-    switch (sortOption) {
-      case "absent_days_desc":
-        return sorted.sort((a, b) => b.absent_days - a.absent_days);
-      case "absent_desc":
-        return sorted.sort((a, b) => b.absent - a.absent);
-      case "present_desc":
-        return sorted.sort((a, b) => b.present - a.present);
-      case "name_asc":
-        return sorted.sort((a, b) => a.first_name.localeCompare(b.first_name));
-      case "name_desc":
-        return sorted.sort((a, b) => b.first_name.localeCompare(a.first_name));
-      case "warning_asc":
-        const warningOrder = { red: 0, yellow: 1, normal: 2 };
-        return sorted.sort((a, b) => warningOrder[a.warning_level] - warningOrder[b.warning_level]);
-      case "jsd_asc":
-      case "jsd_desc":
-        const jsdNum = (jsd?: string) => {
-          if (!jsd) return 9999;
-          const match = jsd.match(/GEN\d+_(\d+)/i);
-          return match ? parseInt(match[1], 10) : 9999;
-        };
-        return sorted.sort((a, b) => {
-          const diff = jsdNum(a.jsd_number) - jsdNum(b.jsd_number);
-          return sortOption === "jsd_asc" ? diff : -diff;
-        });
-      case "absent_days_asc":
-        return sorted.sort((a, b) => a.absent_days - b.absent_days);
-      case "absent_asc":
-        return sorted.sort((a, b) => a.absent - b.absent);
-      case "present_asc":
-        return sorted.sort((a, b) => a.present - b.present);
-      default:
-        return sorted.sort((a, b) => b.absent_days - a.absent_days);
-    }
-  };
-
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between flex-wrap gap-4">
@@ -940,65 +898,30 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Clock className="h-5 w-5" />
-                  Morning Session
-                </CardTitle>
-                <CardDescription className="text-blue-100">9:00 - 10:30</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4 space-y-4">
-                <Button 
-                  onClick={() => handleGenerateCode("morning")}
-                  disabled={isGenerating}
-                  className="w-full"
-                  variant={activeCodeMorning ? "outline" : "default"}
-                >
-                  {isGenerating ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
-                  {activeCodeMorning ? "Regenerate Code" : "Generate Code"}
-                </Button>
-                {activeCodeMorning && (
-                  <div className="text-center p-4 bg-muted rounded-lg">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Active Code</p>
-                    <p className="text-3xl font-bold font-mono tracking-wider">{activeCodeMorning.code}</p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Valid for: <span className="font-semibold text-primary">{timeLeftMorning}</span>
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-purple-500 to-purple-600 text-white pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Clock className="h-5 w-5" />
-                  Afternoon Session
-                </CardTitle>
-                <CardDescription className="text-purple-100">13:00 - 14:30</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4 space-y-4">
-                <Button 
-                  onClick={() => handleGenerateCode("afternoon")}
-                  disabled={isGenerating}
-                  className="w-full"
-                  variant={activeCodeAfternoon ? "outline" : "default"}
-                >
-                  {isGenerating ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
-                  {activeCodeAfternoon ? "Regenerate Code" : "Generate Code"}
-                </Button>
-                {activeCodeAfternoon && (
-                  <div className="text-center p-4 bg-muted rounded-lg">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Active Code</p>
-                    <p className="text-3xl font-bold font-mono tracking-wider">{activeCodeAfternoon.code}</p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Valid for: <span className="font-semibold text-primary">{timeLeftAfternoon}</span>
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <AttendanceCodeCard
+              session="morning"
+              title="Morning Session"
+              description="9:00 - 10:30"
+              gradientFrom="#3b82f6"
+              gradientTo="#2563eb"
+              textColor="text-blue-100"
+              activeCode={activeCodeMorning}
+              timeLeft={timeLeftMorning}
+              isGenerating={isGenerating}
+              onGenerate={handleGenerateCode}
+            />
+            <AttendanceCodeCard
+              session="afternoon"
+              title="Afternoon Session"
+              description="13:00 - 14:30"
+              gradientFrom="#9333ea"
+              gradientTo="#7c3aed"
+              textColor="text-purple-100"
+              activeCode={activeCodeAfternoon}
+              timeLeft={timeLeftAfternoon}
+              isGenerating={isGenerating}
+              onGenerate={handleGenerateCode}
+            />
           </div>
 
           <Card>
@@ -1224,152 +1147,7 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
         </TabsContent>
 
         <TabsContent value="all-students" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    All Students - Cohort {selectedCohort}
-                  </CardTitle>
-                  <CardDescription>
-                    Attendance summary for all students in this cohort
-                  </CardDescription>
-                </div>
-                <Select value={sortOption} onValueChange={setSortOption}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Sort by..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="absent_days_desc">Most Absent Days</SelectItem>
-                    <SelectItem value="absent_desc">Most Absent Sessions</SelectItem>
-                    <SelectItem value="present_desc">Most Present</SelectItem>
-                    <SelectItem value="name_asc">Name A-Z</SelectItem>
-                    <SelectItem value="name_desc">Name Z-A</SelectItem>
-                    <SelectItem value="warning_asc">Warning (Critical first)</SelectItem>
-                    <SelectItem value="jsd_asc">JSD Number</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[120px]">
-                      <button
-                        onClick={() => setSortOption((prev) => (prev === "jsd_asc" ? "jsd_desc" : "jsd_asc"))}
-                        className="flex items-center gap-1.5 hover:text-foreground/70 transition-colors"
-                        title={`Sort by JSD ${sortOption === "jsd_asc" ? "descending" : "ascending"}`}
-                      >
-                        JSD #
-                        <ArrowUpDown className="w-3 h-3 text-muted-foreground ml-1" />
-                        {sortOption.includes("jsd") && (
-                          <span className="text-muted-foreground/50 ml-1 text-[10px] normal-case font-normal whitespace-nowrap">
-                            {sortOption === "jsd_asc" ? "↑" : "↓"}
-                          </span>
-                        )}
-                      </button>
-                    </TableHead>
-                    <TableHead>
-                      <button
-                        onClick={() => setSortOption((prev) => (prev === "name_asc" ? "name_desc" : "name_asc"))}
-                        className="flex items-center gap-1.5 hover:text-foreground/70 transition-colors"
-                        title="Sort by Name"
-                      >
-                        Name
-                        <ArrowUpDown className="w-3 h-3 text-muted-foreground ml-1" />
-                        {sortOption.includes("name") && (
-                          <span className="text-muted-foreground/50 ml-1 text-[10px] normal-case font-normal whitespace-nowrap">
-                            {sortOption === "name_asc" ? "A-Z" : "Z-A"}
-                          </span>
-                        )}
-                      </button>
-                    </TableHead>
-                    <TableHead className="text-center">
-                      <button
-                        onClick={() => setSortOption((prev) => (prev === "present_desc" ? "present_asc" : "present_desc"))}
-                        className="flex items-center justify-center gap-1.5 hover:text-foreground/70 transition-colors mx-auto"
-                        title="Sort by Present"
-                      >
-                        Present
-                        <ArrowUpDown className="w-3 h-3 text-muted-foreground ml-1" />
-                      </button>
-                    </TableHead>
-                    <TableHead className="text-center">Late</TableHead>
-                    <TableHead className="text-center">
-                      <button
-                        onClick={() => setSortOption((prev) => (prev === "absent_desc" ? "absent_asc" : "absent_desc"))}
-                        className="flex items-center justify-center gap-1.5 hover:text-foreground/70 transition-colors mx-auto"
-                        title="Sort by Absent Sessions"
-                      >
-                        Absent Sessions
-                        <ArrowUpDown className="w-3 h-3 text-muted-foreground ml-1" />
-                      </button>
-                    </TableHead>
-                    <TableHead className="text-center">
-                      <button
-                        onClick={() => setSortOption((prev) => (prev === "absent_days_desc" ? "absent_days_asc" : "absent_days_desc"))}
-                        className="flex items-center justify-center gap-1.5 hover:text-foreground/70 transition-colors mx-auto"
-                        title="Sort by Absent Days"
-                      >
-                        Absent Days
-                        <ArrowUpDown className="w-3 h-3 text-muted-foreground ml-1" />
-                      </button>
-                    </TableHead>
-                    <TableHead className="text-center">Excused</TableHead>
-                    <TableHead className="text-center">Warning</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {stats.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={9} className="text-center text-muted-foreground">
-                        No attendance data available
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    getSortedStats(stats).map((student) => (
-                      <TableRow key={student.user_id}>
-                        <TableCell className="font-medium">{student.jsd_number}</TableCell>
-                        <TableCell>{student.first_name} {student.last_name}</TableCell>
-                        <TableCell className="text-center">
-                          <span className="text-green-600 font-medium">{student.present}</span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="text-yellow-600 font-medium">{student.late}</span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="text-red-600 font-medium">{student.absent}</span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="text-red-700 font-bold">{student.absent_days}</span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="text-blue-600 font-medium">{student.late_excused + student.absent_excused}</span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {getWarningBadge(student.warning_level)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                            onClick={() => navigate(`/admin/attendance/student/${student.user_id}`)}
-                            title="View full details"
-                          >
-                            <Eye className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <AttendanceStudentTable cohort={selectedCohort} stats={stats} />
         </TabsContent>
 
         <TabsContent value="calendar" className="space-y-4">
@@ -1381,59 +1159,18 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
         </TabsContent>
 
         <TabsContent value="logs" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Logs
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>JSD</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Session</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>By</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {logs.filter(l => !l.deleted).map((log) => (
-                    <TableRow key={log._id}>
-                      <TableCell>{log.date}</TableCell>
-                      <TableCell>{log.jsd_number}</TableCell>
-                      <TableCell>{log.first_name} {log.last_name}</TableCell>
-                      <TableCell className="capitalize">{log.session}</TableCell>
-                      <TableCell>{getStatusBadge(log.status)}</TableCell>
-                      <TableCell className="capitalize">{log.marked_by}</TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="text-red-500 hover:text-red-700"
-                          onClick={() => {
-                            setRecordToDelete({ 
-                              id: log._id, 
-                              name: `${log.first_name} ${log.last_name}`, 
-                              session: log.session,
-                              date: log.date
-                            });
-                            setDeleteConfirmOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <AttendanceLogsSection
+            logs={logs}
+            onDelete={(log) => {
+              setRecordToDelete({
+                id: log._id,
+                name: `${log.first_name} ${log.last_name}`,
+                session: log.session,
+                date: log.date,
+              });
+              setDeleteConfirmOpen(true);
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="leave-requests" className="space-y-4">
