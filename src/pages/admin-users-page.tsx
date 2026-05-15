@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AdminUsersTable } from "@/components/admin-users-table";
 import { SalesforceExportButton } from "@/components/salesforce-export";
 import { SalesforceIDManager } from "@/components/salesforce-id-manager";
@@ -40,7 +41,8 @@ type Tab = "users" | "salesforce";
 export function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [cohort, setCohort] = useState("12");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const cohort = searchParams.get("cohort") || "12";
   const [activeTab, setActiveTab] = useState<Tab>("users");
 
   const fetchUsers = async (cohortValue: string) => {
@@ -89,7 +91,16 @@ export function AdminUsersPage() {
             <label htmlFor="cohort-select" className="text-sm text-white/60">
               Cohort:
             </label>
-            <Select value={cohort} onValueChange={setCohort}>
+            <Select value={cohort} onValueChange={(value) => {
+              setSearchParams((prev) => {
+                if (value === "0") {
+                  prev.delete("cohort");
+                } else {
+                  prev.set("cohort", value);
+                }
+                return prev;
+              });
+            }}>
               <SelectTrigger id="cohort-select" className="w-[140px]">
                 <SelectValue placeholder="Select cohort" />
               </SelectTrigger>

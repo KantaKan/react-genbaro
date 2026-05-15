@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useQuery } from "react-query";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { api } from "../lib/api";
 import { getAuthToken } from "@/infrastructure/storage";
@@ -23,8 +23,28 @@ import SkeletonLoader from "@/components/ui/SkeletonLoader";
 import type { JWTPayload, User } from "@/domain/types";
 
 export function AllUsers() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [selectedCohort, setSelectedCohort] = useState<number | "all">("all");
+  const [selectedCohort, setSelectedCohort] = useState<number | "all">(
+    () => {
+      const cohortParam = searchParams.get("cohort");
+      if (!cohortParam || cohortParam === "all") return "all";
+      const num = Number(cohortParam);
+      return isNaN(num) ? "all" : num;
+    }
+  );
+
+  const handleCohortChange = (value: number | "all") => {
+    setSelectedCohort(value);
+    setSearchParams((prev) => {
+      if (value === "all") {
+        prev.delete("cohort");
+      } else {
+        prev.set("cohort", String(value));
+      }
+      return prev;
+    });
+  };
 
   const { currentCohort, isAdmin } = useMemo(() => {
     try {
@@ -99,11 +119,11 @@ export function AllUsers() {
               <DropdownMenuContent align="start" className="w-48">
                 <DropdownMenuLabel>Filter by Cohort</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setSelectedCohort("all")} className="flex justify-between items-center">
+                <DropdownMenuItem onClick={() => handleCohortChange("all")} className="flex justify-between items-center">
                   All Cohorts {selectedCohort === "all" && <Check className="w-4 h-4" />}
                 </DropdownMenuItem>
                 {availableCohorts.map(c => (
-                  <DropdownMenuItem key={c} onClick={() => setSelectedCohort(c)} className="flex justify-between items-center">
+                  <DropdownMenuItem key={c} onClick={() => handleCohortChange(c)} className="flex justify-between items-center">
                     Cohort {c} {selectedCohort === c && <Check className="w-4 h-4" />}
                   </DropdownMenuItem>
                 ))}
