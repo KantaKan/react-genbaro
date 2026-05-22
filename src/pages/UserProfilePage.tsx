@@ -309,9 +309,10 @@ const UserProfilePage: React.FC = () => {
                   onChange={(e) => setEditBio(e.target.value)}
                   placeholder="Tell us about yourself..."
                   className="min-h-[100px] text-lg bg-muted/50"
+                  maxLength={500}
                 />
               ) : (
-                <p className="text-xl leading-relaxed">
+                <p className="text-xl leading-relaxed break-words">
                   {user.bio || "This learner hasn't written a bio yet."}
                 </p>
               )}
@@ -438,6 +439,7 @@ const UserProfilePage: React.FC = () => {
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 className="min-h-[100px] bg-background/50"
+                maxLength={1000}
               />
             </CardContent>
             <CardFooter className="justify-end">
@@ -470,7 +472,7 @@ const UserProfilePage: React.FC = () => {
                           </div>
                         </CardHeader>
                         <CardContent className="pb-6 px-6">
-                          <p className="text-lg leading-snug">"{comment.content}"</p>
+                          <p className="text-lg leading-snug break-words">"{comment.content}"</p>
                           <div className="flex items-center gap-2 mt-2">
                             <Button 
                               variant="ghost" 
@@ -498,9 +500,10 @@ const UserProfilePage: React.FC = () => {
                           {replyToCommentId === commentId && (
                             <div className="mt-4 p-4 bg-muted/20 rounded-lg space-y-2">
                                <Textarea 
-                                 value={replyContent} 
-                                 onChange={(e) => setReplyContent(e.target.value)} 
-                                 placeholder="Write a reply..."
+                                  value={replyContent} 
+                                  onChange={(e) => setReplyContent(e.target.value)} 
+                                  placeholder="Write a reply..."
+                                  maxLength={1000}
                                />
                                <div className="flex justify-end gap-2">
                                  <Button variant="ghost" size="sm" onClick={() => {
