@@ -112,6 +112,7 @@ export const HOLIDAYS = [
   new Date("2026-12-05"), // Father's Day
   new Date("2026-12-10"), // Constitution Day
   new Date("2026-12-31"), // New Year's Eve
+  new Date("2026-06-01"),
 ].map((date) => {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
