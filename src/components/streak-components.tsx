@@ -453,13 +453,13 @@ const GlowingFlame = ({ tier = 0, active, className }: { tier?: FlameTier; activ
                 <motion.circle
                   cx="16" cy="33" r="1.8" fill={outlineColor}
                   animate={{ scaleY: [1, 1, 0.1, 1, 1] }}
-                  transition={{ duration: 3.5, repeat: Infinity, times: [0, 0.92, 0.95, 0.98, 1] }}
+                  transition={{ duration: 7, repeat: Infinity, times: [0, 0.92, 0.95, 0.98, 1] }}
                   style={{ originY: "33px" }}
                 />
                 <motion.circle
                   cx="24" cy="33" r="1.8" fill={outlineColor}
                   animate={{ scaleY: [1, 1, 0.1, 1, 1] }}
-                  transition={{ duration: 3.5, repeat: Infinity, times: [0, 0.92, 0.95, 0.98, 1] }}
+                  transition={{ duration: 7, repeat: Infinity, times: [0, 0.92, 0.95, 0.98, 1] }}
                   style={{ originY: "33px" }}
                 />
                 {/* Smile */}

@@ -6,21 +6,24 @@ export interface StreakMilestone {
 }
 
 export const streakMilestones: StreakMilestone[] = [
-  { days: 1, message: "You've started your streak!", emoji: "🔥", fireIntensity: "low" },
-  { days: 3, message: "3 days strong! You're warming up!", emoji: "🔥", fireIntensity: "low" },
-  { days: 5, message: "5 days! The fire is growing!", emoji: "🔥🔥", fireIntensity: "medium" },
-  { days: 7, message: "One week strong! You're on fire!", emoji: "🔥🔥", fireIntensity: "medium" },
-  { days: 14, message: "Two weeks! You're unstoppable!", emoji: "🔥🔥🔥", fireIntensity: "high" },
-  { days: 21, message: "21 days = habit formed!", emoji: "🔥🔥🔥", fireIntensity: "high" },
-  { days: 30, message: "30 days! Legendary streak!", emoji: "🔥🔥🔥", fireIntensity: "high" },
-  { days: 50, message: "50 days! You're a reflection master!", emoji: "🔥🔥🔥", fireIntensity: "high" },
-  { days: 100, message: "100 days! Incredible dedication!", emoji: "🔥🔥🔥", fireIntensity: "high" },
+  { days: 1, message: "{days} day! You've started your streak!", emoji: "🔥", fireIntensity: "low" },
+  { days: 3, message: "{days} days strong! You're warming up!", emoji: "🔥", fireIntensity: "low" },
+  { days: 5, message: "{days} days! The fire is growing!", emoji: "🔥🔥", fireIntensity: "medium" },
+  { days: 7, message: "{days} days! You're on fire!", emoji: "🔥🔥", fireIntensity: "medium" },
+  { days: 14, message: "{days} days! You're unstoppable!", emoji: "🔥🔥🔥", fireIntensity: "high" },
+  { days: 21, message: "{days} days = habit formed!", emoji: "🔥🔥🔥", fireIntensity: "high" },
+  { days: 30, message: "{days} days! Legendary streak!", emoji: "🔥🔥🔥", fireIntensity: "high" },
+  { days: 50, message: "{days} days! You're a reflection master!", emoji: "🔥🔥🔥", fireIntensity: "high" },
+  { days: 100, message: "{days} days! Incredible dedication!", emoji: "🔥🔥🔥", fireIntensity: "high" },
 ]
 
 export function getMilestoneForStreak(streak: number): StreakMilestone | null {
   for (let i = streakMilestones.length - 1; i >= 0; i--) {
     if (streak >= streakMilestones[i].days) {
-      return streakMilestones[i]
+      return {
+        ...streakMilestones[i],
+        message: streakMilestones[i].message.replace("{days}", String(streak)),
+      }
     }
   }
   return null
@@ -28,7 +31,7 @@ export function getMilestoneForStreak(streak: number): StreakMilestone | null {
 
 export function getPreviousMilestone(streak: number): StreakMilestone | null {
   const currentMilestone = getMilestoneForStreak(streak)
-  const currentIndex = streakMilestones.findIndex(m => m === currentMilestone)
+  const currentIndex = streakMilestones.findIndex(m => m.days === currentMilestone?.days)
   
   if (currentIndex > 0) {
     return streakMilestones[currentIndex - 1]
@@ -40,7 +43,7 @@ export function isMilestoneReached(currentStreak: number, previousStreak: number
   const currentMilestone = getMilestoneForStreak(currentStreak)
   const previousMilestone = getMilestoneForStreak(previousStreak)
   
-  return currentMilestone !== previousMilestone
+  return currentMilestone?.days !== previousMilestone?.days
 }
 
 export const comfortZoneMessages = {
