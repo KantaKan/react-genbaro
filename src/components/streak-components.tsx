@@ -598,7 +598,7 @@ const GlowingFlame = ({ tier = 0, active, className }: { tier?: FlameTier; activ
 export const StreakIcon = ({ streakData, showMilestoneToast = true }: { streakData: StreakData; showMilestoneToast?: boolean }) => {
   const { currentStreak, oldStreak, hasCurrentStreak } = streakData
   const displayStreak = hasCurrentStreak ? currentStreak : oldStreak > 0 ? oldStreak : 0
-  const tier = hasCurrentStreak ? getFlameTier(displayStreak) : 0
+  const tier = getFlameTier(displayStreak);
   const prevStreakRef = useRef(0)
   const [celebrating, setCelebrating] = useState(false)
   const [celebrationEffect, setCelebrationEffect] = useState<CelebrationEffect>("fireEmoji")
