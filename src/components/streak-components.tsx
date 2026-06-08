@@ -10,20 +10,20 @@ import { fireConfetti } from "@/lib/confetti"
 
 const tierTextColors: Record<FlameTier, string> = {
   0: "text-muted-foreground",
-  1: "text-amber-600 dark:text-amber-400",
-  2: "text-emerald-600 dark:text-emerald-400",
-  3: "text-indigo-600 dark:text-indigo-400",
-  4: "text-purple-600 dark:text-purple-400",
-  5: "text-yellow-600 dark:text-yellow-400",
+  1: "text-orange-600 dark:text-orange-400",
+  2: "text-red-600 dark:text-red-400",
+  3: "text-red-700 dark:text-red-300",
+  4: "text-pink-600 dark:text-pink-400",
+  5: "text-yellow-600 dark:text-yellow-300",
 }
 
 const tierSubtextColors: Record<FlameTier, string> = {
   0: "text-muted-foreground/60",
-  1: "text-amber-500/80 dark:text-amber-400/70",
-  2: "text-emerald-500/80 dark:text-emerald-400/70",
-  3: "text-indigo-500/80 dark:text-indigo-400/70",
-  4: "text-purple-500/80 dark:text-purple-400/70",
-  5: "text-yellow-500/80 dark:text-yellow-400/70",
+  1: "text-orange-500/80 dark:text-orange-400/70",
+  2: "text-red-500/80 dark:text-red-400/70",
+  3: "text-red-600/80 dark:text-red-300/70",
+  4: "text-pink-500/80 dark:text-pink-400/70",
+  5: "text-yellow-500/80 dark:text-yellow-300/70",
 }
 
 export const FireBar = ({ value, max = 100 }: { value: number; max?: number }) => {
@@ -402,7 +402,7 @@ const GlowingFlame = ({ tier = 0, active, className }: { tier?: FlameTier; activ
             {/* === Frame 1 — flames tips left === */}
             <motion.g
               animate={active ? { opacity: [1, 0, 0] } : { opacity: 1 }}
-              transition={active ? { duration: 0.6, repeat: Infinity, times: [0, 0.01, 1] } : {}}
+              transition={active ? { duration: 1.4, repeat: Infinity, times: [0, 0.01, 1] } : {}}
             >
               <path d="M20 5C17 12 9 20 9 32C9 40 14 47 20 48C26 47 31 40 31 32C31 20 23 12 20 5Z" fill={flameColor} stroke={outlineColor} strokeWidth={strokeW} strokeLinejoin="round" />
               <path d="M20 16C18 21 13 26 13 34C13 39 16 44 20 46C24 44 27 39 27 34C27 26 22 21 20 16Z" fill={innerColor} stroke={outlineColor} strokeWidth={1.5} strokeLinejoin="round" />
@@ -413,7 +413,7 @@ const GlowingFlame = ({ tier = 0, active, className }: { tier?: FlameTier; activ
             {/* === Frame 2 — flames tips right === */}
             <motion.g
               animate={active ? { opacity: [0, 1, 0] } : { opacity: 0 }}
-              transition={active ? { duration: 0.6, repeat: Infinity, times: [0, 0.01, 1] } : {}}
+              transition={active ? { duration: 1.4, repeat: Infinity, times: [0, 0.01, 1] } : {}}
             >
               <path d="M20 4C18 11 10 21 10 33C10 40 14 47 20 48C26 47 30 40 30 33C30 21 22 11 20 4Z" fill={flameColor} stroke={outlineColor} strokeWidth={strokeW} strokeLinejoin="round" />
               <path d="M20 15C18 20 14 27 14 34C14 39 17 44 20 46C23 44 26 39 26 34C26 27 22 20 20 15Z" fill={innerColor} stroke={outlineColor} strokeWidth={1.5} strokeLinejoin="round" />
@@ -424,7 +424,7 @@ const GlowingFlame = ({ tier = 0, active, className }: { tier?: FlameTier; activ
             {/* === Frame 3 — flames tips center === */}
             <motion.g
               animate={active ? { opacity: [0, 0, 1] } : { opacity: 0 }}
-              transition={active ? { duration: 0.6, repeat: Infinity, times: [0, 0.01, 1] } : {}}
+              transition={active ? { duration: 1.4, repeat: Infinity, times: [0, 0.01, 1] } : {}}
             >
               <path d="M20 3C19 10 11 20 11 32C11 40 15 47 20 48C25 47 29 40 29 32C29 20 21 10 20 3Z" fill={flameColor} stroke={outlineColor} strokeWidth={strokeW} strokeLinejoin="round" />
               <path d="M20 14C19 19 15 26 15 33C15 38 17 44 20 46C23 44 25 38 25 33C25 26 21 19 20 14Z" fill={innerColor} stroke={outlineColor} strokeWidth={1.5} strokeLinejoin="round" />
