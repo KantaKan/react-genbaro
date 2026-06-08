@@ -65,3 +65,120 @@ export function getRandomComfortMessage(type: keyof typeof comfortZoneMessages):
   const messages = comfortZoneMessages[type]
   return messages[Math.floor(Math.random() * messages.length)]
 }
+
+export type FlameTier = 0 | 1 | 2 | 3 | 4 | 5
+
+export interface FlameTierConfig {
+  name: string
+  flameColor: string
+  innerColor: string
+  tipColor: string
+  glowColor: string
+  strokeColor: string
+  particleCount: number
+  particleTypes: Array<"star" | "heart" | "swirl" | "diamond">
+  glowScale: number
+  hasCrownTips: boolean
+  hasColorShift: boolean
+  hasRing: boolean
+}
+
+const FLAME_TIER_CONFIGS: Record<FlameTier, FlameTierConfig> = {
+  0: {
+    name: "inactive",
+    flameColor: "#a1a1aa",
+    innerColor: "#d4d4d8",
+    tipColor: "#71717a",
+    glowColor: "#a1a1aa",
+    strokeColor: "#52525b",
+    particleCount: 0,
+    particleTypes: [],
+    glowScale: 1,
+    hasCrownTips: false,
+    hasColorShift: false,
+    hasRing: false,
+  },
+  1: {
+    name: "spark",
+    flameColor: "#f97316",
+    innerColor: "#fbbf24",
+    tipColor: "#ef4444",
+    glowColor: "#f97316",
+    strokeColor: "#1e1e1e",
+    particleCount: 3,
+    particleTypes: ["star"],
+    glowScale: 1,
+    hasCrownTips: false,
+    hasColorShift: false,
+    hasRing: false,
+  },
+  2: {
+    name: "ember",
+    flameColor: "#10b981",
+    innerColor: "#34d399",
+    tipColor: "#06b6d4",
+    glowColor: "#10b981",
+    strokeColor: "#1e1e1e",
+    particleCount: 4,
+    particleTypes: ["star", "heart"],
+    glowScale: 1.1,
+    hasCrownTips: false,
+    hasColorShift: false,
+    hasRing: false,
+  },
+  3: {
+    name: "blaze",
+    flameColor: "#6366f1",
+    innerColor: "#818cf8",
+    tipColor: "#3b82f6",
+    glowColor: "#6366f1",
+    strokeColor: "#1e1e1e",
+    particleCount: 5,
+    particleTypes: ["star", "heart", "swirl"],
+    glowScale: 1.2,
+    hasCrownTips: false,
+    hasColorShift: false,
+    hasRing: false,
+  },
+  4: {
+    name: "inferno",
+    flameColor: "#a855f7",
+    innerColor: "#c084fc",
+    tipColor: "#ec4899",
+    glowColor: "#a855f7",
+    strokeColor: "#1e1e1e",
+    particleCount: 7,
+    particleTypes: ["star", "heart", "swirl", "diamond"],
+    glowScale: 1.3,
+    hasCrownTips: true,
+    hasColorShift: false,
+    hasRing: true,
+  },
+  5: {
+    name: "legendary",
+    flameColor: "#eab308",
+    innerColor: "#fde047",
+    tipColor: "#f59e0b",
+    glowColor: "#eab308",
+    strokeColor: "#1e1e1e",
+    particleCount: 10,
+    particleTypes: ["star", "heart", "swirl", "diamond"],
+    glowScale: 1.5,
+    hasCrownTips: true,
+    hasColorShift: true,
+    hasRing: true,
+  },
+}
+
+export function getFlameTier(streak: number): FlameTier {
+  if (streak >= 50) return 5
+  if (streak >= 30) return 4
+  if (streak >= 20) return 3
+  if (streak >= 10) return 2
+  if (streak >= 1) return 1
+  return 0
+}
+
+export function getFlameTierConfig(tier: FlameTier): FlameTierConfig {
+  return FLAME_TIER_CONFIGS[tier]
+}
