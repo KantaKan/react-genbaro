@@ -111,6 +111,7 @@ export function useReflections(userId?: string, initialReflections: Reflection[]
         setReflections((prev) => prev.map((r) => (r._id === optimisticReflection._id ? response.data.data : r)));
 
         toast.success("Reflection submitted successfully!");
+
         return response.data.data;
       } catch (err) {
         // Revert optimistic update

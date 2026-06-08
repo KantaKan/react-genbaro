@@ -155,7 +155,6 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
       };
 
       await onSubmit(newReflection);
-      toast.success("Reflection submitted successfully!");
 
       // Reset form
       setCategoryInputs({});

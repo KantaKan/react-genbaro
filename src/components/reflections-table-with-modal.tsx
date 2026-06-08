@@ -323,12 +323,10 @@ export default function ReflectionsTableWithModal() {
       setIsLoading(true);
       const response = await api.post(`users/${newReflection.user_id}/reflections`, newReflection);
       if (response.data) {
+        const submittedReflection = response.data.data;
+        setReflections((prev) => [submittedReflection, ...prev]);
         setFormData(null);
         setIsDialogOpen(false);
-        if (typeof refreshUserData === "function") {
-          await refreshUserData();
-        }
-        toast.success("Reflection submitted successfully!");
       }
     } catch (error: any) {
       if (error.response?.status === 409) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -11,7 +11,8 @@ import { Plus, BookOpen, CheckCircle } from "lucide-react";
 import { useReflections, type Reflection } from "@/hooks/use-reflections";
 import { useStreakCalculation } from "@/hooks/use-streak-calculation";
 import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflection-zones";
-import { StreakIcon, FireBar } from "./streak-components";
+import { StreakIcon, FireBar, ComfortZoneMessage } from "./streak-components";
+import { getMilestoneForStreak, getRandomComfortMessage } from "@/lib/streak-milestones";
 import { ReflectionsTable } from "./reflections-table";
 import FeedbackForm from "./linear-feedback-form";
 import { ReflectionPreview } from "./reflection-preview";
@@ -255,13 +256,18 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
                 {streakData.hasCurrentStreak && streakData.currentStreak > 0 ? (
-                  <>
-                    You've been reflecting consistently for <span className="text-primary font-semibold">{streakData.currentStreak} day{streakData.currentStreak !== 1 ? "s" : ""}</span>. Keep the momentum going.
-                  </>
+                  (() => {
+                    const milestone = getMilestoneForStreak(streakData.currentStreak);
+                    return milestone ? (
+                      <span className="text-primary font-semibold">{milestone.emoji} {milestone.message}</span>
+                    ) : (
+                      <>
+                        You've been reflecting consistently for <span className="text-primary font-semibold">{streakData.currentStreak} day{streakData.currentStreak !== 1 ? "s" : ""}</span>. Keep the momentum going.
+                      </>
+                    );
+                  })()
                 ) : streakData.oldStreak > 0 ? (
-                  <>
-                    Your last streak was <span className="text-primary font-semibold">{streakData.oldStreak} days</span>. Add today's reflection to start fresh.
-                  </>
+                  <ComfortZoneMessage type="comeback" />
                 ) : (
                   "Track your learning journey and grow through daily reflection"
                 )}
@@ -646,7 +652,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                         transition={{ duration: 0.3 }} 
                         className="text-sm text-amber-700 font-medium dark:text-amber-400"
                       >
-                        Excellent consistency! Keep reflecting daily.
+                        {getRandomComfortMessage("gentle")}
                       </motion.div>
                     )}
                   </div>
@@ -681,7 +687,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="space-y-2">
                   <p className="text-lg font-medium">
-                    Your last streak was <span className="text-primary font-semibold">{streakData.oldStreak} day{streakData.oldStreak !== 1 ? "s" : ""}</span>
+                    <ComfortZoneMessage type="comeback" />
                   </p>
                   {streakData.lastActiveDate && (
                     <p className="text-sm text-muted-foreground">
