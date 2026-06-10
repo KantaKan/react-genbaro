@@ -352,90 +352,168 @@ const GlowingFlame = ({ tier = 0, active, className }: { tier?: FlameTier; activ
   const hasDiamonds = active && config.particleTypes.includes("diamond")
 
   return (
-    <div className={`relative ${className}`} style={active && config.hasColorShift ? { filter: "hue-rotate(0deg)" } : undefined}>
-      {/* Outer diffused aura — tier 5 */}
-      {active && config.hasColorShift && (
-        <motion.div
-          className="absolute rounded-full"
-          style={{
-            inset: `-${5 * config.glowScale * 20}px`,
-            background: `radial-gradient(circle, ${config.glowColor}30 0%, ${config.glowColor}15 40%, transparent 70%)`,
-            filter: "blur(24px)",
-          }}
-          animate={{ scale: [0.8, 1.25, 0.8], opacity: [0.3, 0.7, 0.3] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        />
+    <div className={`relative ${className}`}>
+      {/* ─── Tier 1: Candle — soft gentle flicker ─── */}
+      {active && config.glowStyle === "candle" && (
+        <>
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 8}px`,
+              background: `radial-gradient(circle, ${config.glowColor}30 0%, ${config.glowColor}10 60%, transparent 80%)`,
+              filter: "blur(6px)",
+            }}
+            animate={{ scale: [0.92, 1.08, 0.92], opacity: [0.25, 0.5, 0.25] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </>
       )}
 
-      {/* Warm glow halo */}
-      {active && (
-        <motion.div
-          className="absolute rounded-full"
-          style={{
-            inset: `-${5 * config.glowScale * 10}px`,
-            background: `radial-gradient(circle, ${config.glowColor}55 0%, ${config.glowColor}25 55%, transparent 80%)`,
-            filter: "blur(12px)",
-          }}
-          animate={{ scale: [0.85, 1.2, 0.85], opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        />
+      {/* ─── Tier 2: Ember — warm steady pulse ─── */}
+      {active && config.glowStyle === "ember" && (
+        <>
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 10}px`,
+              background: `radial-gradient(circle, ${config.glowColor}40 0%, ${config.glowColor}18 55%, transparent 80%)`,
+              filter: "blur(8px)",
+            }}
+            animate={{ scale: [0.88, 1.15, 0.88], opacity: [0.35, 0.65, 0.35] }}
+            transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 4}px`,
+              background: `radial-gradient(circle, ${config.innerColor}35 0%, ${config.glowColor}15 65%, transparent 85%)`,
+              filter: "blur(3px)",
+            }}
+            animate={{ scale: [0.93, 1.07, 0.93], opacity: [0.3, 0.55, 0.3] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </>
       )}
 
-      {/* Inner glow — tier 5 heartbeat */}
-      {active && config.hasColorShift && (
-        <motion.div
-          className="absolute rounded-full"
-          style={{
-            inset: `-${5 * config.glowScale * 4}px`,
-            background: `radial-gradient(circle, ${config.innerColor}60 0%, ${config.glowColor}30 60%, transparent 85%)`,
-            filter: "blur(4px)",
-          }}
-          animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-        />
+      {/* ─── Tier 3: Inferno — intense radiating pulse ─── */}
+      {active && config.glowStyle === "inferno" && (
+        <>
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 14}px`,
+              background: `radial-gradient(circle, ${config.glowColor}50 0%, ${config.glowColor}20 50%, transparent 75%)`,
+              filter: "blur(14px)",
+            }}
+            animate={{ scale: [0.82, 1.22, 0.82], opacity: [0.4, 0.75, 0.4] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 5}px`,
+              background: `radial-gradient(circle, ${config.innerColor}50 0%, ${config.glowColor}25 60%, transparent 85%)`,
+              filter: "blur(4px)",
+            }}
+            animate={{ scale: [0.9, 1.12, 0.9], opacity: [0.45, 0.8, 0.45] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </>
       )}
 
-      {/* Ring — tier 4+ */}
-      {active && config.hasRing && (
-        <motion.div
-          className="absolute inset-0 rounded-full border-2"
-          style={{ borderColor: config.flameColor + "55" }}
-          animate={{ scale: [0.8, 1.15, 0.8], opacity: [0.3, 0.8, 0.3] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        />
+      {/* ─── Tier 4: Inferno + Ring — fierce wave with expanding ring ─── */}
+      {active && config.glowStyle === "inferno-ring" && (
+        <>
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 18}px`,
+              background: `radial-gradient(circle, ${config.glowColor}55 0%, ${config.glowColor}22 45%, transparent 72%)`,
+              filter: "blur(18px)",
+            }}
+            animate={{ scale: [0.78, 1.28, 0.78], opacity: [0.45, 0.8, 0.45] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 6}px`,
+              background: `radial-gradient(circle, ${config.innerColor}55 0%, ${config.glowColor}28 55%, transparent 82%)`,
+              filter: "blur(5px)",
+            }}
+            animate={{ scale: [0.88, 1.15, 0.88], opacity: [0.5, 0.85, 0.5] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute inset-0 rounded-full border-2"
+            style={{ borderColor: config.flameColor + "55" }}
+            animate={{ scale: [0.8, 1.15, 0.8], opacity: [0.3, 0.8, 0.3] }}
+            transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </>
       )}
 
-      {/* Second ring — tier 5 out of phase */}
-      {active && config.hasColorShift && (
-        <motion.div
-          className="absolute inset-0 rounded-full border"
-          style={{ borderColor: config.innerColor + "40" }}
-          animate={{ scale: [0.85, 1.2, 0.85], opacity: [0.2, 0.6, 0.2] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        />
-      )}
-
-      {/* Color shift overlay — tier 5 */}
-      {active && config.hasColorShift && (
-        <motion.div
-          className="absolute inset-0 rounded-full pointer-events-none"
-          style={{ mixBlendMode: "overlay", background: `linear-gradient(135deg, ${config.flameColor}33, ${config.innerColor}40, ${config.tipColor}33)` }}
-          animate={{ opacity: [0.3, 0.6, 0.3] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        />
-      )}
-
-      {/* Iridescent shimmer — tier 5 */}
-      {active && config.hasColorShift && (
-        <motion.div
-          className="absolute inset-0 rounded-full pointer-events-none"
-          style={{
-            background: `conic-gradient(from 0deg, ${config.flameColor}20, ${config.innerColor}15, ${config.tipColor}20, ${config.glowColor}15, ${config.flameColor}20)`,
-            mixBlendMode: "soft-light",
-          }}
-          animate={{ rotate: [0, 360], opacity: [0.2, 0.4, 0.2] }}
-          transition={{ rotate: { duration: 6, repeat: Infinity, ease: "linear" }, opacity: { duration: 3, repeat: Infinity, ease: "easeInOut" } }}
-        />
+      {/* ─── Tier 5: Cosmic aura — 6-layer cosmic effect ─── */}
+      {active && config.glowStyle === "cosmic" && (
+        <>
+          {/* Layer 1: Outer diffused aura */}
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 20}px`,
+              background: `radial-gradient(circle, ${config.glowColor}30 0%, ${config.glowColor}15 40%, transparent 70%)`,
+              filter: "blur(24px)",
+            }}
+            animate={{ scale: [0.8, 1.25, 0.8], opacity: [0.3, 0.7, 0.3] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {/* Layer 2: Enhanced halo */}
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 12}px`,
+              background: `radial-gradient(circle, ${config.glowColor}55 0%, ${config.glowColor}25 55%, transparent 80%)`,
+              filter: "blur(12px)",
+            }}
+            animate={{ scale: [0.85, 1.2, 0.85], opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {/* Layer 3: Inner glow heartbeat */}
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 4}px`,
+              background: `radial-gradient(circle, ${config.innerColor}60 0%, ${config.glowColor}30 60%, transparent 85%)`,
+              filter: "blur(4px)",
+            }}
+            animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {/* Layer 4: Enhanced ring */}
+          <motion.div
+            className="absolute inset-0 rounded-full border-2"
+            style={{ borderColor: config.flameColor + "55" }}
+            animate={{ scale: [0.8, 1.15, 0.8], opacity: [0.3, 0.8, 0.3] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {/* Layer 5: Second ring out of phase */}
+          <motion.div
+            className="absolute inset-0 rounded-full border"
+            style={{ borderColor: config.innerColor + "40" }}
+            animate={{ scale: [0.85, 1.2, 0.85], opacity: [0.2, 0.6, 0.2] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {/* Layer 6: Iridescent shimmer */}
+          <motion.div
+            className="absolute inset-0 rounded-full pointer-events-none"
+            style={{
+              background: `conic-gradient(from 0deg, ${config.flameColor}20, ${config.innerColor}15, ${config.tipColor}20, ${config.glowColor}15, ${config.flameColor}20)`,
+              mixBlendMode: "soft-light",
+            }}
+            animate={{ rotate: [0, 360], opacity: [0.2, 0.4, 0.2] }}
+            transition={{ rotate: { duration: 6, repeat: Infinity, ease: "linear" }, opacity: { duration: 3, repeat: Infinity, ease: "easeInOut" } }}
+          />
+        </>
       )}
 
       {/* Flipbook flame body — 3 frames cycled via stepped timing */}
