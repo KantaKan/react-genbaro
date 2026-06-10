@@ -41,6 +41,16 @@ interface ReflectionsDashboardProps {
   onReflectionSubmit?: () => Promise<void>;
 }
 
+/**
+ * Renders the Daily Reflections dashboard for a given user.
+ *
+ * The component loads reflections and streak data, fetches the user profile, allows submitting one reflection per day via a full-screen dialog, and displays analytics including zone distribution, dominant zone, today's zone, streak messaging, achievements, and reflection history.
+ *
+ * @param userId - The id of the user whose reflections and profile will be loaded.
+ * @param initialReflections - Optional initial reflections used to seed the view before remote data arrives.
+ * @param onReflectionSubmit - Optional callback invoked after a reflection is successfully submitted.
+ * @returns The ReflectionsDashboard React element.
+ */
 export default function ReflectionsDashboard({ userId, initialReflections = [], onReflectionSubmit }: ReflectionsDashboardProps) {
   const { reflections, isLoading: isLoadingReflections, error: reflectionsError, addReflection, refetch } = useReflections(userId, initialReflections);
   const streakData = useStreakCalculation(reflections);

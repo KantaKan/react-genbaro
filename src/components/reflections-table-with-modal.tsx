@@ -25,6 +25,13 @@ import { getRandomStreakQuote } from "@/lib/streak-milestones";
 import { isWeekend, isHoliday, isValidWorkday, getPreviousWorkday } from "@/utils/date-utils";
 import { ZoneStatCard } from "./zone-stat-card";
 
+/**
+ * Render the Daily Reflections UI: a table of user reflections with search, time filters, column visibility, streak and zone summaries, and modal dialogs for adding or viewing reflections.
+ *
+ * The component loads reflection data from user context, computes streak and zone statistics, and provides controls for sorting, filtering, and submitting reflections.
+ *
+ * @returns A React element containing the reflections dashboard (hero, zone statistics, today's reflection card, streak history, table controls, reflections table, and related dialogs).
+ */
 export default function ReflectionsTableWithModal() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
