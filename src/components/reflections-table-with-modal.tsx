@@ -21,6 +21,7 @@ import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflect
 import { useMousePosition } from "../hooks/use-mouse-position";
 import { BarometerVisual } from "./barometer-visual";
 import { FireBar, StreakCounter, StreakIcon } from "./streak-components";
+import { getRandomStreakQuote } from "@/lib/streak-milestones";
 import { isWeekend, isHoliday, isValidWorkday, getPreviousWorkday } from "@/utils/date-utils";
 import { ZoneStatCard } from "./zone-stat-card";
 
@@ -476,10 +477,10 @@ export default function ReflectionsTableWithModal() {
             {/* Update the hero section text to match the design in the image */}
             <motion.p className="text-muted-foreground" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.3 }}>
               {streakData.hasCurrentStreak && streakData.currentStreak > 0 ? (
-                <>
-                  🎯 You've been reflecting consistently for {streakData.currentStreak} day
-                  {streakData.currentStreak !== 1 ? "s" : ""}
-                </>
+                <div className="flex flex-col gap-1">
+                  <span>🎯 You've been reflecting consistently for {streakData.currentStreak} day{streakData.currentStreak !== 1 ? "s" : ""}</span>
+                  <span className="text-sm text-muted-foreground/70 italic">{getRandomStreakQuote()}</span>
+                </div>
               ) : streakData.oldStreak > 0 ? (
                 <>
                   <span className="inline-flex items-center">

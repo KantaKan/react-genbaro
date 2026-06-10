@@ -180,3 +180,39 @@ export function getFlameTier(streak: number): FlameTier {
 export function getFlameTierConfig(tier: FlameTier): FlameTierConfig {
   return FLAME_TIER_CONFIGS[tier]
 }
+
+export const streakQuotes: string[] = [
+  "You showed up. That's half the battle.",
+  "Consistency is quiet genius.",
+  "Still going? Absolute legend.",
+  "Discipline is choosing what you want most over what you want now.",
+  "Growth is silent. The results are loud.",
+  "You don't have to be great to start, but you have to start to be great.",
+  "The secret of getting ahead is getting started. — Mark Twain",
+  "Small daily improvements lead to staggering long-term results.",
+  "Every reflection is a step forward.",
+  "You're building something most people only talk about.",
+  "Progress, not perfection.",
+  "The body achieves what the mind believes.",
+  "One more day in the books.",
+  "We are what we repeatedly do. Excellence is not an act, but a habit. — Aristotle",
+  "The unexamined life is not worth living. — Socrates",
+  "It is not that we have a short time to live, but that we waste a great deal of it. — Seneca",
+  "He who fears he shall suffer, already suffers what he fears. — Montaigne",
+  "The only true wisdom is in knowing you know nothing. — Socrates",
+  "What we do now echoes in eternity. — Marcus Aurelius",
+  "Waste no more time arguing about what a good person should be. Be one. — Marcus Aurelius",
+  "First say to yourself what you would be; and then do what you have to do. — Epictetus",
+  "Hey, you're back! Let's keep this going.",
+  "Look at you, still showing up.",
+  "Another day, another win.",
+  "This streak is getting impressive.",
+  "Future you will be grateful.",
+  "Day by day. Nothing can stop you.",
+  "You're on a roll. Don't stop now.",
+  "Proud of you for sticking with this.",
+]
+
+export function getRandomStreakQuote(): string {
+  return streakQuotes[Math.floor(Math.random() * streakQuotes.length)]
+}
