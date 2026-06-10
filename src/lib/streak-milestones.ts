@@ -71,6 +71,8 @@ export function getRandomComfortMessage(type: keyof typeof comfortZoneMessages):
 
 export type FlameTier = 0 | 1 | 2 | 3 | 4 | 5
 
+export type GlowStyle = "none" | "candle" | "ember" | "inferno" | "inferno-ring" | "cosmic"
+
 export interface FlameTierConfig {
   name: string
   flameColor: string
@@ -84,6 +86,7 @@ export interface FlameTierConfig {
   hasCrownTips: boolean
   hasColorShift: boolean
   hasRing: boolean
+  glowStyle: GlowStyle
 }
 
 const FLAME_TIER_CONFIGS: Record<FlameTier, FlameTierConfig> = {
@@ -94,6 +97,7 @@ const FLAME_TIER_CONFIGS: Record<FlameTier, FlameTierConfig> = {
     tipColor: "#71717a",
     glowColor: "#a1a1aa",
     strokeColor: "#52525b",
+    glowStyle: "none",
     particleCount: 0,
     particleTypes: [],
     glowScale: 1,
@@ -114,6 +118,7 @@ const FLAME_TIER_CONFIGS: Record<FlameTier, FlameTierConfig> = {
     hasCrownTips: false,
     hasColorShift: false,
     hasRing: false,
+    glowStyle: "candle",
   },
   2: {
     name: "ember",
@@ -128,6 +133,7 @@ const FLAME_TIER_CONFIGS: Record<FlameTier, FlameTierConfig> = {
     hasCrownTips: false,
     hasColorShift: false,
     hasRing: false,
+    glowStyle: "ember",
   },
   3: {
     name: "blaze",
@@ -142,6 +148,7 @@ const FLAME_TIER_CONFIGS: Record<FlameTier, FlameTierConfig> = {
     hasCrownTips: false,
     hasColorShift: false,
     hasRing: false,
+    glowStyle: "inferno",
   },
   4: {
     name: "inferno",
@@ -156,6 +163,7 @@ const FLAME_TIER_CONFIGS: Record<FlameTier, FlameTierConfig> = {
     hasCrownTips: true,
     hasColorShift: false,
     hasRing: true,
+    glowStyle: "inferno-ring",
   },
   5: {
     name: "legendary",
@@ -170,6 +178,7 @@ const FLAME_TIER_CONFIGS: Record<FlameTier, FlameTierConfig> = {
     hasCrownTips: true,
     hasColorShift: true,
     hasRing: true,
+    glowStyle: "cosmic",
   },
 }
 
