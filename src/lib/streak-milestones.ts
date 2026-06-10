@@ -84,8 +84,6 @@ export interface FlameTierConfig {
   particleTypes: Array<"star" | "heart" | "swirl" | "diamond">
   glowScale: number
   hasCrownTips: boolean
-  hasColorShift: boolean
-  hasRing: boolean
   glowStyle: GlowStyle
 }
 
@@ -102,8 +100,6 @@ const FLAME_TIER_CONFIGS: Record<FlameTier, FlameTierConfig> = {
     particleTypes: [],
     glowScale: 1,
     hasCrownTips: false,
-    hasColorShift: false,
-    hasRing: false,
   },
   1: {
     name: "spark",
@@ -116,8 +112,6 @@ const FLAME_TIER_CONFIGS: Record<FlameTier, FlameTierConfig> = {
     particleTypes: ["star"],
     glowScale: 1,
     hasCrownTips: false,
-    hasColorShift: false,
-    hasRing: false,
     glowStyle: "candle",
   },
   2: {
@@ -131,8 +125,6 @@ const FLAME_TIER_CONFIGS: Record<FlameTier, FlameTierConfig> = {
     particleTypes: ["star", "heart"],
     glowScale: 1.15,
     hasCrownTips: false,
-    hasColorShift: false,
-    hasRing: false,
     glowStyle: "ember",
   },
   3: {
@@ -146,8 +138,6 @@ const FLAME_TIER_CONFIGS: Record<FlameTier, FlameTierConfig> = {
     particleTypes: ["star", "heart", "swirl"],
     glowScale: 1.3,
     hasCrownTips: false,
-    hasColorShift: false,
-    hasRing: false,
     glowStyle: "inferno",
   },
   4: {
@@ -161,8 +151,6 @@ const FLAME_TIER_CONFIGS: Record<FlameTier, FlameTierConfig> = {
     particleTypes: ["star", "heart", "swirl", "diamond"],
     glowScale: 1.45,
     hasCrownTips: true,
-    hasColorShift: false,
-    hasRing: true,
     glowStyle: "inferno-ring",
   },
   5: {
@@ -176,8 +164,6 @@ const FLAME_TIER_CONFIGS: Record<FlameTier, FlameTierConfig> = {
     particleTypes: ["star", "heart", "swirl", "diamond"],
     glowScale: 1.6,
     hasCrownTips: true,
-    hasColorShift: true,
-    hasRing: true,
     glowStyle: "cosmic",
   },
 }
