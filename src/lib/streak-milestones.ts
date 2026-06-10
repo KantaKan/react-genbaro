@@ -177,6 +177,12 @@ export function getFlameTier(streak: number): FlameTier {
   return 0
 }
 
+/**
+ * Retrieve the visual configuration for a given flame tier.
+ *
+ * @param tier - Flame tier (0–5) indicating intensity level
+ * @returns The FlameTierConfig associated with `tier`
+ */
 export function getFlameTierConfig(tier: FlameTier): FlameTierConfig {
   return FLAME_TIER_CONFIGS[tier]
 }
@@ -213,6 +219,11 @@ export const streakQuotes: string[] = [
   "Proud of you for sticking with this.",
 ]
 
+/**
+ * Selects a random motivational streak quote.
+ *
+ * @returns A randomly chosen string from `streakQuotes`.
+ */
 export function getRandomStreakQuote(): string {
   return streakQuotes[Math.floor(Math.random() * streakQuotes.length)]
 }
