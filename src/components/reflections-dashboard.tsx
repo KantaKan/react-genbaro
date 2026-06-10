@@ -12,7 +12,7 @@ import { useReflections, type Reflection } from "@/hooks/use-reflections";
 import { useStreakCalculation } from "@/hooks/use-streak-calculation";
 import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflection-zones";
 import { StreakIcon, FireBar, ComfortZoneMessage } from "./streak-components";
-import { getMilestoneForStreak, getRandomComfortMessage } from "@/lib/streak-milestones";
+import { getMilestoneForStreak, getRandomComfortMessage, getRandomStreakQuote } from "@/lib/streak-milestones";
 import { ReflectionsTable } from "./reflections-table";
 import FeedbackForm from "./linear-feedback-form";
 import { ReflectionPreview } from "./reflection-preview";
@@ -259,7 +259,10 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                   (() => {
                     const milestone = getMilestoneForStreak(streakData.currentStreak);
                     return milestone ? (
-                      <span className="text-primary font-semibold">{milestone.emoji} {milestone.message}</span>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-primary font-semibold">{milestone.emoji} {milestone.message}</span>
+                        <span className="text-sm text-muted-foreground/70 italic">{getRandomStreakQuote()}</span>
+                      </div>
                     ) : (
                       <>
                         You've been reflecting consistently for <span className="text-primary font-semibold">{streakData.currentStreak} day{streakData.currentStreak !== 1 ? "s" : ""}</span>. Keep the momentum going.
