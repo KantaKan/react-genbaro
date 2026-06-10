@@ -14,7 +14,7 @@ const tierTextColors: Record<FlameTier, string> = {
   2: "text-red-600 dark:text-red-400",
   3: "text-red-700 dark:text-red-300",
   4: "text-pink-600 dark:text-pink-400",
-  5: "text-yellow-600 dark:text-yellow-300",
+  5: "text-purple-600 dark:text-purple-300",
 }
 
 const tierSubtextColors: Record<FlameTier, string> = {
@@ -23,7 +23,7 @@ const tierSubtextColors: Record<FlameTier, string> = {
   2: "text-red-500/80 dark:text-red-400/70",
   3: "text-red-600/80 dark:text-red-300/70",
   4: "text-pink-500/80 dark:text-pink-400/70",
-  5: "text-yellow-500/80 dark:text-yellow-300/70",
+  5: "text-purple-500/80 dark:text-purple-300/70",
 }
 
 export const FireBar = ({ value, max = 100 }: { value: number; max?: number }) => {
@@ -353,6 +353,20 @@ const GlowingFlame = ({ tier = 0, active, className }: { tier?: FlameTier; activ
 
   return (
     <div className={`relative ${className}`} style={active && config.hasColorShift ? { filter: "hue-rotate(0deg)" } : undefined}>
+      {/* Outer diffused aura — tier 5 */}
+      {active && config.hasColorShift && (
+        <motion.div
+          className="absolute rounded-full"
+          style={{
+            inset: `-${5 * config.glowScale * 20}px`,
+            background: `radial-gradient(circle, ${config.glowColor}30 0%, ${config.glowColor}15 40%, transparent 70%)`,
+            filter: "blur(24px)",
+          }}
+          animate={{ scale: [0.8, 1.25, 0.8], opacity: [0.3, 0.7, 0.3] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        />
+      )}
+
       {/* Warm glow halo */}
       {active && (
         <motion.div
@@ -360,10 +374,24 @@ const GlowingFlame = ({ tier = 0, active, className }: { tier?: FlameTier; activ
           style={{
             inset: `-${5 * config.glowScale * 10}px`,
             background: `radial-gradient(circle, ${config.glowColor}55 0%, ${config.glowColor}25 55%, transparent 80%)`,
-            filter: "blur(8px)",
+            filter: "blur(12px)",
           }}
-          animate={{ scale: [0.9, 1.15, 0.9], opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          animate={{ scale: [0.85, 1.2, 0.85], opacity: [0.6, 1, 0.6] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        />
+      )}
+
+      {/* Inner glow — tier 5 heartbeat */}
+      {active && config.hasColorShift && (
+        <motion.div
+          className="absolute rounded-full"
+          style={{
+            inset: `-${5 * config.glowScale * 4}px`,
+            background: `radial-gradient(circle, ${config.innerColor}60 0%, ${config.glowColor}30 60%, transparent 85%)`,
+            filter: "blur(4px)",
+          }}
+          animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.6, 1, 0.6] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
         />
       )}
 
@@ -372,8 +400,18 @@ const GlowingFlame = ({ tier = 0, active, className }: { tier?: FlameTier; activ
         <motion.div
           className="absolute inset-0 rounded-full border-2"
           style={{ borderColor: config.flameColor + "55" }}
-          animate={{ scale: [0.85, 1.1, 0.85], opacity: [0.3, 0.7, 0.3] }}
+          animate={{ scale: [0.8, 1.15, 0.8], opacity: [0.3, 0.8, 0.3] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        />
+      )}
+
+      {/* Second ring — tier 5 out of phase */}
+      {active && config.hasColorShift && (
+        <motion.div
+          className="absolute inset-0 rounded-full border"
+          style={{ borderColor: config.innerColor + "40" }}
+          animate={{ scale: [0.85, 1.2, 0.85], opacity: [0.2, 0.6, 0.2] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         />
       )}
 
@@ -381,9 +419,22 @@ const GlowingFlame = ({ tier = 0, active, className }: { tier?: FlameTier; activ
       {active && config.hasColorShift && (
         <motion.div
           className="absolute inset-0 rounded-full pointer-events-none"
-          style={{ mixBlendMode: "overlay", background: `linear-gradient(135deg, ${config.flameColor}33, ${config.tipColor}33)` }}
-          animate={{ opacity: [0.2, 0.5, 0.2] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          style={{ mixBlendMode: "overlay", background: `linear-gradient(135deg, ${config.flameColor}33, ${config.innerColor}40, ${config.tipColor}33)` }}
+          animate={{ opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        />
+      )}
+
+      {/* Iridescent shimmer — tier 5 */}
+      {active && config.hasColorShift && (
+        <motion.div
+          className="absolute inset-0 rounded-full pointer-events-none"
+          style={{
+            background: `conic-gradient(from 0deg, ${config.flameColor}20, ${config.innerColor}15, ${config.tipColor}20, ${config.glowColor}15, ${config.flameColor}20)`,
+            mixBlendMode: "soft-light",
+          }}
+          animate={{ rotate: [0, 360], opacity: [0.2, 0.4, 0.2] }}
+          transition={{ rotate: { duration: 6, repeat: Infinity, ease: "linear" }, opacity: { duration: 3, repeat: Infinity, ease: "easeInOut" } }}
         />
       )}
 
