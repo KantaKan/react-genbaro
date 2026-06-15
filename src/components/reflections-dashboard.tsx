@@ -11,7 +11,7 @@ import { Plus, BookOpen, CheckCircle } from "lucide-react";
 import { useReflections, type Reflection } from "@/hooks/use-reflections";
 import { useStreakCalculation } from "@/hooks/use-streak-calculation";
 import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflection-zones";
-import { StreakIcon, FireBar, ComfortZoneMessage } from "./streak-components";
+import { StreakIcon, GrowthBar, ComfortZoneMessage } from "./streak-components";
 import { getMilestoneForStreak, getRandomComfortMessage, getRandomStreakQuote } from "@/lib/streak-milestones";
 import { ReflectionsTable } from "./reflections-table";
 import FeedbackForm from "./linear-feedback-form";
@@ -643,7 +643,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                   </motion.p>
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
-                      <FireBar value={streakData.currentStreak} max={20} />
+                      <GrowthBar value={streakData.currentStreak} max={20} />
                       <div className="flex items-center gap-1">
                         <span className="tabular-nums font-medium">{streakData.currentStreak} day streak</span>
                       </div>

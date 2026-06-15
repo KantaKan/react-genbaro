@@ -3,90 +3,57 @@
 import { useRef, useEffect, useState, useCallback } from "react"
 import { motion, useAnimation, AnimatePresence } from "framer-motion"
 import type { StreakData } from "@/hooks/use-reflections"
-import { getMilestoneForStreak, isMilestoneReached, getRandomComfortMessage, getFlameTier, getFlameTierConfig, type FlameTier } from "@/lib/streak-milestones"
+import {
+  getMilestoneForStreak,
+  isMilestoneReached,
+  getRandomComfortMessage,
+  getPlantTier,
+  getPlantTierConfig,
+  type PlantTier,
+} from "@/lib/streak-milestones"
 
 import { Cat } from "lucide-react"
 import { fireConfetti } from "@/lib/confetti"
 
-const tierTextColors: Record<FlameTier, string> = {
+const tierTextColors: Record<PlantTier, string> = {
   0: "text-muted-foreground",
-  1: "text-orange-600 dark:text-orange-400",
-  2: "text-red-600 dark:text-red-400",
-  3: "text-red-700 dark:text-red-300",
-  4: "text-pink-600 dark:text-pink-400",
-  5: "text-purple-600 dark:text-purple-300",
+  1: "text-emerald-600 dark:text-emerald-400",
+  2: "text-green-600 dark:text-green-400",
+  3: "text-green-700 dark:text-green-300",
+  4: "text-emerald-700 dark:text-emerald-300",
+  5: "text-amber-600 dark:text-amber-300",
 }
 
-const tierSubtextColors: Record<FlameTier, string> = {
+const tierSubtextColors: Record<PlantTier, string> = {
   0: "text-muted-foreground/60",
-  1: "text-orange-500/80 dark:text-orange-400/70",
-  2: "text-red-500/80 dark:text-red-400/70",
-  3: "text-red-600/80 dark:text-red-300/70",
-  4: "text-pink-500/80 dark:text-pink-400/70",
-  5: "text-purple-500/80 dark:text-purple-300/70",
+  1: "text-emerald-500/80 dark:text-emerald-400/70",
+  2: "text-green-500/80 dark:text-green-400/70",
+  3: "text-green-600/80 dark:text-green-300/70",
+  4: "text-emerald-600/80 dark:text-emerald-300/70",
+  5: "text-amber-500/80 dark:text-amber-300/70",
 }
 
-export const FireBar = ({ value, max = 100 }: { value: number; max?: number }) => {
+export const GrowthBar = ({ value, max = 100 }: { value: number; max?: number }) => {
   const progress = (value / max) * 100
   const controls = useAnimation()
-  const fireRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     controls.start({
       width: `${progress}%`,
       transition: { duration: 1, ease: "easeOut" },
     })
-
-    if (fireRef.current && value > 0) {
-      const particles = Array.from({ length: Math.min(value, 10) }, () => {
-        const particle = document.createElement("div")
-        particle.className = "absolute bottom-0 rounded-full bg-amber-500 opacity-70"
-        particle.style.width = `${Math.random() * 6 + 4}px`
-        particle.style.height = `${Math.random() * 6 + 4}px`
-        particle.style.left = `${Math.random() * 100}%`
-        return particle
-      })
-
-      particles.forEach((particle) => {
-        fireRef.current?.appendChild(particle)
-
-        const animation = particle.animate(
-          [
-            {
-              transform: `translateY(0) scale(1)`,
-              opacity: 0.7,
-            },
-            {
-              transform: `translateY(-${Math.random() * 20 + 10}px) scale(${Math.random() * 0.5 + 0.5})`,
-              opacity: 0,
-            },
-          ],
-          {
-            duration: Math.random() * 1000 + 1000,
-            iterations: Number.POSITIVE_INFINITY,
-          },
-        )
-
-        return () => {
-          animation.cancel()
-          particle.remove()
-        }
-      })
-
-      return () => {
-        particles.forEach((p) => p.remove())
-      }
-    }
-  }, [controls, progress, value])
+  }, [controls, progress])
 
   return (
     <div className="relative w-full h-2 bg-muted rounded-full overflow-hidden">
       <motion.div
-        className="absolute top-0 left-0 h-full bg-gradient-to-r from-amber-500 to-amber-400"
+        className="absolute top-0 left-0 h-full rounded-full"
+        style={{
+          background: "linear-gradient(90deg, #8B6F47, #52B788, #2D6A4F)",
+        }}
         initial={{ width: 0 }}
         animate={controls}
       />
-      <div ref={fireRef} className="absolute top-0 left-0 w-full h-full pointer-events-none" />
     </div>
   )
 }
@@ -111,7 +78,7 @@ export const StreakCounter = ({ count, hasActiveStreak = true }: { count: number
 
   return (
     <motion.div className="flex items-center gap-1" animate={countAnimation}>
-      <span className="text-amber-500 text-sm">🔥</span>
+      <span className="text-emerald-500 text-sm">🌱</span>
       <motion.span initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
         {count} day streak
       </motion.span>
@@ -121,14 +88,14 @@ export const StreakCounter = ({ count, hasActiveStreak = true }: { count: number
 
 const EMOJI_COUNT = 8
 
-type CelebrationEffect = "fireEmoji" | "sparkleRain" | "starBurst" | "emojiConfetti" | "glowPulse"
+type CelebrationEffect = "petalBurst" | "pollenRain" | "leafBurst" | "natureConfetti" | "glowPulse"
 
 function getRandomCelebrationEffect(): CelebrationEffect {
-  const effects: CelebrationEffect[] = ["fireEmoji", "sparkleRain", "starBurst", "emojiConfetti", "glowPulse"]
+  const effects: CelebrationEffect[] = ["petalBurst", "pollenRain", "leafBurst", "natureConfetti", "glowPulse"]
   return effects[Math.floor(Math.random() * effects.length)]
 }
 
-const SparkleRain = ({ onDone }: { onDone: () => void }) => {
+const PollenRain = ({ onDone }: { onDone: () => void }) => {
   useEffect(() => {
     const timer = setTimeout(onDone, 1500)
     return () => clearTimeout(timer)
@@ -149,7 +116,7 @@ const SparkleRain = ({ onDone }: { onDone: () => void }) => {
             animate={{ y: startY + 80, opacity: 0, scale: 0.3 }}
             transition={{ duration: 1.2, delay, ease: "easeIn" }}
           >
-            ✨
+            ✦
           </motion.span>
         )
       })}
@@ -157,7 +124,7 @@ const SparkleRain = ({ onDone }: { onDone: () => void }) => {
   )
 }
 
-const StarBurst = ({ onDone }: { onDone: () => void }) => {
+const LeafBurst = ({ onDone }: { onDone: () => void }) => {
   useEffect(() => {
     const timer = setTimeout(onDone, 1200)
     return () => clearTimeout(timer)
@@ -183,7 +150,7 @@ const StarBurst = ({ onDone }: { onDone: () => void }) => {
             }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            ⭐
+            🌿
           </motion.span>
         )
       })}
@@ -191,16 +158,17 @@ const StarBurst = ({ onDone }: { onDone: () => void }) => {
   )
 }
 
-const EmojiConfetti = ({ onDone }: { onDone: () => void }) => {
+const NatureConfetti = ({ onDone }: { onDone: () => void }) => {
   useEffect(() => {
     const timer = setTimeout(onDone, 1800)
     return () => clearTimeout(timer)
   }, [onDone])
 
+  const natureEmojis = ["🌱", "🌿", "🌸", "🌺", "🍃", "🌾", "✨", "💚"]
+
   return (
     <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 pointer-events-none z-30">
       {Array.from({ length: 16 }, (_, i) => {
-        const emojis = ["🔥", "⭐", "🎉", "🎊", "✨", "💪", "🏆", "🎯"]
         const startX = Math.random() * 40 - 20
         const startY = -30 - Math.random() * 20
         const endX = startX + (Math.random() * 100 - 50)
@@ -214,7 +182,7 @@ const EmojiConfetti = ({ onDone }: { onDone: () => void }) => {
             animate={{ x: endX, y: endY, opacity: 0, scale: 0.5, rotate: Math.random() * 360 }}
             transition={{ duration: 1.5, delay: i * 0.05, ease: "easeOut" }}
           >
-            {emojis[i % emojis.length]}
+            {natureEmojis[i % natureEmojis.length]}
           </motion.span>
         )
       })}
@@ -222,7 +190,7 @@ const EmojiConfetti = ({ onDone }: { onDone: () => void }) => {
   )
 }
 
-const GlowPulse = ({ onDone }: { onDone: () => void }) => {
+const GrowthGlowPulse = ({ onDone }: { onDone: () => void }) => {
   useEffect(() => {
     const timer = setTimeout(onDone, 1000)
     return () => clearTimeout(timer)
@@ -232,7 +200,7 @@ const GlowPulse = ({ onDone }: { onDone: () => void }) => {
     <motion.div
       className="absolute inset-0 rounded-full pointer-events-none z-30"
       style={{
-        background: "radial-gradient(circle, rgba(255,165,0,0.4) 0%, rgba(255,69,0,0.2) 50%, transparent 70%)",
+        background: "radial-gradient(circle, rgba(82,183,136,0.4) 0%, rgba(45,106,79,0.2) 50%, transparent 70%)",
       }}
       initial={{ scale: 0.5, opacity: 0 }}
       animate={{ scale: [0.5, 2, 0.5], opacity: [0, 0.8, 0] }}
@@ -241,7 +209,7 @@ const GlowPulse = ({ onDone }: { onDone: () => void }) => {
   )
 }
 
-const FireEmojiBurst = ({ onDone }: { onDone: () => void }) => {
+const PetalBurst = ({ onDone }: { onDone: () => void }) => {
   useEffect(() => {
     const timer = setTimeout(onDone, 1200)
     return () => clearTimeout(timer)
@@ -270,7 +238,7 @@ const FireEmojiBurst = ({ onDone }: { onDone: () => void }) => {
             }}
             transition={{ duration: 1, ease: "easeOut" }}
           >
-            🔥
+            🌸
           </motion.span>
         )
       })}
@@ -278,356 +246,628 @@ const FireEmojiBurst = ({ onDone }: { onDone: () => void }) => {
   )
 }
 
-const GlowingFlame = ({ tier = 0, active, className }: { tier?: FlameTier; active: boolean; className?: string }) => {
-  const wobbleControls = useAnimation()
-  const bounceControls = useAnimation()
-  const config = getFlameTierConfig(tier)
+const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; active: boolean; className?: string }) => {
+  const swayControls = useAnimation()
+  const leafBounceControls = useAnimation()
+  const config = getPlantTierConfig(tier)
 
   useEffect(() => {
     if (active) {
-      wobbleControls.start({
-        rotate: [0, -3, 2.5, -2, 3, -1.5, 0],
-        transition: { duration: 1.8, repeat: Infinity, ease: "easeInOut" },
+      swayControls.start({
+        rotate: [0, -2, 1.5, -1, 2, -0.5, 0],
+        transition: { duration: 3, repeat: Infinity, ease: "easeInOut" },
       })
-      bounceControls.start({
-        scaleY: [1, 1.06, 0.95, 1.03, 1],
-        scaleX: [1, 0.97, 1.04, 0.98, 1],
-        transition: { duration: 1.1, repeat: Infinity, ease: "easeInOut" },
+      leafBounceControls.start({
+        scaleY: [1, 1.03, 0.97, 1.02, 1],
+        scaleX: [1, 0.98, 1.02, 0.99, 1],
+        transition: { duration: 2, repeat: Infinity, ease: "easeInOut" },
       })
     } else {
-      wobbleControls.stop()
-      wobbleControls.set({ rotate: 0 })
-      bounceControls.stop()
-      bounceControls.set({ scaleY: 1, scaleX: 1 })
+      swayControls.stop()
+      swayControls.set({ rotate: 0 })
+      leafBounceControls.stop()
+      leafBounceControls.set({ scaleY: 1, scaleX: 1 })
     }
-  }, [active, wobbleControls, bounceControls])
+  }, [active, swayControls, leafBounceControls])
 
-  const flameColor = active ? config.flameColor : "#a1a1aa"
-  const innerColor = active ? config.innerColor : "#d4d4d8"
-  const tipColor = active ? config.tipColor : "#71717a"
-  const outlineColor = active ? config.strokeColor : "#52525b"
-  const strokeW = 2.2
+  const stemColor = active ? config.stemColor : "#a1a1aa"
+  const leafColor = active ? config.leafColor : "#d4d4d8"
+  const flowerColor = active ? config.flowerColor : "#71717a"
+  const fruitColor = active ? config.fruitColor : "#71717a"
+  const potColor = active ? config.potColor : "#9c8b7e"
+  const soilColor = active ? config.soilColor : "#6b5b4e"
+  const outlineColor = active ? "#3d3d3d" : "#52525b"
+  const strokeW = 1.8
 
-  const starPositions = [
-    { delay: 0.3, x: -8, y: -10, size: 8, color: config.innerColor, dur: 2.2 },
-    { delay: 1.1, x: 10, y: -14, size: 7, color: config.flameColor, dur: 2.5 },
-    { delay: 2.0, x: -5, y: -18, size: 9, color: config.tipColor, dur: 2.0 },
-    { delay: 0.6, x: 12, y: -12, size: 6, color: config.innerColor, dur: 2.3 },
-    { delay: 1.5, x: -11, y: -16, size: 7, color: config.flameColor, dur: 2.1 },
-    { delay: 2.8, x: 3, y: -20, size: 8, color: config.tipColor, dur: 2.4 },
-    { delay: 0.9, x: -6, y: -15, size: 6, color: config.innerColor, dur: 2.7 },
-    { delay: 1.9, x: 8, y: -17, size: 7, color: config.flameColor, dur: 2.0 },
-    { delay: 2.4, x: -10, y: -13, size: 8, color: config.tipColor, dur: 2.6 },
-    { delay: 3.2, x: 6, y: -19, size: 6, color: config.innerColor, dur: 2.2 },
+  const petalPositions = [
+    { delay: 0.3, x: -6, y: -8, size: 6, color: config.flowerColor, dur: 2.2 },
+    { delay: 1.1, x: 8, y: -12, size: 5, color: config.glowColor, dur: 2.5 },
+    { delay: 2.0, x: -4, y: -15, size: 7, color: config.flowerColor, dur: 2.0 },
+    { delay: 0.6, x: 10, y: -10, size: 5, color: config.glowColor, dur: 2.3 },
+    { delay: 1.5, x: -8, y: -14, size: 6, color: config.flowerColor, dur: 2.1 },
+    { delay: 2.8, x: 4, y: -18, size: 6, color: config.glowColor, dur: 2.4 },
+    { delay: 0.9, x: -5, y: -12, size: 5, color: config.flowerColor, dur: 2.7 },
+    { delay: 1.9, x: 7, y: -15, size: 5, color: config.glowColor, dur: 2.0 },
+    { delay: 2.4, x: -7, y: -11, size: 6, color: config.flowerColor, dur: 2.6 },
+    { delay: 3.2, x: 5, y: -16, size: 5, color: config.glowColor, dur: 2.2 },
   ]
 
-  const heartPositions = [
-    { delay: 0.7, x: 6, dur: 2.8 },
-    { delay: 1.8, x: -9, dur: 2.4 },
-    { delay: 2.6, x: 3, dur: 2.6 },
-    { delay: 3.1, x: -7, dur: 2.3 },
-    { delay: 0.4, x: 10, dur: 2.9 },
-    { delay: 1.3, x: -4, dur: 2.5 },
-    { delay: 2.2, x: 8, dur: 2.7 },
+  const pollenPositions = [
+    { delay: 0.7, x: 5, dur: 2.8 },
+    { delay: 1.8, x: -7, dur: 2.4 },
+    { delay: 2.6, x: 4, dur: 2.6 },
+    { delay: 3.1, x: -6, dur: 2.3 },
+    { delay: 0.4, x: 8, dur: 2.9 },
+    { delay: 1.3, x: -3, dur: 2.5 },
+    { delay: 2.2, x: 6, dur: 2.7 },
   ]
 
-  const swirlPositions = [
-    { delay: 1.4, x: -3, dur: 2.1 },
-    { delay: 2.5, x: 7, dur: 2.6 },
-    { delay: 3.0, x: -6, dur: 2.3 },
-    { delay: 0.8, x: 5, dur: 2.4 },
-    { delay: 1.9, x: -8, dur: 2.2 },
+  const leafParticlePositions = [
+    { delay: 1.4, x: -4, dur: 2.1 },
+    { delay: 2.5, x: 6, dur: 2.6 },
+    { delay: 3.0, x: -5, dur: 2.3 },
+    { delay: 0.8, x: 4, dur: 2.4 },
+    { delay: 1.9, x: -6, dur: 2.2 },
   ]
 
-  const diamondPositions = [
-    { delay: 0.5, x: -7, dur: 2.0 },
-    { delay: 1.6, x: 9, dur: 2.3 },
-    { delay: 2.7, x: -4, dur: 2.5 },
-    { delay: 3.3, x: 6, dur: 2.1 },
+  const lightPositions = [
+    { delay: 0.5, x: -5, dur: 2.0 },
+    { delay: 1.6, x: 7, dur: 2.3 },
+    { delay: 2.7, x: -3, dur: 2.5 },
+    { delay: 3.3, x: 5, dur: 2.1 },
   ]
 
-  const hasStars = active && config.particleTypes.includes("star")
-  const hasHearts = active && config.particleTypes.includes("heart")
-  const hasSwirls = active && config.particleTypes.includes("swirl")
-  const hasDiamonds = active && config.particleTypes.includes("diamond")
+  const hasPetals = active && config.particleTypes.includes("petal")
+  const hasPollen = active && config.particleTypes.includes("pollen")
+  const hasLeafParticles = active && config.particleTypes.includes("leaf")
+  const hasLight = active && config.particleTypes.includes("light")
+
+  const pollenCount = Math.ceil(config.particleCount * 0.35)
+  const petalCount = Math.ceil(config.particleCount * 0.3)
+  const leafParticleCount = Math.ceil(config.particleCount * 0.2)
+  const lightCount = config.particleCount - pollenCount - petalCount - leafParticleCount
 
   return (
     <div className={`relative ${className}`}>
-      {/* ─── Tier 1: Candle — soft gentle flicker ─── */}
-      {active && config.glowStyle === "candle" && (
+      {/* Glow effects — Sunlight Through Canopy */}
+      {active && config.growthGlow === "glow" && (
         <>
           <motion.div
             className="absolute rounded-full"
             style={{
               inset: `-${5 * config.glowScale * 8}px`,
-              background: `radial-gradient(circle, ${config.glowColor}30 0%, ${config.glowColor}10 60%, transparent 80%)`,
-              filter: "blur(6px)",
-            }}
-            animate={{ scale: [0.92, 1.08, 0.92], opacity: [0.25, 0.5, 0.25] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          />
-        </>
-      )}
-
-      {/* ─── Tier 2: Ember — warm steady pulse ─── */}
-      {active && config.glowStyle === "ember" && (
-        <>
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              inset: `-${5 * config.glowScale * 10}px`,
-              background: `radial-gradient(circle, ${config.glowColor}40 0%, ${config.glowColor}18 55%, transparent 80%)`,
+              background: `radial-gradient(circle, ${config.glowColor}22 0%, ${config.glowColor}10 50%, transparent 70%)`,
               filter: "blur(8px)",
             }}
-            animate={{ scale: [0.88, 1.15, 0.88], opacity: [0.35, 0.65, 0.35] }}
-            transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+            animate={{ scale: [0.92, 1.08, 0.92], opacity: [0.18, 0.38, 0.18] }}
+            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
             className="absolute rounded-full"
             style={{
-              inset: `-${5 * config.glowScale * 4}px`,
-              background: `radial-gradient(circle, ${config.innerColor}35 0%, ${config.glowColor}15 65%, transparent 85%)`,
+              inset: `-${5 * config.glowScale * 3}px`,
+              background: `radial-gradient(circle, ${config.leafColor}30 0%, ${config.glowColor}15 60%, transparent 80%)`,
               filter: "blur(3px)",
             }}
-            animate={{ scale: [0.93, 1.07, 0.93], opacity: [0.3, 0.55, 0.3] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            animate={{ scale: [0.94, 1.06, 0.94], opacity: [0.2, 0.45, 0.2] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           />
         </>
       )}
 
-      {/* ─── Tier 3: Inferno — intense radiating pulse ─── */}
-      {active && config.glowStyle === "inferno" && (
+      {active && config.growthGlow === "radiant" && (
         <>
           <motion.div
             className="absolute rounded-full"
             style={{
-              inset: `-${5 * config.glowScale * 14}px`,
-              background: `radial-gradient(circle, ${config.glowColor}50 0%, ${config.glowColor}20 50%, transparent 75%)`,
-              filter: "blur(14px)",
+              inset: `-${5 * config.glowScale * 12}px`,
+              background: `radial-gradient(circle, ${config.glowColor}28 0%, ${config.glowColor}12 50%, transparent 72%)`,
+              filter: "blur(12px)",
             }}
-            animate={{ scale: [0.82, 1.22, 0.82], opacity: [0.4, 0.75, 0.4] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            animate={{ scale: [0.88, 1.14, 0.88], opacity: [0.25, 0.5, 0.25] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
             className="absolute rounded-full"
             style={{
               inset: `-${5 * config.glowScale * 5}px`,
-              background: `radial-gradient(circle, ${config.innerColor}50 0%, ${config.glowColor}25 60%, transparent 85%)`,
-              filter: "blur(4px)",
+              background: `radial-gradient(circle, ${config.flowerColor}25 0%, ${config.glowColor}14 55%, transparent 78%)`,
+              filter: "blur(5px)",
             }}
-            animate={{ scale: [0.9, 1.12, 0.9], opacity: [0.45, 0.8, 0.45] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+            animate={{ scale: [0.92, 1.1, 0.92], opacity: [0.3, 0.55, 0.3] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 2}px`,
+              background: `radial-gradient(circle, ${config.leafColor}35 0%, ${config.glowColor}20 65%, transparent 85%)`,
+              filter: "blur(2px)",
+            }}
+            animate={{ scale: [0.95, 1.05, 0.95], opacity: [0.2, 0.4, 0.2] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           />
         </>
       )}
 
-      {/* ─── Tier 4: Inferno + Ring — fierce wave with expanding ring ─── */}
-      {active && config.glowStyle === "inferno-ring" && (
+      {active && config.growthGlow === "bloom" && (
         <>
           <motion.div
             className="absolute rounded-full"
             style={{
-              inset: `-${5 * config.glowScale * 18}px`,
-              background: `radial-gradient(circle, ${config.glowColor}55 0%, ${config.glowColor}22 45%, transparent 72%)`,
+              inset: `-${5 * config.glowScale * 16}px`,
+              background: `radial-gradient(circle, ${config.glowColor}35 0%, ${config.glowColor}15 45%, transparent 68%)`,
               filter: "blur(18px)",
             }}
-            animate={{ scale: [0.78, 1.28, 0.78], opacity: [0.45, 0.8, 0.45] }}
+            animate={{ scale: [0.84, 1.2, 0.84], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 7}px`,
+              background: `radial-gradient(circle, ${config.flowerColor}35 0%, ${config.glowColor}18 50%, transparent 75%)`,
+              filter: "blur(7px)",
+            }}
+            animate={{ scale: [0.88, 1.15, 0.88], opacity: [0.35, 0.65, 0.35] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 2.5}px`,
+              background: `radial-gradient(circle, ${config.flowerColor}50 0%, ${config.glowColor}25 60%, transparent 82%)`,
+              filter: "blur(2.5px)",
+            }}
+            animate={{ scale: [0.92, 1.1, 0.92], opacity: [0.4, 0.75, 0.4] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute inset-0 rounded-full border"
+            style={{ borderColor: config.flowerColor + "45" }}
+            animate={{ scale: [0.84, 1.12, 0.84], opacity: [0.2, 0.6, 0.2] }}
+            transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </>
+      )}
+
+      {active && config.growthGlow === "aurora" && (
+        <>
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 22}px`,
+              background: `radial-gradient(circle, ${config.fruitColor}28 0%, ${config.glowColor}12 38%, transparent 62%)`,
+              filter: "blur(26px)",
+            }}
+            animate={{ scale: [0.8, 1.28, 0.8], opacity: [0.25, 0.6, 0.25] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 13}px`,
+              background: `radial-gradient(circle, ${config.fruitColor}40 0%, ${config.glowColor}20 45%, transparent 70%)`,
+              filter: "blur(14px)",
+            }}
+            animate={{ scale: [0.84, 1.22, 0.84], opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 5}px`,
+              background: `radial-gradient(circle, ${config.fruitColor}45 0%, ${config.flowerColor}22 50%, transparent 75%)`,
+              filter: "blur(5px)",
+            }}
+            animate={{ scale: [0.9, 1.14, 0.9], opacity: [0.5, 0.85, 0.5] }}
             transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
             className="absolute rounded-full"
             style={{
-              inset: `-${5 * config.glowScale * 6}px`,
-              background: `radial-gradient(circle, ${config.innerColor}55 0%, ${config.glowColor}28 55%, transparent 82%)`,
-              filter: "blur(5px)",
+              inset: `-${5 * config.glowScale * 8}px`,
+              background: `radial-gradient(circle, ${config.fruitColor}35 0%, ${config.glowColor}15 55%, transparent 78%)`,
+              filter: "blur(8px)",
             }}
-            animate={{ scale: [0.88, 1.15, 0.88], opacity: [0.5, 0.85, 0.5] }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute inset-0 rounded-full border-2"
-            style={{ borderColor: config.flameColor + "55" }}
-            animate={{ scale: [0.8, 1.15, 0.8], opacity: [0.3, 0.8, 0.3] }}
+            animate={{ scale: [0.88, 1.16, 0.88], opacity: [0.3, 0.65, 0.3] }}
             transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
           />
-        </>
-      )}
-
-      {/* ─── Tier 5: Cosmic aura — 6-layer cosmic effect ─── */}
-      {active && config.glowStyle === "cosmic" && (
-        <>
-          {/* Layer 1: Outer diffused aura */}
           <motion.div
             className="absolute rounded-full"
             style={{
-              inset: `-${5 * config.glowScale * 20}px`,
-              background: `radial-gradient(circle, ${config.glowColor}30 0%, ${config.glowColor}15 40%, transparent 70%)`,
-              filter: "blur(24px)",
+              inset: `-${5 * config.glowScale * 2.5}px`,
+              background: `radial-gradient(circle, ${config.fruitColor}55 0%, ${config.flowerColor}30 60%, transparent 82%)`,
+              filter: "blur(3px)",
             }}
-            animate={{ scale: [0.8, 1.25, 0.8], opacity: [0.3, 0.7, 0.3] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            animate={{ scale: [0.93, 1.1, 0.93], opacity: [0.5, 0.9, 0.5] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
           />
-          {/* Layer 2: Enhanced halo */}
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              inset: `-${5 * config.glowScale * 12}px`,
-              background: `radial-gradient(circle, ${config.glowColor}55 0%, ${config.glowColor}25 55%, transparent 80%)`,
-              filter: "blur(12px)",
-            }}
-            animate={{ scale: [0.85, 1.2, 0.85], opacity: [0.6, 1, 0.6] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          />
-          {/* Layer 3: Inner glow heartbeat */}
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              inset: `-${5 * config.glowScale * 4}px`,
-              background: `radial-gradient(circle, ${config.innerColor}60 0%, ${config.glowColor}30 60%, transparent 85%)`,
-              filter: "blur(4px)",
-            }}
-            animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.6, 1, 0.6] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-          />
-          {/* Layer 4: Enhanced ring */}
-          <motion.div
-            className="absolute inset-0 rounded-full border-2"
-            style={{ borderColor: config.flameColor + "55" }}
-            animate={{ scale: [0.8, 1.15, 0.8], opacity: [0.3, 0.8, 0.3] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          />
-          {/* Layer 5: Second ring out of phase */}
-          <motion.div
-            className="absolute inset-0 rounded-full border"
-            style={{ borderColor: config.innerColor + "40" }}
-            animate={{ scale: [0.85, 1.2, 0.85], opacity: [0.2, 0.6, 0.2] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          />
-          {/* Layer 6: Iridescent shimmer */}
           <motion.div
             className="absolute inset-0 rounded-full pointer-events-none"
             style={{
-              background: `conic-gradient(from 0deg, ${config.flameColor}20, ${config.innerColor}15, ${config.tipColor}20, ${config.glowColor}15, ${config.flameColor}20)`,
+              background: `conic-gradient(from 0deg, ${config.fruitColor}18, ${config.glowColor}10, ${config.flowerColor}12, ${config.stemColor}10, ${config.fruitColor}18)`,
               mixBlendMode: "soft-light",
             }}
-            animate={{ rotate: [0, 360], opacity: [0.2, 0.4, 0.2] }}
-            transition={{ rotate: { duration: 6, repeat: Infinity, ease: "linear" }, opacity: { duration: 3, repeat: Infinity, ease: "easeInOut" } }}
+            animate={{ rotate: [0, 360], opacity: [0.12, 0.32, 0.12] }}
+            transition={{ rotate: { duration: 10, repeat: Infinity, ease: "linear" }, opacity: { duration: 4, repeat: Infinity, ease: "easeInOut" } }}
           />
         </>
       )}
 
-      {/* Flipbook flame body — 3 frames cycled via stepped timing */}
+      {!active && config.growthGlow !== "none" && (
+        <motion.div
+          className="absolute rounded-full"
+          style={{
+            inset: `-${5 * config.glowScale * 6}px`,
+            background: `radial-gradient(circle, ${"#a1a1aa"}15 0%, transparent 65%)`,
+            filter: "blur(6px)",
+          }}
+          animate={{ opacity: [0.05, 0.12, 0.05] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        />
+      )}
+
+      {/* Plant SVG */}
       <motion.div
         className="absolute inset-0"
-        animate={wobbleControls}
+        animate={swayControls}
         style={{ originX: "50%", originY: "100%" }}
       >
         <motion.div
           className="w-full h-full"
-          animate={bounceControls}
+          animate={leafBounceControls}
           style={{ originX: "50%", originY: "100%" }}
         >
           <svg viewBox="0 0 40 52" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-            {/* === Frame 1 — flame leans left === */}
-            <motion.g
-              animate={active ? { opacity: [1, 0, 0] } : { opacity: 1 }}
-              transition={active ? { duration: 1.4, repeat: Infinity, times: [0, 0.01, 1] } : {}}
-            >
-              <path d="M10 46 C8 36 12 26 14 18 C15 12 15 6 16 4 C17 12 18 16 19 20 C20 16 22 8 24 6 C26 14 28 24 32 34 C32 42 28 48 20 48 C16 48 12 47 10 46 Z" fill={flameColor} stroke={outlineColor} strokeWidth={strokeW} strokeLinejoin="round" />
-              <path d="M12 44 C12 36 14 28 16 22 C17 16 17 10 18 8 C19 14 19 18 20 22 C21 18 23 12 24 10 C25 16 27 26 28 32 C28 40 24 45 20 45 C17 45 14 44 12 44 Z" fill={innerColor} stroke={outlineColor} strokeWidth={1.5} strokeLinejoin="round" />
-            </motion.g>
+            {/* Pot */}
+            <g>
+              <path
+                d="M9 44 C9 50 13 51.5 20 51.5 C27 51.5 31 50 31 44 Z"
+                fill={potColor}
+                stroke={outlineColor}
+                strokeWidth={strokeW}
+                strokeLinejoin="round"
+              />
+              <path
+                d="M7 44 L33 44 L31 41 L9 41 Z"
+                fill={potColor}
+                stroke={outlineColor}
+                strokeWidth={strokeW}
+                strokeLinejoin="round"
+              />
+              {/* Soil */}
+              <path
+                d="M10 44 C10 43 14 42 20 42.5 C26 42 30 43 30 44"
+                fill={soilColor}
+                stroke={outlineColor}
+                strokeWidth={1.2}
+                strokeLinejoin="round"
+              />
+              {/* Soil texture dots */}
+              {active && (
+                <>
+                  <circle cx="14" cy="43.5" r="0.8" fill={outlineColor} opacity={0.3} />
+                  <circle cx="18" cy="43" r="0.6" fill={outlineColor} opacity={0.25} />
+                  <circle cx="24" cy="43.5" r="0.7" fill={outlineColor} opacity={0.3} />
+                  <circle cx="27" cy="44" r="0.5" fill={outlineColor} opacity={0.2} />
+                </>
+              )}
+            </g>
 
-            {/* === Frame 2 — flame leans right === */}
-            <motion.g
-              animate={active ? { opacity: [0, 1, 0] } : { opacity: 0 }}
-              transition={active ? { duration: 1.4, repeat: Infinity, times: [0, 0.01, 1] } : {}}
-            >
-              <path d="M10 46 C8 36 12 26 14 18 C15 12 17 8 18 6 C19 12 19 16 20 20 C21 16 22 10 24 4 C25 12 28 22 32 32 C32 42 28 48 20 48 C16 48 12 47 10 46 Z" fill={flameColor} stroke={outlineColor} strokeWidth={strokeW} strokeLinejoin="round" />
-              <path d="M12 44 C12 36 14 28 16 22 C17 16 18 12 19 10 C20 15 20 18 21 22 C22 18 24 14 24 10 C25 16 27 24 28 30 C28 38 24 45 20 45 C17 45 14 44 12 44 Z" fill={innerColor} stroke={outlineColor} strokeWidth={1.5} strokeLinejoin="round" />
-            </motion.g>
-
-            {/* === Frame 3 — flame center === */}
-            <motion.g
-              animate={active ? { opacity: [0, 0, 1] } : { opacity: 0 }}
-              transition={active ? { duration: 1.4, repeat: Infinity, times: [0, 0.01, 1] } : {}}
-            >
-              <path d="M10 46 C8 36 12 26 14 18 C15 12 15 8 17 4 C18 12 18 16 19 20 C20 16 22 12 24 4 C26 14 28 24 32 34 C32 42 28 48 20 48 C16 48 12 47 10 46 Z" fill={flameColor} stroke={outlineColor} strokeWidth={strokeW} strokeLinejoin="round" />
-              <path d="M12 44 C12 36 14 28 16 22 C17 16 17 12 19 8 C20 14 20 18 21 22 C22 18 24 12 25 8 C26 16 27 26 28 32 C28 40 24 45 20 45 C17 45 14 44 12 44 Z" fill={innerColor} stroke={outlineColor} strokeWidth={1.5} strokeLinejoin="round" />
-            </motion.g>
-
-            {/* === Crown tips — tier 4+ === */}
-            {active && config.hasCrownTips && (
-              <>
-                <motion.g
-                  animate={{ y: [0, -1.5, 0, 1, 0] }}
-                  transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <path d="M14 7C13 4 11 2 10 5C9 8 12 9 14 7Z" fill={config.tipColor} stroke={outlineColor} strokeWidth={1} strokeLinejoin="round" />
-                  <path d="M20 5C20 2 20 0 20 3C20 6 20 7 20 5Z" fill={config.tipColor} stroke={outlineColor} strokeWidth={1} strokeLinejoin="round" />
-                  <path d="M26 7C27 4 29 2 30 5C31 8 28 9 26 7Z" fill={config.tipColor} stroke={outlineColor} strokeWidth={1} strokeLinejoin="round" />
-                </motion.g>
-              </>
+            {/* Tier 0: Dormant — seed in soil */}
+            {tier === 0 && (
+              <g>
+                <ellipse cx="20" cy="42" rx="2.5" ry="1.8" fill={stemColor} stroke={outlineColor} strokeWidth="1" />
+                <line x1="20" y1="42" x2="20" y2="41" stroke={outlineColor} strokeWidth="0.8" strokeLinecap="round" />
+              </g>
             )}
 
-            {/* === Cute face === */}
-            {active ? (
-              <>
-                {/* Eyes — round dots with occasional blink */}
-                <motion.circle
-                  cx="16" cy="33" r="1.8" fill={outlineColor}
-                  animate={{ scaleY: [1, 1, 0.1, 1, 1] }}
-                  transition={{ duration: 7, repeat: Infinity, times: [0, 0.92, 0.95, 0.98, 1] }}
-                  style={{ originY: "33px" }}
+            {/* Tier 1: Sprout */}
+            {tier >= 1 && (
+              <g opacity={tier >= 1 ? 1 : 0}>
+                {/* Stem */}
+                <path
+                  d="M20 42 Q19 40 20.5 37 Q21 35 20 33"
+                  stroke={stemColor}
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  fill="none"
                 />
-                <motion.circle
-                  cx="24" cy="33" r="1.8" fill={outlineColor}
-                  animate={{ scaleY: [1, 1, 0.1, 1, 1] }}
-                  transition={{ duration: 7, repeat: Infinity, times: [0, 0.92, 0.95, 0.98, 1] }}
-                  style={{ originY: "33px" }}
+                {/* Leaves */}
+                <path
+                  d="M20 36 Q16 34 16.5 32 Q18 33 20 36"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
                 />
-                {/* Smile */}
-                <path d="M17 37C18 39 22 39 23 37" stroke={outlineColor} strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                {/* Rosy cheeks */}
-                <circle cx="13" cy="36" r="2" fill={config.flameColor} opacity={0.25} />
-                <circle cx="27" cy="36" r="2" fill={config.flameColor} opacity={0.25} />
-              </>
-            ) : (
-              <>
-                {/* Dead eyes — X marks */}
-                <line x1="14.5" y1="31.5" x2="17.5" y2="34.5" stroke={outlineColor} strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="17.5" y1="31.5" x2="14.5" y2="34.5" stroke={outlineColor} strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="22.5" y1="31.5" x2="25.5" y2="34.5" stroke={outlineColor} strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="25.5" y1="31.5" x2="22.5" y2="34.5" stroke={outlineColor} strokeWidth="1.5" strokeLinecap="round" />
-                {/* Flat mouth */}
-                <line x1="17" y1="38" x2="23" y2="38" stroke={outlineColor} strokeWidth="1.5" strokeLinecap="round" />
-              </>
+                <path
+                  d="M20 36 Q24 34 23.5 32 Q22 33 20 36"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+              </g>
+            )}
+
+            {/* Tier 2: Seedling */}
+            {tier >= 2 && (
+              <g opacity={tier >= 2 ? 1 : 0}>
+                {/* Main stem */}
+                <path
+                  d="M20 42 L20 30"
+                  stroke={stemColor}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                {/* Left leaf */}
+                <path
+                  d="M20 36 Q14 33 15 30 Q17 32 20 36"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                {/* Right leaf */}
+                <path
+                  d="M20 36 Q26 33 25 30 Q23 32 20 36"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                {/* Top tiny leaf */}
+                <path
+                  d="M20 31 Q17 28 18 26 Q19 28 20 31"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+              </g>
+            )}
+
+            {/* Tier 3: Growing */}
+            {tier >= 3 && (
+              <g opacity={tier >= 3 ? 1 : 0}>
+                {/* Main stem */}
+                <path
+                  d="M20 42 Q21 36 19.5 30 Q19 26 20 22"
+                  stroke={stemColor}
+                  strokeWidth="2.8"
+                  strokeLinecap="round"
+                  fill="none"
+                />
+                {/* Bottom leaves */}
+                <path
+                  d="M20.5 38 Q14 35 15 32 Q17 34 20.5 38"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M20.5 38 Q27 35 26 32 Q24 34 20.5 38"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                {/* Middle leaves */}
+                <path
+                  d="M19.5 30 Q13 27 14 24 Q16 26 19.5 30"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M19.5 30 Q26 27 25 24 Q23 26 19.5 30"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                {/* Bud */}
+                <ellipse cx="20" cy="21" rx="2.5" ry="3" fill={flowerColor} stroke={outlineColor} strokeWidth="1.2" />
+                <ellipse cx="20" cy="21" rx="1.2" ry="1.8" fill={config.glowColor} opacity={0.5} />
+              </g>
+            )}
+
+            {/* Tier 4: Blooming */}
+            {tier >= 4 && (
+              <g opacity={tier >= 4 ? 1 : 0}>
+                {/* Stem */}
+                <path
+                  d="M20 42 Q21.5 36 20 30 Q19 26 20 20"
+                  stroke={stemColor}
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  fill="none"
+                />
+                {/* Bottom leaves */}
+                <path
+                  d="M20.5 38 Q13 35 14 31 Q17 33 20.5 38"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M20.5 38 Q28 35 27 31 Q24 33 20.5 38"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                {/* Middle leaves */}
+                <path
+                  d="M20 30 Q12 27 13 23 Q16 25 20 30"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M20 30 Q28 27 27 23 Q24 25 20 30"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                {/* Upper leaves */}
+                <path
+                  d="M20 24 Q14 22 15 19 Q17 21 20 24"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M20 24 Q26 22 25 19 Q23 21 20 24"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                {/* Flower */}
+                <g transform="translate(20, 17)">
+                  {/* Petals */}
+                  <path d="M0 -6 C-3 -10 -3 -4 0 -2 C3 -4 3 -10 0 -6" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
+                  <path d="M-6 0 C-10 -3 -4 -3 -2 0 C-4 3 -10 3 -6 0" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
+                  <path d="M6 0 C10 -3 4 -3 2 0 C4 3 10 3 6 0" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
+                  <path d="M0 6 C-3 10 -3 4 0 2 C3 4 3 10 0 6" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
+                  {/* Flower center */}
+                  <circle cx="0" cy="0" r="1.5" fill={config.glowColor} stroke={outlineColor} strokeWidth="0.8" />
+                </g>
+              </g>
+            )}
+
+            {/* Tier 5: Fruitful */}
+            {tier >= 5 && (
+              <g opacity={tier >= 5 ? 1 : 0}>
+                {/* Stem */}
+                <path
+                  d="M20 42 Q22 35 20 28 Q19 24 20 18"
+                  stroke={stemColor}
+                  strokeWidth="3.2"
+                  strokeLinecap="round"
+                  fill="none"
+                />
+                {/* Bottom leaves */}
+                <path
+                  d="M21 38 Q13 34 14 30 Q17 33 21 38"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M21 38 Q29 34 28 30 Q25 33 21 38"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                {/* Middle leaves */}
+                <path
+                  d="M20 28 Q11 25 12 21 Q15 23 20 28"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M20 28 Q29 25 28 21 Q25 23 20 28"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                {/* Upper leaves */}
+                <path
+                  d="M20 22 Q14 19 15 16 Q17 18 20 22"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M20 22 Q26 19 25 16 Q23 18 20 22"
+                  fill={leafColor}
+                  stroke={outlineColor}
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
+                {/* Flower */}
+                <g transform="translate(20, 15)">
+                  <path d="M0 -5 C-2.5 -8 -2.5 -3 0 -1.5 C2.5 -3 2.5 -8 0 -5" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
+                  <path d="M-5 0 C-8 -2.5 -3 -2.5 -1.5 0 C-3 2.5 -8 2.5 -5 0" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
+                  <path d="M5 0 C8 -2.5 3 -2.5 1.5 0 C3 2.5 8 2.5 5 0" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
+                  <path d="M0 5 C-2.5 8 -2.5 3 0 1.5 C2.5 3 2.5 8 0 5" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
+                  <circle cx="0" cy="0" r="1.5" fill={config.glowColor} stroke={outlineColor} strokeWidth="0.8" />
+                </g>
+                {/* Fruit */}
+                <g transform="translate(15, 33)">
+                  <circle cx="0" cy="0" r="3.5" fill={fruitColor} stroke={outlineColor} strokeWidth="1.2" />
+                  <path d="M0 -3.5 Q1 -4 2 -3.5" stroke={outlineColor} strokeWidth="0.8" fill="none" />
+                  {/* Shine */}
+                  <circle cx="-1" cy="-1" r="1" fill="white" opacity={0.4} />
+                </g>
+                {/* Second fruit */}
+                <g transform="translate(26, 26)">
+                  <circle cx="0" cy="0" r="2.8" fill={fruitColor} stroke={outlineColor} strokeWidth="1" />
+                  <path d="M0 -2.8 Q0.8 -3.2 1.5 -2.8" stroke={outlineColor} strokeWidth="0.8" fill="none" />
+                  <circle cx="-0.8" cy="-0.8" r="0.8" fill="white" opacity={0.35} />
+                </g>
+              </g>
             )}
           </svg>
         </motion.div>
       </motion.div>
 
-      {/* Floating doodle particles */}
+      {/* Floating particles — organic drift */}
       {active && config.particleCount > 0 && (
         <div className="absolute inset-0 pointer-events-none overflow-visible">
-          {/* Star sparkles */}
-          {hasStars && starPositions.slice(0, Math.ceil(config.particleCount * 0.4)).map((p, i) => (
-            <motion.svg
-              key={`star-${i}`}
-              viewBox="0 0 12 12"
+          {/* Pollen motes — gentle warm air arcs */}
+          {hasPollen && pollenPositions.slice(0, pollenCount).map((p, i) => (
+            <motion.circle
+              key={`pollen-${i}`}
               className="absolute left-1/2 top-0"
-              style={{ width: p.size, height: p.size, marginLeft: -p.size / 2 }}
+              style={{ width: 4, height: 4, marginLeft: -2 }}
+              initial={{ x: p.x, y: 0, opacity: 0 }}
+              animate={{
+                x: [p.x, p.x + 4, p.x - 3, p.x + 5, p.x - 2],
+                y: [0, -7, -14, -22, -30],
+                opacity: [0, 0.5, 0.8, 0.3, 0],
+                scale: [0, 0.8, 1.2, 0.6, 0],
+              }}
+              transition={{ duration: p.dur + 0.6, repeat: Infinity, delay: p.delay, ease: "easeOut" }}
+              fill={config.glowColor}
+            />
+          ))}
+
+          {/* Petals — lazy wobble and spin on a breeze */}
+          {hasPetals && petalPositions.slice(0, petalCount).map((p, i) => (
+            <motion.svg
+              key={`petal-${i}`}
+              viewBox="0 0 8 10"
+              className="absolute left-1/2 top-0"
+              style={{ width: p.size, height: p.size * 1.2, marginLeft: -p.size / 2 }}
               initial={{ x: p.x, y: 0, opacity: 0, scale: 0, rotate: 0 }}
               animate={{
-                x: [p.x, p.x + 4, p.x - 3, p.x + 2],
-                y: [0, p.y * 0.5, p.y, p.y - 6],
-                opacity: [0, 1, 0.8, 0],
-                scale: [0, 1.2, 0.9, 0],
-                rotate: [0, 45, 90, 135],
+                x: [p.x, p.x + 3, p.x - 4, p.x + 5, p.x - 2, p.x + 1],
+                y: [0, -4, -10, -18, -26, -34],
+                opacity: [0, 0.7, 1, 0.6, 0.3, 0],
+                scale: [0, 0.8, 1.1, 0.9, 0.5, 0],
+                rotate: [0, 20, -10, 45, -20, 60],
               }}
-              transition={{ duration: p.dur, repeat: Infinity, delay: p.delay, ease: "easeOut" }}
+              transition={{ duration: p.dur + 0.8, repeat: Infinity, delay: p.delay, ease: "easeOut" }}
             >
               <path
-                d="M6 0L7.5 4.5L12 6L7.5 7.5L6 12L4.5 7.5L0 6L4.5 4.5Z"
+                d="M4 0C4 0 1 3 1 6C1 8 4 10 4 10C4 10 7 8 7 6C7 3 4 0 4 0Z"
                 fill={p.color}
                 stroke={outlineColor}
                 strokeWidth="0.6"
@@ -635,82 +875,49 @@ const GlowingFlame = ({ tier = 0, active, className }: { tier?: FlameTier; activ
             </motion.svg>
           ))}
 
-          {/* Tiny hearts */}
-          {hasHearts && heartPositions.slice(0, Math.ceil(config.particleCount * 0.3)).map((h, i) => (
+          {/* Leaf particles — erratic flutter */}
+          {hasLeafParticles && leafParticlePositions.slice(0, leafParticleCount).map((s, i) => (
             <motion.svg
-              key={`heart-${i}`}
-              viewBox="0 0 12 12"
+              key={`leaf-particle-${i}`}
+              viewBox="0 0 8 6"
               className="absolute left-1/2 top-0"
-              style={{ width: 7, height: 7, marginLeft: -3.5 }}
-              initial={{ x: h.x, y: 0, opacity: 0, scale: 0 }}
-              animate={{
-                x: [h.x, h.x + 3, h.x - 2],
-                y: [0, -12, -24],
-                opacity: [0, 1, 0],
-                scale: [0, 1.1, 0.3],
-              }}
-              transition={{ duration: h.dur, repeat: Infinity, delay: h.delay, ease: "easeOut" }}
-            >
-              <path
-                d="M6 10L5.2 9.3C2.4 6.7 0.5 5 0.5 2.8C0.5 1.1 1.8 0 3.4 0C4.3 0 5.2 0.4 6 1.1C6.8 0.4 7.7 0 8.6 0C10.2 0 11.5 1.1 11.5 2.8C11.5 5 9.6 6.7 6.8 9.3L6 10Z"
-                fill={tipColor}
-                stroke={outlineColor}
-                strokeWidth="0.7"
-              />
-            </motion.svg>
-          ))}
-
-          {/* Swirl sparkles */}
-          {hasSwirls && swirlPositions.slice(0, Math.ceil(config.particleCount * 0.2)).map((s, i) => (
-            <motion.svg
-              key={`swirl-${i}`}
-              viewBox="0 0 10 10"
-              className="absolute left-1/2 top-0"
-              style={{ width: 6, height: 6, marginLeft: -3 }}
+              style={{ width: 6, height: 5, marginLeft: -3 }}
               initial={{ x: s.x, y: 0, opacity: 0, scale: 0, rotate: 0 }}
               animate={{
-                x: [s.x, s.x + 2, s.x - 1],
-                y: [0, -8, -20],
-                opacity: [0, 0.9, 0],
-                scale: [0, 1, 0.2],
-                rotate: [0, 180, 360],
+                x: [s.x, s.x - 4, s.x + 6, s.x - 3, s.x + 5, s.x - 2],
+                y: [0, -6, -12, -18, -26, -34],
+                opacity: [0, 0.5, 0.9, 0.6, 0.3, 0],
+                scale: [0, 0.7, 1.2, 0.8, 0.4, 0],
+                rotate: [0, -40, 50, -30, 60, -20],
               }}
-              transition={{ duration: s.dur, repeat: Infinity, delay: s.delay, ease: "easeOut" }}
+              transition={{ duration: s.dur + 0.8, repeat: Infinity, delay: s.delay, ease: "easeOut" }}
             >
               <path
-                d="M5 8C5 8 2 6 2 4C2 2.5 3.5 1.5 5 2C6.5 2.5 6.5 4 5 4.5C3.5 5 3.5 3 5 3"
-                fill="none"
-                stroke={innerColor}
-                strokeWidth="1.2"
-                strokeLinecap="round"
+                d="M0 3Q2 0 4 1Q6 2 8 3Q6 4 4 5Q2 6 0 3Z"
+                fill={config.leafColor}
+                stroke={outlineColor}
+                strokeWidth="0.5"
               />
             </motion.svg>
           ))}
 
-          {/* Diamond sparkles — tier 4+ */}
-          {hasDiamonds && diamondPositions.slice(0, Math.ceil(config.particleCount * 0.1)).map((d, i) => (
-            <motion.svg
-              key={`diamond-${i}`}
-              viewBox="0 0 10 10"
+          {/* Light motes — firefly twinkle */}
+          {hasLight && lightPositions.slice(0, lightCount).map((d, i) => (
+            <motion.circle
+              key={`light-${i}`}
               className="absolute left-1/2 top-0"
-              style={{ width: 7, height: 7, marginLeft: -3.5 }}
-              initial={{ x: d.x, y: 0, opacity: 0, scale: 0, rotate: 0 }}
+              style={{ width: 5, height: 5, marginLeft: -2.5 }}
+              initial={{ x: d.x, y: 0, opacity: 0, scale: 0 }}
               animate={{
-                x: [d.x, d.x + 2, d.x - 1, d.x + 1],
-                y: [0, -6, -14, -22],
-                opacity: [0, 1, 0.7, 0],
-                scale: [0, 1.1, 0.8, 0],
-                rotate: [0, 90, 180, 270],
+                x: [d.x, d.x + 3, d.x - 2, d.x + 4, d.x - 1, d.x + 2],
+                y: [0, -4, -8, -14, -20, -26],
+                opacity: [0, 0.3, 0.7, 0.2, 0.5, 0],
+                scale: [0, 0.4, 1, 0.3, 0.6, 0],
               }}
-              transition={{ duration: d.dur, repeat: Infinity, delay: d.delay, ease: "easeOut" }}
-            >
-              <path
-                d="M5 0L10 5L5 10L0 5Z"
-                fill={config.innerColor}
-                stroke={outlineColor}
-                strokeWidth="0.6"
-              />
-            </motion.svg>
+              transition={{ duration: d.dur + 0.6, repeat: Infinity, delay: d.delay, ease: "easeOut" }}
+              fill={config.fruitColor}
+              filter="url(#glow)"
+            />
           ))}
         </div>
       )}
@@ -721,10 +928,10 @@ const GlowingFlame = ({ tier = 0, active, className }: { tier?: FlameTier; activ
 export const StreakIcon = ({ streakData, showMilestoneToast = true }: { streakData: StreakData; showMilestoneToast?: boolean }) => {
   const { currentStreak, oldStreak, hasCurrentStreak } = streakData
   const displayStreak = hasCurrentStreak ? currentStreak : oldStreak > 0 ? oldStreak : 0
-  const tier = getFlameTier(displayStreak);
+  const tier = getPlantTier(displayStreak);
   const prevStreakRef = useRef(0)
   const [celebrating, setCelebrating] = useState(false)
-  const [celebrationEffect, setCelebrationEffect] = useState<CelebrationEffect>("fireEmoji")
+  const [celebrationEffect, setCelebrationEffect] = useState<CelebrationEffect>("petalBurst")
   const hasSubmittedRef = useRef(false)
 
   const handleCelebrationDone = useCallback(() => {
@@ -751,11 +958,11 @@ export const StreakIcon = ({ streakData, showMilestoneToast = true }: { streakDa
     <div className="flex items-center gap-2">
       <div className="relative overflow-visible">
         <AnimatePresence>
-          {celebrating && celebrationEffect === "fireEmoji" && <FireEmojiBurst onDone={handleCelebrationDone} />}
-          {celebrating && celebrationEffect === "sparkleRain" && <SparkleRain onDone={handleCelebrationDone} />}
-          {celebrating && celebrationEffect === "starBurst" && <StarBurst onDone={handleCelebrationDone} />}
-          {celebrating && celebrationEffect === "emojiConfetti" && <EmojiConfetti onDone={handleCelebrationDone} />}
-          {celebrating && celebrationEffect === "glowPulse" && <GlowPulse onDone={handleCelebrationDone} />}
+          {celebrating && celebrationEffect === "petalBurst" && <PetalBurst onDone={handleCelebrationDone} />}
+          {celebrating && celebrationEffect === "pollenRain" && <PollenRain onDone={handleCelebrationDone} />}
+          {celebrating && celebrationEffect === "leafBurst" && <LeafBurst onDone={handleCelebrationDone} />}
+          {celebrating && celebrationEffect === "natureConfetti" && <NatureConfetti onDone={handleCelebrationDone} />}
+          {celebrating && celebrationEffect === "glowPulse" && <GrowthGlowPulse onDone={handleCelebrationDone} />}
         </AnimatePresence>
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -763,7 +970,7 @@ export const StreakIcon = ({ streakData, showMilestoneToast = true }: { streakDa
           transition={{ duration: celebrating ? 0.6 : 0.3 }}
           className="flex items-center gap-2 relative z-20"
         >
-          <GlowingFlame
+          <SeedlingPlant
             tier={tier}
             active={hasCurrentStreak}
             className="w-10 h-12 flex-shrink-0"
@@ -789,15 +996,15 @@ export const StreakIcon = ({ streakData, showMilestoneToast = true }: { streakDa
   )
 }
 
-export const ComfortZoneMessage = ({ 
+export const ComfortZoneMessage = ({
   type = "gentle",
-  className 
-}: { 
+  className
+}: {
   type?: "rest" | "comeback" | "gentle"
-  className?: string 
+  className?: string
 }) => {
   const message = getRandomComfortMessage(type)
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
