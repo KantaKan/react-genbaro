@@ -20,7 +20,7 @@ import { AlertDialogContent, AlertDialogAction, AlertDialogCancel, AlertDialog }
 import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflection-zones";
 import { useMousePosition } from "../hooks/use-mouse-position";
 import { BarometerVisual } from "./barometer-visual";
-import { FireBar, StreakCounter, StreakIcon } from "./streak-components";
+import { GrowthBar, StreakCounter, StreakIcon } from "./streak-components";
 import { getRandomStreakQuote } from "@/lib/streak-milestones";
 import { isWeekend, isHoliday, isValidWorkday, getPreviousWorkday } from "@/utils/date-utils";
 import { ZoneStatCard } from "./zone-stat-card";
@@ -652,7 +652,7 @@ export default function ReflectionsTableWithModal() {
                   </motion.p>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <FireBar value={streakData.currentStreak} max={20} />
+                      <GrowthBar value={streakData.currentStreak} max={20} />
                       <div className="flex items-center gap-1">
                         <Fire className="h-4 w-4 text-orange-500" />
                         <span className="tabular-nums">{streakData.currentStreak} day streak</span>

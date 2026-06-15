@@ -2,19 +2,19 @@ export interface StreakMilestone {
   days: number
   message: string
   emoji: string
-  fireIntensity: "low" | "medium" | "high"
+  growthStage: "dormant" | "sprout" | "seedling" | "growing" | "blooming" | "fruitful"
 }
 
 export const streakMilestones: StreakMilestone[] = [
-  { days: 1, message: "{days} day! You've started your streak!", emoji: "🔥", fireIntensity: "low" },
-  { days: 3, message: "{days} days strong! You're warming up!", emoji: "🔥", fireIntensity: "low" },
-  { days: 5, message: "{days} days! The fire is growing!", emoji: "🔥🔥", fireIntensity: "medium" },
-  { days: 7, message: "{days} days! You're on fire!", emoji: "🔥🔥", fireIntensity: "medium" },
-  { days: 14, message: "{days} days! You're unstoppable!", emoji: "🔥🔥🔥", fireIntensity: "high" },
-  { days: 21, message: "{days} days = habit formed!", emoji: "🔥🔥🔥", fireIntensity: "high" },
-  { days: 30, message: "{days} days! Legendary streak!", emoji: "🔥🔥🔥", fireIntensity: "high" },
-  { days: 50, message: "{days} days! You're a reflection master!", emoji: "🔥🔥🔥", fireIntensity: "high" },
-  { days: 100, message: "{days} days! Incredible dedication!", emoji: "🔥🔥🔥", fireIntensity: "high" },
+  { days: 1, message: "{days} day! A tiny sprout appears!", emoji: "🌱", growthStage: "sprout" },
+  { days: 3, message: "{days} days strong! Growing steady!", emoji: "🌱", growthStage: "sprout" },
+  { days: 5, message: "{days} days! Your plant is putting out new leaves!", emoji: "🌿", growthStage: "seedling" },
+  { days: 7, message: "{days} days! A whole week of growth!", emoji: "🌿", growthStage: "seedling" },
+  { days: 14, message: "{days} days! A real garden is forming!", emoji: "🌳", growthStage: "growing" },
+  { days: 21, message: "{days} days = habit blossoming!", emoji: "🌸", growthStage: "blooming" },
+  { days: 30, message: "{days} days! In full bloom!", emoji: "🌸", growthStage: "blooming" },
+  { days: 50, message: "{days} days! Bearing fruit!", emoji: "🍊", growthStage: "fruitful" },
+  { days: 100, message: "{days} days! A magnificent harvest!", emoji: "🍊", growthStage: "fruitful" },
 ]
 
 export function getMilestoneForStreak(streak: number): StreakMilestone | null {
@@ -32,7 +32,7 @@ export function getMilestoneForStreak(streak: number): StreakMilestone | null {
 export function getPreviousMilestone(streak: number): StreakMilestone | null {
   const currentMilestone = getMilestoneForStreak(streak)
   const currentIndex = streakMilestones.findIndex(m => m.days === currentMilestone?.days)
-  
+
   if (currentIndex > 0) {
     return streakMilestones[currentIndex - 1]
   }
@@ -42,7 +42,7 @@ export function getPreviousMilestone(streak: number): StreakMilestone | null {
 export function isMilestoneReached(currentStreak: number, previousStreak: number): boolean {
   const currentMilestone = getMilestoneForStreak(currentStreak)
   const previousMilestone = getMilestoneForStreak(previousStreak)
-  
+
   return currentMilestone?.days !== previousMilestone?.days
 }
 
@@ -51,16 +51,22 @@ export const comfortZoneMessages = {
     "It's okay to rest. Your comfort zone is always here. 🐱",
     "Taking a break is part of the journey. 🐱",
     "Rest today, shine tomorrow. 🐱",
+    "Even gardens need fallow seasons. 🐱",
+    "Let the soil rest before the next planting. 🐱",
   ],
   comeback: [
     "Welcome back! Every new day is a chance to grow. 🐱",
     "You're back! Let's make today count. 🐱",
     "Fresh start! Your comfort zone missed you. 🐱",
+    "New season, new growth. Let's go! 🐱",
+    "The seed is still there. Water it today. 🐱",
   ],
   gentle: [
     "No pressure. We all have off days. 🐱",
     "Be kind to yourself. Growth isn't linear. 🐱",
     "Your comfort zone is here when you need it. 🐱",
+    "Some days are for resting the soil. 🐱",
+    "Even perennials go dormant. You'll bloom again. 🐱",
   ],
 }
 
@@ -69,106 +75,127 @@ export function getRandomComfortMessage(type: keyof typeof comfortZoneMessages):
   return messages[Math.floor(Math.random() * messages.length)]
 }
 
-export type FlameTier = 0 | 1 | 2 | 3 | 4 | 5
+export type PlantTier = 0 | 1 | 2 | 3 | 4 | 5
 
-export type GlowStyle = "none" | "candle" | "ember" | "inferno" | "inferno-ring" | "cosmic"
+export type GrowthGlowStyle = "none" | "glow" | "radiant" | "bloom" | "bloom-ring" | "aurora"
 
-export interface FlameTierConfig {
+export interface PlantTierConfig {
   name: string
-  flameColor: string
-  innerColor: string
-  tipColor: string
+  stemColor: string
+  leafColor: string
+  flowerColor: string
+  fruitColor: string
   glowColor: string
-  strokeColor: string
+  soilColor: string
+  potColor: string
   particleCount: number
-  particleTypes: Array<"star" | "heart" | "swirl" | "diamond">
+  particleTypes: Array<"petal" | "pollen" | "leaf" | "light">
   glowScale: number
-  hasCrownTips: boolean
-  glowStyle: GlowStyle
+  hasFlower: boolean
+  hasFruit: boolean
+  growthGlow: GrowthGlowStyle
 }
 
-const FLAME_TIER_CONFIGS: Record<FlameTier, FlameTierConfig> = {
+const PLANT_TIER_CONFIGS: Record<PlantTier, PlantTierConfig> = {
   0: {
-    name: "inactive",
-    flameColor: "#a1a1aa",
-    innerColor: "#d4d4d8",
-    tipColor: "#71717a",
+    name: "dormant",
+    stemColor: "#a1a1aa",
+    leafColor: "#d4d4d8",
+    flowerColor: "#71717a",
+    fruitColor: "#71717a",
     glowColor: "#a1a1aa",
-    strokeColor: "#52525b",
-    glowStyle: "none",
+    soilColor: "#6b5b4e",
+    potColor: "#9c8b7e",
     particleCount: 0,
     particleTypes: [],
     glowScale: 1,
-    hasCrownTips: false,
+    hasFlower: false,
+    hasFruit: false,
+    growthGlow: "none",
   },
   1: {
-    name: "spark",
-    flameColor: "#f97316",
-    innerColor: "#fbbf24",
-    tipColor: "#ef4444",
-    glowColor: "#f97316",
-    strokeColor: "#1e1e1e",
+    name: "sprout",
+    stemColor: "#a5d6a7",
+    leafColor: "#c8e6c9",
+    flowerColor: "#e8f5e9",
+    fruitColor: "#a5d6a7",
+    glowColor: "#a5d6a7",
+    soilColor: "#5c4033",
+    potColor: "#c77d61",
     particleCount: 3,
-    particleTypes: ["star"],
+    particleTypes: ["pollen"],
     glowScale: 1,
-    hasCrownTips: false,
-    glowStyle: "candle",
+    hasFlower: false,
+    hasFruit: false,
+    growthGlow: "glow",
   },
   2: {
-    name: "ember",
-    flameColor: "#ea580c",
-    innerColor: "#fb923c",
-    tipColor: "#dc2626",
-    glowColor: "#ea580c",
-    strokeColor: "#1e1e1e",
+    name: "seedling",
+    stemColor: "#66bb6a",
+    leafColor: "#81c784",
+    flowerColor: "#a5d6a7",
+    fruitColor: "#66bb6a",
+    glowColor: "#66bb6a",
+    soilColor: "#5c4033",
+    potColor: "#c77d61",
     particleCount: 5,
-    particleTypes: ["star", "heart"],
+    particleTypes: ["pollen", "leaf"],
     glowScale: 1.15,
-    hasCrownTips: false,
-    glowStyle: "ember",
+    hasFlower: false,
+    hasFruit: false,
+    growthGlow: "glow",
   },
   3: {
-    name: "blaze",
-    flameColor: "#dc2626",
-    innerColor: "#f87171",
-    tipColor: "#b91c1c",
-    glowColor: "#dc2626",
-    strokeColor: "#1e1e1e",
+    name: "growing",
+    stemColor: "#43a047",
+    leafColor: "#66bb6a",
+    flowerColor: "#f8bbd0",
+    fruitColor: "#66bb6a",
+    glowColor: "#43a047",
+    soilColor: "#5c4033",
+    potColor: "#c77d61",
     particleCount: 7,
-    particleTypes: ["star", "heart", "swirl"],
+    particleTypes: ["pollen", "leaf", "petal"],
     glowScale: 1.3,
-    hasCrownTips: false,
-    glowStyle: "inferno",
+    hasFlower: true,
+    hasFruit: false,
+    growthGlow: "radiant",
   },
   4: {
-    name: "inferno",
-    flameColor: "#be185d",
-    innerColor: "#f472b6",
-    tipColor: "#9d174d",
-    glowColor: "#be185d",
-    strokeColor: "#1e1e1e",
+    name: "blooming",
+    stemColor: "#2e7d32",
+    leafColor: "#43a047",
+    flowerColor: "#f48fb1",
+    fruitColor: "#43a047",
+    glowColor: "#2e7d32",
+    soilColor: "#5c4033",
+    potColor: "#b56a4e",
     particleCount: 9,
-    particleTypes: ["star", "heart", "swirl", "diamond"],
+    particleTypes: ["pollen", "leaf", "petal", "light"],
     glowScale: 1.45,
-    hasCrownTips: true,
-    glowStyle: "inferno-ring",
+    hasFlower: true,
+    hasFruit: false,
+    growthGlow: "bloom",
   },
   5: {
-    name: "legendary",
-    flameColor: "#c084fc",
-    innerColor: "#e9d5ff",
-    tipColor: "#9333ea",
-    glowColor: "#a855f7",
-    strokeColor: "#1e1e1e",
+    name: "fruitful",
+    stemColor: "#1b5e20",
+    leafColor: "#2e7d32",
+    flowerColor: "#f48fb1",
+    fruitColor: "#e9c46a",
+    glowColor: "#e9c46a",
+    soilColor: "#5c4033",
+    potColor: "#b56a4e",
     particleCount: 12,
-    particleTypes: ["star", "heart", "swirl", "diamond"],
+    particleTypes: ["pollen", "leaf", "petal", "light"],
     glowScale: 1.6,
-    hasCrownTips: true,
-    glowStyle: "cosmic",
+    hasFlower: true,
+    hasFruit: true,
+    growthGlow: "aurora",
   },
 }
 
-export function getFlameTier(streak: number): FlameTier {
+export function getPlantTier(streak: number): PlantTier {
   if (streak >= 50) return 5
   if (streak >= 30) return 4
   if (streak >= 20) return 3
@@ -177,8 +204,8 @@ export function getFlameTier(streak: number): FlameTier {
   return 0
 }
 
-export function getFlameTierConfig(tier: FlameTier): FlameTierConfig {
-  return FLAME_TIER_CONFIGS[tier]
+export function getPlantTierConfig(tier: PlantTier): PlantTierConfig {
+  return PLANT_TIER_CONFIGS[tier]
 }
 
 export const streakQuotes: string[] = [
@@ -211,6 +238,9 @@ export const streakQuotes: string[] = [
   "Day by day. Nothing can stop you.",
   "You're on a roll. Don't stop now.",
   "Proud of you for sticking with this.",
+  "Keep watering that garden.",
+  "Growth takes time. You're doing it.",
+  "Nurture your practice like a garden.",
 ]
 
 export function getRandomStreakQuote(): string {
