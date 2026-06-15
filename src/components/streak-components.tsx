@@ -329,18 +329,30 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
 
   return (
     <div className={`relative ${className}`}>
-      {/* Glow effects per tier */}
+      {/* Glow effects — Sunlight Through Canopy */}
       {active && config.growthGlow === "glow" && (
-        <motion.div
-          className="absolute rounded-full"
-          style={{
-            inset: `-${5 * config.glowScale * 6}px`,
-            background: `radial-gradient(circle, ${config.glowColor}25 0%, transparent 65%)`,
-            filter: "blur(6px)",
-          }}
-          animate={{ scale: [0.94, 1.06, 0.94], opacity: [0.2, 0.4, 0.2] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        />
+        <>
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 8}px`,
+              background: `radial-gradient(circle, ${config.glowColor}22 0%, ${config.glowColor}10 50%, transparent 70%)`,
+              filter: "blur(8px)",
+            }}
+            animate={{ scale: [0.92, 1.08, 0.92], opacity: [0.18, 0.38, 0.18] }}
+            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 3}px`,
+              background: `radial-gradient(circle, ${config.leafColor}30 0%, ${config.glowColor}15 60%, transparent 80%)`,
+              filter: "blur(3px)",
+            }}
+            animate={{ scale: [0.94, 1.06, 0.94], opacity: [0.2, 0.45, 0.2] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </>
       )}
 
       {active && config.growthGlow === "radiant" && (
@@ -348,22 +360,32 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
           <motion.div
             className="absolute rounded-full"
             style={{
-              inset: `-${5 * config.glowScale * 8}px`,
-              background: `radial-gradient(circle, ${config.glowColor}30 0%, ${config.glowColor}12 55%, transparent 75%)`,
-              filter: "blur(8px)",
+              inset: `-${5 * config.glowScale * 12}px`,
+              background: `radial-gradient(circle, ${config.glowColor}28 0%, ${config.glowColor}12 50%, transparent 72%)`,
+              filter: "blur(12px)",
             }}
-            animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.3, 0.55, 0.3] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+            animate={{ scale: [0.88, 1.14, 0.88], opacity: [0.25, 0.5, 0.25] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
             className="absolute rounded-full"
             style={{
-              inset: `-${5 * config.glowScale * 3}px`,
-              background: `radial-gradient(circle, ${config.flowerColor}30 0%, ${config.glowColor}15 60%, transparent 80%)`,
-              filter: "blur(3px)",
+              inset: `-${5 * config.glowScale * 5}px`,
+              background: `radial-gradient(circle, ${config.flowerColor}25 0%, ${config.glowColor}14 55%, transparent 78%)`,
+              filter: "blur(5px)",
             }}
-            animate={{ scale: [0.93, 1.07, 0.93], opacity: [0.25, 0.45, 0.25] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            animate={{ scale: [0.92, 1.1, 0.92], opacity: [0.3, 0.55, 0.3] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 2}px`,
+              background: `radial-gradient(circle, ${config.leafColor}35 0%, ${config.glowColor}20 65%, transparent 85%)`,
+              filter: "blur(2px)",
+            }}
+            animate={{ scale: [0.95, 1.05, 0.95], opacity: [0.2, 0.4, 0.2] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           />
         </>
       )}
@@ -373,28 +395,38 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
           <motion.div
             className="absolute rounded-full"
             style={{
-              inset: `-${5 * config.glowScale * 12}px`,
-              background: `radial-gradient(circle, ${config.glowColor}40 0%, ${config.glowColor}18 50%, transparent 70%)`,
-              filter: "blur(14px)",
+              inset: `-${5 * config.glowScale * 16}px`,
+              background: `radial-gradient(circle, ${config.glowColor}35 0%, ${config.glowColor}15 45%, transparent 68%)`,
+              filter: "blur(18px)",
             }}
-            animate={{ scale: [0.85, 1.18, 0.85], opacity: [0.35, 0.65, 0.35] }}
-            transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+            animate={{ scale: [0.84, 1.2, 0.84], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
             className="absolute rounded-full"
             style={{
-              inset: `-${5 * config.glowScale * 4}px`,
-              background: `radial-gradient(circle, ${config.flowerColor}40 0%, ${config.glowColor}20 55%, transparent 80%)`,
-              filter: "blur(4px)",
+              inset: `-${5 * config.glowScale * 7}px`,
+              background: `radial-gradient(circle, ${config.flowerColor}35 0%, ${config.glowColor}18 50%, transparent 75%)`,
+              filter: "blur(7px)",
             }}
-            animate={{ scale: [0.9, 1.12, 0.9], opacity: [0.4, 0.7, 0.4] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            animate={{ scale: [0.88, 1.15, 0.88], opacity: [0.35, 0.65, 0.35] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 2.5}px`,
+              background: `radial-gradient(circle, ${config.flowerColor}50 0%, ${config.glowColor}25 60%, transparent 82%)`,
+              filter: "blur(2.5px)",
+            }}
+            animate={{ scale: [0.92, 1.1, 0.92], opacity: [0.4, 0.75, 0.4] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
             className="absolute inset-0 rounded-full border"
-            style={{ borderColor: config.glowColor + "50" }}
-            animate={{ scale: [0.85, 1.1, 0.85], opacity: [0.25, 0.65, 0.25] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            style={{ borderColor: config.flowerColor + "45" }}
+            animate={{ scale: [0.84, 1.12, 0.84], opacity: [0.2, 0.6, 0.2] }}
+            transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
           />
         </>
       )}
@@ -404,53 +436,61 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
           <motion.div
             className="absolute rounded-full"
             style={{
-              inset: `-${5 * config.glowScale * 18}px`,
-              background: `radial-gradient(circle, ${config.fruitColor}30 0%, ${config.glowColor}15 40%, transparent 65%)`,
-              filter: "blur(22px)",
+              inset: `-${5 * config.glowScale * 22}px`,
+              background: `radial-gradient(circle, ${config.fruitColor}28 0%, ${config.glowColor}12 38%, transparent 62%)`,
+              filter: "blur(26px)",
             }}
-            animate={{ scale: [0.82, 1.22, 0.82], opacity: [0.3, 0.65, 0.3] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            animate={{ scale: [0.8, 1.28, 0.8], opacity: [0.25, 0.6, 0.25] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
             className="absolute rounded-full"
             style={{
-              inset: `-${5 * config.glowScale * 10}px`,
-              background: `radial-gradient(circle, ${config.fruitColor}45 0%, ${config.glowColor}22 50%, transparent 72%)`,
-              filter: "blur(12px)",
+              inset: `-${5 * config.glowScale * 13}px`,
+              background: `radial-gradient(circle, ${config.fruitColor}40 0%, ${config.glowColor}20 45%, transparent 70%)`,
+              filter: "blur(14px)",
             }}
-            animate={{ scale: [0.86, 1.18, 0.86], opacity: [0.5, 0.85, 0.5] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            animate={{ scale: [0.84, 1.22, 0.84], opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
             className="absolute rounded-full"
             style={{
-              inset: `-${5 * config.glowScale * 3}px`,
-              background: `radial-gradient(circle, ${config.fruitColor}50 0%, ${config.glowColor}25 55%, transparent 80%)`,
-              filter: "blur(4px)",
+              inset: `-${5 * config.glowScale * 5}px`,
+              background: `radial-gradient(circle, ${config.fruitColor}45 0%, ${config.flowerColor}22 50%, transparent 75%)`,
+              filter: "blur(5px)",
             }}
-            animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.5, 0.9, 0.5] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute inset-0 rounded-full border-2"
-            style={{ borderColor: config.fruitColor + "50" }}
-            animate={{ scale: [0.82, 1.12, 0.82], opacity: [0.25, 0.7, 0.25] }}
-            transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute inset-0 rounded-full border"
-            style={{ borderColor: config.glowColor + "35" }}
-            animate={{ scale: [0.88, 1.15, 0.88], opacity: [0.15, 0.5, 0.15] }}
+            animate={{ scale: [0.9, 1.14, 0.9], opacity: [0.5, 0.85, 0.5] }}
             transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 8}px`,
+              background: `radial-gradient(circle, ${config.fruitColor}35 0%, ${config.glowColor}15 55%, transparent 78%)`,
+              filter: "blur(8px)",
+            }}
+            animate={{ scale: [0.88, 1.16, 0.88], opacity: [0.3, 0.65, 0.3] }}
+            transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              inset: `-${5 * config.glowScale * 2.5}px`,
+              background: `radial-gradient(circle, ${config.fruitColor}55 0%, ${config.flowerColor}30 60%, transparent 82%)`,
+              filter: "blur(3px)",
+            }}
+            animate={{ scale: [0.93, 1.1, 0.93], opacity: [0.5, 0.9, 0.5] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
             className="absolute inset-0 rounded-full pointer-events-none"
             style={{
-              background: `conic-gradient(from 0deg, ${config.fruitColor}20, ${config.glowColor}12, ${config.flowerColor}15, ${config.stemColor}12, ${config.fruitColor}20)`,
+              background: `conic-gradient(from 0deg, ${config.fruitColor}18, ${config.glowColor}10, ${config.flowerColor}12, ${config.stemColor}10, ${config.fruitColor}18)`,
               mixBlendMode: "soft-light",
             }}
-            animate={{ rotate: [0, 360], opacity: [0.15, 0.35, 0.15] }}
-            transition={{ rotate: { duration: 8, repeat: Infinity, ease: "linear" }, opacity: { duration: 3.5, repeat: Infinity, ease: "easeInOut" } }}
+            animate={{ rotate: [0, 360], opacity: [0.12, 0.32, 0.12] }}
+            transition={{ rotate: { duration: 10, repeat: Infinity, ease: "linear" }, opacity: { duration: 4, repeat: Infinity, ease: "easeInOut" } }}
           />
         </>
       )}
@@ -788,10 +828,10 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
         </motion.div>
       </motion.div>
 
-      {/* Floating particles */}
+      {/* Floating particles — organic drift */}
       {active && config.particleCount > 0 && (
         <div className="absolute inset-0 pointer-events-none overflow-visible">
-          {/* Pollen motes */}
+          {/* Pollen motes — gentle warm air arcs */}
           {hasPollen && pollenPositions.slice(0, pollenCount).map((p, i) => (
             <motion.circle
               key={`pollen-${i}`}
@@ -799,17 +839,17 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
               style={{ width: 4, height: 4, marginLeft: -2 }}
               initial={{ x: p.x, y: 0, opacity: 0 }}
               animate={{
-                x: [p.x, p.x + 3, p.x - 2],
-                y: [0, -10, -22],
-                opacity: [0, 0.8, 0],
-                scale: [0, 1.2, 0.3],
+                x: [p.x, p.x + 4, p.x - 3, p.x + 5, p.x - 2],
+                y: [0, -7, -14, -22, -30],
+                opacity: [0, 0.5, 0.8, 0.3, 0],
+                scale: [0, 0.8, 1.2, 0.6, 0],
               }}
-              transition={{ duration: p.dur, repeat: Infinity, delay: p.delay, ease: "easeOut" }}
+              transition={{ duration: p.dur + 0.6, repeat: Infinity, delay: p.delay, ease: "easeOut" }}
               fill={config.glowColor}
             />
           ))}
 
-          {/* Petals */}
+          {/* Petals — lazy wobble and spin on a breeze */}
           {hasPetals && petalPositions.slice(0, petalCount).map((p, i) => (
             <motion.svg
               key={`petal-${i}`}
@@ -818,13 +858,13 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
               style={{ width: p.size, height: p.size * 1.2, marginLeft: -p.size / 2 }}
               initial={{ x: p.x, y: 0, opacity: 0, scale: 0, rotate: 0 }}
               animate={{
-                x: [p.x, p.x + 3, p.x - 2, p.x + 1],
-                y: [0, p.y * 0.4, p.y * 0.7, p.y - 4],
-                opacity: [0, 1, 0.7, 0],
-                scale: [0, 1.1, 0.8, 0],
-                rotate: [0, 30, 60, 90],
+                x: [p.x, p.x + 3, p.x - 4, p.x + 5, p.x - 2, p.x + 1],
+                y: [0, -4, -10, -18, -26, -34],
+                opacity: [0, 0.7, 1, 0.6, 0.3, 0],
+                scale: [0, 0.8, 1.1, 0.9, 0.5, 0],
+                rotate: [0, 20, -10, 45, -20, 60],
               }}
-              transition={{ duration: p.dur, repeat: Infinity, delay: p.delay, ease: "easeOut" }}
+              transition={{ duration: p.dur + 0.8, repeat: Infinity, delay: p.delay, ease: "easeOut" }}
             >
               <path
                 d="M4 0C4 0 1 3 1 6C1 8 4 10 4 10C4 10 7 8 7 6C7 3 4 0 4 0Z"
@@ -835,7 +875,7 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
             </motion.svg>
           ))}
 
-          {/* Leaf particles */}
+          {/* Leaf particles — erratic flutter */}
           {hasLeafParticles && leafParticlePositions.slice(0, leafParticleCount).map((s, i) => (
             <motion.svg
               key={`leaf-particle-${i}`}
@@ -844,13 +884,13 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
               style={{ width: 6, height: 5, marginLeft: -3 }}
               initial={{ x: s.x, y: 0, opacity: 0, scale: 0, rotate: 0 }}
               animate={{
-                x: [s.x, s.x + 2, s.x - 1],
-                y: [0, -8, -18],
-                opacity: [0, 0.8, 0],
-                scale: [0, 1, 0.2],
-                rotate: [0, 60, 120],
+                x: [s.x, s.x - 4, s.x + 6, s.x - 3, s.x + 5, s.x - 2],
+                y: [0, -6, -12, -18, -26, -34],
+                opacity: [0, 0.5, 0.9, 0.6, 0.3, 0],
+                scale: [0, 0.7, 1.2, 0.8, 0.4, 0],
+                rotate: [0, -40, 50, -30, 60, -20],
               }}
-              transition={{ duration: s.dur, repeat: Infinity, delay: s.delay, ease: "easeOut" }}
+              transition={{ duration: s.dur + 0.8, repeat: Infinity, delay: s.delay, ease: "easeOut" }}
             >
               <path
                 d="M0 3Q2 0 4 1Q6 2 8 3Q6 4 4 5Q2 6 0 3Z"
@@ -861,7 +901,7 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
             </motion.svg>
           ))}
 
-          {/* Light motes */}
+          {/* Light motes — firefly twinkle */}
           {hasLight && lightPositions.slice(0, lightCount).map((d, i) => (
             <motion.circle
               key={`light-${i}`}
@@ -869,12 +909,12 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
               style={{ width: 5, height: 5, marginLeft: -2.5 }}
               initial={{ x: d.x, y: 0, opacity: 0, scale: 0 }}
               animate={{
-                x: [d.x, d.x + 2, d.x - 1, d.x + 1],
-                y: [0, -6, -14, -20],
-                opacity: [0, 0.6, 0.4, 0],
-                scale: [0, 1, 0.7, 0],
+                x: [d.x, d.x + 3, d.x - 2, d.x + 4, d.x - 1, d.x + 2],
+                y: [0, -4, -8, -14, -20, -26],
+                opacity: [0, 0.3, 0.7, 0.2, 0.5, 0],
+                scale: [0, 0.4, 1, 0.3, 0.6, 0],
               }}
-              transition={{ duration: d.dur, repeat: Infinity, delay: d.delay, ease: "easeOut" }}
+              transition={{ duration: d.dur + 0.6, repeat: Infinity, delay: d.delay, ease: "easeOut" }}
               fill={config.fruitColor}
               filter="url(#glow)"
             />
