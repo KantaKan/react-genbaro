@@ -528,37 +528,31 @@ const GlowingFlame = ({ tier = 0, active, className }: { tier?: FlameTier; activ
           style={{ originX: "50%", originY: "100%" }}
         >
           <svg viewBox="0 0 40 52" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-            {/* === Frame 1 — flames tips left === */}
+            {/* === Frame 1 — flame leans left === */}
             <motion.g
               animate={active ? { opacity: [1, 0, 0] } : { opacity: 1 }}
               transition={active ? { duration: 1.4, repeat: Infinity, times: [0, 0.01, 1] } : {}}
             >
-              <path d="M20 5C17 12 9 20 9 32C9 40 14 47 20 48C26 47 31 40 31 32C31 20 23 12 20 5Z" fill={flameColor} stroke={outlineColor} strokeWidth={strokeW} strokeLinejoin="round" />
-              <path d="M20 16C18 21 13 26 13 34C13 39 16 44 20 46C24 44 27 39 27 34C27 26 22 21 20 16Z" fill={innerColor} stroke={outlineColor} strokeWidth={1.5} strokeLinejoin="round" />
-              <ellipse cx="20" cy="42" rx="3.5" ry="4" fill={active ? "#FFF8DC" : "#e4e4e7"} stroke={outlineColor} strokeWidth={1} />
-              <path d="M20 5C18 11 16 15 14 18C12 21 15 21 17 18C19 15 20 11 20 5Z" fill={tipColor} stroke={outlineColor} strokeWidth={1.3} strokeLinejoin="round" />
+              <path d="M10 46 C8 36 12 26 14 18 C15 12 15 6 16 4 C17 12 18 16 19 20 C20 16 22 8 24 6 C26 14 28 24 32 34 C32 42 28 48 20 48 C16 48 12 47 10 46 Z" fill={flameColor} stroke={outlineColor} strokeWidth={strokeW} strokeLinejoin="round" />
+              <path d="M12 44 C12 36 14 28 16 22 C17 16 17 10 18 8 C19 14 19 18 20 22 C21 18 23 12 24 10 C25 16 27 26 28 32 C28 40 24 45 20 45 C17 45 14 44 12 44 Z" fill={innerColor} stroke={outlineColor} strokeWidth={1.5} strokeLinejoin="round" />
             </motion.g>
 
-            {/* === Frame 2 — flames tips right === */}
+            {/* === Frame 2 — flame leans right === */}
             <motion.g
               animate={active ? { opacity: [0, 1, 0] } : { opacity: 0 }}
               transition={active ? { duration: 1.4, repeat: Infinity, times: [0, 0.01, 1] } : {}}
             >
-              <path d="M20 4C18 11 10 21 10 33C10 40 14 47 20 48C26 47 30 40 30 33C30 21 22 11 20 4Z" fill={flameColor} stroke={outlineColor} strokeWidth={strokeW} strokeLinejoin="round" />
-              <path d="M20 15C18 20 14 27 14 34C14 39 17 44 20 46C23 44 26 39 26 34C26 27 22 20 20 15Z" fill={innerColor} stroke={outlineColor} strokeWidth={1.5} strokeLinejoin="round" />
-              <ellipse cx="20" cy="41" rx="3.8" ry="4.3" fill={active ? "#FFF8DC" : "#e4e4e7"} stroke={outlineColor} strokeWidth={1} />
-              <path d="M20 4C22 10 24 14 26 17C28 20 25 20 23 17C21 14 20 10 20 4Z" fill={tipColor} stroke={outlineColor} strokeWidth={1.3} strokeLinejoin="round" />
+              <path d="M10 46 C8 36 12 26 14 18 C15 12 17 8 18 6 C19 12 19 16 20 20 C21 16 22 10 24 4 C25 12 28 22 32 32 C32 42 28 48 20 48 C16 48 12 47 10 46 Z" fill={flameColor} stroke={outlineColor} strokeWidth={strokeW} strokeLinejoin="round" />
+              <path d="M12 44 C12 36 14 28 16 22 C17 16 18 12 19 10 C20 15 20 18 21 22 C22 18 24 14 24 10 C25 16 27 24 28 30 C28 38 24 45 20 45 C17 45 14 44 12 44 Z" fill={innerColor} stroke={outlineColor} strokeWidth={1.5} strokeLinejoin="round" />
             </motion.g>
 
-            {/* === Frame 3 — flames tips center === */}
+            {/* === Frame 3 — flame center === */}
             <motion.g
               animate={active ? { opacity: [0, 0, 1] } : { opacity: 0 }}
               transition={active ? { duration: 1.4, repeat: Infinity, times: [0, 0.01, 1] } : {}}
             >
-              <path d="M20 3C19 10 11 20 11 32C11 40 15 47 20 48C25 47 29 40 29 32C29 20 21 10 20 3Z" fill={flameColor} stroke={outlineColor} strokeWidth={strokeW} strokeLinejoin="round" />
-              <path d="M20 14C19 19 15 26 15 33C15 38 17 44 20 46C23 44 25 38 25 33C25 26 21 19 20 14Z" fill={innerColor} stroke={outlineColor} strokeWidth={1.5} strokeLinejoin="round" />
-              <ellipse cx="20" cy="42" rx="3.2" ry="3.8" fill={active ? "#FFF8DC" : "#e4e4e7"} stroke={outlineColor} strokeWidth={1} />
-              <path d="M20 3C19 8 18 12 17 14C16 16 19 16 20 14C21 12 20 8 20 3Z" fill={tipColor} stroke={outlineColor} strokeWidth={1.3} strokeLinejoin="round" />
+              <path d="M10 46 C8 36 12 26 14 18 C15 12 15 8 17 4 C18 12 18 16 19 20 C20 16 22 12 24 4 C26 14 28 24 32 34 C32 42 28 48 20 48 C16 48 12 47 10 46 Z" fill={flameColor} stroke={outlineColor} strokeWidth={strokeW} strokeLinejoin="round" />
+              <path d="M12 44 C12 36 14 28 16 22 C17 16 17 12 19 8 C20 14 20 18 21 22 C22 18 24 12 25 8 C26 16 27 26 28 32 C28 40 24 45 20 45 C17 45 14 44 12 44 Z" fill={innerColor} stroke={outlineColor} strokeWidth={1.5} strokeLinejoin="round" />
             </motion.g>
 
             {/* === Crown tips — tier 4+ === */}
