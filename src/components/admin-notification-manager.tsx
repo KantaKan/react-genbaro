@@ -11,6 +11,7 @@ import { Switch } from "./ui/switch";
 import { Badge } from "./ui/badge";
 import { toast } from "sonner";
 import { Trash2, Edit, Plus, Bell, X } from "lucide-react";
+import { SkeletonCard } from "./loading-skeleton";
 import {
   Dialog,
   DialogContent,
@@ -276,7 +277,7 @@ export function AdminNotificationManager() {
 
       <div className="grid gap-4">
         {isLoading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading...</div>
+          <SkeletonCard count={3} />
         ) : notifications.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">

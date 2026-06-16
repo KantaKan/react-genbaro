@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, FileText, AlertTriangle, TrendingUp, Activity } from "lucide-react";
 import { api } from "@/lib/api";
 import { useQuery } from "react-query";
+import { SkeletonWarm } from "@/components/loading-skeleton";
 
 interface MetricCardProps {
   title: string;
@@ -83,10 +84,10 @@ export function DashboardMetrics({ cohort }: DashboardMetricsProps) {
         {[...Array(4)].map((_, i) => (
           <Card key={i} className="h-full">
             <CardHeader>
-              <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+              <SkeletonWarm className="h-4 w-32" />
             </CardHeader>
             <CardContent>
-              <div className="h-8 w-20 bg-muted rounded animate-pulse" />
+              <SkeletonWarm className="h-8 w-20" />
             </CardContent>
           </Card>
         ))}

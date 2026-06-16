@@ -34,6 +34,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { LeaveRequestForm } from "./leave-request-form";
+import { SkeletonWarm } from "@/components/loading-skeleton";
 import { AttendanceChart } from "./attendance-chart";
 
 const getLocalDate = () => {
@@ -315,7 +316,7 @@ export function StudentAttendance() {
                 <div className="flex items-center justify-between">
                   <span>Status:</span>
                   {isLoadingData ? (
-                    <span className="text-muted-foreground">Loading...</span>
+                    <SkeletonWarm className="h-5 w-24" />
                   ) : (
                     getTodayStatus("morning")
                   )}
@@ -335,7 +336,7 @@ export function StudentAttendance() {
                 <div className="flex items-center justify-between">
                   <span>Status:</span>
                   {isLoadingData ? (
-                    <span className="text-muted-foreground">Loading...</span>
+                    <SkeletonWarm className="h-5 w-24" />
                   ) : (
                     getTodayStatus("afternoon")
                   )}
@@ -362,9 +363,7 @@ export function StudentAttendance() {
             </CardHeader>
             <CardContent>
               {isLoadingData ? (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  Loading...
-                </div>
+                <SkeletonWarm className="h-[300px] w-full" />
               ) : (
                 <AttendanceChart data={dailyStats} height={300} />
               )}
@@ -383,9 +382,7 @@ export function StudentAttendance() {
             </CardHeader>
             <CardContent>
               {isLoadingData ? (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  Loading...
-                </div>
+                <SkeletonWarm className="h-[300px] w-full" />
               ) : (
                 <AttendanceChart data={dailyStats} height={300} />
               )}
