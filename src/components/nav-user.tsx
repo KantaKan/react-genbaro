@@ -7,7 +7,7 @@ import { useAuth } from "@/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useUserData } from "@/UserDataContext";
 import { UserAvatar } from "@/components/user-avatar";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonWarm } from "@/components/loading-skeleton";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
@@ -24,10 +24,10 @@ export function NavUser() {
   if (loading) {
     return (
       <div className="flex items-center gap-2 px-2 py-1.5">
-        <Skeleton className="h-8 w-8 rounded-lg" />
+        <SkeletonWarm className="h-8 w-8 rounded-lg" />
         <div className="grid gap-1 flex-1">
-          <Skeleton className="h-3.5 w-24" />
-          <Skeleton className="h-3 w-32" />
+          <SkeletonWarm className="h-3.5 w-24" />
+          <SkeletonWarm className="h-3 w-32" />
         </div>
       </div>
     );

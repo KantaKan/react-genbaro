@@ -8,7 +8,7 @@ import { ArrowLeft, Users, School, ClipboardList, TrendingUp, Award } from "luci
 import { BadgeRenderer } from "@/components/badge-renderer";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonWarm } from "@/components/loading-skeleton";
 import { ReflectionsTable } from "@/components/reflections-table";
 import { reflectionZones } from "@/components/reflection-zones";
 import { BarometerVisual } from "@/components/barometer-visual";
@@ -132,15 +132,15 @@ export default function UserReflectionsPage() {
   if (isLoading) {
   return (
     <div className="container mx-auto pt-16 pb-10 space-y-6">
-        <Skeleton className="h-10 w-40" />
+        <SkeletonWarm className="h-10 w-40" />
         <Card>
           <CardHeader>
-            <Skeleton className="h-7 w-32" />
+            <SkeletonWarm className="h-7 w-32" />
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-24 w-full" />
+                <SkeletonWarm key={i} className="h-24 w-full" />
               ))}
             </div>
           </CardContent>
@@ -148,7 +148,7 @@ export default function UserReflectionsPage() {
         <div className="rounded-md border">
           <div className="p-4 space-y-4">
             {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
+              <SkeletonWarm key={i} className="h-16 w-full" />
             ))}
           </div>
         </div>

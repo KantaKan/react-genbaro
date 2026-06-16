@@ -9,6 +9,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { ChevronDown, ChevronUp, Filter } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
+import { LoadingRow } from "@/components/loading-row";
 import { Badge } from "@/components/ui/badge";
 import FeedbackForm from "./feedback-form";
 import { api } from "@/lib/api";
@@ -40,15 +41,7 @@ interface Reflection {
   };
 }
 
-const LoadingRow = () => (
-  <TableRow>
-    <TableCell colSpan={99}>
-      <div className="flex items-center justify-center p-8">
-        <motion.div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
-      </div>
-    </TableCell>
-  </TableRow>
-);
+
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);

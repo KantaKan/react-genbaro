@@ -36,6 +36,7 @@ import {
 } from "@/lib/api";
 import { Trash2, RefreshCw, Clock, Calendar, X, CalendarClock, Check, ChevronDown, Loader2, Star, Users, Eye, ArrowUpDown, UserX, UserMinus } from "lucide-react";
 import { LeaveRequestsTable } from "./leave-requests-table";
+import { SkeletonWarm } from "@/components/loading-skeleton";
 import { CreateLeaveRequestDialog } from "./create-leave-request-dialog";
 import { AdminAttendanceCalendar } from "./admin-attendance-calendar";
 import { DaySummaryDialog } from "./day-summary-dialog";
@@ -1201,7 +1202,9 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
               <TableBody>
                 {isLoadingHistory ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center">Loading...</TableCell>
+                    <TableCell colSpan={4}>
+                      <SkeletonWarm className="h-8 w-full" />
+                    </TableCell>
                   </TableRow>
                 ) : (
                   studentHistory.filter(h => !h.deleted).map((record) => (

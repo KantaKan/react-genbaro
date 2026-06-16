@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-toastify";
+import { SkeletonTable } from "@/components/loading-skeleton";
 import {
   getAllLeaveRequests,
   updateLeaveRequestStatus,
@@ -231,7 +232,7 @@ export function LeaveRequestsTable({ cohort }: LeaveRequestsTableProps) {
       <Card>
         <CardContent className="pt-6">
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading...</div>
+            <SkeletonTable rows={5} cols={5} />
           ) : requests.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">No leave requests found</div>
           ) : (

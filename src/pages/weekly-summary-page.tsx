@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonWarm } from "@/components/loading-skeleton";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, TrendingDown, TrendingUp, UserX, MessageSquare, Users } from "lucide-react";
 import { getDayBadge } from "@/utils/day-colors";
@@ -54,30 +54,30 @@ const WeeklySummarySkeleton: React.FC = () => (
     {[...Array(2)].map((_, i) => (
       <Card key={i}>
         <CardHeader>
-          <Skeleton className="h-7 w-1/2" />
-          <Skeleton className="h-4 w-1/3" />
+          <SkeletonWarm className="h-7 w-1/2" />
+          <SkeletonWarm className="h-4 w-1/3" />
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <Skeleton className="h-6 w-2/4" />
+              <SkeletonWarm className="h-6 w-2/4" />
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-4">
-                <Skeleton className="h-10 w-full" />
+                <SkeletonWarm className="h-10 w-full" />
               </div>
               <div className="flex items-center space-x-4">
-                <Skeleton className="h-10 w-full" />
+                <SkeletonWarm className="h-10 w-full" />
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <Skeleton className="h-6 w-2/4" />
+              <SkeletonWarm className="h-6 w-2/4" />
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-4">
-                <Skeleton className="h-10 w-full" />
+                <SkeletonWarm className="h-10 w-full" />
               </div>
             </CardContent>
           </Card>
