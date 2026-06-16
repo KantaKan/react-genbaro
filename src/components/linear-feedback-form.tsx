@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
+import { SkeletonCard } from "@/components/loading-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { 
   Code, 
@@ -291,7 +292,7 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
     return () => window.removeEventListener("keydown", handleEnterKey);
   }, [showSubmitConfirmation]);
 
-  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
+  if (loading) return <div className="flex items-center justify-center h-64"><SkeletonCard count={3} /></div>;
   if (error) return <div className="text-center text-destructive p-4">Error loading user data</div>;
 
   if (isSubmitted) {

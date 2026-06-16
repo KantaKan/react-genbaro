@@ -166,7 +166,7 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
   if (error) return <div>Error loading user data</div>;
 
   return (
