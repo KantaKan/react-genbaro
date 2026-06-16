@@ -2,6 +2,7 @@
 
 import { useUserData } from "@/UserDataContext";
 import ReflectionsDashboard from "@/components/reflections-dashboard";
+import { SkeletonCard } from "@/components/loading-skeleton";
 
 export default function ReflectionsPage() {
   const { userData, loading, error, refetchUserData } = useUserData();
@@ -9,7 +10,7 @@ export default function ReflectionsPage() {
   if (loading) {
     return (
       <div className="container mx-auto py-10">
-        <div className="text-center">Loading...</div>
+        <SkeletonCard count={3} />
       </div>
     );
   }

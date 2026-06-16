@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { AttendanceCalendar } from "@/components/attendance-calendar";
 import { EditDayDialog } from "@/components/edit-day-dialog";
+import { PageLoading } from "@/components/page-state";
 
 const getCurrentMonth = () => {
   const now = new Date();
@@ -195,11 +196,7 @@ export function StudentAttendanceDetail() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[400px]">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+    return <PageLoading label="Loading attendance..." />;
   }
 
   return (

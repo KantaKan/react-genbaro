@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import SkeletonLoader from "@/components/ui/SkeletonLoader";
+import { SkeletonCard } from "@/components/loading-skeleton";
 import type { JWTPayload, User } from "@/domain/types";
 
 export function AllUsers() {
@@ -81,9 +81,7 @@ export function AllUsers() {
     return (
       <Card className="border-none bg-transparent shadow-none">
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-0">
-          {[...Array(8)].map((_, i) => (
-            <SkeletonLoader key={i} height="80px" className="rounded-xl" />
-          ))}
+          <SkeletonCard count={8} />
         </CardContent>
       </Card>
     );

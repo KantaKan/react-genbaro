@@ -150,6 +150,23 @@
 .font-handwriting {
   font-family: 'Caveat', cursive;
 }
+
+/* ponytail: warm shimmer — calibrating barometer feel, not generic pulse */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--primary) / 0.04) 0%,
+    hsl(var(--primary) / 0.12) 50%,
+    hsl(var(--primary) / 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
 @layer base {
   * {
     @apply border-border;
