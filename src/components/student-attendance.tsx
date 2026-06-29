@@ -1,13 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { toast } from "react-toastify";
 import {
   submitAttendance,
@@ -22,24 +18,13 @@ import {
 } from "@/lib/api";
 import { useUserData } from "@/UserDataContext";
 import {
-  CheckCircle,
-  AlertTriangle,
-  XCircle,
-  Info,
-  RefreshCw,
-  CalendarClock,
-  Clock,
-  Sun,
-  Sunset,
-  TrendingUp,
+  CalendarClock, RefreshCw, Clock, FileText, CheckCircle, XCircle, Info,
 } from "lucide-react";
 import { LeaveRequestForm } from "./leave-request-form";
 import { SkeletonWarm } from "@/components/loading-skeleton";
 import { AttendanceChart } from "./attendance-chart";
+import { AttendanceFlipDigit } from "./attendance/attendance-flip-digit";
 
-// Thailand date in YYYY-MM-DD so it matches the backend's record date keying
-// (backend uses Asia/Bangkok for GetThailandDate). This keeps "today" aligned
-// regardless of the learner's browser timezone.
 const getThailandDate = () => {
   const now = new Date();
   const utc = now.getTime() + now.getTimezoneOffset() * 60000;
@@ -53,7 +38,8 @@ const getThailandDate = () => {
 export function StudentAttendance() {
   const { userData } = useUserData();
   const [code, setCode] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [punchState, setPunchState] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [punchMessage, setPunchMessage] = useState("");
   const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatus | null>(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
   const [todayRecords, setTodayRecords] = useState<AttendanceRecord[]>([]);
@@ -61,9 +47,11 @@ export function StudentAttendance() {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const successTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     loadAllData();
+    return () => { if (successTimer.current) clearTimeout(successTimer.current); };
   }, []);
 
   const loadAllData = async () => {
@@ -87,8 +75,7 @@ export function StudentAttendance() {
     try {
       const history = await getMyAttendanceHistory(1);
       const today = getThailandDate();
-      const todayRecs = history.filter((r) => r.date === today);
-      setTodayRecords(todayRecs);
+      setTodayRecords(history.filter((r) => r.date === today));
     } catch (error) {
       console.error("Error loading today records:", error);
     }
@@ -108,13 +95,11 @@ export function StudentAttendance() {
       const requests = await getMyLeaveRequests();
       setLeaveRequests(requests || []);
     } catch (error) {
-      console.error("Error loading leave requests:", error);
       setLeaveRequests([]);
     }
   };
 
   const getCurrentSession = (): "morning" | "afternoon" | null => {
-    // Use Thailand hour so session windows match the backend's windows (9-13 morning, 13-17 afternoon).
     const now = new Date();
     const utc = now.getTime() + now.getTimezoneOffset() * 60000;
     const thHour = new Date(utc + 7 * 3600000).getHours();
@@ -124,7 +109,6 @@ export function StudentAttendance() {
   };
 
   const getSessionFromCode = (code: string): "morning" | "afternoon" | null => {
-    // Backend generates codes prefixed with the full session name: MORNING-XXXX / AFTERNOON-XXXX
     const upperCode = code.toUpperCase();
     if (upperCode.startsWith("MORNING")) return "morning";
     if (upperCode.startsWith("AFTERNOON")) return "afternoon";
@@ -138,8 +122,6 @@ export function StudentAttendance() {
     const session = getSessionFromCode(code.trim());
     if (session) {
       const existingRecord = todayRecords.find((r) => r.session === session);
-      // Block re-submit for ANY already-marked status so a student can't overwrite
-      // an "absent" (admin-marked) by re-checking in.
       if (existingRecord) {
         toast.info(`You're already marked as ${existingRecord.status} for ${session} session!`);
         setCode("");
@@ -147,18 +129,26 @@ export function StudentAttendance() {
       }
     }
 
-    setIsSubmitting(true);
+    setPunchState("submitting");
     try {
       const result = await submitAttendance(code.trim(), userData.cohort_number);
-      toast.success(`Attendance submitted! Status: ${result.status}`);
+      setPunchState("success");
+      setPunchMessage(result.status === "present" ? "Present" : result.status === "late" ? "Late" : "Marked");
       setCode("");
-      loadAllData();
+      successTimer.current = setTimeout(() => {
+        setPunchState("idle");
+        setPunchMessage("");
+        loadAllData();
+      }, 2000);
     } catch (error) {
       const err = error as { response?: { data?: { message?: string } } };
       const message = err?.response?.data?.message || "Failed to submit attendance";
-      toast.error(message);
-    } finally {
-      setIsSubmitting(false);
+      setPunchState("error");
+      setPunchMessage(message);
+      successTimer.current = setTimeout(() => {
+        setPunchState("idle");
+        setPunchMessage("");
+      }, 2500);
     }
   };
 
@@ -174,30 +164,33 @@ export function StudentAttendance() {
 
     if (attendanceStatus.warning_level === "red") {
       return (
-        <Alert className="bg-red-50 border-red-500 dark:bg-red-950 dark:border-red-800">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="text-red-700 dark:text-red-400 font-bold">
-            Attendance Warning - Critical
-          </AlertTitle>
-          <AlertDescription className="text-red-600 dark:text-red-300">
-            You have <strong>{attendanceStatus.absent}</strong> absences. Please contact admin
-            immediately.
-          </AlertDescription>
-        </Alert>
+        <div className="register-alert register-alert-danger">
+          <div className="flex gap-3">
+            <XCircle className="h-5 w-5 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-register-heading text-sm uppercase tracking-[0.1em]">Attendance Warning - Critical</p>
+              <p className="text-xs mt-1 opacity-80">
+                You have <strong>{attendanceStatus.absent}</strong> absences. Please contact admin immediately.
+              </p>
+            </div>
+          </div>
+        </div>
       );
     }
 
     if (attendanceStatus.warning_level === "yellow") {
       return (
-        <Alert className="bg-yellow-50 border-yellow-500 dark:bg-yellow-950 dark:border-yellow-800">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="text-yellow-700 dark:text-yellow-400 font-bold">
-            Attendance Warning
-          </AlertTitle>
-          <AlertDescription className="text-yellow-600 dark:text-yellow-300">
-            You have <strong>{attendanceStatus.absent}</strong> absences. Please attend regularly.
-          </AlertDescription>
-        </Alert>
+        <div className="register-alert register-alert-warning">
+          <div className="flex gap-3">
+            <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-register-heading text-sm uppercase tracking-[0.1em]">Attendance Warning</p>
+              <p className="text-xs mt-1 opacity-80">
+                You have <strong>{attendanceStatus.absent}</strong> absences. Please attend regularly.
+              </p>
+            </div>
+          </div>
+        </div>
       );
     }
 
@@ -207,203 +200,237 @@ export function StudentAttendance() {
   const getTodayStatus = (session: "morning" | "afternoon") => {
     const record = todayRecords.find((r) => r.session === session);
     if (!record) {
-      return <Badge variant="outline" className="text-muted-foreground">Not marked</Badge>;
+      return <Stamp status="-" />;
     }
-    switch (record.status) {
-      case "present":
-        return <Badge className="bg-green-500 hover:bg-green-600">Present</Badge>;
-      case "late":
-        return <Badge className="bg-yellow-500 hover:bg-yellow-600">Late</Badge>;
-      case "absent":
-        return <Badge className="bg-red-500 hover:bg-red-600">Absent</Badge>;
-      case "late_excused":
-        return <Badge className="bg-blue-500 hover:bg-blue-600">Late (Excused)</Badge>;
-      case "absent_excused":
-        return <Badge className="bg-gray-500 hover:bg-gray-600">Absent (Excused)</Badge>;
-      case "no_class":
-        return <Badge className="bg-purple-500 hover:bg-purple-600">No Class</Badge>;
-      case "holiday":
-        return <Badge className="bg-orange-500 hover:bg-orange-600">Holiday</Badge>;
-      case "dropout":
-        return <Badge className="bg-red-700 hover:bg-red-800">Dropout</Badge>;
-      case "dismissed":
-        return <Badge className="bg-red-800 hover:bg-red-900">Dismissed</Badge>;
-      default:
-        return <Badge variant="outline">{record.status}</Badge>;
-    }
+    return <Stamp status={record.status} />;
   };
 
   const pendingLeaveRequests = (leaveRequests || []).filter((r) => r.status === "pending");
+  const status = attendanceStatus;
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-4xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">My Attendance</h1>
-          <p className="text-muted-foreground">Track your attendance and leave requests</p>
+          <h1 className="font-register-heading text-2xl text-[hsl(var(--foreground))]">My Attendance</h1>
+          <p className="font-register-body text-sm text-[hsl(var(--muted-foreground))] mt-0.5">
+            Student Register · {userData?.first_name} {userData?.last_name}
+          </p>
         </div>
-        <Button onClick={() => setLeaveDialogOpen(true)} className="w-full sm:w-auto">
-          <CalendarClock className="h-4 w-4 mr-2" />
+        <Button
+          variant="outline"
+          onClick={() => setLeaveDialogOpen(true)}
+          className="border-[hsl(var(--border))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--primary))]/10 font-register-body text-xs uppercase tracking-[0.1em] rounded-none"
+        >
+          <CalendarClock className="h-3.5 w-3.5 mr-2" />
           Request Leave
         </Button>
       </div>
 
+      <div className="register-divider" />
+
       {getWarningAlert()}
 
       {pendingLeaveRequests.length > 0 && (
-        <Alert className="bg-blue-50 border-blue-500 dark:bg-blue-950 dark:border-blue-800">
-          <CalendarClock className="h-4 w-4" />
-          <AlertTitle className="text-blue-700 dark:text-blue-400">Pending Leave Requests</AlertTitle>
-          <AlertDescription className="text-blue-600 dark:text-blue-300">
-            You have {pendingLeaveRequests.length} pending leave request(s) awaiting approval.
-          </AlertDescription>
-        </Alert>
+        <div className="register-alert register-alert-info">
+          <div className="flex gap-3">
+            <CalendarClock className="h-5 w-5 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-register-heading text-sm uppercase tracking-[0.1em]">Pending Leave Requests</p>
+              <p className="text-xs mt-1 opacity-80">
+                You have {pendingLeaveRequests.length} pending leave request(s) awaiting approval.
+              </p>
+            </div>
+          </div>
+        </div>
       )}
 
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Mark Attendance
-          </CardTitle>
-          <CardDescription className="text-blue-100">
-            Enter the code from your instructor
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-4 space-y-4">
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
-            <Input
-              type="text"
-              placeholder="Enter code (e.g., MORNING-ABCD)"
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              className="flex-1"
-            />
-            <Button type="submit" disabled={isSubmitting || !code.trim()} className="w-full sm:w-auto">
-              {isSubmitting ? "Submitting..." : "Submit"}
-            </Button>
-          </form>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => {
-              loadAllData();
-              toast.info("Refreshed attendance data");
-            }}
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh Data
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Punch Clock Card — register slab with brass header */}
+      <div className="register-card">
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]">
+          <Clock className="h-4 w-4" />
+          <span className="font-register-heading text-xs uppercase tracking-[0.15em]">Punch Clock</span>
+        </div>
+        <div className="p-5">
+          {punchState === "success" ? (
+            <div className="flex flex-col items-center justify-center py-6 animate-stamp-in">
+              <div className="w-14 h-14 rounded-full bg-[hsl(var(--register-stamp-present))]/10 border-2 border-[hsl(var(--register-stamp-present))] flex items-center justify-center mb-3">
+                <CheckCircle className="h-7 w-7 text-[hsl(var(--register-stamp-present))]" />
+              </div>
+              <p className="font-register-heading text-lg text-[hsl(var(--register-stamp-present))]">{punchMessage}</p>
+              <p className="font-register-mono text-xs text-[hsl(var(--muted-foreground))] mt-1">Attendance recorded</p>
+            </div>
+          ) : punchState === "error" ? (
+            <div className="flex flex-col items-center justify-center py-6 animate-stamp-in">
+              <div className="w-14 h-14 rounded-full bg-[hsl(var(--register-stamp-absent))]/10 border-2 border-[hsl(var(--register-stamp-absent))] flex items-center justify-center mb-3">
+                <XCircle className="h-7 w-7 text-[hsl(var(--register-stamp-absent))]" />
+              </div>
+              <p className="font-register-body text-sm text-[hsl(var(--register-stamp-absent))] text-center">{punchMessage}</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="font-register-mono text-[10px] uppercase tracking-[0.15em] text-[hsl(var(--muted-foreground))] block mb-1.5">
+                  Enter attendance code
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.toUpperCase())}
+                    placeholder="e.g. MORNING-ABCD"
+                    disabled={punchState === "submitting"}
+                    className="flex-1 h-10 px-3 bg-[hsl(var(--card))] border border-[hsl(var(--border))] font-register-mono text-sm text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))]/50 focus:outline-none focus:border-[hsl(var(--primary))] transition-colors"
+                  />
+                  <button
+                    type="submit"
+                    disabled={punchState === "submitting" || !code.trim()}
+                    className="px-5 h-10 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] font-register-heading text-xs uppercase tracking-[0.15em] hover:brightness-110 disabled:opacity-50 transition-all"
+                  >
+                    {punchState === "submitting" ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Punch"
+                    )}
+                  </button>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => { loadAllData(); toast.info("Refreshed"); }}
+                className="flex items-center gap-1.5 text-xs text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] transition-colors font-register-body"
+              >
+                <RefreshCw className="h-3 w-3" />
+                Refresh
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
 
       <Tabs defaultValue="today" className="space-y-4" onValueChange={handleTabChange}>
-        <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
-          <TabsTrigger value="today">Today</TabsTrigger>
-          <TabsTrigger value="week">This Week</TabsTrigger>
-          <TabsTrigger value="month">This Month</TabsTrigger>
-          <TabsTrigger value="leave">Leave</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 lg:w-[600px] border border-[hsl(var(--border))] rounded-none bg-[hsl(var(--card))]">
+          {["today", "week", "month", "leave"].map((tab) => (
+            <TabsTrigger
+              key={tab}
+              value={tab}
+              className="font-register-heading text-[10px] uppercase tracking-[0.15em] data-[state=active]:bg-[hsl(var(--primary))] data-[state=active]:text-[hsl(var(--primary-foreground))] rounded-none"
+            >
+              {tab === "today" ? "Today" : tab === "week" ? "Week" : tab === "month" ? "Month" : "Leave"}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
+        {/* Today */}
         <TabsContent value="today" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Sun className="h-5 w-5 text-orange-500" />
+            <div className="register-card">
+              <div className="px-4 py-2.5 border-b border-[hsl(var(--border))]">
+                <p className="font-register-heading text-xs uppercase tracking-[0.15em] text-[hsl(var(--foreground))]">
+                  <SunIcon className="h-3.5 w-3.5 inline mr-1.5 text-[hsl(var(--register-stamp-late))]" />
                   Morning Session
-                </CardTitle>
-                <CardDescription>9:00 - 10:30</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <span>Status:</span>
-                  {isLoadingData ? (
-                    <SkeletonWarm className="h-5 w-24" />
-                  ) : (
-                    getTodayStatus("morning")
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                </p>
+                <p className="font-register-mono text-[10px] text-[hsl(var(--muted-foreground))] mt-0.5">09:00 – 10:30</p>
+              </div>
+              <div className="p-4 flex items-center justify-between">
+                <span className="font-register-body text-xs text-[hsl(var(--muted-foreground))]">Status</span>
+                {isLoadingData ? <SkeletonWarm className="h-5 w-20" /> : getTodayStatus("morning")}
+              </div>
+            </div>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Sunset className="h-5 w-5 text-purple-500" />
+            <div className="register-card">
+              <div className="px-4 py-2.5 border-b border-[hsl(var(--border))]">
+                <p className="font-register-heading text-xs uppercase tracking-[0.15em] text-[hsl(var(--foreground))]">
+                  <SunsetIcon className="h-3.5 w-3.5 inline mr-1.5 text-[hsl(var(--register-stamp-late))]" />
                   Afternoon Session
-                </CardTitle>
-                <CardDescription>13:00 - 14:30</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <span>Status:</span>
-                  {isLoadingData ? (
-                    <SkeletonWarm className="h-5 w-24" />
-                  ) : (
-                    getTodayStatus("afternoon")
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                </p>
+                <p className="font-register-mono text-[10px] text-[hsl(var(--muted-foreground))] mt-0.5">13:00 – 14:30</p>
+              </div>
+              <div className="p-4 flex items-center justify-between">
+                <span className="font-register-body text-xs text-[hsl(var(--muted-foreground))]">Status</span>
+                {isLoadingData ? <SkeletonWarm className="h-5 w-20" /> : getTodayStatus("afternoon")}
+              </div>
+            </div>
           </div>
 
-          <TodaySummary
-            status={attendanceStatus}
-            leaveRequests={pendingLeaveRequests}
-            isLoading={isLoadingStatus}
-          />
+          {/* Quick stats flip digits */}
+          {status && (
+            <div className="register-card">
+              <div className="px-4 py-2 border-b border-[hsl(var(--border))]">
+                <p className="font-register-heading text-xs uppercase tracking-[0.15em] text-[hsl(var(--foreground))]">
+                  <BarChart3 className="h-3.5 w-3.5 inline mr-1.5" />
+                  Period Totals
+                </p>
+              </div>
+              <div className="p-4">
+                <div className="flex items-center justify-center gap-6">
+                  <AttendanceFlipDigit value={status.present} label="Present" />
+                  <div className="w-px h-10 bg-[hsl(var(--border))]" />
+                  <AttendanceFlipDigit value={status.late} label="Late" />
+                  <div className="w-px h-10 bg-[hsl(var(--border))]" />
+                  <AttendanceFlipDigit value={status.absent} label="Absent" />
+                  <div className="w-px h-10 bg-[hsl(var(--border))]" />
+                  <AttendanceFlipDigit value={status.late_excused} label="Exc Late" />
+                  <div className="w-px h-10 bg-[hsl(var(--border))]" />
+                  <AttendanceFlipDigit value={status.absent_excused} label="Exc Abs" />
+                </div>
+              </div>
+            </div>
+          )}
         </TabsContent>
 
+        {/* Week / Month */}
         <TabsContent value="week" className="space-y-4">
           <PeriodSummary status={attendanceStatus} isLoading={isLoadingStatus} period="Week" />
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Weekly Attendance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="register-card">
+            <div className="px-4 py-2.5 border-b border-[hsl(var(--border))]">
+              <p className="font-register-heading text-xs uppercase tracking-[0.15em] text-[hsl(var(--foreground))]">
+                <BarChart3 className="h-3.5 w-3.5 inline mr-1.5" />
+                Weekly Chart
+              </p>
+            </div>
+            <div className="p-4">
               {isLoadingData ? (
                 <SkeletonWarm className="h-[300px] w-full" />
               ) : (
                 <AttendanceChart data={dailyStats} height={300} />
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="month" className="space-y-4">
           <PeriodSummary status={attendanceStatus} isLoading={isLoadingStatus} period="Month" />
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Monthly Attendance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="register-card">
+            <div className="px-4 py-2.5 border-b border-[hsl(var(--border))]">
+              <p className="font-register-heading text-xs uppercase tracking-[0.15em] text-[hsl(var(--foreground))]">
+                <BarChart3 className="h-3.5 w-3.5 inline mr-1.5" />
+                Monthly Chart
+              </p>
+            </div>
+            <div className="p-4">
               {isLoadingData ? (
                 <SkeletonWarm className="h-[300px] w-full" />
               ) : (
                 <AttendanceChart data={dailyStats} height={300} />
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
 
+        {/* Leave */}
         <TabsContent value="leave" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarClock className="h-5 w-5" />
+          <div className="register-card">
+            <div className="px-4 py-2.5 border-b border-[hsl(var(--border))]">
+              <p className="font-register-heading text-xs uppercase tracking-[0.15em] text-[hsl(var(--foreground))]">
+                <FileText className="h-3.5 w-3.5 inline mr-1.5" />
                 My Leave Requests
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+              </p>
+            </div>
+            <div className="p-4">
               {leaveRequests.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-8 font-register-body text-sm text-[hsl(var(--muted-foreground))]">
                   No leave requests found
                 </div>
               ) : (
@@ -411,173 +438,137 @@ export function StudentAttendance() {
                   {leaveRequests.map((request) => (
                     <div
                       key={request._id}
-                      className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                      className="flex items-center justify-between p-3 border border-[hsl(var(--border))] bg-[hsl(var(--secondary))]"
                     >
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium capitalize">
+                          <span className="font-register-body text-sm text-[hsl(var(--foreground))] capitalize truncate">
                             {request.type.replace("_", " ")}
                           </span>
-                          {request.session && (
-                            <Badge variant="outline" className="text-xs">
-                              {request.session}
-                            </Badge>
-                          )}
+                          {request.session && <Stamp status={request.session} />}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-register-mono text-xs text-[hsl(var(--muted-foreground))] mt-0.5">
                           {new Date(request.date).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                           })}
                         </p>
                         {request.reason && (
-                          <p className="text-sm text-muted-foreground mt-1">
+                          <p className="font-register-body text-xs text-[hsl(var(--muted-foreground))] mt-1">
                             {request.reason}
                           </p>
                         )}
                       </div>
-                      {request.status === "approved" && (
-                        <Badge className="bg-green-500">Approved</Badge>
-                      )}
-                      {request.status === "rejected" && (
-                        <Badge className="bg-red-500">Rejected</Badge>
-                      )}
-                      {request.status === "pending" && (
-                        <Badge className="bg-yellow-500">Pending</Badge>
-                      )}
+                      <LeaveStatusBadge status={request.status} />
                     </div>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Attendance Rules</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              <span>
-                <strong>Present:</strong> Attend both morning AND afternoon
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <XCircle className="h-4 w-4 text-red-500" />
-              <span>
-                <strong>Absent:</strong> Miss one or both sessions
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Info className="h-4 w-4 text-blue-500" />
-              <span>
-                Need to take leave? Use the "Request Leave" button above
-              </span>
-            </div>
+      {/* Rules — register slab */}
+      <div className="register-card">
+        <div className="px-4 py-2.5 border-b border-[hsl(var(--border))]">
+          <p className="font-register-heading text-xs uppercase tracking-[0.15em] text-[hsl(var(--foreground))]">
+            <Info className="h-3.5 w-3.5 inline mr-1.5" />
+            Attendance Rules
+          </p>
+        </div>
+        <div className="p-4 space-y-2">
+          <div className="flex items-center gap-2 font-register-body text-xs text-[hsl(var(--foreground))]">
+            <CheckCircle className="h-3.5 w-3.5 text-[hsl(var(--register-stamp-present))]" />
+            <span><strong>Present:</strong> Attend both morning AND afternoon</span>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center gap-2 font-register-body text-xs text-[hsl(var(--foreground))]">
+            <XCircle className="h-3.5 w-3.5 text-[hsl(var(--register-stamp-absent))]" />
+            <span><strong>Absent:</strong> Miss one or both sessions</span>
+          </div>
+          <div className="flex items-center gap-2 font-register-body text-xs text-[hsl(var(--foreground))]">
+            <Info className="h-3.5 w-3.5 text-[hsl(var(--primary))]" />
+            <span>Need to take leave? Use the "Request Leave" button above</span>
+          </div>
+        </div>
+      </div>
 
       <LeaveRequestForm
         open={leaveDialogOpen}
         onOpenChange={setLeaveDialogOpen}
-        onSuccess={() => {
-          loadLeaveRequests();
-        }}
+        onSuccess={() => loadLeaveRequests()}
       />
     </div>
   );
 }
 
-function TodaySummary({
-  status,
-  leaveRequests,
-  isLoading,
-}: {
-  status: AttendanceStatus | null;
-  leaveRequests: LeaveRequest[];
-  isLoading: boolean;
-}) {
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-center text-muted-foreground">Loading summary...</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const present = status?.present || 0;
-  const late = status?.late || 0;
-  const absent = status?.absent || 0;
-  const lateExcused = status?.late_excused || 0;
-  const absentExcused = status?.absent_excused || 0;
-  const totalSessions = present + late + absent + lateExcused + absentExcused;
-  const attendanceRate = totalSessions > 0 ? Math.round(((present + late + lateExcused) / totalSessions) * 100) : 0;
-
+/* ==============================
+   Stamp component — quick status badge
+   ============================== */
+function Stamp({ status }: { status: string }) {
+  const colorMap: Record<string, string> = {
+    present: "var(--register-stamp-present)",
+    late: "var(--register-stamp-late)",
+    absent: "var(--register-stamp-absent)",
+    late_excused: "var(--register-stamp-excused)",
+    absent_excused: "var(--register-stamp-excused)",
+    no_class: "var(--register-stamp-excused)",
+    holiday: "var(--register-stamp-holiday)",
+    dropout: "var(--register-stamp-absent)",
+    dismissed: "var(--register-stamp-absent)",
+  };
+  const labelMap: Record<string, string> = {
+    present: "Present",
+    late: "Late",
+    absent: "Absent",
+    late_excused: "Excused",
+    absent_excused: "Excused",
+    no_class: "No Class",
+    holiday: "Holiday",
+    dropout: "Dropout",
+    dismissed: "Dismissed",
+  };
+  const color = colorMap[status] || "var(--register-muted-ink)";
+  const label = labelMap[status] || status;
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="text-center p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
-          <CheckCircle className="h-5 w-5 text-green-500 mx-auto mb-1" />
-          <p className="text-xl font-bold text-green-600">{present}</p>
-          <p className="text-xs text-green-700 dark:text-green-400">Present</p>
-        </div>
-        <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-800">
-          <Clock className="h-5 w-5 text-yellow-500 mx-auto mb-1" />
-          <p className="text-xl font-bold text-yellow-600">{late}</p>
-          <p className="text-xs text-yellow-700 dark:text-yellow-400">Late</p>
-        </div>
-        <div className="text-center p-3 bg-red-50 dark:bg-red-950 rounded-lg border border-red-200 dark:border-red-800">
-          <XCircle className="h-5 w-5 text-red-500 mx-auto mb-1" />
-          <p className="text-xl font-bold text-red-600">{absent}</p>
-          <p className="text-xs text-red-700 dark:text-red-400">Absent</p>
-        </div>
-        <div className="text-center p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-          <Clock className="h-5 w-5 text-blue-500 mx-auto mb-1" />
-          <p className="text-xl font-bold text-blue-600">{lateExcused}</p>
-          <p className="text-xs text-blue-700 dark:text-blue-400">Late Excused</p>
-        </div>
-        <div className="text-center p-3 bg-gray-50 dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800 col-span-2 sm:col-span-1">
-          <Info className="h-5 w-5 text-gray-500 mx-auto mb-1" />
-          <p className="text-xl font-bold text-gray-600">{absentExcused}</p>
-          <p className="text-xs text-gray-700 dark:text-gray-400">Absent Excused</p>
-        </div>
-      </div>
-
-      <Card>
-        <CardContent className="pt-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">Attendance Rate</span>
-            <span className="text-xl font-bold">{attendanceRate}%</span>
-          </div>
-          <Progress value={attendanceRate} className="h-2" />
-          <p className="text-xs text-muted-foreground mt-2">
-            Based on attended sessions (Present + Late + Excused)
-          </p>
-        </CardContent>
-      </Card>
-
-      {leaveRequests.length > 0 && (
-        <Alert className="bg-yellow-50 border-yellow-500 dark:bg-yellow-950 dark:border-yellow-800">
-          <CalendarClock className="h-4 w-4" />
-          <AlertTitle className="text-yellow-700 dark:text-yellow-400">
-            Pending Leave Requests
-          </AlertTitle>
-          <AlertDescription className="text-yellow-600 dark:text-yellow-300">
-            You have {leaveRequests.length} pending leave request(s) awaiting approval.
-          </AlertDescription>
-        </Alert>
-      )}
-    </div>
+    <span
+      className="register-status-stamp"
+      style={{
+        borderColor: `hsl(${color})`,
+        color: `hsl(${color})`,
+        backgroundColor: `hsl(${color} / 0.08)`,
+      }}
+    >
+      {label}
+    </span>
   );
 }
 
+function LeaveStatusBadge({ status }: { status: string }) {
+  const colorMap: Record<string, string> = {
+    approved: "var(--register-stamp-present)",
+    rejected: "var(--register-stamp-absent)",
+    pending: "var(--register-stamp-late)",
+  };
+  const color = colorMap[status] || "var(--register-muted-ink)";
+  const label = status.charAt(0).toUpperCase() + status.slice(1);
+  return (
+    <span
+      className="register-status-stamp"
+      style={{
+        borderColor: `hsl(${color})`,
+        color: `hsl(${color})`,
+        backgroundColor: `hsl(${color} / 0.08)`,
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+/* ==============================
+   Period Summary
+   ============================== */
 function PeriodSummary({
   status,
   isLoading,
@@ -589,11 +580,11 @@ function PeriodSummary({
 }) {
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-center text-muted-foreground">Loading summary...</p>
-        </CardContent>
-      </Card>
+      <div className="register-card">
+        <div className="p-4 text-center font-register-body text-sm text-[hsl(var(--muted-foreground))]">
+          Loading summary...
+        </div>
+      </div>
     );
   }
 
@@ -602,48 +593,103 @@ function PeriodSummary({
   const absent = status?.absent || 0;
   const lateExcused = status?.late_excused || 0;
   const absentExcused = status?.absent_excused || 0;
-  const totalSessions = present + late + absent + lateExcused + absentExcused;
-  const attendanceRate = totalSessions > 0 ? Math.round(((present + late + lateExcused) / totalSessions) * 100) : 0;
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">{period} Summary</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="register-card">
+      <div className="px-4 py-2.5 border-b border-[hsl(var(--border))]">
+        <p className="font-register-heading text-xs uppercase tracking-[0.15em] text-[hsl(var(--foreground))]">
+          {period} Summary
+        </p>
+      </div>
+      <div className="p-4">
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center mb-4">
+          {[
+            { label: "Present", value: present, color: "var(--register-stamp-present)" },
+            { label: "Late", value: late, color: "var(--register-stamp-late)" },
+            { label: "Absent", value: absent, color: "var(--register-stamp-absent)" },
+            { label: "Late Ex", value: lateExcused, color: "var(--register-stamp-excused)" },
+            { label: "Abs Ex", value: absentExcused, color: "var(--register-stamp-excused)" },
+          ].map((item) => (
+            <div key={item.label}>
+              <p className="font-register-mono text-xl" style={{ color: `hsl(${item.color})` }}>{item.value}</p>
+              <p className="font-register-mono text-[10px] text-[hsl(var(--muted-foreground))]">{item.label}</p>
+            </div>
+          ))}
           <div>
-            <p className="text-xl sm:text-2xl font-bold text-green-600">{present}</p>
-            <p className="text-xs text-muted-foreground">Present</p>
-          </div>
-          <div>
-            <p className="text-xl sm:text-2xl font-bold text-yellow-600">{late}</p>
-            <p className="text-xs text-muted-foreground">Late</p>
-          </div>
-          <div>
-            <p className="text-xl sm:text-2xl font-bold text-red-600">{absent}</p>
-            <p className="text-xs text-muted-foreground">Absent</p>
-          </div>
-          <div>
-            <p className="text-xl sm:text-2xl font-bold text-blue-600">{lateExcused}</p>
-            <p className="text-xs text-muted-foreground">Late Ex</p>
-          </div>
-          <div>
-            <p className="text-xl sm:text-2xl font-bold text-gray-600">{absentExcused}</p>
-            <p className="text-xs text-muted-foreground">Abs Ex</p>
-          </div>
-          <div>
-            <p className="text-xl sm:text-2xl font-bold">{attendanceRate}%</p>
-            <p className="text-xs text-muted-foreground">Rate</p>
+            <p className="font-register-mono text-xl text-[hsl(var(--primary))]">
+              {(() => {
+                const total = present + late + absent + lateExcused + absentExcused;
+                return total > 0 ? Math.round(((present + late + lateExcused) / total) * 100) : 0;
+              })()}%
+            </p>
+            <p className="font-register-mono text-[10px] text-[hsl(var(--muted-foreground))]">Rate</p>
           </div>
         </div>
-        <div className="h-2 bg-muted rounded-full overflow-hidden">
+        <div className="h-1.5 bg-[hsl(var(--background))] overflow-hidden">
           <div
-            className="h-full bg-green-500 transition-all"
-            style={{ width: `${attendanceRate}%` }}
+            className="h-full bg-[hsl(var(--register-stamp-present))] transition-all duration-500"
+            style={{
+              width: `${(() => {
+                const total = present + late + absent + lateExcused + absentExcused;
+                return total > 0 ? Math.round(((present + late + lateExcused) / total) * 100) : 0;
+              })()}%`,
+            }}
           />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
+  );
+}
+
+/* Icon helpers */
+function SunIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="5" />
+      <line x1="12" y1="1" x2="12" y2="3" />
+      <line x1="12" y1="21" x2="12" y2="23" />
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+      <line x1="1" y1="12" x2="3" y2="12" />
+      <line x1="21" y1="12" x2="23" y2="12" />
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+    </svg>
+  );
+}
+
+function SunsetIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 18a5 5 0 0 0-10 0" />
+      <line x1="12" y1="9" x2="12" y2="3" />
+      <line x1="4.22" y1="10.22" x2="5.64" y2="11.64" />
+      <line x1="1" y1="18" x2="3" y2="18" />
+      <line x1="21" y1="18" x2="23" y2="18" />
+      <line x1="18.36" y1="11.64" x2="19.78" y2="10.22" />
+      <line x1="23" y1="22" x2="1" y2="22" />
+      <polyline points="16 5 12 9 8 5" />
+    </svg>
+  );
+}
+
+function BarChart3({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="3" y1="20" x2="3" y2="10" />
+      <line x1="9" y1="20" x2="9" y2="4" />
+      <line x1="15" y1="20" x2="15" y2="8" />
+      <line x1="21" y1="20" x2="21" y2="12" />
+    </svg>
+  );
+}
+
+function AlertTriangle({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
   );
 }

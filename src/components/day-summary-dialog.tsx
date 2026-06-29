@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { getTodayOverview, type TodayOverview, type Holiday } from "@/lib/api";
 import { Sun, Sunset, Users, Calendar, Loader2, Star, Trash2 } from "lucide-react";
 
@@ -16,6 +15,68 @@ interface DaySummaryDialogProps {
   holiday?: Holiday | null;
   onMarkAsHoliday?: (date: string) => void;
   onRemoveHoliday?: (holidayId: string) => void;
+}
+
+function StatCard({ count, label, stamp }: { count: number; label: string; stamp: string }) {
+  const colors: Record<string, string> = {
+    present: "bg-[hsl(var(--register-stamp-present)_/_0.1)] text-[hsl(var(--register-stamp-present))] border-[hsl(var(--register-stamp-present)_/_0.2)]",
+    late: "bg-[hsl(var(--register-stamp-late)_/_0.1)] text-[hsl(var(--register-stamp-late))] border-[hsl(var(--register-stamp-late)_/_0.2)]",
+    absent: "bg-[hsl(var(--register-stamp-absent)_/_0.1)] text-[hsl(var(--register-stamp-absent))] border-[hsl(var(--register-stamp-absent)_/_0.2)]",
+    excused: "bg-[hsl(var(--register-stamp-excused)_/_0.1)] text-[hsl(var(--register-stamp-excused))] border-[hsl(var(--register-stamp-excused)_/_0.2)]",
+    holiday: "bg-[hsl(var(--register-stamp-holiday)_/_0.1)] text-[hsl(var(--register-stamp-holiday))] border-[hsl(var(--register-stamp-holiday)_/_0.2)]",
+  };
+  const colorClass = colors[stamp] || "bg-muted text-muted-foreground border-muted";
+
+  return (
+    <div className={`p-2 rounded border text-center ${colorClass}`}>
+      <p className="font-register-mono text-lg font-bold">{count}</p>
+      <p className="font-register-body text-xs">{label}</p>
+    </div>
+  );
+}
+
+function HolidayStamp({ name, description, startDate, endDate }: { name: string; description?: string; startDate?: string; endDate?: string }) {
+  return (
+    <div className="text-center p-6 rounded border border-[hsl(var(--register-stamp-holiday)_/_0.3)] bg-[hsl(var(--register-stamp-holiday)_/_0.08)]">
+      <Star className="h-10 w-10 mx-auto mb-3 text-[hsl(var(--register-stamp-holiday))]" />
+      <h3 className="font-register-heading text-lg text-[hsl(var(--register-stamp-holiday))]">{name}</h3>
+      {description && (
+        <p className="font-register-body text-sm text-muted-foreground mt-2">{description}</p>
+      )}
+      {startDate !== endDate && startDate && endDate && (
+        <p className="font-register-mono text-xs text-muted-foreground mt-2">{startDate} to {endDate}</p>
+      )}
+    </div>
+  );
+}
+
+function getSessionStats(students: TodayOverview["students"], session: "morning" | "afternoon") {
+  const present = students.filter((s) => s[session] === "present").length;
+  const late = students.filter((s) => s[session] === "late").length;
+  const absent = students.filter((s) => s[session] === "absent").length;
+  const lateExcused = students.filter((s) => s[session] === "late_excused").length;
+  const absentExcused = students.filter((s) => s[session] === "absent_excused").length;
+  const noClass = students.filter((s) => s[session] === "no_class").length;
+  const holiday = students.filter((s) => s[session] === "holiday").length;
+  const dropout = students.filter((s) => s[session] === "dropout").length;
+  const dismissed = students.filter((s) => s[session] === "dismissed").length;
+  const total = students.length;
+  const attended = present + late + lateExcused + absentExcused;
+  const rate = total > 0 ? Math.round((attended / total) * 100) : 0;
+  const absentStudents = students.filter((s) => s[session] === "absent");
+  return { present, late, absent, lateExcused, absentExcused, noClass, holiday, dropout, dismissed, total, attended, rate, absentStudents };
+}
+
+function AttendanceRateBadge({ rate }: { rate: number }) {
+  const color = rate >= 90 ? "var(--register-stamp-present)" : rate >= 70 ? "var(--register-stamp-late)" : "var(--register-stamp-absent)";
+  return (
+    <span
+      className="font-register-mono text-xs px-2 py-0.5 rounded border"
+      style={{ color: `hsl(${color})`, borderColor: `hsl(${color} / 0.3)`, backgroundColor: `hsl(${color} / 0.08)` }}
+    >
+      {rate}%
+    </span>
+  );
 }
 
 export function DaySummaryDialog({
@@ -60,39 +121,6 @@ export function DaySummaryDialog({
     });
   };
 
-  const getSessionStats = (students: TodayOverview["students"], session: "morning" | "afternoon") => {
-    const present = students.filter((s) => s[session] === "present").length;
-    const late = students.filter((s) => s[session] === "late").length;
-    const absent = students.filter((s) => s[session] === "absent").length;
-    const lateExcused = students.filter((s) => s[session] === "late_excused").length;
-    const absentExcused = students.filter((s) => s[session] === "absent_excused").length;
-    const noClass = students.filter((s) => s[session] === "no_class").length;
-    const holiday = students.filter((s) => s[session] === "holiday").length;
-    const dropout = students.filter((s) => s[session] === "dropout").length;
-    const dismissed = students.filter((s) => s[session] === "dismissed").length;
-    const total = students.length;
-    const attended = present + late + lateExcused + absentExcused;
-    const rate = total > 0 ? Math.round((attended / total) * 100) : 0;
-    const absentStudents = students.filter((s) => s[session] === "absent");
-
-    return { present, late, absent, lateExcused, absentExcused, noClass, holiday, dropout, dismissed, total, attended, rate, absentStudents };
-  };
-
-  const handleMarkAttendance = () => {
-    onMarkAttendance();
-    onOpenChange(false);
-  };
-
-  const handleMarkAsHoliday = () => {
-    onMarkAsHoliday?.(date);
-  };
-
-  const handleRemoveHoliday = () => {
-    if (holiday?._id) {
-      onRemoveHoliday?.(holiday._id);
-    }
-  };
-
   const morningStats = overview ? getSessionStats(overview.students, "morning") : null;
   const afternoonStats = overview ? getSessionStats(overview.students, "afternoon") : null;
 
@@ -100,17 +128,17 @@ export function DaySummaryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 font-register-heading">
             <Calendar className="h-5 w-5" />
             {formatDate(date)}
             {isHoliday && (
-              <Badge className="bg-purple-500 text-white ml-2">
-                <Star className="h-3 w-3 mr-1 fill-yellow-300 text-yellow-300" />
+              <span className="font-register-mono text-xs px-2 py-0.5 rounded border border-[hsl(var(--register-stamp-holiday)_/_0.3)] bg-[hsl(var(--register-stamp-holiday)_/_0.1)] text-[hsl(var(--register-stamp-holiday))] flex items-center gap-1">
+                <Star className="h-3 w-3 fill-current" />
                 Holiday
-              </Badge>
+              </span>
             )}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="font-register-mono text-xs">
             Cohort {cohort}
             {isHoliday && holiday && ` • ${holiday.name}`}
           </DialogDescription>
@@ -122,69 +150,41 @@ export function DaySummaryDialog({
           </div>
         ) : isHoliday ? (
           <div className="space-y-4 py-4">
-            <div className="text-center p-6 bg-purple-50 dark:bg-purple-950 rounded-lg">
-              <Star className="h-12 w-12 mx-auto mb-3 text-purple-500 fill-purple-200" />
-              <h3 className="text-lg font-semibold text-purple-700 dark:text-purple-300">
-                {holiday?.name || "Holiday"}
-              </h3>
-              {holiday?.description && (
-                <p className="text-sm text-muted-foreground mt-2">{holiday.description}</p>
-              )}
-              {holiday?.start_date !== holiday?.end_date && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  {holiday?.start_date} to {holiday?.end_date}
-                </p>
-              )}
-            </div>
-            <p className="text-center text-sm text-muted-foreground">
+            <HolidayStamp
+              name={holiday?.name || "Holiday"}
+              description={holiday?.description}
+              startDate={holiday?.start_date}
+              endDate={holiday?.end_date}
+            />
+            <p className="text-center font-register-body text-sm text-muted-foreground">
               Attendance is disabled for this day.
             </p>
           </div>
         ) : overview ? (
           <div className="space-y-6">
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Sun className="h-4 w-4 text-orange-500" />
+              <div className="flex items-center gap-2 font-register-body text-sm font-medium">
+                <Sun className="h-4 w-4 text-[hsl(var(--register-stamp-late))]" />
                 Morning Session
               </div>
               {morningStats && (
                 <>
-                  <div className="grid grid-cols-4 gap-2 text-center">
-                    <div className="p-2 bg-green-50 dark:bg-green-950 rounded">
-                      <p className="text-lg font-bold text-green-600">{morningStats.present}</p>
-                      <p className="text-xs text-muted-foreground">Present</p>
-                    </div>
-                    <div className="p-2 bg-yellow-50 dark:bg-yellow-950 rounded">
-                      <p className="text-lg font-bold text-yellow-600">{morningStats.late}</p>
-                      <p className="text-xs text-muted-foreground">Late</p>
-                    </div>
-                    <div className="p-2 bg-red-50 dark:bg-red-950 rounded">
-                      <p className="text-lg font-bold text-red-600">{morningStats.absent}</p>
-                      <p className="text-xs text-muted-foreground">Absent</p>
-                    </div>
-                    <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded">
-                      <p className="text-lg font-bold text-blue-600">{morningStats.lateExcused + morningStats.absentExcused}</p>
-                      <p className="text-xs text-muted-foreground">Excused</p>
-                    </div>
-                    <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded">
-                      <p className="text-lg font-bold text-purple-600">{morningStats.noClass}</p>
-                      <p className="text-xs text-muted-foreground">No Class</p>
-                    </div>
-                    <div className="p-2 bg-orange-50 dark:bg-orange-950 rounded">
-                      <p className="text-lg font-bold text-orange-600">{morningStats.holiday}</p>
-                      <p className="text-xs text-muted-foreground">Holiday</p>
-                    </div>
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
+                    <StatCard count={morningStats.present} label="Present" stamp="present" />
+                    <StatCard count={morningStats.late} label="Late" stamp="late" />
+                    <StatCard count={morningStats.absent} label="Absent" stamp="absent" />
+                    <StatCard count={morningStats.lateExcused + morningStats.absentExcused} label="Excused" stamp="excused" />
+                    <StatCard count={morningStats.noClass} label="No Class" stamp="holiday" />
+                    <StatCard count={morningStats.holiday} label="Holiday" stamp="holiday" />
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Attendance Rate</span>
-                    <Badge variant={morningStats.rate >= 90 ? "default" : morningStats.rate >= 70 ? "secondary" : "destructive"}>
-                      {morningStats.rate}%
-                    </Badge>
+                  <div className="flex items-center justify-between">
+                    <span className="font-register-body text-sm text-muted-foreground">Attendance Rate</span>
+                    <AttendanceRateBadge rate={morningStats.rate} />
                   </div>
                   {morningStats.absentStudents.length > 0 && (
-                    <div className="text-sm">
+                    <div className="font-register-body text-sm">
                       <p className="text-muted-foreground mb-1">Absent Students:</p>
-                      <ul className="text-xs space-y-0.5">
+                      <ul className="font-register-mono text-xs space-y-0.5">
                         {morningStats.absentStudents.map((s) => (
                           <li key={s.user_id} className="flex items-center gap-2">
                             <span className="text-muted-foreground">{s.jsd_number}</span>
@@ -195,55 +195,35 @@ export function DaySummaryDialog({
                     </div>
                   )}
                   {morningStats.absentStudents.length === 0 && morningStats.attended > 0 && (
-                    <p className="text-sm text-green-600">All students attended!</p>
+                    <p className="font-register-body text-sm text-[hsl(var(--register-stamp-present))]">All students attended!</p>
                   )}
                 </>
               )}
             </div>
 
-            <div className="border-t pt-4 space-y-3">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Sunset className="h-4 w-4 text-purple-500" />
+            <div className="border-t border-register-border/20 pt-4 space-y-3">
+              <div className="flex items-center gap-2 font-register-body text-sm font-medium">
+                <Sunset className="h-4 w-4 text-[hsl(var(--register-stamp-excused))]" />
                 Afternoon Session
               </div>
               {afternoonStats && (
                 <>
-                  <div className="grid grid-cols-4 gap-2 text-center">
-                    <div className="p-2 bg-green-50 dark:bg-green-950 rounded">
-                      <p className="text-lg font-bold text-green-600">{afternoonStats.present}</p>
-                      <p className="text-xs text-muted-foreground">Present</p>
-                    </div>
-                    <div className="p-2 bg-yellow-50 dark:bg-yellow-950 rounded">
-                      <p className="text-lg font-bold text-yellow-600">{afternoonStats.late}</p>
-                      <p className="text-xs text-muted-foreground">Late</p>
-                    </div>
-                    <div className="p-2 bg-red-50 dark:bg-red-950 rounded">
-                      <p className="text-lg font-bold text-red-600">{afternoonStats.absent}</p>
-                      <p className="text-xs text-muted-foreground">Absent</p>
-                    </div>
-                    <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded">
-                      <p className="text-lg font-bold text-blue-600">{afternoonStats.lateExcused + afternoonStats.absentExcused}</p>
-                      <p className="text-xs text-muted-foreground">Excused</p>
-                    </div>
-                    <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded">
-                      <p className="text-lg font-bold text-purple-600">{afternoonStats.noClass}</p>
-                      <p className="text-xs text-muted-foreground">No Class</p>
-                    </div>
-                    <div className="p-2 bg-orange-50 dark:bg-orange-950 rounded">
-                      <p className="text-lg font-bold text-orange-600">{afternoonStats.holiday}</p>
-                      <p className="text-xs text-muted-foreground">Holiday</p>
-                    </div>
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
+                    <StatCard count={afternoonStats.present} label="Present" stamp="present" />
+                    <StatCard count={afternoonStats.late} label="Late" stamp="late" />
+                    <StatCard count={afternoonStats.absent} label="Absent" stamp="absent" />
+                    <StatCard count={afternoonStats.lateExcused + afternoonStats.absentExcused} label="Excused" stamp="excused" />
+                    <StatCard count={afternoonStats.noClass} label="No Class" stamp="holiday" />
+                    <StatCard count={afternoonStats.holiday} label="Holiday" stamp="holiday" />
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Attendance Rate</span>
-                    <Badge variant={afternoonStats.rate >= 90 ? "default" : afternoonStats.rate >= 70 ? "secondary" : "destructive"}>
-                      {afternoonStats.rate}%
-                    </Badge>
+                  <div className="flex items-center justify-between">
+                    <span className="font-register-body text-sm text-muted-foreground">Attendance Rate</span>
+                    <AttendanceRateBadge rate={afternoonStats.rate} />
                   </div>
                   {afternoonStats.absentStudents.length > 0 && (
-                    <div className="text-sm">
+                    <div className="font-register-body text-sm">
                       <p className="text-muted-foreground mb-1">Absent Students:</p>
-                      <ul className="text-xs space-y-0.5">
+                      <ul className="font-register-mono text-xs space-y-0.5">
                         {afternoonStats.absentStudents.map((s) => (
                           <li key={s.user_id} className="flex items-center gap-2">
                             <span className="text-muted-foreground">{s.jsd_number}</span>
@@ -254,14 +234,14 @@ export function DaySummaryDialog({
                     </div>
                   )}
                   {afternoonStats.absentStudents.length === 0 && afternoonStats.attended > 0 && (
-                    <p className="text-sm text-green-600">All students attended!</p>
+                    <p className="font-register-body text-sm text-[hsl(var(--register-stamp-present))]">All students attended!</p>
                   )}
                 </>
               )}
             </div>
 
-            <div className="border-t pt-4">
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="border-t border-register-border/20 pt-4">
+              <div className="flex items-center gap-4 font-register-body text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Users className="h-4 w-4" />
                   <span>Total Students: {overview.students.length}</span>
@@ -270,27 +250,27 @@ export function DaySummaryDialog({
             </div>
           </div>
         ) : (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-muted-foreground font-register-body">
             No data available for this date
           </div>
         )}
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="font-register-mono text-xs">
             Close
           </Button>
           {isHoliday ? (
-            <Button variant="destructive" onClick={handleRemoveHoliday}>
+            <Button variant="destructive" onClick={() => holiday?._id && onRemoveHoliday?.(holiday._id)} className="font-register-mono text-xs">
               <Trash2 className="h-4 w-4 mr-2" />
               Remove Holiday
             </Button>
           ) : (
             <>
-              <Button variant="outline" onClick={handleMarkAsHoliday}>
+              <Button variant="outline" onClick={() => onMarkAsHoliday?.(date)} className="font-register-mono text-xs">
                 <Star className="h-4 w-4 mr-2" />
                 Mark as Holiday
               </Button>
-              <Button onClick={handleMarkAttendance}>
+              <Button onClick={handleMarkAttendance} className="font-register-mono text-xs">
                 Mark/Edit Attendance
               </Button>
             </>
@@ -299,4 +279,9 @@ export function DaySummaryDialog({
       </DialogContent>
     </Dialog>
   );
+
+  function handleMarkAttendance() {
+    onMarkAttendance();
+    onOpenChange(false);
+  }
 }

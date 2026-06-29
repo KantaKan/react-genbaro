@@ -22,17 +22,33 @@ interface EditDayDialogProps {
 }
 
 const STATUS_OPTIONS = [
-  { value: "present", label: "Present", color: "text-green-600" },
-  { value: "late", label: "Late", color: "text-yellow-600" },
-  { value: "absent", label: "Absent", color: "text-red-600" },
-  { value: "late_excused", label: "Late (Excused)", color: "text-blue-600" },
-  { value: "absent_excused", label: "Absent (Excused)", color: "text-gray-600" },
-  { value: "no_class", label: "No Class", color: "text-purple-600" },
-  { value: "holiday", label: "Holiday", color: "text-orange-600" },
-  { value: "dropout", label: "Dropout", color: "text-red-700" },
-  { value: "dismissed", label: "Dismissed", color: "text-red-800" },
-  { value: "", label: "Clear / Unset", color: "text-muted-foreground" },
+  { value: "present", label: "Present", stamp: "present" },
+  { value: "late", label: "Late", stamp: "late" },
+  { value: "absent", label: "Absent", stamp: "absent" },
+  { value: "late_excused", label: "Late (Excused)", stamp: "excused" },
+  { value: "absent_excused", label: "Absent (Excused)", stamp: "excused" },
+  { value: "no_class", label: "No Class", stamp: "holiday" },
+  { value: "holiday", label: "Holiday", stamp: "holiday" },
+  { value: "dropout", label: "Dropout", stamp: "absent" },
+  { value: "dismissed", label: "Dismissed", stamp: "absent" },
+  { value: "", label: "Clear / Unset", stamp: "" },
 ];
+
+const STATUS_STAMP_COLORS: Record<string, string> = {
+  present: "bg-[hsl(var(--register-stamp-present))] border-[hsl(var(--register-stamp-present))]",
+  late: "bg-[hsl(var(--register-stamp-late))] border-[hsl(var(--register-stamp-late))]",
+  absent: "bg-[hsl(var(--register-stamp-absent))] border-[hsl(var(--register-stamp-absent))]",
+  excused: "bg-[hsl(var(--register-stamp-excused))] border-[hsl(var(--register-stamp-excused))]",
+  holiday: "bg-[hsl(var(--register-stamp-holiday))] border-[hsl(var(--register-stamp-holiday))]",
+};
+
+function StatusStamp({ stamp }: { stamp: string }) {
+  if (!stamp) return null;
+  const color = STATUS_STAMP_COLORS[stamp] || "bg-muted border-muted";
+  return (
+    <span className={`inline-block w-2.5 h-2.5 rounded-full border ${color}`} />
+  );
+}
 
 export function EditDayDialog({
   open,
@@ -92,24 +108,27 @@ export function EditDayDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>Edit Attendance</DialogTitle>
-          <DialogDescription>{formatDate(date)}</DialogDescription>
+          <DialogTitle className="font-register-heading">Edit Attendance</DialogTitle>
+          <DialogDescription className="font-register-mono text-xs">{formatDate(date)}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Sun className="h-4 w-4 text-orange-500" />
-              <Label>Morning Session</Label>
+              <Sun className="h-4 w-4 text-[hsl(var(--register-stamp-late))]" />
+              <Label className="font-register-body text-sm font-medium">Morning Session</Label>
             </div>
             <Select value={morning} onValueChange={setMorning}>
-              <SelectTrigger>
+              <SelectTrigger className="font-register-mono text-xs">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
                 {STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value || "clear"} value={opt.value || "clear"}>
-                    <span className={opt.color}>{opt.label}</span>
+                  <SelectItem key={opt.value || "clear"} value={opt.value || "clear"} className="font-register-mono text-xs">
+                    <span className="flex items-center gap-2">
+                      <StatusStamp stamp={opt.stamp} />
+                      {opt.label}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -118,17 +137,20 @@ export function EditDayDialog({
 
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Sunset className="h-4 w-4 text-purple-500" />
-              <Label>Afternoon Session</Label>
+              <Sunset className="h-4 w-4 text-[hsl(var(--register-stamp-excused))]" />
+              <Label className="font-register-body text-sm font-medium">Afternoon Session</Label>
             </div>
             <Select value={afternoon} onValueChange={setAfternoon}>
-              <SelectTrigger>
+              <SelectTrigger className="font-register-mono text-xs">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
                 {STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value || "clear-afternoon"} value={opt.value || "clear-afternoon"}>
-                    <span className={opt.color}>{opt.label}</span>
+                  <SelectItem key={opt.value || "clear-afternoon"} value={opt.value || "clear-afternoon"} className="font-register-mono text-xs">
+                    <span className="flex items-center gap-2">
+                      <StatusStamp stamp={opt.stamp} />
+                      {opt.label}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -137,10 +159,10 @@ export function EditDayDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="font-register-mono text-xs">
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={isSubmitting}>
+          <Button onClick={handleSave} disabled={isSubmitting} className="font-register-mono text-xs">
             {isSubmitting ? "Saving..." : "Save Changes"}
           </Button>
         </DialogFooter>

@@ -3,11 +3,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "react-toastify";
 import {
   getStudentAttendanceHistory,
@@ -23,12 +21,12 @@ import {
   XCircle,
   Clock,
   Calendar,
-  AlertTriangle,
   ChevronDown,
   Trash2,
   User,
   UserX,
   UserMinus,
+  FileText,
 } from "lucide-react";
 import { AttendanceCalendar } from "@/components/attendance-calendar";
 import { EditDayDialog } from "@/components/edit-day-dialog";
@@ -39,41 +37,76 @@ const getCurrentMonth = () => {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 };
 
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case "present":
-      return <Badge className="bg-green-500 hover:bg-green-600">Present</Badge>;
-    case "late":
-      return <Badge className="bg-yellow-500 hover:bg-yellow-600">Late</Badge>;
-    case "absent":
-      return <Badge className="bg-red-500 hover:bg-red-600">Absent</Badge>;
-    case "late_excused":
-      return <Badge className="bg-blue-500 hover:bg-blue-600">Late (Excused)</Badge>;
-    case "absent_excused":
-      return <Badge className="bg-gray-500 hover:bg-gray-600">Absent (Excused)</Badge>;
-    case "no_class":
-      return <Badge className="bg-purple-500 hover:bg-purple-600">No Class</Badge>;
-    case "holiday":
-      return <Badge className="bg-orange-500 hover:bg-orange-600">Holiday</Badge>;
-    case "dropout":
-      return <Badge className="bg-red-700 hover:bg-red-800">Dropout</Badge>;
-    case "dismissed":
-      return <Badge className="bg-red-800 hover:bg-red-900">Dismissed</Badge>;
-    default:
-      return <Badge variant="outline">{status}</Badge>;
-  }
-};
+function StatusStamp({ status }: { status: string }) {
+  const colorMap: Record<string, string> = {
+    present: "var(--register-stamp-present)",
+    late: "var(--register-stamp-late)",
+    absent: "var(--register-stamp-absent)",
+    late_excused: "var(--register-stamp-excused)",
+    absent_excused: "var(--register-stamp-excused)",
+    no_class: "var(--register-stamp-excused)",
+    holiday: "var(--register-stamp-holiday)",
+    dropout: "var(--register-stamp-absent)",
+    dismissed: "var(--register-stamp-absent)",
+  };
+  const labelMap: Record<string, string> = {
+    present: "Present",
+    late: "Late",
+    absent: "Absent",
+    late_excused: "Late Ex",
+    absent_excused: "Abs Ex",
+    no_class: "No Class",
+    holiday: "Holiday",
+    dropout: "Dropout",
+    dismissed: "Dismissed",
+  };
+  const color = colorMap[status] || "var(--register-muted-ink)";
+  const label = labelMap[status] || status;
+  return (
+    <span
+      className="register-status-stamp"
+      style={{
+        borderColor: `hsl(${color})`,
+        color: `hsl(${color})`,
+        backgroundColor: `hsl(${color} / 0.08)`,
+      }}
+    >
+      {label}
+    </span>
+  );
+}
 
-const getWarningBadge = (level: string) => {
-  switch (level) {
-    case "red":
-      return <Badge className="bg-red-500">Critical Warning</Badge>;
-    case "yellow":
-      return <Badge className="bg-yellow-500">Warning</Badge>;
-    default:
-      return <Badge className="bg-green-500">Good Standing</Badge>;
+function WarningStamp({ level }: { level: string }) {
+  if (level === "red") {
+    return <span className="font-register-mono text-[10px] uppercase bg-[hsl(var(--register-stamp-absent))]/10 text-[hsl(var(--register-stamp-absent))] px-2 py-1">Critical Warning</span>;
   }
-};
+  if (level === "yellow") {
+    return <span className="font-register-mono text-[10px] uppercase bg-[hsl(var(--register-stamp-late))]/10 text-[hsl(var(--register-stamp-late))] px-2 py-1">Warning</span>;
+  }
+  return <span className="font-register-mono text-[10px] uppercase text-[hsl(var(--register-stamp-present))]">Good Standing</span>;
+}
+
+function LeaveStatusStamp({ status }: { status: string }) {
+  const colorMap: Record<string, string> = {
+    approved: "var(--register-stamp-present)",
+    rejected: "var(--register-stamp-absent)",
+    pending: "var(--register-stamp-late)",
+  };
+  const color = colorMap[status] || "var(--register-muted-ink)";
+  const label = status.charAt(0).toUpperCase() + status.slice(1);
+  return (
+    <span
+      className="register-status-stamp"
+      style={{
+        borderColor: `hsl(${color})`,
+        color: `hsl(${color})`,
+        backgroundColor: `hsl(${color} / 0.08)`,
+      }}
+    >
+      {label}
+    </span>
+  );
+}
 
 export function StudentAttendanceDetail() {
   const { id } = useParams<{ id: string }>();
@@ -92,9 +125,7 @@ export function StudentAttendanceDetail() {
   } | null>(null);
 
   useEffect(() => {
-    if (id) {
-      loadData();
-    }
+    if (id) loadData();
   }, [id]);
 
   const loadData = async () => {
@@ -102,7 +133,6 @@ export function StudentAttendanceDetail() {
     try {
       const history = await getStudentAttendanceHistory(id!);
       setRecords(history);
-
       if (history.length > 0) {
         setStudentInfo({
           first_name: history[0].first_name,
@@ -111,15 +141,13 @@ export function StudentAttendanceDetail() {
           cohort_number: history[0].cohort_number,
         });
       }
-
       try {
         const leaves = await getAllLeaveRequests();
-        const studentLeaves = leaves.filter((l) => l.user_id === id);
-        setLeaveRequests(studentLeaves);
+        setLeaveRequests(leaves.filter((l) => l.user_id === id));
       } catch {
         setLeaveRequests([]);
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to load attendance data");
     } finally {
       setIsLoading(false);
@@ -134,11 +162,9 @@ export function StudentAttendanceDetail() {
     const absentExcused = records.filter((r) => r.status === "absent_excused").length;
     const total = present + late + absent + lateExcused + absentExcused;
     const rate = total > 0 ? Math.round(((present + late + lateExcused + absentExcused) / total) * 100) : 0;
-
     let warningLevel = "normal";
     if (absent >= 7) warningLevel = "red";
     else if (absent >= 4) warningLevel = "yellow";
-
     return { present, late, absent, lateExcused, absentExcused, total, rate, warningLevel };
   };
 
@@ -156,7 +182,7 @@ export function StudentAttendanceDetail() {
       await manualMarkAttendance(id!, records.find((r) => r._id === recordId)?.date || "", session, status);
       toast.success("Attendance updated");
       loadData();
-    } catch (error) {
+    } catch {
       toast.error("Failed to update attendance");
     }
   };
@@ -166,7 +192,7 @@ export function StudentAttendanceDetail() {
       await deleteAttendanceRecord(recordId);
       toast.success("Attendance cleared");
       loadData();
-    } catch (error) {
+    } catch {
       toast.error("Failed to clear attendance");
     }
   };
@@ -184,7 +210,6 @@ export function StudentAttendanceDetail() {
   }));
 
   const stats = calculateStats();
-
   const selectedDateRecords = selectedDate ? getRecordsForDate(selectedDate) : { morning: null, afternoon: null };
 
   const filteredRecords = records
@@ -195,249 +220,220 @@ export function StudentAttendanceDetail() {
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  if (isLoading) {
-    return <PageLoading label="Loading attendance..." />;
-  }
+  if (isLoading) return <PageLoading label="Loading attendance..." />;
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
-      </div>
+    <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-1.5 font-register-body text-xs text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] transition-colors"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Back
+      </button>
 
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-            <User className="h-8 w-8 text-primary" />
+          <div className="h-14 w-14 rounded-full bg-[hsl(var(--primary))]/10 flex items-center justify-center">
+            <User className="h-7 w-7 text-[hsl(var(--primary))]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">
+            <h1 className="font-register-heading text-2xl text-[hsl(var(--foreground))]">
               {studentInfo?.first_name} {studentInfo?.last_name}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="font-register-mono text-xs text-[hsl(var(--muted-foreground))] mt-0.5">
               {studentInfo?.jsd_number} | Cohort {studentInfo?.cohort_number}
             </p>
           </div>
         </div>
-        <div>{getWarningBadge(stats.warningLevel)}</div>
+        <WarningStamp level={stats.warningLevel} />
       </div>
+
+      <div className="register-divider" />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <Card className="border-green-200 dark:border-green-800">
-          <CardContent className="pt-4 pb-3 text-center">
-            <CheckCircle className="h-5 w-5 text-green-500 mx-auto mb-1" />
-            <p className="text-2xl font-bold text-green-600">{stats.present}</p>
-            <p className="text-xs text-muted-foreground">Present</p>
-          </CardContent>
-        </Card>
-        <Card className="border-yellow-200 dark:border-yellow-800">
-          <CardContent className="pt-4 pb-3 text-center">
-            <Clock className="h-5 w-5 text-yellow-500 mx-auto mb-1" />
-            <p className="text-2xl font-bold text-yellow-600">{stats.late}</p>
-            <p className="text-xs text-muted-foreground">Late</p>
-          </CardContent>
-        </Card>
-        <Card className="border-red-200 dark:border-red-800">
-          <CardContent className="pt-4 pb-3 text-center">
-            <XCircle className="h-5 w-5 text-red-500 mx-auto mb-1" />
-            <p className="text-2xl font-bold text-red-600">{stats.absent}</p>
-            <p className="text-xs text-muted-foreground">Absent</p>
-          </CardContent>
-        </Card>
-        <Card className="border-blue-200 dark:border-blue-800">
-          <CardContent className="pt-4 pb-3 text-center">
-            <Calendar className="h-5 w-5 text-blue-500 mx-auto mb-1" />
-            <p className="text-2xl font-bold text-blue-600">{stats.lateExcused + stats.absentExcused}</p>
-            <p className="text-xs text-muted-foreground">Excused</p>
-          </CardContent>
-        </Card>
-        <Card className="col-span-2 sm:col-span-1 border-primary/20">
-          <CardContent className="pt-4 pb-3 text-center">
-            <p className="text-2xl font-bold">{stats.rate}%</p>
-            <p className="text-xs text-muted-foreground">Attendance Rate</p>
-          </CardContent>
-        </Card>
+        {[
+          { label: "Present", value: stats.present, color: "var(--register-stamp-present)" },
+          { label: "Late", value: stats.late, color: "var(--register-stamp-late)" },
+          { label: "Absent", value: stats.absent, color: "var(--register-stamp-absent)" },
+          { label: "Excused", value: stats.lateExcused + stats.absentExcused, color: "var(--register-stamp-excused)" },
+          { label: "Rate", value: `${stats.rate}%`, color: "var(--register-brass)" },
+        ].map((item) => (
+          <div
+            key={item.label}
+            className="register-card text-center"
+          >
+            <div className="p-3">
+              <p className="font-register-mono text-xl" style={{ color: `hsl(${item.color})` }}>{item.value}</p>
+              <p className="font-register-mono text-[10px] text-[hsl(var(--muted-foreground))] mt-0.5">{item.label}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
+      <div className="register-card">
+        <div className="px-4 py-2.5 border-b border-[hsl(var(--border))]">
+          <p className="font-register-heading text-xs uppercase tracking-[0.15em] text-[hsl(var(--foreground))]">
+            <Calendar className="h-3.5 w-3.5 inline mr-1.5" />
             Attendance Calendar
-          </CardTitle>
-          <CardDescription>Click on a day to edit attendance</CardDescription>
-        </CardHeader>
-        <CardContent>
+          </p>
+          <p className="font-register-mono text-[10px] text-[hsl(var(--muted-foreground))] mt-0.5">
+            Click a day to edit
+          </p>
+        </div>
+        <div className="p-4">
           <AttendanceCalendar
             records={calendarRecords}
             currentMonth={currentMonth}
             onMonthChange={setCurrentMonth}
             onDayClick={handleDayClick}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Tabs defaultValue="records" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="records">Attendance Records</TabsTrigger>
-          <TabsTrigger value="leave-requests">Leave Requests</TabsTrigger>
+        <TabsList className="border border-[hsl(var(--border))] rounded-none bg-[hsl(var(--card))]">
+          {["records", "leave-requests"].map((tab) => (
+            <TabsTrigger
+              key={tab}
+              value={tab}
+              className="font-register-heading text-[10px] uppercase tracking-[0.15em] data-[state=active]:bg-[hsl(var(--primary))] data-[state=active]:text-[hsl(var(--primary-foreground))] rounded-none"
+            >
+              {tab === "records" ? "Attendance Records" : "Leave Requests"}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
         <TabsContent value="records">
-          <Card>
-            <CardHeader>
-              <CardTitle>Attendance Records - {currentMonth}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {filteredRecords.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">No records for this month</p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Session</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Marked By</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredRecords.map((record) => (
-                      <TableRow key={record._id}>
-                        <TableCell>
-                          {new Date(record.date).toLocaleDateString("en-US", {
-                            weekday: "short",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </TableCell>
-                        <TableCell className="capitalize">{record.session}</TableCell>
-                        <TableCell>{getStatusBadge(record.status)}</TableCell>
-                        <TableCell className="capitalize">{record.marked_by}</TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                Edit <ChevronDown className="h-3 w-3 ml-1" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+          <div className="register-card">
+            <div className="px-4 py-2.5 border-b border-[hsl(var(--border))]">
+              <span className="font-register-heading text-xs uppercase tracking-[0.15em] text-[hsl(var(--foreground))]">
+                Records — {currentMonth}
+              </span>
+            </div>
+            {filteredRecords.length === 0 ? (
+              <div className="text-center py-8 font-register-body text-sm text-[hsl(var(--muted-foreground))]">
+                No records for this month
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-4 px-4 py-1.5 border-b border-[hsl(var(--border))] bg-[hsl(var(--secondary))] font-register-mono text-[10px] uppercase tracking-[0.1em] text-[hsl(var(--muted-foreground))]">
+                  <span className="flex-1">Date</span>
+                  <span className="w-20 text-center">Session</span>
+                  <span className="w-24 text-center">Status</span>
+                  <span className="w-20 text-center">Marked By</span>
+                  <span className="w-24 text-center">Actions</span>
+                </div>
+                <div className="border-t border-[hsl(var(--border))]">
+                  {filteredRecords.map((record) => (
+                    <div
+                      key={record._id}
+                      className="flex items-center gap-4 px-4 py-2 border-b border-[hsl(var(--border))]/50 last:border-b-0 hover:bg-[hsl(var(--primary))]/[0.02] transition-colors"
+                    >
+                      <span className="font-register-mono text-xs text-[hsl(var(--foreground))] flex-1">
+                        {new Date(record.date).toLocaleDateString("en-US", {
+                          weekday: "short", month: "short", day: "numeric",
+                        })}
+                      </span>
+                      <span className="w-20 text-center font-register-mono text-xs capitalize text-[hsl(var(--foreground))]">
+                        {record.session}
+                      </span>
+                      <span className="w-24 text-center flex justify-center">
+                        <StatusStamp status={record.status} />
+                      </span>
+                      <span className="w-20 text-center font-register-mono text-xs capitalize text-[hsl(var(--foreground))]">
+                        {record.marked_by}
+                      </span>
+                      <div className="w-24 text-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="px-2 py-1 border border-[hsl(var(--border))] font-register-mono text-[10px] text-[hsl(var(--foreground))] hover:border-[hsl(var(--primary))] transition-colors">
+                              Edit <ChevronDown className="h-3 w-3 ml-1 inline" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="rounded-none border-[hsl(var(--border))]">
+                            {[
+                              { label: "Present", status: "present" as const, icon: <CheckCircle className="h-4 w-4 mr-2 text-[hsl(var(--register-stamp-present))]" /> },
+                              { label: "Late", status: "late" as const, icon: <Clock className="h-4 w-4 mr-2 text-[hsl(var(--register-stamp-late))]" /> },
+                              { label: "Absent", status: "absent" as const, icon: <XCircle className="h-4 w-4 mr-2 text-[hsl(var(--register-stamp-absent))]" /> },
+                              { label: "Late (Excused)", status: "late_excused" as const, icon: <Clock className="h-4 w-4 mr-2 text-[hsl(var(--register-stamp-excused))]" /> },
+                              { label: "Absent (Excused)", status: "absent_excused" as const, icon: <Calendar className="h-4 w-4 mr-2 text-[hsl(var(--register-stamp-excused))]" /> },
+                              { label: "No Class", status: "no_class" as const, icon: <Calendar className="h-4 w-4 mr-2 text-[hsl(var(--register-stamp-excused))]" /> },
+                              { label: "Dropout", status: "dropout" as const, icon: <UserX className="h-4 w-4 mr-2 text-[hsl(var(--register-stamp-absent))]" /> },
+                              { label: "Dismissed", status: "dismissed" as const, icon: <UserMinus className="h-4 w-4 mr-2 text-[hsl(var(--register-stamp-absent))]" /> },
+                            ].map((item) => (
                               <DropdownMenuItem
-                                onClick={() => handleManualMark(record._id, record.session, "present")}
+                                key={item.status}
+                                onClick={() => handleManualMark(record._id, record.session, item.status)}
+                                className="font-register-body text-xs"
                               >
-                                <CheckCircle className="h-4 w-4 mr-2 text-green-500" /> Present
+                                {item.icon} {item.label}
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleManualMark(record._id, record.session, "late")}
-                              >
-                                <Clock className="h-4 w-4 mr-2 text-yellow-500" /> Late
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleManualMark(record._id, record.session, "absent")}
-                              >
-                                <XCircle className="h-4 w-4 mr-2 text-red-500" /> Absent
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleManualMark(record._id, record.session, "late_excused")}
-                              >
-                                <Clock className="h-4 w-4 mr-2 text-blue-500" /> Late (Excused)
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleManualMark(record._id, record.session, "absent_excused")}
-                              >
-                                <Calendar className="h-4 w-4 mr-2 text-gray-500" /> Absent (Excused)
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleManualMark(record._id, record.session, "no_class")}
-                              >
-                                <Calendar className="h-4 w-4 mr-2 text-purple-500" /> No Class
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleManualMark(record._id, record.session, "holiday")}
-                              >
-                                <Calendar className="h-4 w-4 mr-2 text-orange-500" /> Holiday
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleManualMark(record._id, record.session, "dropout")}
-                              >
-                                <UserX className="h-4 w-4 mr-2 text-red-700" /> Dropout
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleManualMark(record._id, record.session, "dismissed")}
-                              >
-                                <UserMinus className="h-4 w-4 mr-2 text-red-800" /> Dismissed
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => handleClearRecord(record._id)}
-                                className="text-red-600"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" /> Clear
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+                            ))}
+                            <DropdownMenuSeparator className="bg-[hsl(var(--border))]" />
+                            <DropdownMenuItem
+                              onClick={() => handleClearRecord(record._id)}
+                              className="font-register-body text-xs text-[hsl(var(--register-stamp-absent))]"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" /> Clear
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="leave-requests">
-          <Card>
-            <CardHeader>
-              <CardTitle>Leave Requests</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {leaveRequests.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">No leave requests</p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Reason</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {leaveRequests.map((request) => (
-                      <TableRow key={request._id}>
-                        <TableCell className="capitalize">{request.type.replace("_", " ")}</TableCell>
-                        <TableCell>
-                          {new Date(request.date).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </TableCell>
-                        <TableCell className="max-w-[200px] truncate">{request.reason}</TableCell>
-                        <TableCell>
-                          {request.status === "approved" && (
-                            <Badge className="bg-green-500">Approved</Badge>
-                          )}
-                          {request.status === "rejected" && (
-                            <Badge className="bg-red-500">Rejected</Badge>
-                          )}
-                          {request.status === "pending" && (
-                            <Badge className="bg-yellow-500">Pending</Badge>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+          <div className="register-card">
+            <div className="px-4 py-2.5 border-b border-[hsl(var(--border))]">
+              <span className="font-register-heading text-xs uppercase tracking-[0.15em] text-[hsl(var(--foreground))]">
+                <FileText className="h-3.5 w-3.5 inline mr-1.5" />
+                Leave Requests
+              </span>
+            </div>
+            {leaveRequests.length === 0 ? (
+              <div className="text-center py-8 font-register-body text-sm text-[hsl(var(--muted-foreground))]">
+                No leave requests
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-4 px-4 py-1.5 border-b border-[hsl(var(--border))] bg-[hsl(var(--secondary))] font-register-mono text-[10px] uppercase tracking-[0.1em] text-[hsl(var(--muted-foreground))]">
+                  <span className="w-24">Type</span>
+                  <span className="w-24">Date</span>
+                  <span className="flex-1">Reason</span>
+                  <span className="w-20 text-center">Status</span>
+                </div>
+                <div className="border-t border-[hsl(var(--border))]">
+                  {leaveRequests.map((request) => (
+                    <div
+                      key={request._id}
+                      className="flex items-center gap-4 px-4 py-2 border-b border-[hsl(var(--border))]/50 last:border-b-0 hover:bg-[hsl(var(--primary))]/[0.02] transition-colors"
+                    >
+                      <span className="w-24 font-register-body text-xs capitalize text-[hsl(var(--foreground))]">
+                        {request.type.replace("_", " ")}
+                      </span>
+                      <span className="w-24 font-register-mono text-xs text-[hsl(var(--foreground))]">
+                        {new Date(request.date).toLocaleDateString("en-US", {
+                          month: "short", day: "numeric", year: "numeric",
+                        })}
+                      </span>
+                      <span className="flex-1 font-register-body text-xs text-[hsl(var(--muted-foreground))] truncate max-w-[200px]">
+                        {request.reason}
+                      </span>
+                      <span className="w-20 text-center flex justify-center">
+                        <LeaveStatusStamp status={request.status} />
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
 

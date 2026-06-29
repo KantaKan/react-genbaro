@@ -28,7 +28,12 @@ import { AuthedPageLayout } from "./routes/layouts/AuthedPageLayout";
 import { LearnerLayout } from "./routes/layouts/LearnerLayout";
 import { AppErrorBanner } from "./components/AppErrorBanner";
 import { useAuthActions } from "./features/auth/useAuthActions";
-import { AttendanceDashboard } from "./components/attendance-dashboard";
+import { AttendanceShell } from "./components/attendance-shell";
+import { AttendanceRegisterView } from "./components/attendance-register-view";
+import { AttendanceAllStudentsView } from "./components/attendance-all-students-view";
+import { AttendanceCalendarView } from "./components/attendance-calendar-view";
+import { AttendanceLogsView } from "./components/attendance-logs-view";
+import { AttendanceLeaveView } from "./components/attendance-leave-view";
 import { StudentAttendance } from "./components/student-attendance";
 import { LeaveRequestsTable } from "./components/leave-requests-table";
 import { StudentAttendanceDetail } from "./pages/student-attendance-detail";
@@ -95,7 +100,14 @@ function AppContent() {
             <Route path="table/:id" element={<UserReflectionsPage />} />
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="weekly-summary" element={<WeeklySummaryPage />} />
-            <Route path="attendance" element={<AttendanceDashboard />} />
+            <Route path="attendance" element={<AttendanceShell />}>
+              <Route index element={<Navigate to="register" replace />} />
+              <Route path="register" element={<AttendanceRegisterView />} />
+              <Route path="all-students" element={<AttendanceAllStudentsView />} />
+              <Route path="calendar" element={<AttendanceCalendarView />} />
+              <Route path="logs" element={<AttendanceLogsView />} />
+              <Route path="leave" element={<AttendanceLeaveView />} />
+            </Route>
             <Route path="attendance/student/:id" element={<StudentAttendanceDetail />} />
             <Route path="leave-requests" element={<LeaveRequestsTable />} />
             <Route path="notifications" element={<AdminNotificationManager />} />
