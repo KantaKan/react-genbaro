@@ -110,8 +110,11 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
 
   const monthName = new Date(year, month - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  // Use Thailand time for "today" so the highlight matches the backend's date keying.
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const th = new Date(utc + 7 * 3600000);
+  const todayStr = `${th.getFullYear()}-${String(th.getMonth() + 1).padStart(2, "0")}-${String(th.getDate()).padStart(2, "0")}`;
 
   const calendarDays: JSX.Element[] = [];
 
@@ -129,8 +132,6 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
     const isHoliday = !!holiday;
     const rate = getAttendanceRate(stats);
 
-    // Use actual AM/PM counts from backend
-    const cohortTotal = stats?.total || 0;
     const amPresent = stats?.am_present || 0;
     const pmPresent = stats?.pm_present || 0;
     const amTotal = stats?.am_total || 0;

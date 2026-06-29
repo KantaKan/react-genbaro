@@ -99,9 +99,10 @@ export const attendanceService = {
   async lockAttendance(
     date: string,
     session: AttendanceSession,
-    locked: boolean
+    locked: boolean,
+    cohort?: number
   ) {
-    const response = await api.post("/admin/attendance/lock", { date, session, locked });
+    const response = await api.post("/admin/attendance/lock", { date, session, locked, cohort });
     return response.data;
   },
 
