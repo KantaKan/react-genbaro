@@ -37,11 +37,16 @@ import { LeaveRequestForm } from "./leave-request-form";
 import { SkeletonWarm } from "@/components/loading-skeleton";
 import { AttendanceChart } from "./attendance-chart";
 
-const getLocalDate = () => {
+// Thailand date in YYYY-MM-DD so it matches the backend's record date keying
+// (backend uses Asia/Bangkok for GetThailandDate). This keeps "today" aligned
+// regardless of the learner's browser timezone.
+const getThailandDate = () => {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const th = new Date(utc + 7 * 3600000);
+  const year = th.getFullYear();
+  const month = String(th.getMonth() + 1).padStart(2, "0");
+  const day = String(th.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
@@ -81,7 +86,7 @@ export function StudentAttendance() {
   const loadTodayRecords = async () => {
     try {
       const history = await getMyAttendanceHistory(1);
-      const today = getLocalDate();
+      const today = getThailandDate();
       const todayRecs = history.filter((r) => r.date === today);
       setTodayRecords(todayRecs);
     } catch (error) {
@@ -109,16 +114,20 @@ export function StudentAttendance() {
   };
 
   const getCurrentSession = (): "morning" | "afternoon" | null => {
-    const hour = new Date().getHours();
-    if (hour >= 9 && hour < 13) return "morning";
-    if (hour >= 13 && hour < 17) return "afternoon";
+    // Use Thailand hour so session windows match the backend's windows (9-13 morning, 13-17 afternoon).
+    const now = new Date();
+    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+    const thHour = new Date(utc + 7 * 3600000).getHours();
+    if (thHour >= 9 && thHour < 13) return "morning";
+    if (thHour >= 13 && thHour < 17) return "afternoon";
     return null;
   };
 
   const getSessionFromCode = (code: string): "morning" | "afternoon" | null => {
+    // Backend generates codes prefixed with the full session name: MORNING-XXXX / AFTERNOON-XXXX
     const upperCode = code.toUpperCase();
-    if (upperCode.startsWith("MORN")) return "morning";
-    if (upperCode.startsWith("AFTN") || upperCode.startsWith("AFTER")) return "afternoon";
+    if (upperCode.startsWith("MORNING")) return "morning";
+    if (upperCode.startsWith("AFTERNOON")) return "afternoon";
     return getCurrentSession();
   };
 
@@ -129,7 +138,9 @@ export function StudentAttendance() {
     const session = getSessionFromCode(code.trim());
     if (session) {
       const existingRecord = todayRecords.find((r) => r.session === session);
-      if (existingRecord && ["present", "late", "late_excused"].includes(existingRecord.status)) {
+      // Block re-submit for ANY already-marked status so a student can't overwrite
+      // an "absent" (admin-marked) by re-checking in.
+      if (existingRecord) {
         toast.info(`You're already marked as ${existingRecord.status} for ${session} session!`);
         setCode("");
         return;
@@ -224,14 +235,6 @@ export function StudentAttendance() {
 
   const pendingLeaveRequests = (leaveRequests || []).filter((r) => r.status === "pending");
 
-  const present = attendanceStatus?.present || 0;
-  const late = attendanceStatus?.late || 0;
-  const absent = attendanceStatus?.absent || 0;
-  const lateExcused = attendanceStatus?.late_excused || 0;
-  const absentExcused = attendanceStatus?.absent_excused || 0;
-  const totalSessions = present + late + absent + lateExcused + absentExcused;
-  const attendanceRate = totalSessions > 0 ? Math.round(((present + late + lateExcused) / totalSessions) * 100) : 0;
-
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -271,7 +274,7 @@ export function StudentAttendance() {
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
             <Input
               type="text"
-              placeholder="Enter code (e.g., MORN-ABCD)"
+              placeholder="Enter code (e.g., MORNING-ABCD)"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               className="flex-1"
