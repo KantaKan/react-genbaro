@@ -73,13 +73,12 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
   const [daySummaryOpen, setDaySummaryOpen] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [overviewSortDir, setOverviewSortDir] = useState<"asc" | "desc">("asc");
 
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [createHolidayDialogOpen, setCreateHolidayDialogOpen] = useState(false);
   const [holidayDate, setHolidayDate] = useState<string>("");
   const [selectedHoliday, setSelectedHoliday] = useState<Holiday | null>(null);
-
-  const [overviewSortDir, setOverviewSortDir] = useState<"asc" | "desc">("asc");
 
   const cohortNum = parseInt(selectedCohort);
 
@@ -115,9 +114,11 @@ export function AttendanceDashboard({ cohort }: AttendanceDashboardProps) {
 
   const loadStudents = async () => {
     try {
-      setStudents(await getCohort(selectedCohort));
+      const data = await getCohort(selectedCohort);
+      setStudents(data ?? []);
     } catch (error) {
       console.error("Error loading students:", error);
+      setStudents([]);
     }
   };
 
