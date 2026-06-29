@@ -22,23 +22,23 @@ interface AttendanceChartProps {
 const chartConfig: ChartConfig = {
   present: {
     label: "Present",
-    color: "#22c55e",
+    color: "hsl(var(--register-stamp-present))",
   },
   late: {
     label: "Late",
-    color: "#eab308",
+    color: "hsl(var(--register-stamp-late))",
   },
   absent: {
     label: "Absent",
-    color: "#ef4444",
+    color: "hsl(var(--register-stamp-absent))",
   },
   late_excused: {
     label: "Late (Excused)",
-    color: "#3b82f6",
+    color: "hsl(var(--register-stamp-excused))",
   },
   absent_excused: {
     label: "Absent (Excused)",
-    color: "#6b7280",
+    color: "hsl(var(--register-stamp-excused))",
   },
 };
 
@@ -63,7 +63,7 @@ export function AttendanceChart({ data, title, showLegend = true, height = 300 }
 
   if (!data || data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+      <div className="flex items-center justify-center h-[300px] font-register-body text-sm text-[hsl(var(--muted-foreground))]">
         No attendance data available
       </div>
     );
@@ -71,19 +71,19 @@ export function AttendanceChart({ data, title, showLegend = true, height = 300 }
 
   return (
     <div className="space-y-2">
-      {title && <h3 className="text-lg font-semibold">{title}</h3>}
+      {title && <h3 className="font-register-heading text-sm">{title}</h3>}
       <ChartContainer config={chartConfig} className="w-full">
         <ResponsiveContainer width="100%" height={height}>
           <BarChart data={processedData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-[hsl(var(--border))]" />
             <XAxis
               dataKey="displayDate"
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11 }}
+              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
               tickMargin={8}
             />
-            <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} allowDecimals={false} />
+            <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
             <Tooltip
               content={
                 <ChartTooltipContent
@@ -94,10 +94,10 @@ export function AttendanceChart({ data, title, showLegend = true, height = 300 }
                         className="w-2.5 h-2.5 rounded-sm"
                         style={{ backgroundColor: chartConfig[name as keyof typeof chartConfig]?.color }}
                       />
-                      <span className="text-muted-foreground">
+                      <span className="text-[hsl(var(--muted-foreground))] font-register-body text-xs">
                         {chartConfig[name as keyof typeof chartConfig]?.label || name}:
                       </span>
-                      <span className="font-medium">{value}</span>
+                      <span className="font-register-mono text-xs font-medium text-[hsl(var(--foreground))]">{value}</span>
                     </div>
                   )}
                 />
@@ -107,16 +107,51 @@ export function AttendanceChart({ data, title, showLegend = true, height = 300 }
               <Legend
                 verticalAlign="top"
                 height={36}
-                formatter={(value) => chartConfig[value as keyof typeof chartConfig]?.label || value}
+                formatter={(value) => (
+                  <span className="font-register-body text-xs text-[hsl(var(--foreground))]">
+                    {chartConfig[value as keyof typeof chartConfig]?.label || value}
+                  </span>
+                )}
               />
             )}
-            <Bar dataKey="present" stackId="a" fill="#22c55e" radius={[0, 0, 0, 0]} name="present" />
-            <Bar dataKey="late" stackId="a" fill="#eab308" radius={[0, 0, 0, 0]} name="late" />
-            <Bar dataKey="absent" stackId="a" fill="#ef4444" radius={[0, 0, 0, 0]} name="absent" />
+            <Bar
+              dataKey="present"
+              stackId="a"
+              fill="hsl(var(--register-stamp-present))"
+              radius={[0, 0, 0, 0]}
+              name="present"
+            />
+            <Bar
+              dataKey="late"
+              stackId="a"
+              fill="hsl(var(--register-stamp-late))"
+              radius={[0, 0, 0, 0]}
+              name="late"
+            />
+            <Bar
+              dataKey="absent"
+              stackId="a"
+              fill="hsl(var(--register-stamp-absent))"
+              radius={[0, 0, 0, 0]}
+              name="absent"
+            />
             {hasExcused && (
               <>
-                <Bar dataKey="late_excused" stackId="a" fill="#3b82f6" radius={[0, 0, 0, 0]} name="late_excused" />
-                <Bar dataKey="absent_excused" stackId="a" fill="#6b7280" radius={[0, 0, 0, 0]} name="absent_excused" />
+                <Bar
+                  dataKey="late_excused"
+                  stackId="a"
+                  fill="hsl(var(--register-stamp-excused))"
+                  radius={[0, 0, 0, 0]}
+                  name="late_excused"
+                />
+                <Bar
+                  dataKey="absent_excused"
+                  stackId="a"
+                  fill="hsl(var(--register-stamp-excused))"
+                  radius={[0, 0, 0, 0]}
+                  opacity={0.6}
+                  name="absent_excused"
+                />
               </>
             )}
           </BarChart>
@@ -131,30 +166,23 @@ interface SimpleAttendanceChartProps {
   height?: number;
 }
 
-export function SimpleAttendanceChart({ data, height = 200 }: SimpleAttendanceChartProps) {
-  const getColor = (type: string) => {
-    switch (type) {
-      case "present":
-        return "#22c55e";
-      case "late":
-        return "#eab308";
-      case "absent":
-        return "#ef4444";
-      default:
-        return "#6b7280";
-    }
-  };
+const typeColor: Record<string, string> = {
+  present: "hsl(var(--register-stamp-present))",
+  late: "hsl(var(--register-stamp-late))",
+  absent: "hsl(var(--register-stamp-absent))",
+};
 
+export function SimpleAttendanceChart({ data, height = 200 }: SimpleAttendanceChartProps) {
   const processedData = data.map((item) => ({
     ...item,
     displayDate: formatDate(item.date),
-    fill: getColor(item.type),
+    fill: typeColor[item.type] || "hsl(var(--muted-foreground))",
   }));
 
   const maxValue = Math.max(...data.map((d) => d.value), 1);
 
   return (
-    <div className="h-[${height}px] flex items-end gap-1">
+    <div style={{ height: `${height}px` }} className="flex items-end gap-1">
       {processedData.map((day, index) => (
         <div key={index} className="flex-1 flex flex-col items-center gap-1">
           <div
@@ -167,7 +195,7 @@ export function SimpleAttendanceChart({ data, height = 200 }: SimpleAttendanceCh
             title={`${day.displayDate}: ${day.value} ${day.type}`}
           />
           {index % Math.ceil(data.length / 7) === 0 && (
-            <p className="text-[10px] text-muted-foreground">{day.displayDate}</p>
+            <p className="font-register-mono text-[10px] text-[hsl(var(--muted-foreground))]">{day.displayDate}</p>
           )}
         </div>
       ))}

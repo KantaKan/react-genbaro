@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { getDailyAttendanceStats, getHolidays, type DailyStats, type Holiday } from "@/lib/api";
-import { AppErrorBanner } from "@/components/AppErrorBanner"; // Import AppErrorBanner
 
 interface AdminAttendanceCalendarProps {
   cohort: number;
@@ -25,7 +23,6 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Use external holidays if provided, otherwise use internal state
   const holidays = externalHolidays || internalHolidays;
 
   useEffect(() => {
@@ -40,20 +37,13 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
       const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
       const lastDay = new Date(year, month, 0);
       const endDate = `${year}-${String(month).padStart(2, "0")}-${String(lastDay.getDate()).padStart(2, "0")}`;
-      
-      const [stats] = await Promise.all([
-        getDailyAttendanceStats(cohort, startDate, endDate),
-      ]);
-      
+      const [stats] = await Promise.all([getDailyAttendanceStats(cohort, startDate, endDate)]);
       setDailyStats(stats);
-      
-      // Only fetch holidays internally if external holidays not provided
       if (!externalHolidays) {
         const holidaysData = await getHolidays(startDate, endDate);
         setInternalHolidays(holidaysData);
       }
     } catch (err: any) {
-      console.error("Error loading calendar data:", err);
       setError(err.message || "Failed to load calendar data.");
     } finally {
       setIsLoading(false);
@@ -72,34 +62,20 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
     setCurrentMonth(`${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, "0")}`);
   };
 
-  const getStatsForDate = (date: string): DailyStats | null => {
-    return dailyStats.find((s) => s.date === date) || null;
-  };
+  const getStatsForDate = (date: string): DailyStats | null =>
+    dailyStats.find((s) => s.date === date) || null;
 
   const getHolidayForDate = (date: string): Holiday | null => {
     if (!holidays) return null;
-    return holidays.find((h) => {
-      return date >= h.start_date && date <= h.end_date;
-    }) || null;
+    return holidays.find((h) => date >= h.start_date && date <= h.end_date) || null;
   };
 
-  const getAttendanceRate = (stats: DailyStats | null): number => {
-    // Use backend-provided rate if available
-    if (stats && typeof stats.rate === 'number') {
-      return Math.round(stats.rate);
-    }
-    // Fallback to calculation
-    if (!stats || stats.total === 0) return -1;
-    const attended = stats.present + stats.late + stats.late_excused + stats.absent_excused;
-    return Math.round((attended / stats.total) * 100);
-  };
-
-  const getDayColorClass = (rate: number, isHoliday: boolean): string => {
-    if (isHoliday) return "bg-purple-500 text-white hover:bg-purple-600";
-    if (rate < 0) return "bg-muted/30 hover:bg-muted/50";
-    if (rate >= 90) return "bg-green-500 text-white hover:bg-green-600";
-    if (rate >= 70) return "bg-yellow-500 text-white hover:bg-yellow-600";
-    return "bg-red-500 text-white hover:bg-red-600";
+  const getDayColorTokens = (rate: number, isHoliday: boolean): string => {
+    if (isHoliday) return "bg-[hsl(var(--register-stamp-excused))]/20 border-[hsl(var(--register-stamp-excused))]";
+    if (rate < 0) return "bg-[hsl(var(--background))] border-[hsl(var(--border))]";
+    if (rate >= 90) return "bg-[hsl(var(--register-stamp-present))]/10 border-[hsl(var(--register-stamp-present))]";
+    if (rate >= 70) return "bg-[hsl(var(--register-stamp-late))]/10 border-[hsl(var(--register-stamp-late))]";
+    return "bg-[hsl(var(--register-stamp-absent))]/10 border-[hsl(var(--register-stamp-absent))]";
   };
 
   const [year, month] = currentMonth.split("-").map(Number);
@@ -107,10 +83,8 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
   const lastDayOfMonth = new Date(year, month, 0);
   const daysInMonth = lastDayOfMonth.getDate();
   const startDayOfWeek = firstDayOfMonth.getDay();
-
   const monthName = new Date(year, month - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
-  // Use Thailand time for "today" so the highlight matches the backend's date keying.
   const now = new Date();
   const utc = now.getTime() + now.getTimezoneOffset() * 60000;
   const th = new Date(utc + 7 * 3600000);
@@ -119,7 +93,7 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
   const calendarDays: JSX.Element[] = [];
 
   for (let i = 0; i < startDayOfWeek; i++) {
-    calendarDays.push(<div key={`empty-${i}`} className="h-24" />);
+    calendarDays.push(<div key={`empty-${i}`} />);
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
@@ -129,8 +103,10 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
     const isToday = dateStr === todayStr;
     const stats = getStatsForDate(dateStr);
     const holiday = getHolidayForDate(dateStr);
-    const isHoliday = !!holiday;
-    const rate = getAttendanceRate(stats);
+    const isHolidayDay = !!holiday;
+    const rate = (stats && typeof stats.rate === "number") ? Math.round(stats.rate)
+      : !stats || stats.total === 0 ? -1
+      : Math.round(((stats.present + stats.late + stats.late_excused + stats.absent_excused) / stats.total) * 100);
 
     const amPresent = stats?.am_present || 0;
     const pmPresent = stats?.pm_present || 0;
@@ -140,121 +116,109 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
     calendarDays.push(
       <button
         key={day}
-        onClick={() => onDayClick(dateStr, isHoliday, holiday || undefined)}
+        onClick={() => onDayClick(dateStr, isHolidayDay, holiday || undefined)}
         disabled={isWeekend}
         className={`
-          h-24 rounded-md flex flex-col items-center justify-center text-sm font-medium
-          transition-colors relative
-          ${isWeekend ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}
-          ${isToday ? "ring-2 ring-primary ring-offset-1" : ""}
-          ${isWeekend ? "bg-muted/20" : getDayColorClass(rate, isHoliday)}
+          border p-1.5 flex flex-col items-center justify-center text-xs transition-colors relative
+          font-register-body
+          ${isWeekend ? "opacity-30 cursor-not-allowed bg-[hsl(var(--background))]" : "cursor-pointer hover:border-[hsl(var(--primary))]"}
+          ${isToday ? "ring-1 ring-[hsl(var(--primary))]" : ""}
+          ${!isWeekend ? getDayColorTokens(rate, isHolidayDay) : "border-[hsl(var(--border))]"}
         `}
-        title={holiday ? `${holiday.name}${holiday.description ? ` - ${holiday.description}` : ""}` : stats ? `Present: ${stats.present}, Late: ${stats.late}, Absent: ${stats.absent}, Excused: ${stats.late_excused + stats.absent_excused}` : "No data"}
+        style={{ minHeight: "88px" }}
       >
-        <span className="text-xs font-bold mb-1">{day}</span>
-        {isHoliday && !isWeekend && (
-          <Star className="h-3 w-3 mb-0.5 fill-yellow-300 text-yellow-300" />
+        <span className={`font-register-mono text-xs mb-1 ${isToday ? "text-[hsl(var(--primary))]" : "text-[hsl(var(--foreground))]"}`}>
+          {day}
+        </span>
+        {isHolidayDay && !isWeekend && (
+          <Star className="h-3 w-3 mb-0.5 fill-[hsl(var(--register-stamp-excused))] text-[hsl(var(--register-stamp-excused))]" />
         )}
-        {!isWeekend && !isHoliday && (
-          <div className="text-[10px] space-y-0.5">
+        {!isWeekend && !isHolidayDay && (
+          <div className="text-[9px] space-y-0.5 font-register-mono text-[hsl(var(--muted-foreground))]">
             <div>AM: {amTotal > 0 ? `${amPresent}/${amTotal}` : "-"}</div>
             <div>PM: {pmTotal > 0 ? `${pmPresent}/${pmTotal}` : "-"}</div>
           </div>
         )}
-        {isHoliday && !isWeekend && (
-          <span className="text-[9px] font-semibold truncate max-w-[90%]">{holiday?.name || "Holiday"}</span>
+        {isHolidayDay && !isWeekend && (
+          <span className="font-register-mono text-[9px] truncate max-w-full text-[hsl(var(--register-stamp-excused))]">
+            {holiday?.name || "Holiday"}
+          </span>
         )}
-        {!isWeekend && !isHoliday && rate >= 0 && (
-          <span className="text-[9px] mt-0.5">{rate}%</span>
+        {!isWeekend && !isHolidayDay && rate >= 0 && (
+          <span className="font-register-mono text-[9px] mt-0.5 text-[hsl(var(--muted-foreground))]">{rate}%</span>
         )}
-        {!isWeekend && !isHoliday && stats && (
-          (() => {
-            const absentCount = Number(stats.absent) || 0;
-            const absentExcusedCount = Number(stats.absent_excused) || 0;
-            const totalAbsent = absentCount + absentExcusedCount;
-            if (totalAbsent > 0) {
-              return (
-                <span className="absolute bottom-1 right-1 text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded-full font-bold">
-                  {totalAbsent} A
-                </span>
-              );
-            }
-            return null;
-          })()
+        {!isWeekend && !isHolidayDay && stats && (Number(stats.absent) + Number(stats.absent_excused)) > 0 && (
+          <span className="absolute bottom-0.5 right-0.5 font-register-mono text-[8px] bg-[hsl(var(--register-stamp-absent))] text-white px-1 py-0.5">
+            {Number(stats.absent) + Number(stats.absent_excused)}A
+          </span>
         )}
       </button>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Monthly Overview</CardTitle>
-            <CardDescription>Click on a day to see details or mark as holiday</CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={prevMonth}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium min-w-[140px] text-center">{monthName}</span>
-            <Button variant="outline" size="sm" onClick={nextMonth}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+    <div className="register-card">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[hsl(var(--border))]">
+        <div>
+          <p className="font-register-heading text-xs uppercase tracking-[0.15em] text-[hsl(var(--foreground))]">Monthly Overview</p>
+          <p className="font-register-mono text-[10px] text-[hsl(var(--muted-foreground))] mt-0.5">Click a day to manage</p>
         </div>
-      </CardHeader>
-      <CardContent>
+        <div className="flex items-center gap-2">
+          <button onClick={prevMonth} className="p-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] transition-colors">
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="font-register-mono text-xs min-w-[130px] text-center text-[hsl(var(--foreground))]">{monthName}</span>
+          <button onClick={nextMonth} className="p-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] transition-colors">
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+      <div className="p-4">
         {isLoading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading calendar...</div>
-        ) : error ? ( // Display error if present
-          <div className="p-4">
-            <AppErrorBanner error={error} />
-          </div>
+          <div className="text-center py-8 font-register-body text-sm text-[hsl(var(--muted-foreground))]">Loading calendar...</div>
+        ) : error ? (
+          <div className="text-center py-8 font-register-body text-sm text-[hsl(var(--register-stamp-absent))]">{error}</div>
         ) : (
           <>
-            <div className="grid grid-cols-7 gap-1 mb-2">
+            <div className="grid grid-cols-7 gap-px mb-1">
               {DAYS.map((day) => (
-                <div key={day} className="h-8 flex items-center justify-center text-xs font-medium text-muted-foreground">
+                <div key={day} className="py-1.5 flex items-center justify-center font-register-mono text-[10px] uppercase tracking-[0.1em] text-[hsl(var(--muted-foreground))]">
                   {day}
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-px">
               {calendarDays}
             </div>
-            <div className="flex flex-wrap gap-4 text-xs mt-4 pt-4 border-t">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-green-500" />
-                <span>Excellent (90%+)</span>
+            <div className="flex flex-wrap gap-4 font-register-mono text-[10px] mt-4 pt-3 border-t border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 border border-[hsl(var(--register-stamp-present))] bg-[hsl(var(--register-stamp-present))]/10" />
+                <span>90%+</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-yellow-500" />
-                <span>Warning (70-89%)</span>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 border border-[hsl(var(--register-stamp-late))] bg-[hsl(var(--register-stamp-late))]/10" />
+                <span>70-89%</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-red-500" />
-                <span>Critical (&lt;70%)</span>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 border border-[hsl(var(--register-stamp-absent))] bg-[hsl(var(--register-stamp-absent))]/10" />
+                <span>&lt;70%</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-muted/30" />
-                <span>Not marked</span>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 border border-[hsl(var(--border))] bg-[hsl(var(--background))]" />
+                <span>No data</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-purple-500 flex items-center justify-center">
-                  <Star className="h-2 w-2 fill-yellow-300 text-yellow-300" />
-                </div>
-                <span>Holiday/Break</span>
+              <div className="flex items-center gap-1.5">
+                <Star className="h-3 w-3 fill-[hsl(var(--register-stamp-excused))] text-[hsl(var(--register-stamp-excused))]" />
+                <span>Holiday</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="px-1.5 py-0.5 bg-red-600 text-white rounded-full font-bold text-[9px]">A</span>
-                <span>Absent count</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-register-mono text-[8px] bg-[hsl(var(--register-stamp-absent))] text-white px-1">1A</span>
+                <span>Absent</span>
               </div>
             </div>
           </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

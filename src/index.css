@@ -151,6 +151,114 @@
   font-family: 'Caveat', cursive;
 }
 
+/* =============================================
+   THE REGISTER — Industrial Attendance Aesthetic
+   ============================================= */
+   
+/* Register font utilities */
+.font-register-heading {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+.font-register-mono {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+.font-register-body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+/* Attendance stamp colors — semantic status markers */
+@layer base {
+  :root {
+    --register-stamp-present: 150 50% 40%;
+    --register-stamp-late: 38 80% 50%;
+    --register-stamp-absent: 0 55% 42%;
+    --register-stamp-excused: 200 45% 50%;
+    --register-stamp-no-class: 0 0% 60%;
+    --register-stamp-holiday: 220 35% 55%;
+    --register-stamp-dropout: 340 35% 40%;
+    --register-stamp-dismissed: 0 0% 35%;
+  }
+
+  .dark {
+    --register-stamp-present: 150 45% 40%;
+    --register-stamp-late: 38 75% 50%;
+    --register-stamp-absent: 0 55% 40%;
+    --register-stamp-excused: 200 45% 45%;
+    --register-stamp-no-class: 0 0% 50%;
+    --register-stamp-holiday: 220 35% 50%;
+    --register-stamp-dropout: 340 35% 40%;
+    --register-stamp-dismissed: 0 0% 40%;
+  }
+}
+
+/* Register card base */
+.register-card {
+  position: relative;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0;
+  transition: border-color 0.2s, box-shadow 0.3s;
+}
+.register-card:hover {
+  border-color: hsl(var(--primary) / 0.4);
+  box-shadow: 0 1px 8px hsl(var(--primary) / 0.08);
+}
+
+/* Stamp stamp animation (the mechanical "CHA-CHUNK") */
+@keyframes stamp-stamp {
+  0% { transform: scale(0.6) translateY(-10px); opacity: 0; }
+  40% { transform: scale(1.15) translateY(4px); opacity: 1; }
+  60% { transform: scale(0.95) translateY(-2px); }
+  80% { transform: scale(1.02) translateY(1px); }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.animate-stamp {
+  animation: stamp-stamp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Flip digit flip animation */
+@keyframes flip-half {
+  0% { transform: rotateX(0deg); }
+  50% { transform: rotateX(-90deg); }
+  51% { transform: rotateX(90deg); }
+  100% { transform: rotateX(0deg); }
+}
+
+/* Brass pulse for click feedback */
+@keyframes brass-pulse {
+  0% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4); }
+  100% { box-shadow: 0 0 0 12px hsl(var(--primary) / 0); }
+}
+
+/* Loading pulse for stamp buttons while mutating */
+@keyframes loading-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+.animate-register-loading {
+  animation: loading-pulse 0.8s ease-in-out infinite;
+}
+
+.animate-brass-pulse {
+  animation: brass-pulse 0.5s ease-out;
+}
+
+/* Register divider */
+.register-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    hsl(var(--primary) / 0.3),
+    hsl(var(--primary) / 0.5),
+    hsl(var(--primary) / 0.3),
+    transparent
+  );
+}  
+
 /* ponytail: warm shimmer — calibrating barometer feel, not generic pulse */
 @keyframes shimmer {
   0% { background-position: 200% 0; }

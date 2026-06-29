@@ -13,8 +13,8 @@ import {
   ClipboardCheck,
   Bell,
 } from "lucide-react";
-import { motion } from "framer-motion"; // New import for animation
-import { Badge } from "@/components/ui/badge"; // New import for the 'New' badge
+import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
@@ -77,6 +77,14 @@ const navigationConfig: Record<UserRole, any[]> = {
           title: "Attendance",
           url: "/admin/attendance",
           icon: ClipboardCheck,
+          isActive: true,
+          items: [
+            { title: "Register", url: "/admin/attendance/register", icon: ClipboardCheck },
+            { title: "All Students", url: "/admin/attendance/all-students", icon: Users },
+            { title: "Calendar", url: "/admin/attendance/calendar", icon: Calendar },
+            { title: "Logs", url: "/admin/attendance/logs", icon: FileText },
+            { title: "Leave", url: "/admin/attendance/leave", icon: BookOpen },
+          ],
         },
         {
           title: "Notifications",
