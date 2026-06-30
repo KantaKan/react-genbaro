@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AdminUsersTable } from "@/components/admin-users-table";
+import { BulkRegisterDialog } from "@/components/bulk-register-dialog";
 import { SalesforceExportButton } from "@/components/salesforce-export";
 import { SalesforceIDManager } from "@/components/salesforce-id-manager";
 import { api } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { UserPlus } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -36,7 +39,7 @@ interface ApiResponse {
   };
 }
 
-type Tab = "users" | "salesforce";
+type Tab = "users" | "register" | "salesforce";
 
 export function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -44,6 +47,7 @@ export function AdminUsersPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const cohort = searchParams.get("cohort") || "12";
   const [activeTab, setActiveTab] = useState<Tab>("users");
+  const [isBulkRegisterOpen, setIsBulkRegisterOpen] = useState(false);
 
   const fetchUsers = async (cohortValue: string) => {
     setIsLoading(true);
@@ -77,6 +81,7 @@ export function AdminUsersPage() {
 
   const tabs: { key: Tab; label: string; emoji: string }[] = [
     { key: "users", label: "User Table", emoji: "👥" },
+    { key: "register", label: "Bulk Register", emoji: "📋" },
     { key: "salesforce", label: "Salesforce IDs", emoji: "☁️" },
   ];
 
@@ -146,6 +151,26 @@ export function AdminUsersPage() {
       {/* Tab content */}
       {activeTab === "users" && (
         <AdminUsersTable users={users as never} isLoading={isLoading} />
+      )}
+
+      {activeTab === "register" && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <UserPlus className="h-16 w-16 text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Bulk Register Learners</h2>
+          <p className="text-muted-foreground mb-6 max-w-md">
+            Register multiple learners to a new cohort at once. Paste CSV data with names, emails, and JSD numbers.
+          </p>
+          <Button onClick={() => setIsBulkRegisterOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Open Bulk Register
+          </Button>
+
+          <BulkRegisterDialog
+            isOpen={isBulkRegisterOpen}
+            onClose={() => setIsBulkRegisterOpen(false)}
+            onSuccess={() => fetchUsers(cohort)}
+          />
+        </div>
       )}
 
       {activeTab === "salesforce" && (
