@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
-import { Eye, CalendarClock, UserX, UserMinus } from "lucide-react";
+import { Eye, CalendarClock, UserX } from "lucide-react";
 import type { AttendanceStatusType } from "@/domain/types";
-import { getStatusLabel, getStatusColor, cycleStatus } from "@/lib/attendance-status";
+import { getStatusBgClass } from "@/lib/attendance-status";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AttendanceRegisterCardProps {
   userId: string;
@@ -18,6 +18,15 @@ interface AttendanceRegisterCardProps {
   onOpenLeave: (userId: string, jsd: string, first: string, last: string) => void;
 }
 
+// ponytail: admin picks status directly — no cycling nonsense
+const STATUS_OPTIONS: { value: AttendanceStatusType; label: string }[] = [
+  { value: "present", label: "Present" },
+  { value: "late", label: "Late" },
+  { value: "absent", label: "Absent" },
+  { value: "late_excused", label: "Late Exc" },
+  { value: "absent_excused", label: "Absent Exc" },
+];
+
 export function AttendanceRegisterCard({
   userId,
   jsdNumber,
@@ -32,57 +41,40 @@ export function AttendanceRegisterCard({
   onViewDetails,
   onOpenLeave,
 }: AttendanceRegisterCardProps) {
-  const [stampSession, setStampSession] = useState<"morning" | "afternoon" | null>(null);
-
-  const handleCycleStatus = useCallback(
-    (session: "morning" | "afternoon", currentStatus: string) => {
-      if (isMutating || isHoliday) return;
-      const next = cycleStatus(currentStatus as AttendanceStatusType);
-      setStampSession(session);
-      onStatusChange(userId, session, next);
-      setTimeout(() => setStampSession(null), 500);
-    },
-    [userId, isMutating, isHoliday, onStatusChange]
-  );
-
-  const renderStatusStamp = (session: "morning" | "afternoon", status: string) => {
-    const isStamping = stampSession === session;
-    const color = getStatusColor(status);
+  const renderStatusSelect = (session: "morning" | "afternoon", status: string) => {
+    const isActive = status !== "-";
+    const bgClass = isActive ? getStatusBgClass(status) : "";
 
     return (
-      <button
-        onClick={() => handleCycleStatus(session, status)}
+      <Select
+        value={isActive ? status : "__none__"}
+        onValueChange={(val) => {
+          if (val === "__none__") return;
+          onStatusChange(userId, session, val as AttendanceStatusType);
+        }}
         disabled={isMutating || isHoliday}
-        className={`
-          relative flex items-center justify-center gap-1.5
-          px-2.5 py-1.5 min-w-[80px]
-          font-register-mono text-[11px] uppercase tracking-[0.12em]
-          border transition-all duration-200
-          ${isStamping ? "animate-stamp" : ""}
-          ${status === "-"
-            ? "border-dashed border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))] hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
-            : `border-[${color}]/30 text-[${color}] ${getStatusBgClass(status)}`
-          }
-          ${isHoliday ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}
-          disabled:opacity-40 disabled:cursor-not-allowed
-          ${isMutating ? "animate-register-loading" : ""}
-        `}
-        title={`${isHoliday ? "Holiday — click disabled" : `Click to cycle status (currently: ${getStatusLabel(status)})`}`}
       >
-        <span className="font-bold">{status === "-" ? "—" : getStatusLabel(status)}</span>
-      </button>
+        <SelectTrigger
+          className={`h-7 min-w-[80px] px-2 py-1 text-[11px] font-register-mono uppercase tracking-[0.12em] rounded-none border-dashed
+            ${isActive
+              ? `border-solid ${bgClass}`
+              : "border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]"
+            }
+            ${isHoliday ? "opacity-40 cursor-not-allowed" : ""}
+          `}
+        >
+          <SelectValue placeholder="—" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="__none__">—</SelectItem>
+          {STATUS_OPTIONS.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     );
-  };
-
-  const getStatusBgClass = (status: string) => {
-    switch (status) {
-      case "present": return "bg-[hsl(var(--register-stamp-present) / 0.08)]";
-      case "late": return "bg-[hsl(var(--register-stamp-late) / 0.08)]";
-      case "absent": return "bg-[hsl(var(--register-stamp-absent) / 0.08)]";
-      case "late_excused": case "absent_excused": return "bg-[hsl(var(--register-stamp-excused) / 0.08)]";
-      case "no_class": return "bg-[hsl(var(--register-stamp-no-class) / 0.08)]";
-      default: return "";
-    }
   };
 
   return (
@@ -101,8 +93,8 @@ export function AttendanceRegisterCard({
       </span>
 
       <div className="flex items-center gap-1.5">
-        {renderStatusStamp("morning", morningStatus)}
-        {renderStatusStamp("afternoon", afternoonStatus)}
+        {renderStatusSelect("morning", morningStatus)}
+        {renderStatusSelect("afternoon", afternoonStatus)}
       </div>
 
       <div className="flex items-center gap-0.5 ml-1">
