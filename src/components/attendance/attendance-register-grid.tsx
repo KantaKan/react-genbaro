@@ -1,10 +1,8 @@
-import { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Users, Loader2 } from "lucide-react";
+import { useMemo } from "react";
+import { Users, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AttendanceRegisterCard } from "./attendance-register-card";
 import type { AttendanceStatusType, TodayStudent } from "@/domain/types";
-
-const PAGE_SIZE = 20;
 
 interface AttendanceRegisterGridProps {
   students: TodayStudent[];
@@ -33,9 +31,6 @@ export function AttendanceRegisterGrid({
   onViewDetails,
   onOpenLeave,
 }: AttendanceRegisterGridProps) {
-  const [page, setPage] = useState(0);
-  const totalPages = Math.max(1, Math.ceil(students.length / PAGE_SIZE));
-
   const sortedStudents = useMemo(() => {
     const jsdNum = (jsd?: string) => {
       if (!jsd) return 9999;
@@ -44,8 +39,6 @@ export function AttendanceRegisterGrid({
     };
     return [...students].sort((a, b) => jsdNum(a.jsd_number) - jsdNum(b.jsd_number));
   }, [students]);
-
-  const pageStudents = sortedStudents.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   const marginals = useMemo(() => {
     const morningMarked = students.filter((s) => s.morning !== "-").length;
@@ -100,14 +93,14 @@ export function AttendanceRegisterGrid({
 
       {/* Grid body */}
       <div className="border-x border-b border-[hsl(var(--border))]">
-        {pageStudents.length === 0 ? (
+        {sortedStudents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-[hsl(var(--muted-foreground))]">
             <span className="font-register-heading text-lg mb-1">No Entries</span>
             <span className="font-register-body text-xs">No students found for this cohort.</span>
           </div>
         ) : (
           <div>
-            {pageStudents.map((student) => (
+            {sortedStudents.map((student) => (
               <AttendanceRegisterCard
                 key={student.user_id}
                 userId={student.user_id}
@@ -127,34 +120,6 @@ export function AttendanceRegisterGrid({
           </div>
         )}
       </div>
-
-      {/* Pagination — brass bar */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-2 bg-[hsl(var(--primary))]/5 border border-[hsl(var(--border))] border-t-0">
-          <span className="font-register-mono text-[10px] text-[hsl(var(--muted-foreground))]">
-            Showing {(page * PAGE_SIZE) + 1}–{Math.min((page + 1) * PAGE_SIZE, students.length)} of {students.length}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
-              className="p-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] disabled:opacity-30 transition-colors"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </button>
-            <span className="font-register-mono text-xs text-[hsl(var(--foreground))]">
-              {page + 1} / {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={page >= totalPages - 1}
-              className="p-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] disabled:opacity-30 transition-colors"
-            >
-              <ChevronRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
