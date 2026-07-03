@@ -34,6 +34,7 @@ import { AttendanceAllStudentsView } from "./components/attendance-all-students-
 import { AttendanceCalendarView } from "./components/attendance-calendar-view";
 import { AttendanceLogsView } from "./components/attendance-logs-view";
 import { AttendanceLeaveView } from "./components/attendance-leave-view";
+import { AttendanceCodeDispatchView } from "./components/attendance/attendance-code-dispatch-view";
 import { StudentAttendance } from "./components/student-attendance";
 import { LeaveRequestsTable } from "./components/leave-requests-table";
 import { StudentAttendanceDetail } from "./pages/student-attendance-detail";
@@ -103,6 +104,7 @@ function AppContent() {
             <Route path="attendance" element={<AttendanceShell />}>
               <Route index element={<Navigate to="register" replace />} />
               <Route path="register" element={<AttendanceRegisterView />} />
+              <Route path="code-dispatch" element={<AttendanceCodeDispatchView />} />
               <Route path="all-students" element={<AttendanceAllStudentsView />} />
               <Route path="calendar" element={<AttendanceCalendarView />} />
               <Route path="logs" element={<AttendanceLogsView />} />
