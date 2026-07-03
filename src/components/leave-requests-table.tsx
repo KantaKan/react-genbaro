@@ -195,40 +195,58 @@ export function LeaveRequestsTable({ cohort }: LeaveRequestsTableProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-l-4 border-l-[hsl(var(--register-stamp-late))]">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-register-body text-sm text-muted-foreground">Pending</p>
-                <p className="font-register-mono text-3xl font-bold" style={{ color: `hsl(var(--register-stamp-late))` }}>{pendingCount}</p>
-              </div>
-              <Clock className="h-8 w-8 opacity-40" style={{ color: `hsl(var(--register-stamp-late))` }} />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-[hsl(var(--register-stamp-present))]">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-register-body text-sm text-muted-foreground">Approved</p>
-                <p className="font-register-mono text-3xl font-bold" style={{ color: `hsl(var(--register-stamp-present))` }}>{approvedCount}</p>
-              </div>
-              <Check className="h-8 w-8 opacity-40" style={{ color: `hsl(var(--register-stamp-present))` }} />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-[hsl(var(--register-stamp-absent))]">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-register-body text-sm text-muted-foreground">Rejected</p>
-                <p className="font-register-mono text-3xl font-bold" style={{ color: `hsl(var(--register-stamp-absent))` }}>{rejectedCount}</p>
-              </div>
-              <X className="h-8 w-8 opacity-40" style={{ color: `hsl(var(--register-stamp-absent))` }} />
-            </div>
-          </CardContent>
-        </Card>
+      <div>
+        <div className="flex h-2 rounded-full overflow-hidden bg-muted/30">
+          {(() => {
+            const total = pendingCount + approvedCount + rejectedCount;
+            if (total === 0) return <div className="w-full" />;
+            return (
+              <>
+                {pendingCount > 0 && (
+                  <div
+                    className="h-full transition-all duration-500"
+                    style={{ width: `${(pendingCount / total) * 100}%`, backgroundColor: `hsl(var(--register-stamp-late))` }}
+                  />
+                )}
+                {approvedCount > 0 && (
+                  <div
+                    className="h-full transition-all duration-500"
+                    style={{ width: `${(approvedCount / total) * 100}%`, backgroundColor: `hsl(var(--register-stamp-present))` }}
+                  />
+                )}
+                {rejectedCount > 0 && (
+                  <div
+                    className="h-full transition-all duration-500"
+                    style={{ width: `${(rejectedCount / total) * 100}%`, backgroundColor: `hsl(var(--register-stamp-absent))` }}
+                  />
+                )}
+              </>
+            );
+          })()}
+        </div>
+        <div className="flex items-center gap-4 mt-1.5">
+          <span className="font-register-mono text-xs text-muted-foreground">
+            Total: {requests.length}
+          </span>
+          {pendingCount > 0 && (
+            <span className="font-register-mono text-xs inline-flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: `hsl(var(--register-stamp-late))` }} />
+              {pendingCount} pending
+            </span>
+          )}
+          {approvedCount > 0 && (
+            <span className="font-register-mono text-xs inline-flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: `hsl(var(--register-stamp-present))` }} />
+              {approvedCount} approved
+            </span>
+          )}
+          {rejectedCount > 0 && (
+            <span className="font-register-mono text-xs inline-flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: `hsl(var(--register-stamp-absent))` }} />
+              {rejectedCount} rejected
+            </span>
+          )}
+        </div>
       </div>
 
       <Card>
