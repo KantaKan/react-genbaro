@@ -1,28 +1,58 @@
-"use client";
-
 import * as React from "react";
 import { ChevronRight, type LucideIcon } from "lucide-react";
-import { Link } from "react-router-dom"; // Import Link from react-router-dom
+import { Link } from "react-router-dom";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem } from "@/components/ui/sidebar";
 
-export function NavMain({
-  items,
-}: {
-  items: {
-    title: string;
-    url: string;
-    icon?: LucideIcon;
-    isActive?: boolean;
-    badge?: React.ReactNode; // New prop for badge
-    items?: {
-      title: string;
-      url: string;
-      icon?: LucideIcon; // Add icon property for sub-items
-    }[];
-  }[];
-}) {
+interface NavItem {
+  title: string;
+  url: string;
+  icon?: LucideIcon;
+  isActive?: boolean;
+  badge?: React.ReactNode;
+  items?: NavItem[];
+}
+
+function NavSubItem({ item }: { item: NavItem }) {
+  if (item.items && item.items.length > 0) {
+    return (
+      <Collapsible asChild defaultOpen={item.isActive} className="group/collapsible">
+        <SidebarMenuItem>
+          <CollapsibleTrigger asChild>
+            <SidebarMenuSubButton asChild>
+              <span className="flex w-full items-center gap-2">
+                {item.icon && <item.icon className="h-4 w-4" />}
+                <span>{item.title}</span>
+                <ChevronRight className="ml-auto h-3 w-3 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              </span>
+            </SidebarMenuSubButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <SidebarMenuSub>
+              {item.items.map((sub) => (
+                <NavSubItem key={sub.title} item={sub} />
+              ))}
+            </SidebarMenuSub>
+          </CollapsibleContent>
+        </SidebarMenuItem>
+      </Collapsible>
+    );
+  }
+
+  return (
+    <SidebarMenuSubItem>
+      <SidebarMenuSubButton asChild>
+        <Link to={item.url}>
+          {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+          <span>{item.title}</span>
+        </Link>
+      </SidebarMenuSubButton>
+    </SidebarMenuSubItem>
+  );
+}
+
+export function NavMain({ items }: { items: NavItem[] }) {
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
@@ -34,22 +64,14 @@ export function NavMain({
                 <SidebarMenuButton tooltip={item.title}>
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
-                  {item.badge && <div className="ml-2">{item.badge}</div>} {/* Render badge */}
+                  {item.badge && <div className="ml-2">{item.badge}</div>}
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <SidebarMenuSub>
                   {item.items?.map((subItem) => (
-                    <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton asChild>
-                        {/* Replace <a> with <Link> */}
-                        <Link to={subItem.url}>
-                          {subItem.icon && <subItem.icon className="mr-2 h-4 w-4" />}
-                          <span>{subItem.title}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
+                    <NavSubItem key={subItem.title} item={subItem} />
                   ))}
                 </SidebarMenuSub>
               </CollapsibleContent>
