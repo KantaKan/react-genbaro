@@ -10,7 +10,7 @@ import { Zap, Copy, Check, Clock, Radio, Lock, Unlock } from "lucide-react";
 
 const SESSIONS: AttendanceSession[] = ["morning", "afternoon"];
 
-export function AttendanceCodePanel() {
+export function AttendanceCodeDispatchView() {
   const { selectedCohort, selectedDate, holidayToday } = useAttendanceContext();
   const cohortNum = parseInt(selectedCohort);
 
@@ -22,7 +22,6 @@ export function AttendanceCodePanel() {
   const prevCodeRef = useRef<string | null>(null);
 
   const lockMutation = useLockAttendance(cohortNum, selectedDate);
-
   const generateMutation = useGenerateAttendanceCode();
   const activeCodeQuery = useActiveAttendanceCode(
     cohortNum,
@@ -31,7 +30,6 @@ export function AttendanceCodePanel() {
   );
 
   const activeCode = activeCodeQuery.data as AttendanceCode | null;
-
   const code = activeCode?.code ?? "";
   const hasCode = code.length > 0;
   const isGenerating = generateMutation.isLoading;
@@ -102,106 +100,122 @@ export function AttendanceCodePanel() {
   const secs = timeRemaining % 60;
   const isExpired = hasCode && timeRemaining <= 0;
   const isLocked = lockedSessions.has(session);
+  const isHoliday = !!holidayToday;
 
   return (
-    <div className="code-panel">
-      <div className="code-panel-header">
-        <Radio className="h-3.5 w-3.5" />
-        <span>Code Dispatch</span>
+    <div className="code-dispatch">
+      <div className="code-dispatch-header">
+        <Radio className="h-4 w-4" />
+        <span>Code Dispatch Room</span>
+        <span className="code-dispatch-badge">
+          {session === "morning" ? "AM" : "PM"} Session
+        </span>
       </div>
 
-      <div className="code-panel-body">
-        <div className="code-session-tabs">
-          {SESSIONS.map((s) => (
-            <button
-              key={s}
-              onClick={() => setSession(s)}
-              className={`code-session-tab ${
-                session === s ? "code-session-tab--active" : ""
-              }`}
-            >
-              {s === "morning" ? "AM" : "PM"}
-            </button>
-          ))}
-          <button
-            onClick={() => handleLockToggle(session)}
-            className={`code-lock-btn ${isLocked ? "code-lock-btn--locked" : ""}`}
-            title={isLocked ? "Unlock session" : "Lock session"}
-            disabled={lockMutation.isLoading}
-          >
-            {isLocked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
-          </button>
-        </div>
-
-        <div className="code-display-area">
-          {isGenerating ? (
-            <div className="code-generating">
-              <span className="code-dot-pulse" />
-              <span className="code-dot-pulse" />
-              <span className="code-dot-pulse" />
-              <span className="code-label">Dispatching...</span>
-            </div>
-          ) : isExpired ? (
-            <div className="code-empty">
-              <Clock className="h-6 w-6" />
-              <span className="code-label">Code expired</span>
-            </div>
-          ) : hasCode ? (
-            <div className="code-display">
-              <span className="code-text">
-                {displayChars.map((ch, i) => (
-                  <span
-                    key={i}
-                    className="code-char"
-                    style={{ animationDelay: `${i * 50}ms` }}
-                  >
-                    {ch}
-                  </span>
-                ))}
-                {displayChars.length < code.length && (
-                  <span className="code-cursor">▊</span>
-                )}
-              </span>
-              <button
-                onClick={handleCopy}
-                className="code-copy-btn"
-                title="Copy code"
-              >
-                {copied ? (
-                  <Check className="h-3.5 w-3.5" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5" />
-                )}
-              </button>
-            </div>
-          ) : (
-            <div className="code-empty">
-              <Zap className="h-6 w-6" />
-              <span className="code-label">Pull lever to generate</span>
-            </div>
-          )}
-        </div>
-
-        {hasCode && !isExpired && (
-          <div className="code-status-row">
-            <span className="code-status-dot" />
-            <span className="code-status-text">
-              Active &middot; {mins}:{secs.toString().padStart(2, "0")}
+      <div className="code-dispatch-readout">
+        {isGenerating ? (
+          <div className="code-dispatch-generating">
+            <span className="code-dot-pulse" />
+            <span className="code-dot-pulse" />
+            <span className="code-dot-pulse" />
+            <span className="code-label" style={{ marginLeft: "0.5rem" }}>
+              Dispatching...
             </span>
           </div>
-        )}
-
-        {isExpired && (
-          <div className="code-status-row code-status-row--expired">
-            <span className="code-status-dot code-status-dot--expired" />
-            <span className="code-status-text">Expired &middot; Generate new</span>
+        ) : isExpired ? (
+          <div className="code-dispatch-empty">
+            <Clock className="h-8 w-8" />
+            <span className="code-label">Code Expired</span>
+          </div>
+        ) : hasCode ? (
+          <div className="code-dispatch-code">
+            {displayChars.map((ch, i) => (
+              <span
+                key={i}
+                className="code-char"
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
+                {ch}
+              </span>
+            ))}
+            {displayChars.length < code.length && (
+              <span className="code-cursor">▊</span>
+            )}
+          </div>
+        ) : (
+          <div className="code-dispatch-empty">
+            <Zap className="h-8 w-8" />
+            <span className="code-label">Pull the lever to dispatch a code</span>
           </div>
         )}
+      </div>
 
+      <div className="code-dispatch-status">
+        {hasCode && !isExpired && (
+          <>
+            <span className="code-dispatch-status-dot" />
+            <span className="code-dispatch-status-text">
+              Active &middot; {mins}:{secs.toString().padStart(2, "0")}
+            </span>
+          </>
+        )}
+        {isExpired && (
+          <>
+            <span className="code-dispatch-status-dot code-dispatch-status-dot--expired" />
+            <span className="code-dispatch-status-text">
+              Expired &middot; Generate new code
+            </span>
+          </>
+        )}
+        {!hasCode && !isGenerating && (
+          <span className="code-dispatch-status-text">
+            {isHoliday ? "Holiday — dispatching disabled" : "No active code"}
+          </span>
+        )}
+        {hasCode && (
+          <button onClick={handleCopy} className="code-dispatch-copy-btn">
+            {copied ? (
+              <>
+                <Check className="h-3 w-3" /> Copied
+              </>
+            ) : (
+              <>
+                <Copy className="h-3 w-3" /> Copy Code
+              </>
+            )}
+          </button>
+        )}
+      </div>
+
+      <div className="code-dispatch-controls">
+        {SESSIONS.map((s) => (
+          <button
+            key={s}
+            onClick={() => setSession(s)}
+            className={`code-dispatch-session-tab ${
+              session === s ? "code-dispatch-session-tab--active" : ""
+            }`}
+          >
+            {s === "morning" ? "AM" : "PM"}
+          </button>
+        ))}
+        <button
+          onClick={() => handleLockToggle(session)}
+          className={`code-dispatch-lock-btn ${
+            isLocked ? "code-dispatch-lock-btn--locked" : ""
+          }`}
+          title={isLocked ? "Unlock session" : "Lock session"}
+          disabled={lockMutation.isLoading}
+        >
+          {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+        </button>
+      </div>
+
+      <div className="code-dispatch-lever-row">
         <button
           onClick={handleGenerate}
-          disabled={isGenerating || !!holidayToday || isLocked}
-          className="code-lever"
+          disabled={isGenerating || isHoliday || isLocked}
+          className="code-dispatch-lever"
         >
           {isGenerating ? (
             <>
@@ -211,12 +225,17 @@ export function AttendanceCodePanel() {
           ) : isLocked ? (
             <>
               <Lock className="h-4 w-4" />
-              Attendance Locked
+              Session Locked
+            </>
+          ) : isHoliday ? (
+            <>
+              <Clock className="h-4 w-4" />
+              Holiday
             </>
           ) : (
             <>
               <Zap className="h-4 w-4" />
-              Pull Lever
+              Dispatch Code
             </>
           )}
         </button>

@@ -11,6 +11,7 @@ import {
   User,
   Hammer,
   ClipboardCheck,
+  Radio,
   Bell,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -80,6 +81,7 @@ const navigationConfig: Record<UserRole, any[]> = {
           isActive: true,
           items: [
             { title: "Register", url: "/admin/attendance/register", icon: ClipboardCheck },
+            { title: "Code Dispatch", url: "/admin/attendance/code-dispatch", icon: Radio },
             { title: "All Students", url: "/admin/attendance/all-students", icon: Users },
             { title: "Calendar", url: "/admin/attendance/calendar", icon: Calendar },
             { title: "Logs", url: "/admin/attendance/logs", icon: FileText },
