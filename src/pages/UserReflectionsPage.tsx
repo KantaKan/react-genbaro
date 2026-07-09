@@ -18,24 +18,7 @@ import { BarometerVisual } from "@/components/barometer-visual";
 import { formatDate } from "@/lib/utils";
 import { AwardBadgeButton } from "@/components/award-badge-button";
 import type { Badge } from "@/lib/types";
-interface Reflection {
-  day: string;
-  user_id: string;
-  date: string;
-  reflection: {
-    barometer: string;
-    tech_sessions: {
-      session_name: string[];
-      happy: string;
-      improve: string;
-    };
-    non_tech_sessions: {
-      session_name: string[];
-      happy: string;
-      improve: string;
-    };
-  };
-}
+import type { Reflection } from "@/hooks/use-reflections";
 
 interface User {
   cohort_number: number;
@@ -111,6 +94,8 @@ export default function UserReflectionsPage() {
     }
   };
 
+  const streakData = useStreakCalculation(reflections);
+
   if (isLoading) {
   return (
     <div className="container mx-auto pt-16 pb-10 space-y-6">
@@ -155,8 +140,6 @@ export default function UserReflectionsPage() {
       </div>
     );
   }
-
-  const streakData = useStreakCalculation(reflections as any);  // ponytail: hook only reads 'date' field, local Reflection type differs in createdAt
 
   return (
     <div className="container mx-auto py-10 space-y-6">
