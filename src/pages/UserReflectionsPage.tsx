@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, School, ClipboardList, TrendingUp, Award } from "lucide-react";
+import { ArrowLeft, Users, School, ClipboardList, Award } from "lucide-react";
 import { Badge as UiBadge } from "@/components/ui/badge";
 import { BadgeRenderer } from "@/components/badge-renderer";
 import { useAuth } from "@/AuthContext";
@@ -12,29 +12,13 @@ import { motion } from "framer-motion";
 import { api } from "@/lib/api";
 import { SkeletonWarm } from "@/components/loading-skeleton";
 import { ReflectionsTable } from "@/components/reflections-table";
-import { reflectionZones } from "@/components/reflection-zones";
+import { useStreakCalculation } from "@/hooks/use-streak-calculation";
+import { StreakIcon } from "@/components/streak-components";
 import { BarometerVisual } from "@/components/barometer-visual";
 import { formatDate } from "@/lib/utils";
 import { AwardBadgeButton } from "@/components/award-badge-button";
 import type { Badge } from "@/lib/types";
-interface Reflection {
-  day: string;
-  user_id: string;
-  date: string;
-  reflection: {
-    barometer: string;
-    tech_sessions: {
-      session_name: string[];
-      happy: string;
-      improve: string;
-    };
-    non_tech_sessions: {
-      session_name: string[];
-      happy: string;
-      improve: string;
-    };
-  };
-}
+import type { Reflection } from "@/hooks/use-reflections";
 
 interface User {
   cohort_number: number;
@@ -110,27 +94,7 @@ export default function UserReflectionsPage() {
     }
   };
 
-  const getZoneStats = () => {
-    const stats = reflections.reduce(
-      (acc, reflection) => {
-        const zone = reflectionZones.find((z) => z.label === reflection.reflection.barometer);
-        if (zone) {
-          acc[zone.id] = (acc[zone.id] || 0) + 1;
-        }
-        return acc;
-      },
-      { comfort: 0, "stretch-enjoying": 0, "stretch-overwhelmed": 0, panic: 0 } as Record<string, number>,
-    );
-
-    const total = reflections.length;
-    const dominantZone = Object.entries(stats).reduce((a, b) => (b[1] > a[1] ? b : a))[0];
-
-    return {
-      ...stats,
-      total,
-      dominantZone,
-    };
-  };
+  const streakData = useStreakCalculation(reflections);
 
   if (isLoading) {
   return (
@@ -177,8 +141,6 @@ export default function UserReflectionsPage() {
     );
   }
 
-  const stats = getZoneStats();
-
   return (
     <div className="container mx-auto py-10 space-y-6">
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="flex justify-between items-center mb-4">
@@ -202,20 +164,9 @@ export default function UserReflectionsPage() {
                 <StatCard icon={Users} label="Student Name" value={`${user.first_name} ${user.last_name}`} />
                 <StatCard icon={School} label="JSD Number" value={user.jsd_number} />
                 <StatCard icon={ClipboardList} label="Total Reflections" value={reflections.length} />
-                <StatCard
-                  icon={TrendingUp}
-                  label="Most Common Zone"
-                  value={
-                    stats.total > 0 ? (
-                      <div className="flex items-center gap-2 text-base">
-                        <span className="shrink-0">{reflectionZones.find((z) => z.id === stats.dominantZone)?.emoji}</span>
-                        <span className="truncate">{reflectionZones.find((z) => z.id === stats.dominantZone)?.label || "N/A"}</span>
-                      </div>
-                    ) : (
-                      "No data"
-                    )
-                  }
-                />
+                <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+                  <StreakIcon streakData={streakData} showMilestoneToast={false} />
+                </div>
               </div>
               {user.badges && user.badges.length > 0 && (
                 <div className="mt-8">
