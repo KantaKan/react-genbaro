@@ -5,7 +5,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Users, School, ClipboardList, TrendingUp, Award } from "lucide-react";
+import { Badge as UiBadge } from "@/components/ui/badge";
 import { BadgeRenderer } from "@/components/badge-renderer";
+import { useAuth } from "@/AuthContext";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
 import { SkeletonWarm } from "@/components/loading-skeleton";
@@ -60,6 +62,7 @@ const StatCard = ({ icon: Icon, label, value }: { icon: any; label: string; valu
 export default function UserReflectionsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { userRole } = useAuth();
   const [reflections, setReflections] = useState<Reflection[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -179,9 +182,12 @@ export default function UserReflectionsPage() {
   return (
     <div className="container mx-auto py-10 space-y-6">
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="flex justify-between items-center mb-4">
-        <Button onClick={handleBack} variant="outline">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to All Reflections
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button onClick={handleBack} variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to All Reflections
+          </Button>
+          {userRole === "admin" && <UiBadge variant="default">Admin</UiBadge>}
+        </div>
         {id && <AwardBadgeButton userId={id} onBadgeAwarded={handleBadgeAwarded} />}
       </motion.div>
 
