@@ -14,6 +14,7 @@ import {
 
 import { Cat } from "lucide-react"
 import { fireConfetti } from "@/lib/confetti"
+import { getPotPath, type PlantVariantConfig } from "@/lib/plant-variants"
 
 const tierTextColors: Record<PlantTier, string> = {
   0: "text-muted-foreground",
@@ -246,10 +247,11 @@ const PetalBurst = ({ onDone }: { onDone: () => void }) => {
   )
 }
 
-const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; active: boolean; className?: string }) => {
+const SeedlingPlant = ({ tier = 0, active, className, variant }: { tier?: PlantTier; active: boolean; className?: string; variant?: PlantVariantConfig }) => {
   const swayControls = useAnimation()
   const leafBounceControls = useAnimation()
   const config = getPlantTierConfig(tier)
+  const potPaths = variant ? getPotPath(variant.pot) : null
 
   useEffect(() => {
     if (active) {
@@ -270,12 +272,12 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
     }
   }, [active, swayControls, leafBounceControls])
 
-  const stemColor = active ? config.stemColor : "#a1a1aa"
-  const leafColor = active ? config.leafColor : "#d4d4d8"
-  const flowerColor = active ? config.flowerColor : "#71717a"
-  const fruitColor = active ? config.fruitColor : "#71717a"
-  const potColor = active ? config.potColor : "#9c8b7e"
-  const soilColor = active ? config.soilColor : "#6b5b4e"
+  const stemColor = active ? (variant?.palette.stem ?? config.stemColor) : "#a1a1aa"
+  const leafColor = active ? (variant?.palette.leaf ?? config.leafColor) : "#d4d4d8"
+  const flowerColor = active ? (variant?.palette.flower ?? config.flowerColor) : "#71717a"
+  const fruitColor = active ? (variant?.palette.fruit ?? config.fruitColor) : "#71717a"
+  const potColor = active ? (variant?.palette.pot ?? config.potColor) : "#9c8b7e"
+  const soilColor = active ? (variant?.palette.soil ?? config.soilColor) : "#6b5b4e"
   const outlineColor = active ? "#3d3d3d" : "#52525b"
   const strokeW = 1.8
 
@@ -523,14 +525,14 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
             {/* Pot */}
             <g>
               <path
-                d="M9 44 C9 50 13 51.5 20 51.5 C27 51.5 31 50 31 44 Z"
+                d={potPaths?.bottom ?? "M9 44 C9 50 13 51.5 20 51.5 C27 51.5 31 50 31 44 Z"}
                 fill={potColor}
                 stroke={outlineColor}
                 strokeWidth={strokeW}
                 strokeLinejoin="round"
               />
               <path
-                d="M7 44 L33 44 L31 41 L9 41 Z"
+                d={potPaths?.rim ?? "M7 44 L33 44 L31 41 L9 41 Z"}
                 fill={potColor}
                 stroke={outlineColor}
                 strokeWidth={strokeW}
@@ -925,7 +927,7 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
   )
 }
 
-export const StreakIcon = ({ streakData, showMilestoneToast = true }: { streakData: StreakData; showMilestoneToast?: boolean }) => {
+export const StreakIcon = ({ streakData, showMilestoneToast = true, variant }: { streakData: StreakData; showMilestoneToast?: boolean; variant?: PlantVariantConfig }) => {
   const { currentStreak, oldStreak, hasCurrentStreak } = streakData
   const displayStreak = hasCurrentStreak ? currentStreak : oldStreak > 0 ? oldStreak : 0
   const tier = getPlantTier(displayStreak);
@@ -973,6 +975,7 @@ export const StreakIcon = ({ streakData, showMilestoneToast = true }: { streakDa
           <SeedlingPlant
             tier={tier}
             active={hasCurrentStreak}
+            variant={variant}
             className="w-10 h-12 flex-shrink-0"
           />
           <div className="flex flex-col leading-none">

@@ -13,6 +13,7 @@ import { useStreakCalculation } from "@/hooks/use-streak-calculation";
 import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflection-zones";
 import { StreakIcon, GrowthBar, ComfortZoneMessage } from "./streak-components";
 import { getMilestoneForStreak, getRandomComfortMessage, getRandomStreakQuote } from "@/lib/streak-milestones";
+import { getPlantVariant } from "@/lib/plant-variants";
 import { ReflectionsTable } from "./reflections-table";
 import FeedbackForm from "./linear-feedback-form";
 import { ReflectionPreview } from "./reflection-preview";
@@ -48,6 +49,10 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   const [user, setUser] = useState<User | null>(null); // New state for user
   const [isLoadingUser, setIsLoadingUser] = useState(false); // New loading state for user
   const [userError, setUserError] = useState<string | null>(null); // New error state for user
+
+  const plantVariant = useMemo(() => {
+    return user ? getPlantVariant(user._id) : undefined;
+  }, [user]);
 
   useEffect(() => {
     refetch(); // Refetch reflections
@@ -247,7 +252,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                 >
                   Daily Reflections
                 </motion.h1>
-                <StreakIcon streakData={streakData} />
+                <StreakIcon streakData={streakData} variant={plantVariant} />
               </div>
               <motion.p 
                 className="text-lg text-muted-foreground max-w-xl leading-relaxed"
