@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useEffect, useState, useCallback } from "react"
-import { motion, useAnimation, AnimatePresence } from "framer-motion"
+import { motion, useAnimation, AnimatePresence, useReducedMotion } from "framer-motion"
 import type { StreakData } from "@/hooks/use-reflections"
 import {
   getMilestoneForStreak,
@@ -14,6 +14,7 @@ import {
 
 import { Cat } from "lucide-react"
 import { fireConfetti } from "@/lib/confetti"
+import { getPotPath, type PlantVariantConfig } from "@/lib/plant-variants"
 
 const tierTextColors: Record<PlantTier, string> = {
   0: "text-muted-foreground",
@@ -246,13 +247,15 @@ const PetalBurst = ({ onDone }: { onDone: () => void }) => {
   )
 }
 
-const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; active: boolean; className?: string }) => {
+export const SeedlingPlant = ({ tier = 0, active, className, variant, showParticles = true }: { tier?: PlantTier; active: boolean; className?: string; variant?: PlantVariantConfig; showParticles?: boolean }) => {
   const swayControls = useAnimation()
   const leafBounceControls = useAnimation()
+  const prefersReducedMotion = useReducedMotion()
   const config = getPlantTierConfig(tier)
+  const potPaths = variant ? getPotPath(variant.pot) : null
 
   useEffect(() => {
-    if (active) {
+    if (active && !prefersReducedMotion) {
       swayControls.start({
         rotate: [0, -2, 1.5, -1, 2, -0.5, 0],
         transition: { duration: 3, repeat: Infinity, ease: "easeInOut" },
@@ -268,14 +271,14 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
       leafBounceControls.stop()
       leafBounceControls.set({ scaleY: 1, scaleX: 1 })
     }
-  }, [active, swayControls, leafBounceControls])
+  }, [active, prefersReducedMotion, swayControls, leafBounceControls])
 
-  const stemColor = active ? config.stemColor : "#a1a1aa"
-  const leafColor = active ? config.leafColor : "#d4d4d8"
-  const flowerColor = active ? config.flowerColor : "#71717a"
-  const fruitColor = active ? config.fruitColor : "#71717a"
-  const potColor = active ? config.potColor : "#9c8b7e"
-  const soilColor = active ? config.soilColor : "#6b5b4e"
+  const stemColor = active ? (variant?.palette.stem ?? config.stemColor) : "#a1a1aa"
+  const leafColor = active ? (variant?.palette.leaf ?? config.leafColor) : "#d4d4d8"
+  const flowerColor = active ? (variant?.palette.flower ?? config.flowerColor) : "#71717a"
+  const fruitColor = active ? (variant?.palette.fruit ?? config.fruitColor) : "#71717a"
+  const potColor = active ? (variant?.palette.pot ?? config.potColor) : "#9c8b7e"
+  const soilColor = active ? (variant?.palette.soil ?? config.soilColor) : "#6b5b4e"
   const outlineColor = active ? "#3d3d3d" : "#52525b"
   const strokeW = 1.8
 
@@ -330,7 +333,7 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
   return (
     <div className={`relative ${className}`}>
       {/* Glow effects — Sunlight Through Canopy */}
-      {active && config.growthGlow === "glow" && (
+      {active && !prefersReducedMotion && config.growthGlow === "glow" && (
         <>
           <motion.div
             className="absolute rounded-full"
@@ -355,7 +358,7 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
         </>
       )}
 
-      {active && config.growthGlow === "radiant" && (
+      {active && !prefersReducedMotion && config.growthGlow === "radiant" && (
         <>
           <motion.div
             className="absolute rounded-full"
@@ -390,7 +393,7 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
         </>
       )}
 
-      {active && config.growthGlow === "bloom" && (
+      {active && !prefersReducedMotion && config.growthGlow === "bloom" && (
         <>
           <motion.div
             className="absolute rounded-full"
@@ -431,7 +434,7 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
         </>
       )}
 
-      {active && config.growthGlow === "aurora" && (
+      {active && !prefersReducedMotion && config.growthGlow === "aurora" && (
         <>
           <motion.div
             className="absolute rounded-full"
@@ -495,7 +498,7 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
         </>
       )}
 
-      {!active && config.growthGlow !== "none" && (
+      {!active && !prefersReducedMotion && config.growthGlow !== "none" && (
         <motion.div
           className="absolute rounded-full"
           style={{
@@ -523,14 +526,14 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
             {/* Pot */}
             <g>
               <path
-                d="M9 44 C9 50 13 51.5 20 51.5 C27 51.5 31 50 31 44 Z"
+                d={potPaths?.bottom ?? "M9 44 C9 50 13 51.5 20 51.5 C27 51.5 31 50 31 44 Z"}
                 fill={potColor}
                 stroke={outlineColor}
                 strokeWidth={strokeW}
                 strokeLinejoin="round"
               />
               <path
-                d="M7 44 L33 44 L31 41 L9 41 Z"
+                d={potPaths?.rim ?? "M7 44 L33 44 L31 41 L9 41 Z"}
                 fill={potColor}
                 stroke={outlineColor}
                 strokeWidth={strokeW}
@@ -829,7 +832,7 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
       </motion.div>
 
       {/* Floating particles — organic drift */}
-      {active && config.particleCount > 0 && (
+      {active && showParticles && !prefersReducedMotion && config.particleCount > 0 && (
         <div className="absolute inset-0 pointer-events-none overflow-visible">
           {/* Pollen motes — gentle warm air arcs */}
           {hasPollen && pollenPositions.slice(0, pollenCount).map((p, i) => (
@@ -925,7 +928,7 @@ const SeedlingPlant = ({ tier = 0, active, className }: { tier?: PlantTier; acti
   )
 }
 
-export const StreakIcon = ({ streakData, showMilestoneToast = true }: { streakData: StreakData; showMilestoneToast?: boolean }) => {
+export const StreakIcon = ({ streakData, showMilestoneToast = true, variant }: { streakData: StreakData; showMilestoneToast?: boolean; variant?: PlantVariantConfig }) => {
   const { currentStreak, oldStreak, hasCurrentStreak } = streakData
   const displayStreak = hasCurrentStreak ? currentStreak : oldStreak > 0 ? oldStreak : 0
   const tier = getPlantTier(displayStreak);
@@ -973,6 +976,7 @@ export const StreakIcon = ({ streakData, showMilestoneToast = true }: { streakDa
           <SeedlingPlant
             tier={tier}
             active={hasCurrentStreak}
+            variant={variant}
             className="w-10 h-12 flex-shrink-0"
           />
           <div className="flex flex-col leading-none">

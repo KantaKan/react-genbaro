@@ -2,113 +2,88 @@ import { useMemo } from "react";
 import type { Reflection, StreakData } from "./use-reflections";
 import { isHoliday, isWeekend, getPreviousWorkday } from "../utils/date-utils";
 
-export function useStreakCalculation(reflections: Reflection[]): StreakData {
-  return useMemo(() => {
-    if (reflections.length === 0) {
-      return {
-        currentStreak: 0,
-        oldStreak: 0,
-        lastActiveDate: null,
-        hasCurrentStreak: false,
-      };
+export function calculateStreakData(reflections: Reflection[]): StreakData {
+  if (reflections.length === 0) {
+    return {
+      currentStreak: 0,
+      oldStreak: 0,
+      lastActiveDate: null,
+      hasCurrentStreak: false,
+    };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Use the 'day' field for date comparison since it's more reliable
+  const sortedDates = reflections.map((r) => new Date(r.day || r.date)).sort((a, b) => b.getTime() - a.getTime());
+
+  let currentStreak = 0;
+  let oldStreak = 0;
+  let lastActiveDate: Date | null = null;
+  let hasCurrentStreak = false;
+  let streakBroken = false;
+
+  const hasTodayReflection = sortedDates.some((date) => {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime() === today.getTime();
+  });
+
+  let currentDate = new Date(today);
+  if (isWeekend(today)) {
+    while (isWeekend(currentDate)) {
+      currentDate.setDate(currentDate.getDate() - 1);
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Use the 'day' field for date comparison since it's more reliable
-    const sortedDates = reflections.map((r) => new Date(r.day || r.date)).sort((a, b) => b.getTime() - a.getTime());
-
-    let currentStreak = 0;
-    let oldStreak = 0;
-    let lastActiveDate: Date | null = null;
-    let hasCurrentStreak = false;
-    let streakBroken = false;
-
-    const hasTodayReflection = sortedDates.some((date) => {
+    const hasLastWorkdayReflection = sortedDates.some((date) => {
       const d = new Date(date);
       d.setHours(0, 0, 0, 0);
-      return d.getTime() === today.getTime();
+      return d.getTime() === currentDate.getTime();
     });
 
-    let currentDate = new Date(today);
-    if (isWeekend(today)) {
-      while (isWeekend(currentDate)) {
-        currentDate.setDate(currentDate.getDate() - 1);
-      }
+    if (hasLastWorkdayReflection) {
+      hasCurrentStreak = true;
+    }
+  } else {
+    hasCurrentStreak = hasTodayReflection;
+  }
 
-      const hasLastWorkdayReflection = sortedDates.some((date) => {
-        const d = new Date(date);
-        d.setHours(0, 0, 0, 0);
-        return d.getTime() === currentDate.getTime();
-      });
+  currentDate = isWeekend(today) ? getPreviousWorkday(today) : today;
 
-      if (hasLastWorkdayReflection) {
-        hasCurrentStreak = true;
-      }
-    } else {
-      hasCurrentStreak = hasTodayReflection;
+  if (hasCurrentStreak) {
+    if (hasTodayReflection && !isWeekend(today)) {
+      currentStreak = 1;
+      lastActiveDate = new Date(today);
     }
 
-    currentDate = isWeekend(today) ? getPreviousWorkday(today) : today;
+    let checkDate = getPreviousWorkday(currentDate);
 
-    if (hasCurrentStreak) {
-      if (hasTodayReflection && !isWeekend(today)) {
-        currentStreak = 1;
-        lastActiveDate = new Date(today);
-      }
-
-      let checkDate = getPreviousWorkday(currentDate);
-
-      while (true) {
-        if (isWeekend(checkDate)) {
-          checkDate = getPreviousWorkday(checkDate);
-          continue;
-        }
-
-        const hasReflectionOnDate =
-          sortedDates.some((date) => {
-            const d = new Date(date);
-            d.setHours(0, 0, 0, 0);
-            return d.getTime() === checkDate.getTime();
-          }) || isHoliday(checkDate);
-
-        if (hasReflectionOnDate) {
-          currentStreak++;
-          if (!lastActiveDate) lastActiveDate = new Date(checkDate);
-          checkDate = getPreviousWorkday(checkDate);
-        } else {
-          streakBroken = true;
-          break;
-        }
-      }
-
-      if (streakBroken) {
+    while (true) {
+      if (isWeekend(checkDate)) {
         checkDate = getPreviousWorkday(checkDate);
-
-        while (true) {
-          if (isWeekend(checkDate)) {
-            checkDate = getPreviousWorkday(checkDate);
-            continue;
-          }
-
-          const hasReflectionOnDate =
-            sortedDates.some((date) => {
-              const d = new Date(date);
-              d.setHours(0, 0, 0, 0);
-              return d.getTime() === checkDate.getTime();
-            }) || isHoliday(checkDate);
-
-          if (hasReflectionOnDate) {
-            oldStreak++;
-            checkDate = getPreviousWorkday(checkDate);
-          } else {
-            break;
-          }
-        }
+        continue;
       }
-    } else {
-      let checkDate = getPreviousWorkday(today);
+
+      const hasReflectionOnDate =
+        sortedDates.some((date) => {
+          const d = new Date(date);
+          d.setHours(0, 0, 0, 0);
+          return d.getTime() === checkDate.getTime();
+        }) || isHoliday(checkDate);
+
+      if (hasReflectionOnDate) {
+        currentStreak++;
+        if (!lastActiveDate) lastActiveDate = new Date(checkDate);
+        checkDate = getPreviousWorkday(checkDate);
+      } else {
+        streakBroken = true;
+        break;
+      }
+    }
+
+    if (streakBroken) {
+      checkDate = getPreviousWorkday(checkDate);
 
       while (true) {
         if (isWeekend(checkDate)) {
@@ -124,7 +99,6 @@ export function useStreakCalculation(reflections: Reflection[]): StreakData {
           }) || isHoliday(checkDate);
 
         if (hasReflectionOnDate) {
-          if (!lastActiveDate) lastActiveDate = new Date(checkDate);
           oldStreak++;
           checkDate = getPreviousWorkday(checkDate);
         } else {
@@ -132,12 +106,44 @@ export function useStreakCalculation(reflections: Reflection[]): StreakData {
         }
       }
     }
+  } else {
+    let checkDate = getPreviousWorkday(today);
 
-    return {
-      currentStreak: hasCurrentStreak ? currentStreak : oldStreak,
-      oldStreak,
-      lastActiveDate,
-      hasCurrentStreak: hasCurrentStreak || oldStreak > 0,
-    };
-  }, [reflections]);
+    while (true) {
+      if (isWeekend(checkDate)) {
+        checkDate = getPreviousWorkday(checkDate);
+        continue;
+      }
+
+      const hasReflectionOnDate =
+        sortedDates.some((date) => {
+          const d = new Date(date);
+          d.setHours(0, 0, 0, 0);
+          return d.getTime() === checkDate.getTime();
+        }) || isHoliday(checkDate);
+
+      if (hasReflectionOnDate) {
+        if (!lastActiveDate) lastActiveDate = new Date(checkDate);
+        oldStreak++;
+        checkDate = getPreviousWorkday(checkDate);
+      } else {
+        break;
+      }
+    }
+  }
+
+  return {
+    currentStreak: hasCurrentStreak ? currentStreak : oldStreak,
+    oldStreak,
+    lastActiveDate,
+    hasCurrentStreak: hasCurrentStreak || oldStreak > 0,
+  };
+}
+
+export function getDisplayStreak(sd: StreakData): number {
+  return sd.hasCurrentStreak ? sd.currentStreak : sd.oldStreak > 0 ? sd.oldStreak : 0;
+}
+
+export function useStreakCalculation(reflections: Reflection[]): StreakData {
+  return useMemo(() => calculateStreakData(reflections), [reflections]);
 }

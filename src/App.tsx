@@ -16,6 +16,7 @@ import UserReflectionsPage from "./pages/UserReflectionsPage";
 import UserProfilePage from "./pages/UserProfilePage";
 import LearnerDirectoryPage from "./pages/LearnerDirectoryPage";
 import MyProfileWrapper from "./pages/MyProfileWrapper";
+import LearnerGenmateGardenPage from "./pages/LearnerGenmateGardenPage";
 import TalkBoardPage from "./pages/talk-board-page";
 import PostPage from "./pages/PostPage";
 import ReflectionsPage from "./pages/user-reflection";
@@ -23,6 +24,7 @@ import ToolsPage from "./pages/ToolPage";
 import SpinWheelPage from "./pages/SpinWheelPage";
 import WeeklySummaryPage from "./pages/weekly-summary-page";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
+import { GenmateGardenPage } from "./pages/admin/GenmateGardenPage";
 import { AdminLayout } from "./routes/layouts/AdminLayout";
 import { AuthedPageLayout } from "./routes/layouts/AuthedPageLayout";
 import { LearnerLayout } from "./routes/layouts/LearnerLayout";
@@ -100,6 +102,7 @@ function AppContent() {
             <Route path="table" element={<AdminTablePage />} />
             <Route path="table/:id" element={<UserReflectionsPage />} />
             <Route path="users" element={<AdminUsersPage />} />
+            <Route path="garden" element={<GenmateGardenPage />} />
             <Route path="weekly-summary" element={<WeeklySummaryPage />} />
             <Route path="attendance" element={<AttendanceShell />}>
               <Route index element={<Navigate to="register" replace />} />
@@ -120,6 +123,7 @@ function AppContent() {
             <Route path="attendance" element={<StudentAttendance />} />
             <Route path="directory" element={<LearnerDirectoryPage />} />
             <Route path="my-profile" element={<MyProfileWrapper />} />
+            <Route path="garden" element={<LearnerGenmateGardenPage />} />
           </Route>
 
           <Route

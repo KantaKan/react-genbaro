@@ -80,6 +80,21 @@ export const handlers = [
             email: "alice@example.com",
             cohort_number: 1,
             role: "learner",
+            genmate_group: "Garden Alpha",
+            reflections: [
+              {
+                _id: "ref-1",
+                user_id: "user-1",
+                date: "2026-02-02T10:00:00.000Z",
+                day: "2026-02-02",
+                createdAt: "2026-02-02T10:00:00.000Z",
+                reflection: {
+                  barometer: "Comfort Zone",
+                  tech_sessions: { happy: "hooks", improve: "state" },
+                  non_tech_sessions: { happy: "sync", improve: "focus" },
+                },
+              },
+            ],
           },
           {
             _id: "user-2",
@@ -88,6 +103,8 @@ export const handlers = [
             email: "bob@example.com",
             cohort_number: 1,
             role: "admin",
+            genmate_group: "Garden Alpha",
+            reflections: [],
           },
         ],
       },
