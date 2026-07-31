@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useEffect, useState, useCallback } from "react"
-import { motion, useAnimation, AnimatePresence } from "framer-motion"
+import { motion, useAnimation, AnimatePresence, useReducedMotion } from "framer-motion"
 import type { StreakData } from "@/hooks/use-reflections"
 import {
   getMilestoneForStreak,
@@ -247,14 +247,15 @@ const PetalBurst = ({ onDone }: { onDone: () => void }) => {
   )
 }
 
-const SeedlingPlant = ({ tier = 0, active, className, variant }: { tier?: PlantTier; active: boolean; className?: string; variant?: PlantVariantConfig }) => {
+export const SeedlingPlant = ({ tier = 0, active, className, variant, showParticles = true }: { tier?: PlantTier; active: boolean; className?: string; variant?: PlantVariantConfig; showParticles?: boolean }) => {
   const swayControls = useAnimation()
   const leafBounceControls = useAnimation()
+  const prefersReducedMotion = useReducedMotion()
   const config = getPlantTierConfig(tier)
   const potPaths = variant ? getPotPath(variant.pot) : null
 
   useEffect(() => {
-    if (active) {
+    if (active && !prefersReducedMotion) {
       swayControls.start({
         rotate: [0, -2, 1.5, -1, 2, -0.5, 0],
         transition: { duration: 3, repeat: Infinity, ease: "easeInOut" },
@@ -270,7 +271,7 @@ const SeedlingPlant = ({ tier = 0, active, className, variant }: { tier?: PlantT
       leafBounceControls.stop()
       leafBounceControls.set({ scaleY: 1, scaleX: 1 })
     }
-  }, [active, swayControls, leafBounceControls])
+  }, [active, prefersReducedMotion, swayControls, leafBounceControls])
 
   const stemColor = active ? (variant?.palette.stem ?? config.stemColor) : "#a1a1aa"
   const leafColor = active ? (variant?.palette.leaf ?? config.leafColor) : "#d4d4d8"
@@ -332,7 +333,7 @@ const SeedlingPlant = ({ tier = 0, active, className, variant }: { tier?: PlantT
   return (
     <div className={`relative ${className}`}>
       {/* Glow effects — Sunlight Through Canopy */}
-      {active && config.growthGlow === "glow" && (
+      {active && !prefersReducedMotion && config.growthGlow === "glow" && (
         <>
           <motion.div
             className="absolute rounded-full"
@@ -357,7 +358,7 @@ const SeedlingPlant = ({ tier = 0, active, className, variant }: { tier?: PlantT
         </>
       )}
 
-      {active && config.growthGlow === "radiant" && (
+      {active && !prefersReducedMotion && config.growthGlow === "radiant" && (
         <>
           <motion.div
             className="absolute rounded-full"
@@ -392,7 +393,7 @@ const SeedlingPlant = ({ tier = 0, active, className, variant }: { tier?: PlantT
         </>
       )}
 
-      {active && config.growthGlow === "bloom" && (
+      {active && !prefersReducedMotion && config.growthGlow === "bloom" && (
         <>
           <motion.div
             className="absolute rounded-full"
@@ -433,7 +434,7 @@ const SeedlingPlant = ({ tier = 0, active, className, variant }: { tier?: PlantT
         </>
       )}
 
-      {active && config.growthGlow === "aurora" && (
+      {active && !prefersReducedMotion && config.growthGlow === "aurora" && (
         <>
           <motion.div
             className="absolute rounded-full"
@@ -497,7 +498,7 @@ const SeedlingPlant = ({ tier = 0, active, className, variant }: { tier?: PlantT
         </>
       )}
 
-      {!active && config.growthGlow !== "none" && (
+      {!active && !prefersReducedMotion && config.growthGlow !== "none" && (
         <motion.div
           className="absolute rounded-full"
           style={{
@@ -831,7 +832,7 @@ const SeedlingPlant = ({ tier = 0, active, className, variant }: { tier?: PlantT
       </motion.div>
 
       {/* Floating particles — organic drift */}
-      {active && config.particleCount > 0 && (
+      {active && showParticles && !prefersReducedMotion && config.particleCount > 0 && (
         <div className="absolute inset-0 pointer-events-none overflow-visible">
           {/* Pollen motes — gentle warm air arcs */}
           {hasPollen && pollenPositions.slice(0, pollenCount).map((p, i) => (

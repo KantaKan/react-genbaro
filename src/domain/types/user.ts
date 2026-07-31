@@ -75,6 +75,23 @@ export interface GetAllUsersResponse {
   };
 }
 
+export interface GenmateGardenMember {
+  _id: string;
+  first_name: string;
+  last_name: string;
+  cohort_number: number;
+  genmate_group: string;
+  reflection_dates: string[];
+}
+
+export interface GenmateGardenResponse {
+  status: string;
+  message: string;
+  data: {
+    users: GenmateGardenMember[];
+  };
+}
+
 export interface JWTPayload {
   user_id: string;
   cohort?: number;

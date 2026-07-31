@@ -19,6 +19,7 @@ import FeedbackForm from "./linear-feedback-form";
 import { ReflectionPreview } from "./reflection-preview";
 import { SubmissionStatusCard } from "./submission-status-card";
 import { AchievementsSection } from "./achievements-section";
+import LearnerGenmateGardenWidget from "./learner-genmate-garden-widget";
 import { api } from "@/lib/api";
 import type { Badge } from "@/lib/types";
 
@@ -280,6 +281,8 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                   "Track your learning journey and grow through daily reflection"
                 )}
               </motion.p>
+
+              <LearnerGenmateGardenWidget />
             </div>
             <div className="flex-col sm:flex-row items-stretch sm:items-center gap-3">
               {hasSubmittedToday ? (

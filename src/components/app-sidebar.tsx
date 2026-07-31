@@ -13,6 +13,7 @@ import {
   ClipboardCheck,
   Radio,
   Bell,
+  Sprout,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -63,6 +64,11 @@ const navigationConfig: Record<UserRole, any[]> = {
           title: "All Users",
           url: "/admin/users",
           icon: Users, // Add icon for sub-menu item
+        },
+        {
+          title: "Genmate Garden",
+          url: "/admin/garden",
+          icon: Sprout,
         },
         {
           title: "Learner Directory",
@@ -156,6 +162,11 @@ const navigationConfig: Record<UserRole, any[]> = {
           title: "Learner Directory",
           url: "/learner/directory",
           icon: Users,
+        },
+        {
+          title: "Genmate Garden",
+          url: "/learner/garden",
+          icon: Sprout,
         },
       ],
     },

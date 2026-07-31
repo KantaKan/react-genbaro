@@ -1,10 +1,22 @@
 import { api } from "../../infrastructure/api";
-import type { User, GetAllUsersResponse, ApiResponse, UserData } from "../../domain/types";
+import type {
+  User,
+  GetAllUsersResponse,
+  ApiResponse,
+  UserData,
+  GenmateGardenMember,
+  GenmateGardenResponse,
+} from "../../domain/types";
 
 export const userService = {
   async getUserById(userId: string): Promise<UserData> {
     const response = await api.get<ApiResponse<UserData>>(`/users/${userId}`);
     return response.data.data;
+  },
+
+  async getMyGenmateGarden(): Promise<GenmateGardenMember[]> {
+    const response = await api.get<GenmateGardenResponse>("/users/genmate-garden");
+    return response.data.data.users;
   },
 
   async getAllUsers(): Promise<User[]> {
@@ -49,6 +61,7 @@ export const userService = {
 
 export const getAllUsers = userService.getAllUsers;
 export const getCohort = userService.getUsersByCohort;
+export const getMyGenmateGarden = userService.getMyGenmateGarden;
 export const getUsersByBarometer = userService.getUsersByBarometer;
 export const addProfileComment = userService.addProfileComment;
 export const addProfileReaction = userService.addProfileReaction;
