@@ -24,7 +24,7 @@ export {
   deletePost,
   deleteComment,
 } from "../application/services/boardService";
-export { getAllUsers, getCohort, getUsersByBarometer, deleteUserById, getMyGenmateGarden } from "../application/services/userService";
+export { getAllUsers, getCohort, deleteUserById, getMyGenmateGarden } from "../application/services/userService";
 export { getWeeklyReflections, createReflection, getBarometerData } from "../application/services/reflectionService";
 export {
   submitLeaveRequest,
@@ -48,7 +48,6 @@ export {
   getTodayOverview,
   lockAttendance,
   deleteAttendanceRecord,
-  getAttendanceStatsByDays,
   getDailyAttendanceStats,
   getMyAttendanceHistory,
   getMyDailyStats,
