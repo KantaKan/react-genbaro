@@ -29,11 +29,6 @@ export const userService = {
     return response.data.data.users;
   },
 
-  async getUsersByBarometer(barometer: string): Promise<User[]> {
-    const response = await api.get<User[]>(`admin/users/barometer/${barometer}`);
-    return response.data;
-  },
-
   async addProfileComment(userId: string, payload: { content: string; parentId?: string }): Promise<void> {
     await api.post(`/users/${userId}/profile/comments`, payload);
   },
@@ -62,7 +57,6 @@ export const userService = {
 export const getAllUsers = userService.getAllUsers;
 export const getCohort = userService.getUsersByCohort;
 export const getMyGenmateGarden = userService.getMyGenmateGarden;
-export const getUsersByBarometer = userService.getUsersByBarometer;
 export const addProfileComment = userService.addProfileComment;
 export const addProfileReaction = userService.addProfileReaction;
 export const getUserById = userService.getUserById;

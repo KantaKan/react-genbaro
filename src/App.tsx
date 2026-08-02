@@ -19,6 +19,7 @@ import MyProfileWrapper from "./pages/MyProfileWrapper";
 import LearnerGenmateGardenPage from "./pages/LearnerGenmateGardenPage";
 import TalkBoardPage from "./pages/talk-board-page";
 import PostPage from "./pages/PostPage";
+import StampBoardPage from "./pages/stamp-board-page";
 import ReflectionsPage from "./pages/user-reflection";
 import ToolsPage from "./pages/ToolPage";
 import SpinWheelPage from "./pages/SpinWheelPage";
@@ -134,6 +135,7 @@ function AppContent() {
             <Route path="/talk-board/:postId" element={<PostPage />} />
             <Route path="/tools" element={<ToolsPage />} />
             <Route path="/tools/spin-wheel" element={<SpinWheelPage />} />
+            <Route path="/stamp-board" element={<StampBoardPage />} />
           </Route>
 
           <Route

@@ -111,16 +111,6 @@ export const attendanceService = {
     return response.data.data;
   },
 
-  async getAttendanceStatsByDays(
-    cohort?: number,
-    days = 7
-  ): Promise<AttendanceStats[]> {
-    let url = `/admin/attendance/stats-by-days?days=${days}`;
-    if (cohort) url += `&cohort=${cohort}`;
-    const response = await api.get(url);
-    return response.data.data;
-  },
-
   async getDailyAttendanceStats(
     cohort?: number,
     startDate?: string,
@@ -231,7 +221,6 @@ export const getStudentAttendanceHistory = attendanceService.getStudentAttendanc
 export const getTodayOverview = attendanceService.getTodayOverview;
 export const lockAttendance = attendanceService.lockAttendance;
 export const deleteAttendanceRecord = attendanceService.deleteAttendanceRecord;
-export const getAttendanceStatsByDays = attendanceService.getAttendanceStatsByDays;
 export const getDailyAttendanceStats = attendanceService.getDailyAttendanceStats;
 export const getMyAttendanceHistory = attendanceService.getMyAttendanceHistory;
 export const getMyDailyStats = attendanceService.getMyDailyStats;
