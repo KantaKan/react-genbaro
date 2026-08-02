@@ -1,60 +1,36 @@
 import { toast } from "react-toastify";
 import { useMutation, useQueryClient } from "react-query";
 import { createStamp } from "@/lib/api";
-import { STAMP_W, STAMP_H } from "@/lib/stamp-mask";
+import { fireConfetti, fireMilestoneConfetti } from "@/lib/confetti";
+import { prepareStampFile } from "@/lib/stamp-upload";
+import type { Stamp } from "@/lib/stamp";
 
-const MAX_DIMENSION = 600;
-const IMAGE_QUALITY = 0.78;
+const MILESTONE_INTERVAL = 10;
 
-async function prepareStampFile(file: File): Promise<File> {
-  const bitmap = await createImageBitmap(file);
-  const targetRatio = STAMP_W / STAMP_H;
-
-  let cropWidth = bitmap.width;
-  let cropHeight = bitmap.height;
-  if (bitmap.width / bitmap.height > targetRatio) {
-    cropWidth = Math.round(bitmap.height * targetRatio);
-  } else {
-    cropHeight = Math.round(bitmap.width / targetRatio);
-  }
-  const sx = (bitmap.width - cropWidth) / 2;
-  const sy = (bitmap.height - cropHeight) / 2;
-
-  const scale = Math.min(1, MAX_DIMENSION / Math.max(cropWidth, cropHeight));
-  const outputWidth = Math.max(1, Math.round(cropWidth * scale));
-  const outputHeight = Math.max(1, Math.round(cropHeight * scale));
-
-  const canvas = document.createElement("canvas");
-  canvas.width = outputWidth;
-  canvas.height = outputHeight;
-  const context = canvas.getContext("2d");
-  if (!context) {
-    throw new Error("Canvas is not supported");
-  }
-
-  context.drawImage(bitmap, sx, sy, cropWidth, cropHeight, 0, 0, outputWidth, outputHeight);
-  bitmap.close();
-
-  const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob(resolve, "image/webp", IMAGE_QUALITY)
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
-  if (!blob) {
-    throw new Error("Image encoding failed");
-  }
-
-  const baseName = file.name.replace(/\.[^/.]+$/, "") || "stamp";
-  return new File([blob], `${baseName}.webp`, { type: "image/webp" });
 }
 
 export function useStampUpload() {
   const queryClient = useQueryClient();
 
   const mutation = useMutation(
-    ({ file }: { file: File }) => createStamp(file),
+    ({ file }: { file: File; isMilestone: boolean }) => createStamp(file),
     {
-      onSuccess: () => {
+      onSuccess: (_data, variables) => {
         queryClient.invalidateQueries("stampBoard");
         queryClient.invalidateQueries("stampCohort");
+        if (!prefersReducedMotion()) {
+          if (variables.isMilestone) {
+            fireMilestoneConfetti();
+          } else {
+            fireConfetti();
+          }
+        }
         toast.success("Your stamp was added to the board!");
       },
       onError: (error: unknown) => {
@@ -68,12 +44,19 @@ export function useStampUpload() {
     }
   );
 
-  const upload = async (_cohortNumber: number, file: File) => {
+  const upload = async (
+    cohortNumber: number,
+    file: File,
+    options: { prepared?: boolean } = {}
+  ): Promise<boolean> => {
     try {
-      const prepared = await prepareStampFile(file);
-      mutation.mutate({ file: prepared });
+      const ready = options.prepared ? file : await prepareStampFile(file);
+      const current = queryClient.getQueryData<Stamp[]>(["stampBoard", cohortNumber]) ?? [];
+      const isMilestone = (current.length + 1) % MILESTONE_INTERVAL === 0;
+      await mutation.mutateAsync({ file: ready, isMilestone });
+      return true;
     } catch {
-      toast.error("That photo couldn't be read. Try a different image.");
+      return false;
     }
   };
 
