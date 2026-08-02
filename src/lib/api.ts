@@ -9,6 +9,7 @@ export {
   leaveService,
   badgeService,
   boardService,
+  stampService,
 } from "../application/services";
 
 export { awardBadge } from "../application/services/badgeService";
@@ -26,6 +27,16 @@ export {
 } from "../application/services/boardService";
 export { getAllUsers, getCohort, deleteUserById, getMyGenmateGarden } from "../application/services/userService";
 export { getWeeklyReflections, createReflection, getBarometerData } from "../application/services/reflectionService";
+export {
+  listCohorts,
+  getCohortInfo,
+  getCohortStamps,
+  createStamp,
+  updateCohort,
+  uploadPoster,
+  clearCohortStamps,
+  deleteStamp,
+} from "../application/services/stampService";
 export {
   submitLeaveRequest,
   getMyLeaveRequests,

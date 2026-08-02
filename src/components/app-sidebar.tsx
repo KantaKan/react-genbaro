@@ -14,6 +14,7 @@ import {
   Radio,
   Bell,
   Sprout,
+  Stamp,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -135,6 +136,19 @@ const navigationConfig: Record<UserRole, any[]> = {
         },
       ],
     },
+    {
+      title: "Stamp Board",
+      url: "/stamp-board",
+      icon: Stamp,
+      isActive: false,
+      items: [
+        {
+          title: "Stamp Board",
+          url: "/stamp-board",
+          icon: Stamp, // Add icon for sub-menu item
+        },
+      ],
+    },
   ],
   learner: [
     {
@@ -196,6 +210,19 @@ const navigationConfig: Record<UserRole, any[]> = {
           title: "Discussion",
           url: "/talk-board",
           icon: MessageSquare, // Add icon for sub-menu item
+        },
+      ],
+    },
+    {
+      title: "Stamp Board",
+      url: "/stamp-board",
+      icon: Stamp,
+      isActive: false,
+      items: [
+        {
+          title: "Stamp Board",
+          url: "/stamp-board",
+          icon: Stamp, // Add icon for sub-menu item
         },
       ],
     },
