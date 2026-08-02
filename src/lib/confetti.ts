@@ -29,3 +29,28 @@ export function fireConfetti() {
     });
   }, 150);
 }
+
+export function fireMilestoneConfetti() {
+  const defaults = {
+    colors: FIRE_PALETTE,
+    ticks: 140,
+    gravity: 1,
+    scalar: 1.2,
+    shapes: ["circle", "square"] as confetti.Shape[],
+    drift: 0,
+  };
+
+  const end = Date.now() + 1200;
+  (function frame() {
+    confetti({
+      ...defaults,
+      particleCount: 8,
+      startVelocity: 45,
+      spread: 70,
+      origin: { x: Math.random(), y: Math.random() * 0.4 + 0.1 },
+    });
+    if (Date.now() < end) {
+      requestAnimationFrame(frame);
+    }
+  })();
+}

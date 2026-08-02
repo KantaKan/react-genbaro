@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Flame, Sparkles, Stamp, Users } from "lucide-react";
 import { useQuery } from "react-query";
 import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/application/contexts/UserDataContext";
@@ -18,7 +19,7 @@ import {
 import { getCohortInfo, getCohortStamps, listCohorts } from "@/lib/api";
 
 export default function StampBoardPage() {
-  const { userRole } = useAuth();
+  const { userRole, userId } = useAuth();
   const { userData, loading: userDataLoading } = useUserData();
   const isAdmin = userRole === "admin";
 
@@ -78,13 +79,20 @@ export default function StampBoardPage() {
   const stamps = stampsQuery.data ?? [];
   const isLocked = cohort?.isLocked ?? false;
 
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const stampedToday = stamps.filter((stamp) => new Date(stamp.createdAt) >= todayStart).length;
+  const uniqueStampers = new Set(stamps.map((stamp) => stamp.ownerId)).size;
+  const stampsToMilestone = 10 - (stamps.length % 10);
+  const milestoneProgress = ((stamps.length % 10) / 10) * 100;
+
   return (
     <div className="container mx-auto py-10">
       <StampDefs />
-      <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
+      <div className="flex flex-wrap justify-between items-end mb-4 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Stamp Board</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="font-handwriting text-5xl text-foreground leading-none">Stamp Board</h1>
+          <p className="text-muted-foreground mt-2">
             {isLocked
               ? "This board is closed — here's everything you stamped together."
               : "Paste a stamp onto your cohort's shared canvas."}
@@ -116,7 +124,34 @@ export default function StampBoardPage() {
         </div>
       </div>
 
-      <CohortBoard stamps={stamps} isLocked={isLocked} canDelete={isAdmin} />
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1.5 text-xs text-muted-foreground">
+          <Stamp className="h-3.5 w-3.5 text-primary" />
+          <strong className="text-foreground">{stamps.length}</strong> total
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1.5 text-xs text-muted-foreground">
+          <Users className="h-3.5 w-3.5 text-primary" />
+          <strong className="text-foreground">{uniqueStampers}</strong> stampers
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1.5 text-xs text-muted-foreground">
+          <Flame className="h-3.5 w-3.5 text-amber-500" />
+          <strong className="text-foreground">{stampedToday}</strong> stamped today
+        </span>
+        {stamps.length > 0 && (
+          <span className="inline-flex items-center gap-2 rounded-full bg-muted/60 px-3 py-1.5 text-xs text-muted-foreground">
+            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-amber-500 transition-all duration-500"
+                style={{ width: `${milestoneProgress}%` }}
+              />
+            </div>
+            {stampsToMilestone} to next milestone
+          </span>
+        )}
+      </div>
+
+      <CohortBoard stamps={stamps} isLocked={isLocked} canDelete={isAdmin} userId={userId} />
     </div>
   );
 }
