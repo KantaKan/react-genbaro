@@ -19,19 +19,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { usePersistedState } from "@/hooks/use-persisted-state";
 import { SkeletonCard } from "@/components/loading-skeleton";
 import type { JWTPayload, User } from "@/domain/types";
+
+const COHORT_KEY = "baro:learner-directory:cohort";
 
 export function AllUsers() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [selectedCohort, setSelectedCohort] = useState<number | "all">(
-    () => {
-      const cohortParam = searchParams.get("cohort");
-      if (!cohortParam || cohortParam === "all") return "all";
-      const num = Number(cohortParam);
-      return isNaN(num) ? "all" : num;
-    }
+  const cohortParam = searchParams.get("cohort");
+  const initialCohort: number | "all" =
+    !cohortParam || cohortParam === "all" || isNaN(Number(cohortParam))
+      ? "all"
+      : Number(cohortParam);
+  const [selectedCohort, setSelectedCohort] = usePersistedState<number | "all">(
+    COHORT_KEY,
+    initialCohort
   );
 
   const handleCohortChange = (value: number | "all") => {
