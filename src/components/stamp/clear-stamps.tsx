@@ -40,7 +40,7 @@ export function ClearStamps({ cohortNumber }: ClearStampsProps) {
       <Button
         variant="outline"
         size="sm"
-        className="text-red-500 hover:text-red-700"
+        className="text-destructive hover:text-destructive"
         onClick={() => setOpen(true)}
       >
         <Trash2 className="mr-1.5 h-4 w-4" />
@@ -59,7 +59,7 @@ export function ClearStamps({ cohortNumber }: ClearStampsProps) {
             <AlertDialogAction
               onClick={() => mutation.mutate()}
               disabled={mutation.isLoading}
-              className="bg-red-500 hover:bg-red-600"
+              className="bg-destructive hover:bg-destructive/90"
             >
               {mutation.isLoading ? "Clearing..." : "Clear Board"}
             </AlertDialogAction>

@@ -9,7 +9,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { STAMP_W } from "@/lib/stamp-mask";
-import { deterministicOffset, deterministicRotation } from "@/lib/stamp-rotation";
+import {
+  deterministicOffset,
+  deterministicOffsetX,
+  deterministicRotation,
+} from "@/lib/stamp-rotation";
 import type { Stamp } from "@/lib/stamp";
 
 interface CohortBoardProps {
@@ -69,7 +73,11 @@ export function CohortBoard({ stamps, isLocked, canDelete = false, userId }: Coh
                 >
                   <div
                     className="relative"
-                    style={{ transform: `translateY(${deterministicOffset(stamp.id)}px)` }}
+                    style={{
+                      transform: `translate(${deterministicOffsetX(stamp.id)}px, ${deterministicOffset(
+                        stamp.id
+                      )}px)`,
+                    }}
                   >
                     {canDelete && (
                       <div className="absolute -right-2 -top-2 z-10">
@@ -81,7 +89,10 @@ export function CohortBoard({ stamps, isLocked, canDelete = false, userId }: Coh
                     )}
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="cursor-pointer">
+                        <button
+                          type="button"
+                          className="cursor-pointer rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        >
                           <StampImage
                             src={stamp.imageUrl}
                             alt={`Stamp from ${formatStampDate(stamp.createdAt)}`}
@@ -89,7 +100,7 @@ export function CohortBoard({ stamps, isLocked, canDelete = false, userId }: Coh
                             size={STAMP_SIZE}
                             className="rounded-sm shadow-lg drop-shadow-[0_4px_8px_rgba(0,0,0,0.18)] transition-[filter] duration-200 hover:drop-shadow-[0_10px_16px_rgba(0,0,0,0.28)]"
                           />
-                        </div>
+                        </button>
                       </TooltipTrigger>
                       <TooltipContent>
                         <p className="text-xs">

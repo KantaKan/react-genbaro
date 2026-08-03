@@ -41,7 +41,7 @@ export function DeleteStampButton({ cohortNumber, stampId }: DeleteStampButtonPr
       <Button
         variant="ghost"
         size="icon"
-        className="h-7 w-7 rounded-full bg-background/80 text-red-500 shadow-sm hover:bg-background hover:text-red-700"
+        className="rounded-full bg-background/80 text-destructive shadow-sm hover:bg-background hover:text-destructive"
         aria-label="Delete stamp"
         onClick={() => setOpen(true)}
       >
@@ -60,7 +60,7 @@ export function DeleteStampButton({ cohortNumber, stampId }: DeleteStampButtonPr
             <AlertDialogAction
               onClick={() => mutation.mutate()}
               disabled={mutation.isLoading}
-              className="bg-red-500 hover:bg-red-600"
+              className="bg-destructive hover:bg-destructive/90"
             >
               {mutation.isLoading ? "Removing..." : "Remove Stamp"}
             </AlertDialogAction>
