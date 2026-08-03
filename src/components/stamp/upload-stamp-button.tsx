@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import type { ChangeEvent } from "react";
-import { Camera } from "lucide-react";
+import { Camera, Check } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { prepareStampFile } from "@/lib/stamp-upload";
 
 interface UploadStampButtonProps {
   cohortNumber: number;
+  hasStampedToday?: boolean;
 }
 
 interface PendingStamp {
@@ -17,7 +18,7 @@ interface PendingStamp {
   previewUrl: string;
 }
 
-export function UploadStampButton({ cohortNumber }: UploadStampButtonProps) {
+export function UploadStampButton({ cohortNumber, hasStampedToday = false }: UploadStampButtonProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<PendingStamp | null>(null);
   const [isPreparing, setIsPreparing] = useState(false);
@@ -72,11 +73,21 @@ export function UploadStampButton({ cohortNumber }: UploadStampButtonProps) {
       />
       <Button
         onClick={() => inputRef.current?.click()}
-        disabled={isUploading || isPreparing}
+        disabled={isUploading || isPreparing || hasStampedToday}
         className="rounded-full px-6"
+        aria-disabled={hasStampedToday}
       >
-        <Camera className="mr-2 h-4 w-4" />
-        {isUploading ? "Stamping..." : isPreparing ? "Preparing..." : "Add a Stamp"}
+        {hasStampedToday ? (
+          <>
+            <Check className="mr-2 h-4 w-4" />
+            See you tomorrow!
+          </>
+        ) : (
+          <>
+            <Camera className="mr-2 h-4 w-4" />
+            {isUploading ? "Stamping..." : isPreparing ? "Preparing..." : "Add a Stamp"}
+          </>
+        )}
       </Button>
       <StampPreviewDialog
         open={Boolean(pending)}

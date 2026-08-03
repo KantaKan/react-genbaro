@@ -94,7 +94,11 @@ export default function StampBoardPage() {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const stampedToday = stamps.filter((stamp) => new Date(stamp.createdAt) >= todayStart).length;
+  const stampedTodayByUser = stamps.some(
+    (stamp) => stamp.ownerId === userId && new Date(stamp.createdAt) >= todayStart
+  );
   const uniqueStampers = new Set(stamps.map((stamp) => stamp.ownerId)).size;
+  const milestoneReached = stamps.length > 0 && stamps.length % 10 === 0;
   const stampsToMilestone = 10 - (stamps.length % 10);
   const milestoneProgress = ((stamps.length % 10) / 10) * 100;
 
@@ -130,7 +134,9 @@ export default function StampBoardPage() {
             </Select>
           )}
 
-          {!isLocked && <UploadStampButton cohortNumber={cohortNumber} />}
+          {!isLocked && (
+            <UploadStampButton cohortNumber={cohortNumber} hasStampedToday={stampedTodayByUser} />
+          )}
           <PosterExport cohortNumber={cohortNumber} stamps={stamps} />
           {isAdmin && <ClearStamps cohortNumber={cohortNumber} />}
         </div>
@@ -146,19 +152,19 @@ export default function StampBoardPage() {
           <strong className="text-foreground">{uniqueStampers}</strong> stampers
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1.5 text-xs text-muted-foreground">
-          <Flame className="h-3.5 w-3.5 text-amber-500" />
+          <Flame className="h-3.5 w-3.5 text-accent" />
           <strong className="text-foreground">{stampedToday}</strong> stamped today
         </span>
         {stamps.length > 0 && (
           <span className="inline-flex items-center gap-2 rounded-full bg-muted/60 px-3 py-1.5 text-xs text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+            <Sparkles className="h-3.5 w-3.5 text-accent" />
             <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-amber-500 transition-all duration-500"
-                style={{ width: `${milestoneProgress}%` }}
+                className="h-full rounded-full bg-accent transition-all duration-300"
+                style={{ width: `${milestoneReached ? 100 : milestoneProgress}%` }}
               />
             </div>
-            {stampsToMilestone} to next milestone
+            {milestoneReached ? "Milestone reached!" : `${stampsToMilestone} to next milestone`}
           </span>
         )}
       </div>

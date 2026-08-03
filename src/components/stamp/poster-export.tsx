@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Download, Upload } from "lucide-react";
+import { Download, Loader2, Upload } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
@@ -123,7 +123,11 @@ export function PosterExport({ cohortNumber, stamps }: PosterExportProps) {
         onClick={() => void handleExport()}
         disabled={isExporting || isUploading}
       >
-        <Download className="mr-1.5 h-4 w-4" />
+        {isExporting ? (
+          <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+        ) : (
+          <Download className="mr-1.5 h-4 w-4" />
+        )}
         {isExporting ? "Exporting..." : "Export Poster"}
       </Button>
       <Button
@@ -132,7 +136,11 @@ export function PosterExport({ cohortNumber, stamps }: PosterExportProps) {
         onClick={() => void handleUpload()}
         disabled={isExporting || isUploading}
       >
-        <Upload className="mr-1.5 h-4 w-4" />
+        {isUploading ? (
+          <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+        ) : (
+          <Upload className="mr-1.5 h-4 w-4" />
+        )}
         {isUploading ? "Saving..." : "Save Poster"}
       </Button>
     </div>
