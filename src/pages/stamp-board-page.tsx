@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Flame, Sparkles, Stamp, Users } from "lucide-react";
 import { useQuery } from "react-query";
 import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/application/contexts/UserDataContext";
 import { PageError, PageLoading } from "@/components/page-state";
+import { usePersistedState } from "@/hooks/use-persisted-state";
 import { ClearStamps } from "@/components/stamp/clear-stamps";
 import { CohortBoard } from "@/components/stamp/cohort-board";
 import { PosterExport } from "@/components/stamp/poster-export";
@@ -17,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getCohortInfo, getCohortStamps, listCohorts } from "@/lib/api";
+
+const STAMP_COHORT_KEY = "baro:stamp-board:cohort";
 
 export default function StampBoardPage() {
   const { userRole, userId } = useAuth();
@@ -35,8 +38,17 @@ export default function StampBoardPage() {
     return first ? first.cohortNumber : undefined;
   }, [userData, cohortsQuery.data]);
 
-  const [selectedCohort, setSelectedCohort] = useState<number | undefined>(undefined);
+  const [selectedCohort, setSelectedCohort] = usePersistedState<number | undefined>(
+    STAMP_COHORT_KEY,
+    undefined
+  );
   const cohortNumber = selectedCohort ?? defaultCohort;
+
+  useEffect(() => {
+    if (isAdmin && selectedCohort && cohortsQuery.data && !cohortsQuery.data.some((item) => item.cohortNumber === selectedCohort)) {
+      setSelectedCohort(undefined);
+    }
+  }, [isAdmin, cohortsQuery.data, selectedCohort, setSelectedCohort]);
 
   const cohortQuery = useQuery(
     ["stampCohort", cohortNumber],
