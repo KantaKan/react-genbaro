@@ -5,7 +5,7 @@ export interface Badge {
   emoji: string;
   imageUrl?: string;
   color?: string;
-  style?: "pixel" | "rounded" | "minimal";
+  style?: "pixel" | "rounded" | "minimal" | "image";
   awardedAt: string;
 }
 
@@ -15,7 +15,7 @@ export interface BadgeAwardPayload {
   emoji: string;
   imageUrl?: string;
   color?: string;
-  style?: "pixel" | "rounded" | "minimal";
+  style?: "pixel" | "rounded" | "minimal" | "image";
 }
 
 export interface AwardBadgeResponse {

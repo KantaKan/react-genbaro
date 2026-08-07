@@ -21,8 +21,6 @@ interface ConfigState {
       visibleColumns: string[];
     };
   };
-  // Add more configuration sections as needed
-  [key: string]: any;
 }
 
 // Default configuration values

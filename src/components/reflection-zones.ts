@@ -22,7 +22,7 @@ export const getColorForBarometer = (barometer: string) => {
   return zone ? `${zone.bgColor} ${zone.textColor}` : "";
 };
 
-export const calculateZoneStats = (reflections: any[]) => {
+export const calculateZoneStats = (reflections: { reflection?: { barometer?: string } }[]) => {
   const stats = {
     comfort: 0,
     stretchEnjoying: 0,
@@ -32,8 +32,9 @@ export const calculateZoneStats = (reflections: any[]) => {
   };
 
   reflections.forEach((reflection) => {
-    if (reflection?.reflection?.barometer) {
-      const zone = reflectionZones.find((zone) => zone.label === reflection.reflection.barometer);
+    const barometer = reflection?.reflection?.barometer;
+    if (barometer) {
+      const zone = reflectionZones.find((zone) => zone.label === barometer);
       if (zone) {
         if (zone.id === "comfort") stats.comfort++;
         if (zone.id === "stretch-enjoying") stats.stretchEnjoying++;

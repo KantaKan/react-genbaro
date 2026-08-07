@@ -6,8 +6,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "react-toastify";
-import { manualMarkAttendance, deleteAttendanceRecord, type AttendanceRecord } from "@/lib/api";
-import { Sun, Sunset, Trash2 } from "lucide-react";
+import { manualMarkAttendance, deleteAttendanceRecord } from "@/lib/api";
+import type { AttendanceStatusType } from "@/domain/types";
+import { Sun, Sunset } from "lucide-react";
 
 interface EditDayDialogProps {
   open: boolean;
@@ -83,13 +84,13 @@ export function EditDayDialog({
     setIsSubmitting(true);
     try {
       if (morning) {
-        await manualMarkAttendance(userId, date, "morning", morning as any);
+        await manualMarkAttendance(userId, date, "morning", morning as AttendanceStatusType);
       } else if (morningRecordId) {
         await deleteAttendanceRecord(morningRecordId);
       }
 
       if (afternoon) {
-        await manualMarkAttendance(userId, date, "afternoon", afternoon as any);
+        await manualMarkAttendance(userId, date, "afternoon", afternoon as AttendanceStatusType);
       } else if (afternoonRecordId) {
         await deleteAttendanceRecord(afternoonRecordId);
       }
@@ -97,7 +98,7 @@ export function EditDayDialog({
       toast.success("Attendance updated");
       onOpenChange(false);
       onSuccess();
-    } catch (error) {
+    } catch {
       toast.error("Failed to update attendance");
     } finally {
       setIsSubmitting(false);

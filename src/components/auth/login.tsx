@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Link, useNavigate } from "react-router-dom"; // Correct import for React Router
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -36,8 +36,6 @@ export function Login({ onLogin }: LoginProps) {
       password: "",
     },
   });
-  const navigate = useNavigate(); // To navigate after successful login
-
   // Handle form submission
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);

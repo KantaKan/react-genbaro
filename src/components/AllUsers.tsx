@@ -1,15 +1,15 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { api } from "../lib/api";
 import { getAuthToken } from "@/infrastructure/storage";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
-import { 
-  ArrowDownAZ, ArrowUpAZ, Users, GraduationCap, Crown, 
-  Filter, ChevronDown, Check
+import {
+  ArrowDownAZ, ArrowUpAZ, GraduationCap, Crown,
+  ChevronDown, Check
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -161,8 +161,8 @@ export function AllUsers() {
       <Card className="border-none bg-transparent shadow-none">
         <CardContent className="p-0">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {users.length > 0 ? (
-              users.map((user) => (
+            {sortedUsers.length > 0 ? (
+              sortedUsers.map((user) => (
                 <Link key={user._id} to={`/profile/${user._id}`}>
                   <Card className="hover:bg-card hover:scale-[1.02] hover:shadow-lg transition-all duration-300 border-none shadow-sm group bg-card/50 backdrop-blur-sm">
                     <CardContent className="p-4 flex items-center gap-4">

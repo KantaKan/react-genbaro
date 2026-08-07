@@ -16,7 +16,7 @@ import { toast } from "react-toastify";
 import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/application/contexts/UserDataContext";
 import { addCommentReaction, addReaction, createComment, deleteComment, getPost, removeCommentReaction, removeReaction } from "@/lib/api";
-import { getBoardUserPayload, type BoardComment, type BoardPost } from "@/lib/board";
+import { getBoardUserPayload, decodeHtmlEntities, type BoardComment, type BoardPost } from "@/lib/board";
 
 interface MutationOptions {
   onSuccess?: () => void;
@@ -114,7 +114,7 @@ const PostCard: React.FC<{
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-lg">{post.content}</p>
+        <p className="text-lg">{decodeHtmlEntities(post.content)}</p>
       </CardContent>
       <CardFooter className="flex justify-between">
         <div className="flex gap-4 relative">
@@ -203,7 +203,7 @@ const CommentCard: React.FC<{
         </div>
       </CardHeader>
       <CardContent>
-        <p>{comment.content}</p>
+        <p>{decodeHtmlEntities(comment.content)}</p>
       </CardContent>
       <CardFooter className="flex justify-between">
         <div className="flex gap-4 relative">
@@ -249,7 +249,8 @@ const PostPage: React.FC = () => {
   const { postId } = useParams<{ postId: string }>();
   const queryClient = useQueryClient();
   const { userData } = useUserData();
-  const { isAdmin } = useAuth();
+  const { userRole } = useAuth();
+  const isAdmin = userRole === "admin";
   const [newComment, setNewComment] = useState("");
   const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);

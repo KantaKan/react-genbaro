@@ -1,10 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { jwtDecode } from "jwt-decode";
-import { 
-  MessageSquare, Send, Smile, Award, Info, 
+import {
+  MessageSquare, Send, Smile, Info,
   Instagram, Linkedin, Github, Edit2, Check, X,
   Pin, MapPin, Crown, Trash2
 } from "lucide-react";
@@ -20,12 +19,9 @@ import { Input } from "@/components/ui/input";
 import { BadgeRenderer } from "@/components/badge-renderer";
 import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/application/contexts/UserDataContext";
-import { getUserById, addProfileComment, addProfileReaction, updateUserPersonalDetails, deleteUserById, deleteProfileComment, updateUser } from "@/application/services/userService";
-import { deleteComment as deleteBoardComment } from "@/lib/api";
-import { getBoardUserPayload } from "@/lib/board";
-import { getAuthToken } from "@/infrastructure/storage";
+import { getUserById, addProfileComment, addProfileReaction, updateUserPersonalDetails, deleteProfileComment, updateUser } from "@/application/services/userService";
 import { toast } from "react-toastify";
-import type { JWTPayload } from "@/domain/types";
+import type { User } from "@/domain/types";
 
 // Helper to generate a unique, deterministic gradient based on a string (user ID)
 const getDeterministicGradient = (str: string) => {
@@ -110,7 +106,7 @@ const UserProfilePage: React.FC = () => {
   );
 
   const updateDetailsMutation = useMutation(
-    (payload: any) => isAdmin 
+    (payload: Partial<User>) => isAdmin
       ? updateUser(id!, payload) 
       : updateUserPersonalDetails(id!, payload),
     {
@@ -332,11 +328,11 @@ const UserProfilePage: React.FC = () => {
                         className={`cursor-pointer transition-all ${editPinnedBadges.includes(badge._id!) ? "ring-4 ring-primary rounded-xl scale-110" : "opacity-50 grayscale hover:grayscale-0"}`}
                         onClick={() => togglePinBadge(badge._id!)}
                       >
-                        <BadgeRenderer badge={badge as any} />
+                        <BadgeRenderer badge={badge} />
                       </div>
                     ))
                   ) : (
-                    pinnedBadges.map(badge => <BadgeRenderer key={badge._id} badge={badge as any} />)
+                    pinnedBadges.map(badge => <BadgeRenderer key={badge._id} badge={badge} />)
                   )}
                 </div>
               </div>
@@ -411,7 +407,7 @@ const UserProfilePage: React.FC = () => {
             {user.profile_reactions && user.profile_reactions.length > 0 && (
               <div className="pt-4 border-t border-white/5">
                 <BoardReactionSummary 
-                  reactions={user.profile_reactions.map(r => ({ ...r, id: r.id || '', userId: r.userId || '', type: r.type as any || 'emoji' }))} 
+                  reactions={user.profile_reactions.map(r => ({ ...r, id: r.id || '', userId: r.userId || '', type: (r.type === 'image' ? 'image' : 'emoji') as 'emoji' | 'image' }))}
                   className="flex items-center gap-4"
                 />
               </div>
@@ -550,7 +546,7 @@ const UserProfilePage: React.FC = () => {
                 {user.badges && user.badges.length > 0 ? (
                   user.badges.map((badge, idx) => (
                     <div key={badge._id || idx} className="flex justify-center">
-                      <BadgeRenderer badge={badge as any} />
+                      <BadgeRenderer badge={badge} />
                     </div>
                   ))
                 ) : (

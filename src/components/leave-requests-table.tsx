@@ -352,7 +352,7 @@ export function LeaveRequestsTable({ cohort }: LeaveRequestsTableProps) {
       <CreateLeaveRequestDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        students={students}
+        students={students.map((s) => ({ user_id: s._id, jsd_number: s.jsd_number ?? "", first_name: s.first_name, last_name: s.last_name }))}
         onSuccess={() => {
           loadRequests();
         }}

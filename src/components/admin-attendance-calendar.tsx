@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { getDailyAttendanceStats, getHolidays, type DailyStats, type Holiday } from "@/lib/api";
 
@@ -25,11 +24,7 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
 
   const holidays = externalHolidays || internalHolidays;
 
-  useEffect(() => {
-    loadData();
-  }, [cohort, currentMonth, externalHolidays]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -43,12 +38,16 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
         const holidaysData = await getHolidays(startDate, endDate);
         setInternalHolidays(holidaysData);
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to load calendar data.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load calendar data.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [cohort, currentMonth, externalHolidays]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const prevMonth = () => {
     const [year, month] = currentMonth.split("-").map(Number);
@@ -90,13 +89,12 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
   const th = new Date(utc + 7 * 3600000);
   const todayStr = `${th.getFullYear()}-${String(th.getMonth() + 1).padStart(2, "0")}-${String(th.getDate()).padStart(2, "0")}`;
 
-  const calendarDays: JSX.Element[] = [];
+  const emptyDays = Array.from({ length: startDayOfWeek }, (_, i) => (
+    <div key={`empty-${i}`} />
+  ));
 
-  for (let i = 0; i < startDayOfWeek; i++) {
-    calendarDays.push(<div key={`empty-${i}`} />);
-  }
-
-  for (let day = 1; day <= daysInMonth; day++) {
+  const monthDays = Array.from({ length: daysInMonth }, (_, index) => {
+    const day = index + 1;
     const dayOfWeek = (startDayOfWeek + day - 1) % 7;
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     const dateStr = `${currentMonth}-${String(day).padStart(2, "0")}`;
@@ -113,7 +111,7 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
     const amTotal = stats?.am_total || 0;
     const pmTotal = stats?.pm_total || 0;
 
-    calendarDays.push(
+    return (
       <button
         key={day}
         onClick={() => onDayClick(dateStr, isHolidayDay, holiday || undefined)}
@@ -154,7 +152,7 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
         )}
       </button>
     );
-  }
+  });
 
   return (
     <div className="register-card">
@@ -188,7 +186,8 @@ export function AdminAttendanceCalendar({ cohort, onDayClick, holidays: external
               ))}
             </div>
             <div className="grid grid-cols-7 gap-px">
-              {calendarDays}
+              {emptyDays}
+              {monthDays}
             </div>
             <div className="flex flex-wrap gap-4 font-register-mono text-[10px] mt-4 pt-3 border-t border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]">
               <div className="flex items-center gap-1.5">

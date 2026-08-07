@@ -122,6 +122,7 @@ export interface Reflection {
   day?: string;
   createdAt?: string;
   reflection: ReflectionData;
+  admin_feedback?: string;
 }
 
 export interface ReflectionData {

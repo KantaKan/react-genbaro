@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import type { Badge } from "@/lib/types";
 
@@ -209,8 +210,10 @@ function MinimalBadge({ badge, className = "", showTooltip = true }: BadgeRender
 
 // Pure PNG Image Badge Component (no styling, just the image)
 function ImageBadge({ badge, className = "", showTooltip = true }: BadgeRendererProps) {
-  if (!badge.imageUrl) {
-    // Fallback to emoji if no image URL
+  const [imageFailed, setImageFailed] = useState(false);
+
+  if (!badge.imageUrl || imageFailed) {
+    // Fallback to emoji if no image URL, or if the image failed to load
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
@@ -235,6 +238,7 @@ function ImageBadge({ badge, className = "", showTooltip = true }: BadgeRenderer
         src={badge.imageUrl}
         alt={badge.name}
         className="max-w-none"
+        onError={() => setImageFailed(true)}
         style={{
           width: "auto",
           height: "auto",

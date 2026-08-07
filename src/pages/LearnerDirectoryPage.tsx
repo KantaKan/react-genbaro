@@ -1,11 +1,14 @@
 import React from "react";
 import { AllUsers } from "@/components/AllUsers";
-import { Users, Lock } from "lucide-react";
+import { Users } from "lucide-react";
 import { useAuth } from "@/AuthContext";
+import { useUserData } from "@/application/contexts/UserDataContext";
 
 const LearnerDirectoryPage: React.FC = () => {
-  const { userRole, currentCohort } = useAuth();
+  const { userRole } = useAuth();
+  const { userData } = useUserData();
   const isAdmin = userRole === "admin";
+  const currentCohort = userData?.cohort_number;
 
   return (
     <div className="container mx-auto py-10 space-y-6">

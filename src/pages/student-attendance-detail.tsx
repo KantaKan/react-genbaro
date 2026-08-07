@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "react-toastify";
@@ -124,14 +122,11 @@ export function StudentAttendanceDetail() {
     cohort_number: number;
   } | null>(null);
 
-  useEffect(() => {
-    if (id) loadData();
-  }, [id]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
+    if (!id) return;
     setIsLoading(true);
     try {
-      const history = await getStudentAttendanceHistory(id!);
+      const history = await getStudentAttendanceHistory(id);
       setRecords(history);
       if (history.length > 0) {
         setStudentInfo({
@@ -152,7 +147,11 @@ export function StudentAttendanceDetail() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const calculateStats = () => {
     const present = records.filter((r) => r.status === "present").length;

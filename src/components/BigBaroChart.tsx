@@ -14,7 +14,7 @@ import LatestWeeklySummary from "./latest-weekly-summary";
 import { Badge } from "@/components/ui/badge"; // New import
 import { getDayBadge } from "@/utils/day-colors"; // New import
 
-const CustomizedXAxisTick = ({ x, y, payload }) => {
+const CustomizedXAxisTick = ({ x, y, payload }: { x: number; y: number; payload: { value: string } }) => {
   const { dayName } = getDayBadge(payload.value);
   return (
     <g transform={`translate(${x},${y})`}>
@@ -29,11 +29,10 @@ const CustomizedXAxisTick = ({ x, y, payload }) => {
 
 
 type BaroChartProps = {
-  userId?: string;
   cohort?: string;
 };
 
-export default function BaroChart({ userId, cohort }: BaroChartProps) {
+export default function BaroChart({ cohort }: BaroChartProps) {
   const [timeRange, setTimeRange] = React.useState("7d");
   const [view, setView] = React.useState<"chart" | "summary">("chart");
 
@@ -47,8 +46,7 @@ export default function BaroChart({ userId, cohort }: BaroChartProps) {
 
   const chartDataArray = React.useMemo(() => {
     if (!rawChartData) return null;
-    const data = Array.isArray(rawChartData) ? rawChartData : rawChartData.data;
-    return Array.isArray(data) ? data : null;
+    return Array.isArray(rawChartData) ? rawChartData : null;
   }, [rawChartData]);
 
   const chartConfig = React.useMemo(() => {
@@ -77,7 +75,7 @@ export default function BaroChart({ userId, cohort }: BaroChartProps) {
 
   const chartData = React.useMemo(() => {
     if (!chartDataArray) return [];
-    return [...chartDataArray].sort((a, b) => new Date(a.date) - new Date(b.date));
+    return [...chartDataArray].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [chartDataArray]);
 
   const totalReflections = React.useMemo(() => {
@@ -88,7 +86,7 @@ export default function BaroChart({ userId, cohort }: BaroChartProps) {
           total +
           Object.keys(dayData).reduce(
             (dayTotal, key) =>
-              key === "date" ? dayTotal : dayTotal + (dayData[key] || 0),
+              key === "date" ? dayTotal : dayTotal + (Number(dayData[key]) || 0),
             0
           )
         );
@@ -112,7 +110,7 @@ export default function BaroChart({ userId, cohort }: BaroChartProps) {
     return Math.round(
       Object.keys(todayData).reduce(
         (dayTotal, key) =>
-          key === "date" ? dayTotal : dayTotal + (todayData[key] || 0),
+          key === "date" ? dayTotal : dayTotal + (Number(todayData[key]) || 0),
         0
       )
     );
@@ -210,6 +208,7 @@ export default function BaroChart({ userId, cohort }: BaroChartProps) {
                   axisLine={false}
                   tickMargin={8}
                   minTickGap={32}
+                  tick={<CustomizedXAxisTick x={0} y={0} payload={{ value: "" }} />}
                 />
                 <ChartTooltip
                   cursor={false}

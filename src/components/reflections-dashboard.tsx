@@ -63,7 +63,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
       setIsLoadingUser(true);
       setUserError(null);
       try {
-      const response = await api.get<any>(`users/${userId}`);
+      const response = await api.get<{ data: User }>(`users/${userId}`);
       setUser(response.data.data);
       } catch (err) {
         console.error("Error fetching user data:", err);
@@ -109,14 +109,6 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   // Memoize submission status
   const hasSubmittedToday = useMemo(() => {
     return !!todaysReflection;
-  }, [todaysReflection]);
-
-  // Memoize submission date
-  const submissionDate = useMemo(() => {
-    if (todaysReflection) {
-      return getLocalDateString(new Date());
-    }
-    return null;
   }, [todaysReflection]);
 
   const handleSubmit = async (newReflection: Omit<Reflection, "_id" | "createdAt" | "day">) => {
@@ -379,7 +371,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
         </motion.div>
 
       {/* Submission Status Card */}
-      <SubmissionStatusCard hasSubmitted={hasSubmittedToday} submissionDate={submissionDate} todaysReflection={todaysReflection} />
+      <SubmissionStatusCard hasSubmitted={hasSubmittedToday} todaysReflection={todaysReflection} />
 
       {/* Achievements Section - Editorial Header */}
       {user && user.badges && user.badges.length > 0 && (

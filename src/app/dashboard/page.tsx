@@ -1,12 +1,12 @@
-import { useParams, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ModeToggle } from "@/components/mode-toggle";
 import { CustomSidebarProvider } from "@/components/custom-sidebar-provider";
 
-export default function Page({ children }: { children: React.ReactNode }, props: any) {
+export default function Page({ children }: { children: React.ReactNode }) {
   const location = useLocation();
 
   const getBreadcrumbItems = () => {

@@ -1,4 +1,3 @@
-import React from "react";
 import { BadgeCheck, ChevronsUpDown, LogOut } from "lucide-react";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";

@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { LoadingRow } from "@/components/loading-row";
 import { Badge } from "@/components/ui/badge";
-import FeedbackForm from "./feedback-form";
+import FeedbackForm, { type Reflection as NewReflectionInput } from "./feedback-form";
 import { api } from "@/lib/api";
 import { useConfig } from "@/hooks/use-config";
 import { Input } from "@/components/ui/input";
@@ -143,7 +143,7 @@ export default function AdminReflectionsTable() {
     });
   };
 
-  const handleSubmit = async (newReflection: Reflection) => {
+  const handleSubmit = async (newReflection: NewReflectionInput) => {
     try {
       const response = await api.post(`users/${newReflection.user_id}/reflections`, newReflection);
       if (response.data) {
@@ -471,7 +471,11 @@ export default function AdminReflectionsTable() {
       <Pagination className="mt-6">
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} />
+            <PaginationPrevious
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              aria-disabled={currentPage === 1}
+              className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+            />
           </PaginationItem>
 
           {/* First page */}
@@ -519,7 +523,11 @@ export default function AdminReflectionsTable() {
           )}
 
           <PaginationItem>
-            <PaginationNext onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} />
+            <PaginationNext
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              aria-disabled={currentPage === totalPages}
+              className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+            />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
