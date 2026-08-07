@@ -12,7 +12,7 @@ import { useReflections, type Reflection } from "@/hooks/use-reflections";
 import { useStreakCalculation } from "@/hooks/use-streak-calculation";
 import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflection-zones";
 import { StreakIcon, GrowthBar, ComfortZoneMessage } from "./streak-components";
-import { getMilestoneForStreak, getRandomComfortMessage, getRandomStreakQuote } from "@/lib/streak-milestones";
+import { getMilestoneForStreak, getRandomComfortMessage, getRandomStreakQuote, getNextTierProgress } from "@/lib/streak-milestones";
 import { getPlantVariant } from "@/lib/plant-variants";
 import { ReflectionsTable } from "./reflections-table";
 import FeedbackForm from "./linear-feedback-form";
@@ -20,8 +20,10 @@ import { ReflectionPreview } from "./reflection-preview";
 import { SubmissionStatusCard } from "./submission-status-card";
 import { AchievementsSection } from "./achievements-section";
 import LearnerGenmateGardenWidget from "./learner-genmate-garden-widget";
+import { FertilizerInventoryButton } from "./fertilizer-inventory-button";
 import { api } from "@/lib/api";
 import type { Badge } from "@/lib/types";
+import type { FertilizerLogEntry } from "@/domain/types";
 
 // Define the User interface
 interface User {
@@ -35,6 +37,9 @@ interface User {
   project_group: string;
   genmate_group: string;
   badges?: Badge[];
+  fertilizer_balance?: number;
+  growth_points?: number;
+  fertilizer_log?: FertilizerLogEntry[];
 }
 
 interface ReflectionsDashboardProps {
@@ -45,35 +50,45 @@ interface ReflectionsDashboardProps {
 
 export default function ReflectionsDashboard({ userId, initialReflections = [], onReflectionSubmit }: ReflectionsDashboardProps) {
   const { reflections, isLoading: isLoadingReflections, error: reflectionsError, addReflection, refetch } = useReflections(userId, initialReflections);
-  const streakData = useStreakCalculation(reflections);
 
   const [user, setUser] = useState<User | null>(null); // New state for user
   const [isLoadingUser, setIsLoadingUser] = useState(false); // New loading state for user
   const [userError, setUserError] = useState<string | null>(null); // New error state for user
 
+  const protectedDates = useMemo(() => {
+    const dates = (user?.fertilizer_log ?? [])
+      .filter((entry) => entry.kind === "protect" && entry.relatedDate)
+      .map((entry) => entry.relatedDate as string);
+    return new Set(dates);
+  }, [user?.fertilizer_log]);
+
+  const streakData = useStreakCalculation(reflections, protectedDates);
+  const tierProgress = useMemo(() => getNextTierProgress(streakData.currentStreak), [streakData.currentStreak]);
+  const oldTierProgress = useMemo(() => getNextTierProgress(streakData.oldStreak), [streakData.oldStreak]);
+
   const plantVariant = useMemo(() => {
     return user ? getPlantVariant(user._id) : undefined;
   }, [user]);
 
-  useEffect(() => {
-    refetch(); // Refetch reflections
-
-    const fetchUser = async () => { // New function to fetch user
-      if (!userId) return;
-      setIsLoadingUser(true);
-      setUserError(null);
-      try {
+  const fetchUser = useCallback(async () => {
+    if (!userId) return;
+    setIsLoadingUser(true);
+    setUserError(null);
+    try {
       const response = await api.get<{ data: User }>(`users/${userId}`);
       setUser(response.data.data);
-      } catch (err) {
-        console.error("Error fetching user data:", err);
-        setUserError("Failed to load user data");
-      } finally {
-        setIsLoadingUser(false);
-      }
-    };
-    fetchUser(); // Call new fetch user function
-  }, [userId, refetch]); // Depend on userId and refetch
+    } catch (err) {
+      console.error("Error fetching user data:", err);
+      setUserError("Failed to load user data");
+    } finally {
+      setIsLoadingUser(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    refetch(); // Refetch reflections
+    fetchUser();
+  }, [userId, refetch, fetchUser]); // Depend on userId and refetch
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState<
@@ -245,7 +260,15 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                 >
                   Daily Reflections
                 </motion.h1>
-                <StreakIcon streakData={streakData} variant={plantVariant} />
+                <StreakIcon streakData={streakData} variant={plantVariant} growthPoints={user?.growth_points ?? 0} />
+                {user && (
+                  <FertilizerInventoryButton
+                    userId={user._id}
+                    balance={user.fertilizer_balance ?? 0}
+                    eligibleProtectDate={streakData.eligibleProtectDate}
+                    onUsed={fetchUser}
+                  />
+                )}
               </div>
               <motion.p 
                 className="text-lg text-muted-foreground max-w-xl leading-relaxed"
@@ -643,11 +666,26 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                   </motion.p>
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
-                      <GrowthBar value={streakData.currentStreak} max={20} />
+                      <GrowthBar value={tierProgress.current} max={tierProgress.max} />
                       <div className="flex items-center gap-1">
                         <span className="tabular-nums font-medium">{streakData.currentStreak} day streak</span>
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          {tierProgress.isMaxTier ? "· max tier 🌟" : `· ${tierProgress.current}/${tierProgress.max} to next tier`}
+                        </span>
                       </div>
                     </div>
+                    {user && (user.growth_points ?? 0) > 0 && (
+                      <div className="flex items-center gap-3">
+                        <GrowthBar
+                          variant="growth"
+                          value={(user.growth_points ?? 0) % 50 || 50}
+                          max={50}
+                        />
+                        <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+                          ✨ {user.growth_points} growth points
+                        </span>
+                      </div>
+                    )}
                     {streakData.currentStreak >= 5 && (
                       <motion.div 
                         initial={{ opacity: 0, height: 0 }} 
@@ -711,15 +749,15 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                 </div>
                 <div className="w-full md:w-1/3">
                   <div className="relative h-3 bg-muted rounded-full overflow-hidden">
-                    <div 
-                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-amber-500 to-amber-400" 
-                      style={{ width: `${(streakData.oldStreak / 20) * 100}%` }} 
+                    <div
+                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-amber-500 to-amber-400"
+                      style={{ width: `${oldTierProgress.isMaxTier ? 100 : (oldTierProgress.current / oldTierProgress.max) * 100}%` }}
                     />
                   </div>
                   <div className="flex justify-between mt-2 text-xs text-muted-foreground">
                     <span>0</span>
-                    <span>10</span>
-                    <span>20 days</span>
+                    <span>{Math.round(oldTierProgress.max / 2)}</span>
+                    <span>{oldTierProgress.max} days</span>
                   </div>
                 </div>
               </div>

@@ -10,7 +10,8 @@ export function mapGenmateMembers(members: GenmateGardenMember[]): GardenMember[
     const reflections = m.reflection_dates.map(
       (d) => ({ day: d }) as unknown as Reflection
     );
-    const streakData = calculateStreakData(reflections);
+    const protectedDates = new Set(m.protected_dates ?? []);
+    const streakData = calculateStreakData(reflections, protectedDates);
     const displayStreak = getDisplayStreak(streakData);
     return {
       user: {
@@ -25,6 +26,7 @@ export function mapGenmateMembers(members: GenmateGardenMember[]): GardenMember[
       variant: getPlantVariant(m._id),
       displayStreak,
       tier: getPlantTier(displayStreak),
+      growthPoints: m.growth_points ?? 0,
     };
   });
 }

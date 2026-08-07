@@ -20,6 +20,7 @@ export interface StreakData {
   oldStreak: number;
   lastActiveDate: Date | null;
   hasCurrentStreak: boolean;
+  eligibleProtectDate: string | null;
 }
 
 export function useReflections(userId?: string, initialReflections: Reflection[] = []) {

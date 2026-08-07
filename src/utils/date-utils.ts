@@ -146,6 +146,20 @@ export const isHoliday = (date: Date): boolean => {
   return HOLIDAYS.some((holiday) => holiday.getTime() === normalizedDate.getTime());
 };
 
+// Formats a date as a local YYYY-MM-DD key (not UTC — toISOString() would shift
+// the calendar day in non-UTC timezones like Thailand's UTC+7).
+export const toLocalDateKey = (date: Date): string => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
+// Helper function to check if a date has been protected by a fertilizer streak-freeze
+export const isProtectedDate = (date: Date, protectedDates: Set<string>): boolean => {
+  return protectedDates.has(toLocalDateKey(date));
+};
+
 // Function to check if a date is a valid workday (not weekend, not holiday)
 export const isValidWorkday = (date: Date): boolean => {
   return !isWeekend(date) && !isHoliday(date);

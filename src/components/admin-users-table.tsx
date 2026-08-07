@@ -40,6 +40,7 @@ interface AdminUsersTableProps {
 import { BarometerVisual, reflectionZones } from "@/components/barometer-visual";
 import { BulkActionsBar } from "@/components/bulk-actions-bar";
 import { AwardBadgeBulkDialog } from "@/components/award-badge-bulk-dialog";
+import { AwardFertilizerBulkDialog } from "@/components/award-fertilizer-bulk-dialog";
 import { BulkAttendanceDialog } from "@/components/bulk-attendance-dialog";
 import { LoadingRow } from "@/components/loading-row";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -66,6 +67,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
   const [projectGroupFilter, setProjectGroupFilter] = useState<string>("all");
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
   const [bulkBadgeOpen, setBulkBadgeOpen] = useState(false);
+  const [bulkFertilizerOpen, setBulkFertilizerOpen] = useState(false);
   const [bulkAttendanceOpen, setBulkAttendanceOpen] = useState(false);
   const [isBulkExporting, setIsBulkExporting] = useState(false);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
@@ -438,6 +440,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
         totalCount={filteredUsers.length}
         onClearSelection={() => setSelectedUserIds(new Set())}
         onBulkBadge={() => setBulkBadgeOpen(true)}
+        onBulkFertilizer={() => setBulkFertilizerOpen(true)}
         onBulkAttendance={() => setBulkAttendanceOpen(true)}
         onBulkExport={handleBulkExport}
         isExporting={isBulkExporting}
@@ -504,6 +507,13 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
       <AwardBadgeBulkDialog
         isOpen={bulkBadgeOpen}
         onClose={() => setBulkBadgeOpen(false)}
+        userIds={Array.from(selectedUserIds)}
+        onSuccess={() => setSelectedUserIds(new Set())}
+      />
+
+      <AwardFertilizerBulkDialog
+        isOpen={bulkFertilizerOpen}
+        onClose={() => setBulkFertilizerOpen(false)}
         userIds={Array.from(selectedUserIds)}
         onSuccess={() => setSelectedUserIds(new Set())}
       />
