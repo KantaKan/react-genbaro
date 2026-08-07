@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BadgePlus, Award, Sparkles, Palette } from "lucide-react";
-import { api, awardBadge } from "@/lib/api";
+import { awardBadge } from "@/lib/api";
 import { toast } from "sonner";
 import { BadgeRenderer, badgeColors } from "./badge-renderer";
 
@@ -90,7 +90,7 @@ export function AwardBadgeButton({ userId, onBadgeAwarded }: AwardBadgeButtonPro
 
      setIsSubmitting(true);
      try {
-       const response = await awardBadge(userId, badgeData);
+       await awardBadge(userId, badgeData);
        toast.success(`Badge "${badgeData.name}" awarded successfully!`);
        setIsOpen(false);
        resetForm();

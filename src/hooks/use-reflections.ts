@@ -4,39 +4,15 @@ import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
+import type { Reflection, ReflectionData, TechSession, NonTechSession } from "@/domain/types/user";
+
+export type { Reflection, ReflectionData, TechSession, NonTechSession };
 
 // Add this interface to match the API response structure
 interface ApiResponse<T> {
   status: string;
   message: string;
   data: T;
-}
-
-export interface TechSession {
-  happy: string;
-  improve: string;
-  session_name?: string | null;
-}
-
-export interface NonTechSession {
-  happy: string;
-  improve: string;
-  session_name?: string | null;
-}
-
-export interface ReflectionData {
-  barometer: string;
-  tech_sessions: TechSession;
-  non_tech_sessions: NonTechSession;
-}
-
-export interface Reflection {
-  _id?: string;
-  user_id: string;
-  date: string;
-  day: string;
-  createdAt: string;
-  reflection: ReflectionData;
 }
 
 export interface StreakData {

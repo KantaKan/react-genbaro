@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, createContext, useContext } from "react";
+import { useState, useEffect, useMemo, useCallback, createContext, useContext } from "react";
+import type { UseQueryResult } from "react-query";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +20,8 @@ import {
   useBulkMarkAttendance,
   useDeleteAttendanceRecord,
 } from "@/application/hooks/useAttendance";
-import type { AttendanceSession, AttendanceStatusType } from "@/domain/types";
+import type { AttendanceSession, AttendanceStatusType, TodayOverview } from "@/domain/types";
+import type { LogRecord } from "./attendance/attendance-logs-section";
 
 const COHORTS = Array.from({ length: 12 }, (_, i) => i + 7);
 
@@ -41,8 +43,8 @@ interface AttendanceContextValue {
   goToToday: () => void;
   isToday: boolean;
   isMutating: boolean;
-  overview: any;
-  overviewQuery: any;
+  overview: TodayOverview | undefined;
+  overviewQuery: UseQueryResult<TodayOverview>;
   students: User[];
   holidays: Holiday[];
   holidayToday: Holiday | null;
@@ -55,7 +57,7 @@ interface AttendanceContextValue {
   handleCalendarDayClick: (date: string, isHol: boolean, holiday?: Holiday) => void;
   onViewDetails: (userId: string) => void;
   setSelectedCohort: (c: string) => void;
-  handleDeleteFromLogs: (log: any) => void;
+  handleDeleteFromLogs: (log: LogRecord) => void;
 }
 
 const AttendanceCtx = createContext<AttendanceContextValue | null>(null);
@@ -105,22 +107,22 @@ export function AttendanceShell({ cohort }: { cohort?: string }) {
   const overview = overviewQuery.data;
   const isMutating = manualMark.isLoading || bulkMark.isLoading;
 
-  const loadHolidays = async () => {
+  const loadHolidays = useCallback(async () => {
     try {
       setHolidays(await getHolidays());
     } catch {
       setHolidays([]);
     }
-  };
+  }, []);
 
-  const loadStudents = async () => {
+  const loadStudents = useCallback(async () => {
     try {
       const data = await getCohort(selectedCohort);
       setStudents(data ?? []);
     } catch {
       setStudents([]);
     }
-  };
+  }, [selectedCohort]);
 
   useEffect(() => {
     if (cohort) {
@@ -132,7 +134,7 @@ export function AttendanceShell({ cohort }: { cohort?: string }) {
   useEffect(() => {
     loadHolidays();
     loadStudents();
-  }, [selectedCohort]);
+  }, [loadHolidays, loadStudents]);
 
   const handleCohortChange = (value: string) => {
     setSelectedCohort(value);
@@ -155,13 +157,13 @@ export function AttendanceShell({ cohort }: { cohort?: string }) {
 
   const handleMarkAllPresent = () => {
     if (!overview?.students) return;
-    const unmarked = overview.students.filter((s: any) => s.morning === "-" || s.afternoon === "-");
+    const unmarked = overview.students.filter((s) => s.morning === "-" || s.afternoon === "-");
     if (unmarked.length === 0) {
       toast.info("All students already marked");
       return;
     }
-    const morningUnmarked = unmarked.filter((s: any) => s.morning === "-").map((s: any) => s.user_id);
-    const afternoonUnmarked = unmarked.filter((s: any) => s.afternoon === "-").map((s: any) => s.user_id);
+    const morningUnmarked = unmarked.filter((s) => s.morning === "-").map((s) => s.user_id);
+    const afternoonUnmarked = unmarked.filter((s) => s.afternoon === "-").map((s) => s.user_id);
     if (morningUnmarked.length > 0) {
       bulkMark.mutate({ userIds: morningUnmarked, session: "morning", status: "present" });
     }
@@ -171,7 +173,7 @@ export function AttendanceShell({ cohort }: { cohort?: string }) {
   };
 
   const handleClearAttendance = (userId: string, session: AttendanceSession) => {
-    const student = overview?.students.find((s: any) => s.user_id === userId);
+    const student = overview?.students.find((s) => s.user_id === userId);
     const recordId = session === "morning" ? student?.morning_record_id : student?.afternoon_record_id;
     if (!recordId) {
       toast.error("Attendance record not found");
@@ -274,7 +276,7 @@ export function AttendanceShell({ cohort }: { cohort?: string }) {
 
   const tabInfo = TAB_TITLES[activeTab] || TAB_TITLES.register;
 
-  const handleDeleteFromLogs = (log: any) => {
+  const handleDeleteFromLogs = (log: LogRecord) => {
     setRecordToDelete({
       id: log._id,
       name: `${log.first_name} ${log.last_name}`,

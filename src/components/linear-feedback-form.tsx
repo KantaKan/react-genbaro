@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -75,6 +75,41 @@ interface FeedbackFormProps {
   isLoading?: boolean;
 }
 
+const COMFORT_ZONES: ComfortZone[] = [
+  {
+    id: "comfort",
+    label: "Comfort Zone",
+    color: "text-white",
+    bgColor: "bg-emerald-500",
+    emoji: "😊",
+    description: "Tasks are easy and familiar. Feeling safe and in control."
+  },
+  {
+    id: "stretch-enjoying",
+    label: "Stretch zone - Enjoying the challenges",
+    color: "text-white",
+    bgColor: "bg-amber-500",
+    emoji: "💪",
+    description: "Pushing your boundaries, feeling challenged but excited."
+  },
+  {
+    id: "stretch-overwhelmed",
+    label: "Stretch zone - Overwhelmed",
+    color: "text-white",
+    bgColor: "bg-red-500",
+    emoji: "😰",
+    description: "Feeling stressed, but still learning and growing."
+  },
+  {
+    id: "panic",
+    label: "Panic Zone",
+    color: "text-white",
+    bgColor: "bg-violet-500",
+    emoji: "😵",
+    description: "Feeling extreme stress or fear. Learning is difficult here."
+  },
+];
+
 export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChange, isLoading = false }: FeedbackFormProps) {
   const { userData, loading, error } = useUserData();
   const [categoryInputs, setCategoryInputs] = useState<Record<string, string>>(initialData?.categoryInputs || {});
@@ -124,41 +159,6 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
     },
   ];
 
-  const comfortZones: ComfortZone[] = [
-    {
-      id: "comfort",
-      label: "Comfort Zone",
-      color: "text-white",
-      bgColor: "bg-emerald-500",
-      emoji: "😊",
-      description: "Tasks are easy and familiar. Feeling safe and in control."
-    },
-    {
-      id: "stretch-enjoying",
-      label: "Stretch zone - Enjoying the challenges",
-      color: "text-white",
-      bgColor: "bg-amber-500",
-      emoji: "💪",
-      description: "Pushing your boundaries, feeling challenged but excited."
-    },
-    {
-      id: "stretch-overwhelmed",
-      label: "Stretch zone - Overwhelmed",
-      color: "text-white",
-      bgColor: "bg-red-500",
-      emoji: "😰",
-      description: "Feeling stressed, but still learning and growing."
-    },
-    {
-      id: "panic",
-      label: "Panic Zone",
-      color: "text-white",
-      bgColor: "bg-violet-500",
-      emoji: "😵",
-      description: "Feeling extreme stress or fear. Learning is difficult here."
-    },
-  ];
-
   const progress = (currentStep / totalSteps) * 100;
 
   useEffect(() => {
@@ -186,7 +186,7 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!comfortLevel) {
       toast.error("Please select your comfort level");
       return;
@@ -216,7 +216,7 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
             happy: categoryInputs["non-tech-happy"] || "",
             improve: categoryInputs["non-tech-improve"] || "",
           },
-          barometer: comfortZones.find((zone) => zone.id === comfortLevel)?.label || "",
+          barometer: COMFORT_ZONES.find((zone) => zone.id === comfortLevel)?.label || "",
         },
       };
 
@@ -234,7 +234,7 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to submit reflection");
     }
-  };
+  }, [comfortLevel, categoryInputs, userData, onSubmit, onSuccess]);
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
@@ -250,7 +250,7 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
     }
   };
 
-  const handleKeyDownGlobal = (e: KeyboardEvent) => {
+  const handleKeyDownGlobal = useCallback((e: KeyboardEvent) => {
     if (currentStep === 5) {
       const zoneKeys: Record<string, string> = {
         '1': 'comfort',
@@ -272,12 +272,12 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
       e.preventDefault();
       setShowSubmitConfirmation(true);
     }
-  };
+  }, [currentStep, comfortLevel]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDownGlobal);
     return () => window.removeEventListener("keydown", handleKeyDownGlobal);
-  }, [currentStep, comfortLevel]);
+  }, [handleKeyDownGlobal]);
 
   useEffect(() => {
     const handleEnterKey = (e: KeyboardEvent) => {
@@ -290,7 +290,7 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
 
     window.addEventListener("keydown", handleEnterKey);
     return () => window.removeEventListener("keydown", handleEnterKey);
-  }, [showSubmitConfirmation]);
+  }, [showSubmitConfirmation, handleSubmit]);
 
   if (loading) return (
     <div className="space-y-6 p-6">
@@ -474,7 +474,7 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
                     onValueChange={setComfortLevel} 
                     className="grid grid-cols-1 md:grid-cols-2 gap-3"
                   >
-                    {comfortZones.map((zone) => (
+                    {COMFORT_ZONES.map((zone) => (
                       <Label
                         key={zone.id}
                         className={`flex items-start gap-3 p-4 rounded-lg cursor-pointer transition-all border-2 ${
@@ -491,7 +491,7 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <kbd className="px-1.5 py-0.5 rounded bg-muted border text-xs font-mono">
-                              {comfortZones.findIndex(z => z.id === zone.id) + 1}
+                              {COMFORT_ZONES.findIndex(z => z.id === zone.id) + 1}
                             </kbd>
                             <span className="text-xl">{zone.emoji}</span>
                             <span className={`font-medium ${comfortLevel === zone.id ? zone.color : ""}`}>
@@ -514,7 +514,7 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
                     >
                       <AlertTriangle className="w-5 h-5 text-yellow-500 mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="font-medium">Selected: {comfortZones.find(z => z.id === comfortLevel)?.label}</p>
+                        <p className="font-medium">Selected: {COMFORT_ZONES.find(z => z.id === comfortLevel)?.label}</p>
                         <p className="text-sm text-muted-foreground">This will help us understand your learning journey</p>
                       </div>
                     </motion.div>

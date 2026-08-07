@@ -25,7 +25,7 @@ interface ReflectionData {
   non_tech_sessions: NonTechSession;
 }
 
-interface Reflection {
+export interface Reflection {
   user_id: string;
   date: string;
   reflection: ReflectionData;

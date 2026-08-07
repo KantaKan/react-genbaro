@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, X, Calendar, Cloud, FileSpreadsheet, Table, Columns3, Filter, Split } from "lucide-react";
+import { Download, X, Calendar, Cloud, FileSpreadsheet, Table, Filter, Split } from "lucide-react";
 import { toast } from "sonner";
 import { attendanceService } from "@/application/services/attendanceService";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

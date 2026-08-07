@@ -6,6 +6,7 @@ import type {
   UserData,
   GenmateGardenMember,
   GenmateGardenResponse,
+  SocialLinks,
 } from "../../domain/types";
 
 export const userService = {

@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAttendanceContext } from "./attendance-shell";
 import { useAttendanceStats } from "@/application/hooks/useAttendance";
+import type { AttendanceStats } from "@/domain/types";
 
 const getDefaultStartDate = () => {
   const now = new Date();
@@ -53,15 +54,15 @@ export function AttendanceAllStudentsView() {
   const sortedStats = useMemo(() => {
     const data = [...(stats ?? [])];
     switch (sortOption) {
-      case "absent_days_desc": return data.sort((a: any, b: any) => b.absent_days - a.absent_days);
-      case "absent_days_asc": return data.sort((a: any, b: any) => a.absent_days - b.absent_days);
-      case "absent_desc": return data.sort((a: any, b: any) => b.absent - a.absent);
-      case "present_desc": return data.sort((a: any, b: any) => b.present - a.present);
-      case "name_asc": return data.sort((a: any, b: any) => a.first_name.localeCompare(b.first_name));
-      case "name_desc": return data.sort((a: any, b: any) => b.first_name.localeCompare(a.first_name));
-      case "warning_asc": return data.sort((a: any, b: any) => (b.warning_level === "red" ? 0 : 1) - (a.warning_level === "red" ? 0 : 1));
-      case "jsd_asc": return data.sort((a: any, b: any) => jsdNum(a.jsd_number) - jsdNum(b.jsd_number));
-      default: return data.sort((a: any, b: any) => b.absent_days - a.absent_days);
+      case "absent_days_desc": return data.sort((a: AttendanceStats, b: AttendanceStats) => b.absent_days - a.absent_days);
+      case "absent_days_asc": return data.sort((a: AttendanceStats, b: AttendanceStats) => a.absent_days - b.absent_days);
+      case "absent_desc": return data.sort((a: AttendanceStats, b: AttendanceStats) => b.absent - a.absent);
+      case "present_desc": return data.sort((a: AttendanceStats, b: AttendanceStats) => b.present - a.present);
+      case "name_asc": return data.sort((a: AttendanceStats, b: AttendanceStats) => a.first_name.localeCompare(b.first_name));
+      case "name_desc": return data.sort((a: AttendanceStats, b: AttendanceStats) => b.first_name.localeCompare(a.first_name));
+      case "warning_asc": return data.sort((a: AttendanceStats, b: AttendanceStats) => (b.warning_level === "red" ? 0 : 1) - (a.warning_level === "red" ? 0 : 1));
+      case "jsd_asc": return data.sort((a: AttendanceStats, b: AttendanceStats) => jsdNum(a.jsd_number) - jsdNum(b.jsd_number));
+      default: return data.sort((a: AttendanceStats, b: AttendanceStats) => b.absent_days - a.absent_days);
     }
   }, [stats, sortOption]);
 
@@ -117,7 +118,7 @@ export function AttendanceAllStudentsView() {
             No data available
           </div>
         ) : (
-          pageStats.map((student: any) => (
+          pageStats.map((student: AttendanceStats) => (
             <div
               key={student.user_id}
               className="flex items-center gap-3 px-4 py-2 border-b border-[hsl(var(--border))]/50 last:border-b-0 hover:bg-[hsl(var(--primary))]/[0.02] transition-colors"

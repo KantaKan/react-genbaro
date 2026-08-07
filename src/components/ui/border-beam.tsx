@@ -71,7 +71,7 @@ export const BorderBeam = React.memo(
             }}
           />
         </div>
-        <style jsx global>{`
+        <style>{`
           @keyframes border-beam {
             0% {
               transform: translateX(-10%) translateY(-10%) rotate(0deg);

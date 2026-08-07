@@ -38,18 +38,6 @@ const INITIAL_GENMATE = [
   "Genmate G",
 ];
 
-// Mock learners - ภายหลังจะเปลี่ยนเป็น fetch API
-const MOCK_LEARNERS = [
-  "สมชาย เรียนดี",
-  "สมหญิง รักเรียน",
-  "วิชัย มานะ",
-  "มานี มีสุข",
-  "ปิติ ตั้งใจ",
-  "ดวงใจ ขยัน",
-  "ประเสริฐ ดีเด่น",
-  "สุภาพ เรียบร้อย",
-];
-
 type SpinMode = "custom" | "genmate" | "learner";
 
 const SpinWheelPage = () => {
@@ -80,12 +68,13 @@ const SpinWheelPage = () => {
       setLearnersLoading(true);
       const response = await getCohort(cohort);
       setLearnerOptions(
-        response.map(
-          (user) => user.jsd_number.split("_").pop() ?? user.jsd_number
-        )
+        response
+          .map((user) => user.jsd_number)
+          .filter((jsd): jsd is string => Boolean(jsd))
+          .map((jsd) => jsd.split("_").pop() ?? jsd)
       );
-    } catch (error) {
-      setLearnersLoading(false);
+    } catch {
+      setLearnerOptions([]);
     } finally {
       setLearnersLoading(false);
     }

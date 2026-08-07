@@ -1,7 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { getStatusLabel } from "@/lib/attendance-status";
 
-interface LogRecord {
+export interface LogRecord {
   _id: string;
   date: string;
   jsd_number: string;

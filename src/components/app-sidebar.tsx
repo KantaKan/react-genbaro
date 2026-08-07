@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { NavMain } from "@/components/nav-main";
+import { NavMain, type NavItem } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
 import {
@@ -43,7 +43,7 @@ const teams = [
 const showNewTalkBoardIndicator = true; // Set to false to hide the 'New' indicator
 
 // Navigation configurations for different roles
-const navigationConfig: Record<UserRole, any[]> = {
+const navigationConfig: Record<UserRole, NavItem[]> = {
   admin: [
     {
       title: "Dashboard Panel",

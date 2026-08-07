@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, School, ClipboardList, Award } from "lucide-react";
+import { ArrowLeft, Users, School, ClipboardList, type LucideIcon } from "lucide-react";
 import { Badge as UiBadge } from "@/components/ui/badge";
 import { BadgeRenderer } from "@/components/badge-renderer";
 import { useAuth } from "@/AuthContext";
@@ -14,8 +14,6 @@ import { SkeletonWarm } from "@/components/loading-skeleton";
 import { ReflectionsTable } from "@/components/reflections-table";
 import { useStreakCalculation } from "@/hooks/use-streak-calculation";
 import { StreakIcon } from "@/components/streak-components";
-import { BarometerVisual } from "@/components/barometer-visual";
-import { formatDate } from "@/lib/utils";
 import { AwardBadgeButton } from "@/components/award-badge-button";
 import type { Badge } from "@/lib/types";
 import type { Reflection } from "@/hooks/use-reflections";
@@ -31,7 +29,7 @@ interface User {
   badges?: Badge[];
 }
 
-const StatCard = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | number | JSX.Element }) => (
+const StatCard = ({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string | number | JSX.Element }) => (
   <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
     <div className={`p-2.5 rounded-full bg-primary/10 shrink-0`}>
       <Icon className="h-5 w-5 text-primary" />
@@ -54,7 +52,7 @@ export default function UserReflectionsPage() {
 
   const fetchUserData = async (userId: string) => {
     try {
-      const response = await api.get(`/admin/userreflections/${userId}`);
+      const response = await api.get<{ data: { reflections: Reflection[]; user: User } }>(`/admin/userreflections/${userId}`);
       if (response.data.data.reflections) {
         const sortedReflections = response.data.data.reflections.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setReflections(sortedReflections);

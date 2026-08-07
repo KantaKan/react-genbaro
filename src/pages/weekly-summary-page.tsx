@@ -7,10 +7,8 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { SkeletonWarm } from "@/components/loading-skeleton";
-import { Button } from "@/components/ui/button";
-import { AlertCircle, TrendingDown, TrendingUp, UserX, MessageSquare, Users } from "lucide-react";
+import { AlertCircle, TrendingDown, TrendingUp, UserX } from "lucide-react";
 import { getDayBadge } from "@/utils/day-colors";
-import { toast } from "react-toastify";
 
 const DayBadgeComponent: React.FC<{ dateString: string }> = ({ dateString }) => {
   const { dayName, colorClass } = getDayBadge(dateString);
@@ -253,17 +251,25 @@ const WeeklySummaryPage: React.FC = () => {
         <Pagination className="mt-12">
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious onClick={() => handlePageChange(page - 1)} disabled={page === 1} />
+              <PaginationPrevious
+                onClick={() => page > 1 && handlePageChange(page - 1)}
+                aria-disabled={page === 1}
+                className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
             </PaginationItem>
             {[...Array(totalPages)].map((_, i) => (
               <PaginationItem key={i}>
-                <PaginationLink isActive={page === i + 1} onClick={() => handlePageChange(i + 1)}>
+                <PaginationLink isActive={page === i + 1} onClick={() => handlePageChange(i + 1)} className="cursor-pointer">
                   {i + 1}
                 </PaginationLink>
               </PaginationItem>
             ))}
             <PaginationItem>
-              <PaginationNext onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} />
+              <PaginationNext
+                onClick={() => page < totalPages && handlePageChange(page + 1)}
+                aria-disabled={page === totalPages}
+                className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
             </PaginationItem>
           </PaginationContent>
         </Pagination>

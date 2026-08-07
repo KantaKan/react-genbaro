@@ -1,11 +1,10 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { ReflectionsTable } from './reflections-table';
 import type { Reflection } from '@/hooks/use-reflections';
 
 describe('ReflectionsTable', () => {
-  it('renders the table with reflections', () => {
+  it('renders reflection cards and expands to show session details', () => {
     const mockReflections: Reflection[] = [
       {
         _id: '1',
@@ -30,13 +29,14 @@ describe('ReflectionsTable', () => {
 
     render(<ReflectionsTable reflections={mockReflections} />);
 
-    // Check for table headers
-    expect(screen.getByText('Date')).toBeInTheDocument();
-    expect(screen.getByText('Tech Happy')).toBeInTheDocument();
+    // The zone label is visible on the collapsed card header.
+    expect(screen.getByText('Comfort Zone')).toBeInTheDocument();
 
-    // Check for reflection content
+    // Session details are only rendered once the card is expanded.
+    expect(screen.queryByText('Learning hooks')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { expanded: false }));
+
     expect(screen.getByText('Learning hooks')).toBeInTheDocument();
     expect(screen.getByText('Good communication')).toBeInTheDocument();
-    expect(screen.getByText('Comfort Zone')).toBeInTheDocument();
   });
 });

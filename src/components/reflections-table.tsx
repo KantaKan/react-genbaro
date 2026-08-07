@@ -9,7 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Search, ChevronDown, ChevronUp, MessageSquareText, X } from "lucide-react";
 import type { Reflection } from "@/hooks/use-reflections";
 import { reflectionZones } from "./reflection-zones";
-import { BarometerVisual } from "./barometer-visual";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface ReflectionsTableProps {
@@ -137,7 +136,6 @@ export const ReflectionsTable = ({ reflections, isAdmin = false }: ReflectionsTa
   };
 
   const isAllExpanded = filteredReflections.length > 0 && filteredReflections.every((r, i) => expandedCards.has(getCardId(r, i)));
-  const isAllCollapsed = filteredReflections.length > 0 && filteredReflections.every((r, i) => !expandedCards.has(getCardId(r, i)));
 
   return (
     <div className="space-y-4">

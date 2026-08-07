@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getTodayOverview, type TodayOverview, type Holiday } from "@/lib/api";
@@ -94,13 +94,7 @@ export function DaySummaryDialog({
 
   const isHoliday = !!holiday;
 
-  useEffect(() => {
-    if (open && date && cohort) {
-      loadOverview();
-    }
-  }, [open, date, cohort]);
-
-  const loadOverview = async () => {
+  const loadOverview = useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await getTodayOverview(cohort, undefined, date);
@@ -110,7 +104,13 @@ export function DaySummaryDialog({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [cohort, date]);
+
+  useEffect(() => {
+    if (open && date && cohort) {
+      loadOverview();
+    }
+  }, [open, date, cohort, loadOverview]);
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("en-US", {

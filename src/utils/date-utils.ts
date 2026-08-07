@@ -75,6 +75,21 @@ export function getTodayISOString(): string {
   return today.toISOString().split("T")[0];
 }
 
+/**
+ * Gets the current date/time adjusted to Asia/Bangkok (UTC+7)
+ */
+export function getThailandTime(): Date {
+  const thailandString = new Date().toLocaleString("en-US", { timeZone: "Asia/Bangkok" });
+  return new Date(thailandString);
+}
+
+/**
+ * Gets today's date in Asia/Bangkok as an ISO string (YYYY-MM-DD)
+ */
+export function getThailandDateISO(): string {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
+}
+
 export const HOLIDAYS = [
   new Date("2025-04-07"), // Specific holiday
   // Thai holidays (add more as needed)

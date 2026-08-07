@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "react-toastify";
 import {
@@ -49,18 +48,7 @@ export function StudentAttendance() {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const successTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    loadAllData();
-    return () => { if (successTimer.current) clearTimeout(successTimer.current); };
-  }, []);
-
-  const loadAllData = async () => {
-    setIsLoadingData(true);
-    await Promise.all([loadAttendanceStatus(), loadTodayRecords(), loadDailyStats(7), loadLeaveRequests()]);
-    setIsLoadingData(false);
-  };
-
-  const loadAttendanceStatus = async () => {
+  const loadAttendanceStatus = useCallback(async () => {
     try {
       const status = await getMyAttendanceStatus();
       setAttendanceStatus(status);
@@ -69,9 +57,9 @@ export function StudentAttendance() {
     } finally {
       setIsLoadingStatus(false);
     }
-  };
+  }, []);
 
-  const loadTodayRecords = async () => {
+  const loadTodayRecords = useCallback(async () => {
     try {
       const history = await getMyAttendanceHistory(1);
       const today = getThailandDate();
@@ -79,25 +67,36 @@ export function StudentAttendance() {
     } catch (error) {
       console.error("Error loading today records:", error);
     }
-  };
+  }, []);
 
-  const loadDailyStats = async (days: number) => {
+  const loadDailyStats = useCallback(async (days: number) => {
     try {
       const stats = await getMyDailyStats(days);
       setDailyStats(stats);
     } catch (error) {
       console.error("Error loading daily stats:", error);
     }
-  };
+  }, []);
 
-  const loadLeaveRequests = async () => {
+  const loadLeaveRequests = useCallback(async () => {
     try {
       const requests = await getMyLeaveRequests();
       setLeaveRequests(requests || []);
-    } catch (error) {
+    } catch {
       setLeaveRequests([]);
     }
-  };
+  }, []);
+
+  const loadAllData = useCallback(async () => {
+    setIsLoadingData(true);
+    await Promise.all([loadAttendanceStatus(), loadTodayRecords(), loadDailyStats(7), loadLeaveRequests()]);
+    setIsLoadingData(false);
+  }, [loadAttendanceStatus, loadTodayRecords, loadDailyStats, loadLeaveRequests]);
+
+  useEffect(() => {
+    loadAllData();
+    return () => { if (successTimer.current) clearTimeout(successTimer.current); };
+  }, [loadAllData]);
 
   const getCurrentSession = (): "morning" | "afternoon" | null => {
     const now = new Date();
