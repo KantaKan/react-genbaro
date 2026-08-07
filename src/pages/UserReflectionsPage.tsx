@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,10 @@ import { ReflectionsTable } from "@/components/reflections-table";
 import { useStreakCalculation } from "@/hooks/use-streak-calculation";
 import { StreakIcon } from "@/components/streak-components";
 import { AwardBadgeButton } from "@/components/award-badge-button";
+import { AwardFertilizerButton } from "@/components/award-fertilizer-button";
 import type { Badge } from "@/lib/types";
 import type { Reflection } from "@/hooks/use-reflections";
+import type { FertilizerLogEntry } from "@/domain/types";
 
 interface User {
   cohort_number: number;
@@ -27,6 +29,7 @@ interface User {
   role: string;
   _id: string;
   badges?: Badge[];
+  fertilizer_log?: FertilizerLogEntry[];
 }
 
 const StatCard = ({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string | number | JSX.Element }) => (
@@ -92,7 +95,14 @@ export default function UserReflectionsPage() {
     }
   };
 
-  const streakData = useStreakCalculation(reflections);
+  const protectedDates = useMemo(() => {
+    const dates = (user?.fertilizer_log ?? [])
+      .filter((entry) => entry.kind === "protect" && entry.relatedDate)
+      .map((entry) => entry.relatedDate as string);
+    return new Set(dates);
+  }, [user?.fertilizer_log]);
+
+  const streakData = useStreakCalculation(reflections, protectedDates);
 
   if (isLoading) {
   return (
@@ -148,7 +158,12 @@ export default function UserReflectionsPage() {
           </Button>
           {userRole === "admin" && <UiBadge variant="default">Admin</UiBadge>}
         </div>
-        {id && <AwardBadgeButton userId={id} onBadgeAwarded={handleBadgeAwarded} />}
+        {id && (
+          <div className="flex items-center gap-2">
+            <AwardBadgeButton userId={id} onBadgeAwarded={handleBadgeAwarded} />
+            <AwardFertilizerButton userId={id} onFertilizerAwarded={handleBadgeAwarded} />
+          </div>
+        )}
       </motion.div>
 
       {user && (

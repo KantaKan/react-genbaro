@@ -8,6 +8,7 @@ export {
   attendanceService,
   leaveService,
   badgeService,
+  fertilizerService,
   boardService,
   stampService,
 } from "../application/services";

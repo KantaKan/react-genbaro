@@ -9,12 +9,14 @@ import {
   getRandomComfortMessage,
   getPlantTier,
   getPlantTierConfig,
+  getFlourishTier,
+  flourishAccentColors,
   type PlantTier,
 } from "@/lib/streak-milestones"
 
 import { Cat } from "lucide-react"
 import { fireConfetti } from "@/lib/confetti"
-import { getPotPath, type PlantVariantConfig } from "@/lib/plant-variants"
+import { getPotPath, getStemTilt, type PlantVariantConfig } from "@/lib/plant-variants"
 
 const tierTextColors: Record<PlantTier, string> = {
   0: "text-muted-foreground",
@@ -34,8 +36,13 @@ const tierSubtextColors: Record<PlantTier, string> = {
   5: "text-amber-500/80 dark:text-amber-300/70",
 }
 
-export const GrowthBar = ({ value, max = 100 }: { value: number; max?: number }) => {
-  const progress = (value / max) * 100
+const growthBarGradients = {
+  streak: "linear-gradient(90deg, #8B6F47, #52B788, #2D6A4F)",
+  growth: "linear-gradient(90deg, #F59E0B, #FBBF24, #FDE68A)",
+}
+
+export const GrowthBar = ({ value, max = 100, variant = "streak" }: { value: number; max?: number; variant?: "streak" | "growth" }) => {
+  const progress = max > 0 ? (value / max) * 100 : 0
   const controls = useAnimation()
 
   useEffect(() => {
@@ -50,7 +57,7 @@ export const GrowthBar = ({ value, max = 100 }: { value: number; max?: number })
       <motion.div
         className="absolute top-0 left-0 h-full rounded-full"
         style={{
-          background: "linear-gradient(90deg, #8B6F47, #52B788, #2D6A4F)",
+          background: growthBarGradients[variant],
         }}
         initial={{ width: 0 }}
         animate={controls}
@@ -247,12 +254,47 @@ const PetalBurst = ({ onDone }: { onDone: () => void }) => {
   )
 }
 
-export const SeedlingPlant = ({ tier = 0, active, className, variant, showParticles = true }: { tier?: PlantTier; active: boolean; className?: string; variant?: PlantVariantConfig; showParticles?: boolean }) => {
+const AuraGlow = ({
+  sizePct,
+  color,
+  blurPx,
+  opacity,
+  duration,
+  topPct = 38,
+}: {
+  sizePct: number
+  color: string
+  blurPx: number
+  opacity: number
+  duration: number
+  topPct?: number
+}) => (
+  <motion.div
+    className="absolute rounded-full pointer-events-none"
+    style={{
+      width: `${sizePct}%`,
+      height: `${sizePct}%`,
+      top: `${topPct}%`,
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      background: `radial-gradient(circle, ${color}45 0%, ${color}18 50%, transparent 72%)`,
+      filter: `blur(${blurPx}px)`,
+      mixBlendMode: "screen",
+    }}
+    animate={{ scale: [0.92, 1.08, 0.92], opacity: [opacity * 0.6, opacity, opacity * 0.6] }}
+    transition={{ duration, repeat: Infinity, ease: "easeInOut" }}
+  />
+)
+
+export const SeedlingPlant = ({ tier = 0, active, className, variant, showParticles = true, growthPoints = 0 }: { tier?: PlantTier; active: boolean; className?: string; variant?: PlantVariantConfig; showParticles?: boolean; growthPoints?: number }) => {
   const swayControls = useAnimation()
   const leafBounceControls = useAnimation()
   const prefersReducedMotion = useReducedMotion()
   const config = getPlantTierConfig(tier)
   const potPaths = variant ? getPotPath(variant.pot) : null
+  const stemTilt = variant ? getStemTilt(variant.stem) : 0
+  const flourishTier = getFlourishTier(growthPoints)
+  const flourishColor = flourishAccentColors[flourishTier]
 
   useEffect(() => {
     if (active && !prefersReducedMotion) {
@@ -332,183 +374,52 @@ export const SeedlingPlant = ({ tier = 0, active, className, variant, showPartic
 
   return (
     <div className={`relative ${className}`}>
-      {/* Glow effects — Sunlight Through Canopy */}
+      {/* Glow effects — one clean light source per tier instead of stacked multi-hue smudges */}
       {active && !prefersReducedMotion && config.growthGlow === "glow" && (
         <>
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              inset: `-${5 * config.glowScale * 8}px`,
-              background: `radial-gradient(circle, ${config.glowColor}22 0%, ${config.glowColor}10 50%, transparent 70%)`,
-              filter: "blur(8px)",
-            }}
-            animate={{ scale: [0.92, 1.08, 0.92], opacity: [0.18, 0.38, 0.18] }}
-            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              inset: `-${5 * config.glowScale * 3}px`,
-              background: `radial-gradient(circle, ${config.leafColor}30 0%, ${config.glowColor}15 60%, transparent 80%)`,
-              filter: "blur(3px)",
-            }}
-            animate={{ scale: [0.94, 1.06, 0.94], opacity: [0.2, 0.45, 0.2] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          />
+          <AuraGlow sizePct={80 * config.glowScale} color={config.glowColor} blurPx={8} opacity={0.3} duration={4.5} />
+          <AuraGlow sizePct={40 * config.glowScale} color={config.glowColor} blurPx={3} opacity={0.4} duration={3} />
         </>
       )}
 
       {active && !prefersReducedMotion && config.growthGlow === "radiant" && (
         <>
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              inset: `-${5 * config.glowScale * 12}px`,
-              background: `radial-gradient(circle, ${config.glowColor}28 0%, ${config.glowColor}12 50%, transparent 72%)`,
-              filter: "blur(12px)",
-            }}
-            animate={{ scale: [0.88, 1.14, 0.88], opacity: [0.25, 0.5, 0.25] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              inset: `-${5 * config.glowScale * 5}px`,
-              background: `radial-gradient(circle, ${config.flowerColor}25 0%, ${config.glowColor}14 55%, transparent 78%)`,
-              filter: "blur(5px)",
-            }}
-            animate={{ scale: [0.92, 1.1, 0.92], opacity: [0.3, 0.55, 0.3] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              inset: `-${5 * config.glowScale * 2}px`,
-              background: `radial-gradient(circle, ${config.leafColor}35 0%, ${config.glowColor}20 65%, transparent 85%)`,
-              filter: "blur(2px)",
-            }}
-            animate={{ scale: [0.95, 1.05, 0.95], opacity: [0.2, 0.4, 0.2] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          />
+          <AuraGlow sizePct={100 * config.glowScale} color={config.glowColor} blurPx={11} opacity={0.35} duration={4} />
+          <AuraGlow sizePct={50 * config.glowScale} color={config.glowColor} blurPx={4} opacity={0.5} duration={2.6} />
         </>
       )}
 
       {active && !prefersReducedMotion && config.growthGlow === "bloom" && (
         <>
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              inset: `-${5 * config.glowScale * 16}px`,
-              background: `radial-gradient(circle, ${config.glowColor}35 0%, ${config.glowColor}15 45%, transparent 68%)`,
-              filter: "blur(18px)",
-            }}
-            animate={{ scale: [0.84, 1.2, 0.84], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              inset: `-${5 * config.glowScale * 7}px`,
-              background: `radial-gradient(circle, ${config.flowerColor}35 0%, ${config.glowColor}18 50%, transparent 75%)`,
-              filter: "blur(7px)",
-            }}
-            animate={{ scale: [0.88, 1.15, 0.88], opacity: [0.35, 0.65, 0.35] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              inset: `-${5 * config.glowScale * 2.5}px`,
-              background: `radial-gradient(circle, ${config.flowerColor}50 0%, ${config.glowColor}25 60%, transparent 82%)`,
-              filter: "blur(2.5px)",
-            }}
-            animate={{ scale: [0.92, 1.1, 0.92], opacity: [0.4, 0.75, 0.4] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute inset-0 rounded-full border"
-            style={{ borderColor: config.flowerColor + "45" }}
-            animate={{ scale: [0.84, 1.12, 0.84], opacity: [0.2, 0.6, 0.2] }}
-            transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-          />
+          <AuraGlow sizePct={130 * config.glowScale} color={config.glowColor} blurPx={16} opacity={0.4} duration={3.5} />
+          <AuraGlow sizePct={60 * config.glowScale} color={config.flowerColor} blurPx={6} opacity={0.55} duration={2.2} />
         </>
       )}
 
       {active && !prefersReducedMotion && config.growthGlow === "aurora" && (
         <>
+          <AuraGlow sizePct={170 * config.glowScale} color={config.glowColor} blurPx={22} opacity={0.45} duration={5} />
+          <AuraGlow sizePct={75 * config.glowScale} color={config.flowerColor} blurPx={7} opacity={0.6} duration={2.4} />
+          {/* Signature high-tier accent: a single slow-rotating ring, not another stacked blur */}
           <motion.div
-            className="absolute rounded-full"
+            className="absolute rounded-full pointer-events-none"
             style={{
-              inset: `-${5 * config.glowScale * 22}px`,
-              background: `radial-gradient(circle, ${config.fruitColor}28 0%, ${config.glowColor}12 38%, transparent 62%)`,
-              filter: "blur(26px)",
+              width: "115%",
+              height: "115%",
+              top: "38%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              border: `1px solid ${config.fruitColor}55`,
+              mixBlendMode: "screen",
             }}
-            animate={{ scale: [0.8, 1.28, 0.8], opacity: [0.25, 0.6, 0.25] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              inset: `-${5 * config.glowScale * 13}px`,
-              background: `radial-gradient(circle, ${config.fruitColor}40 0%, ${config.glowColor}20 45%, transparent 70%)`,
-              filter: "blur(14px)",
-            }}
-            animate={{ scale: [0.84, 1.22, 0.84], opacity: [0.4, 0.8, 0.4] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              inset: `-${5 * config.glowScale * 5}px`,
-              background: `radial-gradient(circle, ${config.fruitColor}45 0%, ${config.flowerColor}22 50%, transparent 75%)`,
-              filter: "blur(5px)",
-            }}
-            animate={{ scale: [0.9, 1.14, 0.9], opacity: [0.5, 0.85, 0.5] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              inset: `-${5 * config.glowScale * 8}px`,
-              background: `radial-gradient(circle, ${config.fruitColor}35 0%, ${config.glowColor}15 55%, transparent 78%)`,
-              filter: "blur(8px)",
-            }}
-            animate={{ scale: [0.88, 1.16, 0.88], opacity: [0.3, 0.65, 0.3] }}
-            transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              inset: `-${5 * config.glowScale * 2.5}px`,
-              background: `radial-gradient(circle, ${config.fruitColor}55 0%, ${config.flowerColor}30 60%, transparent 82%)`,
-              filter: "blur(3px)",
-            }}
-            animate={{ scale: [0.93, 1.1, 0.93], opacity: [0.5, 0.9, 0.5] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute inset-0 rounded-full pointer-events-none"
-            style={{
-              background: `conic-gradient(from 0deg, ${config.fruitColor}18, ${config.glowColor}10, ${config.flowerColor}12, ${config.stemColor}10, ${config.fruitColor}18)`,
-              mixBlendMode: "soft-light",
-            }}
-            animate={{ rotate: [0, 360], opacity: [0.12, 0.32, 0.12] }}
+            animate={{ rotate: [0, 360], opacity: [0.25, 0.55, 0.25] }}
             transition={{ rotate: { duration: 10, repeat: Infinity, ease: "linear" }, opacity: { duration: 4, repeat: Infinity, ease: "easeInOut" } }}
           />
         </>
       )}
 
       {!active && !prefersReducedMotion && config.growthGlow !== "none" && (
-        <motion.div
-          className="absolute rounded-full"
-          style={{
-            inset: `-${5 * config.glowScale * 6}px`,
-            background: `radial-gradient(circle, ${"#a1a1aa"}15 0%, transparent 65%)`,
-            filter: "blur(6px)",
-          }}
-          animate={{ opacity: [0.05, 0.12, 0.05] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        />
+        <AuraGlow sizePct={60 * config.glowScale} color="#a1a1aa" blurPx={6} opacity={0.1} duration={4} />
       )}
 
       {/* Plant SVG */}
@@ -556,277 +467,140 @@ export const SeedlingPlant = ({ tier = 0, active, className, variant, showPartic
                   <circle cx="27" cy="44" r="0.5" fill={outlineColor} opacity={0.2} />
                 </>
               )}
+              {/* Growth-points flourish: pot-rim accent (bronze/silver/gold) */}
+              {active && flourishTier > 0 && (
+                <path
+                  d={potPaths?.rim ?? "M7 44 L33 44 L31 41 L9 41 Z"}
+                  fill="none"
+                  stroke={flourishColor}
+                  strokeWidth={1.2}
+                  strokeLinejoin="round"
+                  opacity={0.85}
+                />
+              )}
             </g>
 
-            {/* Tier 0: Dormant — seed in soil */}
-            {tier === 0 && (
-              <g>
-                <ellipse cx="20" cy="42" rx="2.5" ry="1.8" fill={stemColor} stroke={outlineColor} strokeWidth="1" />
-                <line x1="20" y1="42" x2="20" y2="41" stroke={outlineColor} strokeWidth="0.8" strokeLinecap="round" />
-              </g>
-            )}
-
-            {/* Tier 1: Sprout */}
-            {tier >= 1 && (
-              <g opacity={tier >= 1 ? 1 : 0}>
-                {/* Stem */}
-                <path
-                  d="M20 42 Q19 40 20.5 37 Q21 35 20 33"
-                  stroke={stemColor}
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                {/* Leaves */}
-                <path
-                  d="M20 36 Q16 34 16.5 32 Q18 33 20 36"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M20 36 Q24 34 23.5 32 Q22 33 20 36"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-              </g>
-            )}
-
-            {/* Tier 2: Seedling */}
-            {tier >= 2 && (
-              <g opacity={tier >= 2 ? 1 : 0}>
-                {/* Main stem */}
-                <path
-                  d="M20 42 L20 30"
-                  stroke={stemColor}
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                />
-                {/* Left leaf */}
-                <path
-                  d="M20 36 Q14 33 15 30 Q17 32 20 36"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                {/* Right leaf */}
-                <path
-                  d="M20 36 Q26 33 25 30 Q23 32 20 36"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                {/* Top tiny leaf */}
-                <path
-                  d="M20 31 Q17 28 18 26 Q19 28 20 31"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-              </g>
-            )}
-
-            {/* Tier 3: Growing */}
-            {tier >= 3 && (
-              <g opacity={tier >= 3 ? 1 : 0}>
-                {/* Main stem */}
-                <path
-                  d="M20 42 Q21 36 19.5 30 Q19 26 20 22"
-                  stroke={stemColor}
-                  strokeWidth="2.8"
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                {/* Bottom leaves */}
-                <path
-                  d="M20.5 38 Q14 35 15 32 Q17 34 20.5 38"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M20.5 38 Q27 35 26 32 Q24 34 20.5 38"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                {/* Middle leaves */}
-                <path
-                  d="M19.5 30 Q13 27 14 24 Q16 26 19.5 30"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M19.5 30 Q26 27 25 24 Q23 26 19.5 30"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                {/* Bud */}
-                <ellipse cx="20" cy="21" rx="2.5" ry="3" fill={flowerColor} stroke={outlineColor} strokeWidth="1.2" />
-                <ellipse cx="20" cy="21" rx="1.2" ry="1.8" fill={config.glowColor} opacity={0.5} />
-              </g>
-            )}
-
-            {/* Tier 4: Blooming */}
-            {tier >= 4 && (
-              <g opacity={tier >= 4 ? 1 : 0}>
-                {/* Stem */}
-                <path
-                  d="M20 42 Q21.5 36 20 30 Q19 26 20 20"
-                  stroke={stemColor}
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                {/* Bottom leaves */}
-                <path
-                  d="M20.5 38 Q13 35 14 31 Q17 33 20.5 38"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M20.5 38 Q28 35 27 31 Q24 33 20.5 38"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                {/* Middle leaves */}
-                <path
-                  d="M20 30 Q12 27 13 23 Q16 25 20 30"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M20 30 Q28 27 27 23 Q24 25 20 30"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                {/* Upper leaves */}
-                <path
-                  d="M20 24 Q14 22 15 19 Q17 21 20 24"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M20 24 Q26 22 25 19 Q23 21 20 24"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                {/* Flower */}
-                <g transform="translate(20, 17)">
-                  {/* Petals */}
-                  <path d="M0 -6 C-3 -10 -3 -4 0 -2 C3 -4 3 -10 0 -6" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
-                  <path d="M-6 0 C-10 -3 -4 -3 -2 0 C-4 3 -10 3 -6 0" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
-                  <path d="M6 0 C10 -3 4 -3 2 0 C4 3 10 3 6 0" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
-                  <path d="M0 6 C-3 10 -3 4 0 2 C3 4 3 10 0 6" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
-                  {/* Flower center */}
-                  <circle cx="0" cy="0" r="1.5" fill={config.glowColor} stroke={outlineColor} strokeWidth="0.8" />
+            {/* Plant, tilted per-user via variant.stem */}
+            <g transform={`rotate(${stemTilt} 20 44)`}>
+              {/* Tier 0: Dormant — plump seed in soil */}
+              {tier === 0 && (
+                <g>
+                  <ellipse cx="20" cy="42" rx="3" ry="2.2" fill={stemColor} stroke={outlineColor} strokeWidth="1" />
+                  <line x1="20" y1="42" x2="20" y2="40.5" stroke={outlineColor} strokeWidth="0.8" strokeLinecap="round" />
                 </g>
-              </g>
-            )}
+              )}
 
-            {/* Tier 5: Fruitful */}
-            {tier >= 5 && (
-              <g opacity={tier >= 5 ? 1 : 0}>
-                {/* Stem */}
-                <path
-                  d="M20 42 Q22 35 20 28 Q19 24 20 18"
-                  stroke={stemColor}
-                  strokeWidth="3.2"
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                {/* Bottom leaves */}
-                <path
-                  d="M21 38 Q13 34 14 30 Q17 33 21 38"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M21 38 Q29 34 28 30 Q25 33 21 38"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                {/* Middle leaves */}
-                <path
-                  d="M20 28 Q11 25 12 21 Q15 23 20 28"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M20 28 Q29 25 28 21 Q25 23 20 28"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                {/* Upper leaves */}
-                <path
-                  d="M20 22 Q14 19 15 16 Q17 18 20 22"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M20 22 Q26 19 25 16 Q23 18 20 22"
-                  fill={leafColor}
-                  stroke={outlineColor}
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                />
-                {/* Flower */}
-                <g transform="translate(20, 15)">
-                  <path d="M0 -5 C-2.5 -8 -2.5 -3 0 -1.5 C2.5 -3 2.5 -8 0 -5" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
-                  <path d="M-5 0 C-8 -2.5 -3 -2.5 -1.5 0 C-3 2.5 -8 2.5 -5 0" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
-                  <path d="M5 0 C8 -2.5 3 -2.5 1.5 0 C3 2.5 8 2.5 5 0" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
-                  <path d="M0 5 C-2.5 8 -2.5 3 0 1.5 C2.5 3 2.5 8 0 5" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
-                  <circle cx="0" cy="0" r="1.5" fill={config.glowColor} stroke={outlineColor} strokeWidth="0.8" />
+              {/* Tier 1: single curled sprout */}
+              {tier >= 1 && (
+                <g opacity={tier >= 1 ? 1 : 0}>
+                  <path
+                    d="M20 42 C18.5 39 18 36.5 20 34 C21 32.7 21.3 32 20.5 31"
+                    stroke={stemColor}
+                    strokeWidth="2.8"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+                  <ellipse cx="18.5" cy="31.5" rx="3.4" ry="2.2" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(-35 18.5 31.5)" />
                 </g>
-                {/* Fruit */}
-                <g transform="translate(15, 33)">
-                  <circle cx="0" cy="0" r="3.5" fill={fruitColor} stroke={outlineColor} strokeWidth="1.2" />
-                  <path d="M0 -3.5 Q1 -4 2 -3.5" stroke={outlineColor} strokeWidth="0.8" fill="none" />
-                  {/* Shine */}
-                  <circle cx="-1" cy="-1" r="1" fill="white" opacity={0.4} />
+              )}
+
+              {/* Tier 2: twin round leaf pair + tiny topknot */}
+              {tier >= 2 && (
+                <g opacity={tier >= 2 ? 1 : 0}>
+                  <path d="M20 42 L20 29" stroke={stemColor} strokeWidth="3" strokeLinecap="round" />
+                  <ellipse cx="15" cy="33" rx="3.6" ry="2.4" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(-30 15 33)" />
+                  <ellipse cx="25" cy="33" rx="3.6" ry="2.4" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(30 25 33)" />
+                  <circle cx="20" cy="28" r="2" fill={leafColor} stroke={outlineColor} strokeWidth="1.2" />
                 </g>
-                {/* Second fruit */}
-                <g transform="translate(26, 26)">
-                  <circle cx="0" cy="0" r="2.8" fill={fruitColor} stroke={outlineColor} strokeWidth="1" />
-                  <path d="M0 -2.8 Q0.8 -3.2 1.5 -2.8" stroke={outlineColor} strokeWidth="0.8" fill="none" />
-                  <circle cx="-0.8" cy="-0.8" r="0.8" fill="white" opacity={0.35} />
+              )}
+
+              {/* Tier 3: fuller canopy + closed bud */}
+              {tier >= 3 && (
+                <g opacity={tier >= 3 ? 1 : 0}>
+                  <path d="M20 42 Q21 36 19.5 30 Q19 26 20 22" stroke={stemColor} strokeWidth="3.2" strokeLinecap="round" fill="none" />
+                  <ellipse cx="14.5" cy="35" rx="4" ry="2.6" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(-30 14.5 35)" />
+                  <ellipse cx="25.5" cy="35" rx="4" ry="2.6" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(30 25.5 35)" />
+                  <ellipse cx="13" cy="27" rx="3.6" ry="2.4" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(-35 13 27)" />
+                  <ellipse cx="27" cy="27" rx="3.6" ry="2.4" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(35 27 27)" />
+                  {/* Closed bud — same overlapping-petal motif as the tier 4/5 bloom, drawn tight and unopened */}
+                  <ellipse cx="17.6" cy="23.5" rx="2.2" ry="1.6" fill={leafColor} stroke={outlineColor} strokeWidth="1.2" transform="rotate(-30 17.6 23.5)" />
+                  <ellipse cx="22.4" cy="23.5" rx="2.2" ry="1.6" fill={leafColor} stroke={outlineColor} strokeWidth="1.2" transform="rotate(30 22.4 23.5)" />
+                  <g transform="translate(20, 20)">
+                    <circle cx="0" cy="-1.5" r="2.2" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
+                    <circle cx="-1.8" cy="1" r="2.2" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
+                    <circle cx="1.8" cy="1" r="2.2" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
+                    <ellipse cx="-0.7" cy="-2" rx="0.7" ry="0.9" fill="white" opacity={0.4} />
+                  </g>
                 </g>
-              </g>
-            )}
+              )}
+
+              {/* Tier 4: open chunky bloom + denser canopy */}
+              {tier >= 4 && (
+                <g opacity={tier >= 4 ? 1 : 0}>
+                  <path d="M20 42 Q21.5 36 20 30 Q19 26 20 19" stroke={stemColor} strokeWidth="3.4" strokeLinecap="round" fill="none" />
+                  <ellipse cx="13.5" cy="37" rx="4.2" ry="2.7" fill={leafColor} stroke={outlineColor} strokeWidth="1.5" transform="rotate(-32 13.5 37)" />
+                  <ellipse cx="26.5" cy="37" rx="4.2" ry="2.7" fill={leafColor} stroke={outlineColor} strokeWidth="1.5" transform="rotate(32 26.5 37)" />
+                  <ellipse cx="12.5" cy="29" rx="3.8" ry="2.5" fill={leafColor} stroke={outlineColor} strokeWidth="1.5" transform="rotate(-38 12.5 29)" />
+                  <ellipse cx="27.5" cy="29" rx="3.8" ry="2.5" fill={leafColor} stroke={outlineColor} strokeWidth="1.5" transform="rotate(38 27.5 29)" />
+                  <ellipse cx="14.5" cy="23" rx="3.2" ry="2.1" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(-40 14.5 23)" />
+                  <ellipse cx="25.5" cy="23" rx="3.2" ry="2.1" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(40 25.5 23)" />
+                  {/* Chunky open bloom: 5-petal circle cluster */}
+                  <g transform="translate(20, 16)">
+                    {[0, 72, 144, 216, 288].map((angle) => {
+                      const rad = (angle * Math.PI) / 180
+                      const px = Math.cos(rad) * 3.4
+                      const py = Math.sin(rad) * 3.4
+                      return <circle key={angle} cx={px} cy={py} r="2.6" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
+                    })}
+                    <circle cx="0" cy="0" r="2" fill={config.glowColor} stroke={outlineColor} strokeWidth="0.8" />
+                  </g>
+                </g>
+              )}
+
+              {/* Tier 5: bloom + two plump fruits + sparkle crown */}
+              {tier >= 5 && (
+                <g opacity={tier >= 5 ? 1 : 0}>
+                  <path d="M20 42 Q22 35 20 28 Q19 24 20 17" stroke={stemColor} strokeWidth="3.6" strokeLinecap="round" fill="none" />
+                  <ellipse cx="13" cy="37" rx="4.4" ry="2.8" fill={leafColor} stroke={outlineColor} strokeWidth="1.5" transform="rotate(-32 13 37)" />
+                  <ellipse cx="27" cy="37" rx="4.4" ry="2.8" fill={leafColor} stroke={outlineColor} strokeWidth="1.5" transform="rotate(32 27 37)" />
+                  <ellipse cx="11.5" cy="28" rx="4" ry="2.6" fill={leafColor} stroke={outlineColor} strokeWidth="1.5" transform="rotate(-38 11.5 28)" />
+                  <ellipse cx="28.5" cy="28" rx="4" ry="2.6" fill={leafColor} stroke={outlineColor} strokeWidth="1.5" transform="rotate(38 28.5 28)" />
+                  <ellipse cx="14" cy="22" rx="3.4" ry="2.2" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(-40 14 22)" />
+                  <ellipse cx="26" cy="22" rx="3.4" ry="2.2" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(40 26 22)" />
+                  {/* Bloom */}
+                  <g transform="translate(20, 14)">
+                    {[0, 72, 144, 216, 288].map((angle) => {
+                      const rad = (angle * Math.PI) / 180
+                      const px = Math.cos(rad) * 3.6
+                      const py = Math.sin(rad) * 3.6
+                      return <circle key={angle} cx={px} cy={py} r="2.8" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
+                    })}
+                    <circle cx="0" cy="0" r="2.2" fill={config.glowColor} stroke={outlineColor} strokeWidth="0.8" />
+                  </g>
+                  {/* Sparkle crown — floats clear above the bloom instead of cutting through it */}
+                  <path
+                    d="M20 1.7 L20.7 3.8 L22.8 4.5 L20.7 5.2 L20 7.3 L19.3 5.2 L17.2 4.5 L19.3 3.8 Z"
+                    fill={config.glowColor}
+                    stroke={outlineColor}
+                    strokeWidth="0.6"
+                    opacity={0.95}
+                  />
+                  <circle cx="25" cy="6.5" r="0.9" fill={config.glowColor} opacity={0.8} />
+                  <circle cx="15" cy="7.5" r="0.6" fill={config.glowColor} opacity={0.7} />
+                  {/* Fruit — plump, with a small leafy calyx instead of a bare line */}
+                  <g transform="translate(14.5, 33)">
+                    <circle cx="0" cy="0" r="3.8" fill={fruitColor} stroke={outlineColor} strokeWidth="1.3" />
+                    <ellipse cx="0.3" cy="-3.6" rx="1.1" ry="0.7" fill={leafColor} stroke={outlineColor} strokeWidth="0.7" transform="rotate(20 0.3 -3.6)" />
+                    <circle cx="-1.1" cy="-1.1" r="1.1" fill="white" opacity={0.4} />
+                  </g>
+                  <g transform="translate(26.5, 26)">
+                    <circle cx="0" cy="0" r="3" fill={fruitColor} stroke={outlineColor} strokeWidth="1.1" />
+                    <ellipse cx="0.25" cy="-2.8" rx="0.9" ry="0.6" fill={leafColor} stroke={outlineColor} strokeWidth="0.6" transform="rotate(20 0.25 -2.8)" />
+                    <circle cx="-0.9" cy="-0.9" r="0.9" fill="white" opacity={0.35} />
+                  </g>
+                </g>
+              )}
+            </g>
           </svg>
         </motion.div>
       </motion.div>
@@ -928,7 +702,7 @@ export const SeedlingPlant = ({ tier = 0, active, className, variant, showPartic
   )
 }
 
-export const StreakIcon = ({ streakData, showMilestoneToast = true, variant }: { streakData: StreakData; showMilestoneToast?: boolean; variant?: PlantVariantConfig }) => {
+export const StreakIcon = ({ streakData, showMilestoneToast = true, variant, growthPoints = 0 }: { streakData: StreakData; showMilestoneToast?: boolean; variant?: PlantVariantConfig; growthPoints?: number }) => {
   const { currentStreak, oldStreak, hasCurrentStreak } = streakData
   const displayStreak = hasCurrentStreak ? currentStreak : oldStreak > 0 ? oldStreak : 0
   const tier = getPlantTier(displayStreak);
@@ -977,6 +751,7 @@ export const StreakIcon = ({ streakData, showMilestoneToast = true, variant }: {
             tier={tier}
             active={hasCurrentStreak}
             variant={variant}
+            growthPoints={growthPoints}
             className="w-10 h-12 flex-shrink-0"
           />
           <div className="flex flex-col leading-none">

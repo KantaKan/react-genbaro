@@ -21,6 +21,7 @@ const MiniPlant = ({ member }: { member: ReturnType<typeof mapGenmateMembers>[nu
         tier={member.tier}
         active={member.streakData.hasCurrentStreak}
         variant={member.variant}
+        growthPoints={member.growthPoints}
         showParticles={false}
         className="h-8 w-7 flex-shrink-0"
       />

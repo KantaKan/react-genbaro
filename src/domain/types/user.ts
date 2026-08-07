@@ -1,5 +1,6 @@
 import type { UserRole } from "./auth";
 import type { Badge } from "./badge";
+import type { FertilizerLogEntry } from "./fertilizer";
 
 export type { Badge };
 
@@ -22,6 +23,9 @@ export interface User {
   bio?: string;
   social_links?: SocialLinks;
   pinned_badge_ids?: string[];
+  fertilizer_balance?: number;
+  growth_points?: number;
+  fertilizer_log?: FertilizerLogEntry[];
 }
 
 export interface SocialLinks {
@@ -82,6 +86,8 @@ export interface GenmateGardenMember {
   cohort_number: number;
   genmate_group: string;
   reflection_dates: string[];
+  growth_points?: number;
+  protected_dates?: string[];
 }
 
 export interface GenmateGardenResponse {

@@ -55,6 +55,7 @@ export interface GardenMember {
   variant: ReturnType<typeof getPlantVariant>;
   displayStreak: number;
   tier: ReturnType<typeof getPlantTier>;
+  growthPoints?: number;
 }
 
 export interface GardenGroup {
@@ -214,7 +215,7 @@ export function GenmateGarden({ cohort }: GenmateGardenProps) {
 }
 
 export function PlantTile({ member }: { member: GardenMember }) {
-  const { user, streakData, variant, displayStreak, tier } = member;
+  const { user, streakData, variant, displayStreak, tier, growthPoints } = member;
   const fullName = `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || "Unknown learner";
   const nextMilestone = streakMilestones.find((m) => m.days > displayStreak) ?? null;
   const daysToNext = nextMilestone ? nextMilestone.days - displayStreak : 0;
@@ -241,6 +242,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
             tier={tier}
             active={streakData.hasCurrentStreak}
             variant={variant}
+            growthPoints={growthPoints}
             showParticles={false}
             className="h-16 w-14 flex-shrink-0"
           />
@@ -277,6 +279,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
               tier={tier}
               active={streakData.hasCurrentStreak}
               variant={variant}
+              growthPoints={growthPoints}
               className="h-14 w-12 flex-shrink-0"
             />
             <div className="flex flex-col gap-0.5 text-sm">

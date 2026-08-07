@@ -204,6 +204,33 @@ export function getPlantTier(streak: number): PlantTier {
   return 0
 }
 
+const TIER_THRESHOLDS: Record<PlantTier, number> = { 0: 0, 1: 1, 2: 10, 3: 20, 4: 30, 5: 50 }
+
+export type FlourishTier = 0 | 1 | 2 | 3
+
+const FLOURISH_THRESHOLDS: Record<FlourishTier, number> = { 0: 0, 1: 50, 2: 150, 3: 300 }
+export const flourishAccentColors: Record<FlourishTier, string> = {
+  0: "",
+  1: "#CD7F32", // bronze
+  2: "#C0C0C0", // silver
+  3: "#FFD700", // gold
+}
+
+export function getFlourishTier(growthPoints: number): FlourishTier {
+  if (growthPoints >= FLOURISH_THRESHOLDS[3]) return 3
+  if (growthPoints >= FLOURISH_THRESHOLDS[2]) return 2
+  if (growthPoints >= FLOURISH_THRESHOLDS[1]) return 1
+  return 0
+}
+
+export function getNextTierProgress(streak: number): { current: number; max: number; isMaxTier: boolean } {
+  const tier = getPlantTier(streak)
+  if (tier === 5) return { current: streak, max: streak, isMaxTier: true }
+  const next = TIER_THRESHOLDS[(tier + 1) as PlantTier]
+  const prev = TIER_THRESHOLDS[tier]
+  return { current: streak - prev, max: next - prev, isMaxTier: false }
+}
+
 export function getPlantTierConfig(tier: PlantTier): PlantTierConfig {
   return PLANT_TIER_CONFIGS[tier]
 }
