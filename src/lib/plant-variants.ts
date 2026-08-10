@@ -1,5 +1,3 @@
-import type { PlantTier } from "@/lib/streak-milestones"
-
 /* ─── Seeded PRNG ─── */
 
 function hashString(str: string): number {
@@ -31,6 +29,7 @@ export interface PlantPalette {
   pot: string
 }
 
+// ponytail: names here mirror validPlantPalettes in baro-gofiber/internal/handler/user_handler.go — keep in sync
 const PALETTES: PlantPalette[] = [
   {
     name: "Forest",
@@ -132,6 +131,66 @@ const PALETTES: PlantPalette[] = [
     soil: "#3e2723",
     pot: "#6d4c41",
   },
+  {
+    name: "Jade",
+    stem: "#1e5631",
+    leaf: "#3f8a5c",
+    flower: "#a8e6a3",
+    fruit: "#d9f2b4",
+    glow: "#52c77e",
+    soil: "#3e2723",
+    pot: "#6d8a6d",
+  },
+  {
+    name: "Berry",
+    stem: "#6a1b4d",
+    leaf: "#8e3b6a",
+    flower: "#c2185b",
+    fruit: "#ad1457",
+    glow: "#ec407a",
+    soil: "#3e2723",
+    pot: "#7b4b5a",
+  },
+  {
+    name: "Citrus",
+    stem: "#558b2f",
+    leaf: "#9ccc65",
+    flower: "#fff59d",
+    fruit: "#ffb300",
+    glow: "#cddc39",
+    soil: "#4e342e",
+    pot: "#ef6c00",
+  },
+  {
+    name: "Slate",
+    stem: "#37474f",
+    leaf: "#607d8b",
+    flower: "#b0bec5",
+    fruit: "#cfd8dc",
+    glow: "#90a4ae",
+    soil: "#263238",
+    pot: "#455a64",
+  },
+  {
+    name: "Blush",
+    stem: "#ad7a99",
+    leaf: "#d8a7c4",
+    flower: "#ffc1e3",
+    fruit: "#ffd6ec",
+    glow: "#f48fb1",
+    soil: "#4e342e",
+    pot: "#c48b9f",
+  },
+  {
+    name: "Midnight",
+    stem: "#1a237e",
+    leaf: "#3949ab",
+    flower: "#7986cb",
+    fruit: "#9fa8da",
+    glow: "#5c6bc0",
+    soil: "#263238",
+    pot: "#303f9f",
+  },
 ]
 
 /* ─── Pot Shapes ─── */
@@ -186,6 +245,70 @@ const STEM_TILTS: Record<StemStyle, number> = {
   leaning: 5,
 }
 
+/* ─── Species ─── */
+
+// Different growth topologies, not just recolors: flower/tree grow a canopy of
+// leaf pairs up a stem, cactus stacks round paddle segments, succulent radiates
+// a rosette from the pot rim, fern fans curved fronds from the base, vine drapes
+// leaflets down over the pot rim, bamboo stacks thin jointed stalks, palm tops a
+// bare trunk with a radiating frond crown, mushroom clusters cap-on-stalk fungi,
+// pine stacks triangular tiers, clover mounds low trefoil clusters, orchid arches
+// a sparse stem of butterfly blossoms, coral waves thick bulb-tipped tentacles,
+// grass fans thin blades from the base, lotus floats flat pads with a rising bloom,
+// bonsai layers flat pads along a zigzag trunk, flytrap radiates paired trap jaws,
+// sunflower tops a bare stem with one big flower head, topiary balls a single
+// round crown on a stick, strawberry mounds heart leaves with hanging berries,
+// tulip clusters cup-shaped blooms on straight stems, pumpkin-vine creeps low
+// and horizontal with gourds resting on the soil. See SpeciesCanopy in streak-components.tsx.
+export type PlantSpecies =
+  | "flower"
+  | "cactus"
+  | "succulent"
+  | "tree"
+  | "fern"
+  | "vine"
+  | "bamboo"
+  | "palm"
+  | "mushroom"
+  | "pine"
+  | "clover"
+  | "orchid"
+  | "coral"
+  | "grass"
+  | "lotus"
+  | "bonsai"
+  | "flytrap"
+  | "sunflower"
+  | "topiary"
+  | "strawberry"
+  | "tulip"
+  | "pumpkin-vine"
+
+const SPECIES: PlantSpecies[] = [
+  "flower",
+  "cactus",
+  "succulent",
+  "tree",
+  "fern",
+  "vine",
+  "bamboo",
+  "palm",
+  "mushroom",
+  "pine",
+  "clover",
+  "orchid",
+  "coral",
+  "grass",
+  "lotus",
+  "bonsai",
+  "flytrap",
+  "sunflower",
+  "topiary",
+  "strawberry",
+  "tulip",
+  "pumpkin-vine",
+]
+
 /* ─── Variant Config ─── */
 
 export interface PlantVariantConfig {
@@ -194,6 +317,7 @@ export interface PlantVariantConfig {
   leaf: LeafStyle
   flower: FlowerType
   stem: StemStyle
+  species: PlantSpecies
 }
 
 export function getPlantVariant(userId: string, paletteOverride?: string): PlantVariantConfig {
@@ -209,59 +333,12 @@ export function getPlantVariant(userId: string, paletteOverride?: string): Plant
     leaf: (["rounded", "pointed", "wide"] as LeafStyle[])[Math.floor(rand() * 3)],
     flower: (["daisy", "tulip", "star"] as FlowerType[])[Math.floor(rand() * 3)],
     stem: (["straight", "curved", "leaning"] as StemStyle[])[Math.floor(rand() * 3)],
+    species: SPECIES[Math.floor(rand() * SPECIES.length)],
   }
-}
-
-/* ─── Unlockable palette progression ─── */
-
-// ponytail: mirrors validPlantPalettes in baro-gofiber/internal/handler/user_handler.go — keep in sync
-const PALETTE_UNLOCK_COUNTS: Record<PlantTier, number> = { 0: 0, 1: 0, 2: 3, 3: 5, 4: 7, 5: 10 }
-
-export function getUnlockedPalettes(tier: PlantTier): PlantPalette[] {
-  return PALETTES.slice(0, PALETTE_UNLOCK_COUNTS[tier])
 }
 
 export function getAllPalettes(): PlantPalette[] {
   return PALETTES
-}
-
-// The tier at which the palette at this index (into getAllPalettes()) becomes selectable.
-export function getPaletteUnlockTier(index: number): PlantTier {
-  const tiers: PlantTier[] = [0, 1, 2, 3, 4, 5]
-  for (const tier of tiers) {
-    if (index < PALETTE_UNLOCK_COUNTS[tier]) return tier
-  }
-  return 5
-}
-
-/* ─── Tier-specific leaf positions ─── */
-
-interface LeafPos {
-  x: number
-  y: number
-}
-
-const LEAF_POSITIONS: Record<PlantTier, LeafPos[]> = {
-  0: [],
-  1: [{ x: 20, y: 36 }],
-  2: [
-    { x: 20, y: 36 },
-    { x: 20, y: 31 },
-  ],
-  3: [
-    { x: 20.5, y: 38 },
-    { x: 19.5, y: 30 },
-  ],
-  4: [
-    { x: 20.5, y: 38 },
-    { x: 20, y: 30 },
-    { x: 20, y: 24 },
-  ],
-  5: [
-    { x: 21, y: 38 },
-    { x: 20, y: 28 },
-    { x: 20, y: 22 },
-  ],
 }
 
 /* ─── Exported utilities ─── */
@@ -276,32 +353,4 @@ export function getLeafPath(style: LeafStyle): string {
 
 export function getStemTilt(style: StemStyle): number {
   return STEM_TILTS[style]
-}
-
-export function getLeafPositions(tier: PlantTier): LeafPos[] {
-  return LEAF_POSITIONS[tier] ?? []
-}
-
-export function getFlowerPosition(tier: PlantTier): { x: number; y: number } | null {
-  if (tier >= 5) return { x: 20, y: 15 }
-  if (tier >= 4) return { x: 20, y: 17 }
-  if (tier >= 3) return { x: 20, y: 21 }
-  return null
-}
-
-export function getStemPath(tier: PlantTier): string {
-  switch (tier) {
-    case 1:
-      return "M20 42 Q19 40 20.5 37 Q21 35 20 33"
-    case 2:
-      return "M20 42 L20 30"
-    case 3:
-      return "M20 42 Q21 36 19.5 30 Q19 26 20 22"
-    case 4:
-      return "M20 42 Q21.5 36 20 30 Q19 26 20 20"
-    case 5:
-      return "M20 42 Q22 35 20 28 Q19 24 20 18"
-    default:
-      return ""
-  }
 }

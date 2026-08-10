@@ -12,9 +12,8 @@ import { useReflections, type Reflection } from "@/hooks/use-reflections";
 import { useStreakCalculation } from "@/hooks/use-streak-calculation";
 import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflection-zones";
 import { StreakIcon, GrowthBar, ComfortZoneMessage } from "./streak-components";
-import { getMilestoneForStreak, getRandomComfortMessage, getRandomStreakQuote, getNextTierProgress, getPlantTier, getEffectivePlantDays } from "@/lib/streak-milestones";
+import { getMilestoneForStreak, getRandomComfortMessage, getRandomStreakQuote, getNextTierProgress } from "@/lib/streak-milestones";
 import { getPlantVariant } from "@/lib/plant-variants";
-import { getDisplayStreak } from "@/hooks/use-streak-calculation";
 import { ReflectionsTable } from "./reflections-table";
 import FeedbackForm from "./linear-feedback-form";
 import { ReflectionPreview } from "./reflection-preview";
@@ -78,11 +77,6 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   const plantVariant = useMemo(() => {
     return user ? getPlantVariant(user._id, user.selected_palette) : undefined;
   }, [user]);
-
-  const currentTier = useMemo(
-    () => getPlantTier(getEffectivePlantDays(getDisplayStreak(streakData), user?.growth_points ?? 0)),
-    [streakData, user?.growth_points]
-  );
 
   const fetchUser = useCallback(async () => {
     if (!userId) return;
@@ -286,7 +280,6 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                 {user && (
                   <PlantPalettePicker
                     userId={user._id}
-                    currentTier={currentTier}
                     selected={user.selected_palette}
                     onSaved={fetchUser}
                   />

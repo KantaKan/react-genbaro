@@ -75,7 +75,7 @@ export function getRandomComfortMessage(type: keyof typeof comfortZoneMessages):
   return messages[Math.floor(Math.random() * messages.length)]
 }
 
-export type PlantTier = 0 | 1 | 2 | 3 | 4 | 5
+export type PlantTier = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 export type GrowthGlowStyle = "none" | "glow" | "radiant" | "bloom" | "bloom-ring" | "aurora"
 
@@ -115,14 +115,14 @@ const PLANT_TIER_CONFIGS: Record<PlantTier, PlantTierConfig> = {
   },
   1: {
     name: "sprout",
-    stemColor: "#a5d6a7",
-    leafColor: "#c8e6c9",
+    stemColor: "#b9dab9",
+    leafColor: "#d3ecd4",
     flowerColor: "#e8f5e9",
-    fruitColor: "#a5d6a7",
+    fruitColor: "#b9dab9",
     glowColor: "#a5d6a7",
     soilColor: "#5c4033",
     potColor: "#c77d61",
-    particleCount: 3,
+    particleCount: 2,
     particleTypes: ["pollen"],
     glowScale: 1,
     hasFlower: false,
@@ -130,77 +130,144 @@ const PLANT_TIER_CONFIGS: Record<PlantTier, PlantTierConfig> = {
     growthGlow: "glow",
   },
   2: {
-    name: "seedling",
-    stemColor: "#66bb6a",
-    leafColor: "#81c784",
-    flowerColor: "#a5d6a7",
-    fruitColor: "#66bb6a",
-    glowColor: "#66bb6a",
+    name: "sprouting",
+    stemColor: "#a5d6a7",
+    leafColor: "#c8e6c9",
+    flowerColor: "#e8f5e9",
+    fruitColor: "#a5d6a7",
+    glowColor: "#8fd08f",
     soilColor: "#5c4033",
     potColor: "#c77d61",
-    particleCount: 5,
-    particleTypes: ["pollen", "leaf"],
-    glowScale: 1.15,
+    particleCount: 3,
+    particleTypes: ["pollen"],
+    glowScale: 1.05,
     hasFlower: false,
     hasFruit: false,
     growthGlow: "glow",
   },
   3: {
-    name: "growing",
-    stemColor: "#43a047",
-    leafColor: "#66bb6a",
-    flowerColor: "#f8bbd0",
-    fruitColor: "#66bb6a",
-    glowColor: "#43a047",
+    name: "seedling",
+    stemColor: "#8bc98f",
+    leafColor: "#b7ddb9",
+    flowerColor: "#dcedc8",
+    fruitColor: "#8bc98f",
+    glowColor: "#7cc97f",
     soilColor: "#5c4033",
     potColor: "#c77d61",
-    particleCount: 7,
+    particleCount: 5,
+    particleTypes: ["pollen", "leaf"],
+    glowScale: 1.1,
+    hasFlower: false,
+    hasFruit: false,
+    growthGlow: "glow",
+  },
+  4: {
+    name: "budding",
+    stemColor: "#74bc79",
+    leafColor: "#9ed3a1",
+    flowerColor: "#dcedc8",
+    fruitColor: "#74bc79",
+    glowColor: "#66bb6a",
+    soilColor: "#5c4033",
+    potColor: "#c77d61",
+    particleCount: 6,
+    particleTypes: ["pollen", "leaf"],
+    glowScale: 1.15,
+    hasFlower: false,
+    hasFruit: false,
+    growthGlow: "radiant",
+  },
+  5: {
+    name: "growing",
+    stemColor: "#66bb6a",
+    leafColor: "#8fc793",
+    flowerColor: "#c8e6c9",
+    fruitColor: "#66bb6a",
+    glowColor: "#57b25c",
+    soilColor: "#5c4033",
+    potColor: "#c77d61",
+    particleCount: 8,
+    particleTypes: ["pollen", "leaf"],
+    glowScale: 1.2,
+    hasFlower: false,
+    hasFruit: false,
+    growthGlow: "radiant",
+  },
+  6: {
+    name: "flourishing",
+    stemColor: "#52a855",
+    leafColor: "#7cba80",
+    flowerColor: "#f8bbd0",
+    fruitColor: "#52a855",
+    glowColor: "#4caf50",
+    soilColor: "#5c4033",
+    potColor: "#c77d61",
+    particleCount: 9,
     particleTypes: ["pollen", "leaf", "petal"],
     glowScale: 1.3,
     hasFlower: true,
     hasFruit: false,
     growthGlow: "radiant",
   },
-  4: {
+  7: {
     name: "blooming",
-    stemColor: "#2e7d32",
-    leafColor: "#43a047",
+    stemColor: "#43a047",
+    leafColor: "#66bb6a",
     flowerColor: "#f48fb1",
-    fruitColor: "#43a047",
-    glowColor: "#2e7d32",
+    fruitColor: "#66bb6a",
+    glowColor: "#43a047",
     soilColor: "#5c4033",
     potColor: "#b56a4e",
-    particleCount: 9,
-    particleTypes: ["pollen", "leaf", "petal", "light"],
-    glowScale: 1.45,
+    particleCount: 11,
+    particleTypes: ["pollen", "leaf", "petal"],
+    glowScale: 1.4,
     hasFlower: true,
     hasFruit: false,
     growthGlow: "bloom",
   },
-  5: {
+  8: {
     name: "fruitful",
-    stemColor: "#1b5e20",
-    leafColor: "#2e7d32",
+    stemColor: "#2e7d32",
+    leafColor: "#43a047",
     flowerColor: "#f48fb1",
     fruitColor: "#e9c46a",
     glowColor: "#e9c46a",
     soilColor: "#5c4033",
     potColor: "#b56a4e",
-    particleCount: 12,
+    particleCount: 13,
     particleTypes: ["pollen", "leaf", "petal", "light"],
-    glowScale: 1.6,
+    glowScale: 1.5,
+    hasFlower: true,
+    hasFruit: true,
+    growthGlow: "bloom",
+  },
+  9: {
+    name: "bountiful",
+    stemColor: "#1b5e20",
+    leafColor: "#2e7d32",
+    flowerColor: "#f06292",
+    fruitColor: "#ffd700",
+    glowColor: "#ffd700",
+    soilColor: "#5c4033",
+    potColor: "#b56a4e",
+    particleCount: 16,
+    particleTypes: ["pollen", "leaf", "petal", "light"],
+    glowScale: 1.65,
     hasFlower: true,
     hasFruit: true,
     growthGlow: "aurora",
   },
 }
 
+// Denser early tiers (streaks under 30 days flip stages every few days) plus
+// extended late tiers (up to 100 days) so long streaks keep visibly evolving.
+const TIER_DAY_BOUNDARIES: Record<PlantTier, number> = { 0: 0, 1: 1, 2: 3, 3: 7, 4: 14, 5: 21, 6: 30, 7: 50, 8: 75, 9: 100 }
+
 export function getPlantTier(streak: number): PlantTier {
-  if (streak >= 50) return 5
-  if (streak >= 30) return 4
-  if (streak >= 20) return 3
-  if (streak >= 10) return 2
-  if (streak >= 1) return 1
+  const tiers: PlantTier[] = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+  for (const tier of tiers) {
+    if (streak >= TIER_DAY_BOUNDARIES[tier]) return tier
+  }
   return 0
 }
 
@@ -213,10 +280,8 @@ export function getEffectivePlantDays(streak: number, growthPoints: number): num
   return streak + Math.floor(growthPoints / GROWTH_POINTS_PER_DAY)
 }
 
-const TIER_THRESHOLDS: Record<PlantTier, number> = { 0: 0, 1: 1, 2: 10, 3: 20, 4: 30, 5: 50 }
-
 export function getTierDayThreshold(tier: PlantTier): number {
-  return TIER_THRESHOLDS[tier]
+  return TIER_DAY_BOUNDARIES[tier]
 }
 
 export type FlourishTier = 0 | 1 | 2 | 3
@@ -239,9 +304,9 @@ export function getFlourishTier(growthPoints: number): FlourishTier {
 export function getNextTierProgress(streak: number, growthPoints = 0): { current: number; max: number; isMaxTier: boolean } {
   const days = getEffectivePlantDays(streak, growthPoints)
   const tier = getPlantTier(days)
-  if (tier === 5) return { current: days, max: days, isMaxTier: true }
-  const next = TIER_THRESHOLDS[(tier + 1) as PlantTier]
-  const prev = TIER_THRESHOLDS[tier]
+  if (tier === 9) return { current: days, max: days, isMaxTier: true }
+  const next = TIER_DAY_BOUNDARIES[(tier + 1) as PlantTier]
+  const prev = TIER_DAY_BOUNDARIES[tier]
   return { current: days - prev, max: next - prev, isMaxTier: false }
 }
 

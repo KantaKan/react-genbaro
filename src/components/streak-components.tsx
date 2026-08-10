@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useEffect, useState, useCallback } from "react"
+import { useRef, useEffect, useState, useCallback, type ReactNode } from "react"
 import { motion, useAnimation, AnimatePresence, useReducedMotion } from "framer-motion"
 import type { StreakData } from "@/hooks/use-reflections"
 import {
@@ -17,24 +17,1054 @@ import {
 
 import { Cat } from "lucide-react"
 import { fireConfetti } from "@/lib/confetti"
-import { getPotPath, getStemTilt, type PlantVariantConfig } from "@/lib/plant-variants"
+import { getPotPath, getStemTilt, type PlantVariantConfig, type PlantSpecies } from "@/lib/plant-variants"
 
 const tierTextColors: Record<PlantTier, string> = {
   0: "text-muted-foreground",
-  1: "text-emerald-600 dark:text-emerald-400",
-  2: "text-green-600 dark:text-green-400",
-  3: "text-green-700 dark:text-green-300",
-  4: "text-emerald-700 dark:text-emerald-300",
-  5: "text-amber-600 dark:text-amber-300",
+  1: "text-emerald-500 dark:text-emerald-400",
+  2: "text-emerald-600 dark:text-emerald-400",
+  3: "text-green-600 dark:text-green-400",
+  4: "text-green-600 dark:text-green-300",
+  5: "text-green-700 dark:text-green-300",
+  6: "text-emerald-700 dark:text-emerald-300",
+  7: "text-pink-600 dark:text-pink-300",
+  8: "text-amber-600 dark:text-amber-300",
+  9: "text-amber-500 dark:text-amber-200",
 }
 
 const tierSubtextColors: Record<PlantTier, string> = {
   0: "text-muted-foreground/60",
   1: "text-emerald-500/80 dark:text-emerald-400/70",
-  2: "text-green-500/80 dark:text-green-400/70",
-  3: "text-green-600/80 dark:text-green-300/70",
-  4: "text-emerald-600/80 dark:text-emerald-300/70",
-  5: "text-amber-500/80 dark:text-amber-300/70",
+  2: "text-emerald-500/80 dark:text-emerald-400/70",
+  3: "text-green-500/80 dark:text-green-400/70",
+  4: "text-green-600/80 dark:text-green-400/70",
+  5: "text-green-600/80 dark:text-green-300/70",
+  6: "text-emerald-600/80 dark:text-emerald-300/70",
+  7: "text-pink-500/80 dark:text-pink-300/70",
+  8: "text-amber-500/80 dark:text-amber-300/70",
+  9: "text-amber-500/80 dark:text-amber-200/70",
+}
+
+/* ─── Procedural plant canopy ───
+   Each species gets its own growth topology (not a recolor of the same
+   shape): flower grows leaf pairs up a stem to a bloom, tree grows a trunk
+   into a leafy crown, cactus stacks spined paddle segments, succulent
+   radiates a rosette. Shapes are generated from `tier` by formula so all 10
+   tiers fall out of one function instead of ten hand-drawn blocks. */
+
+interface LeafSpec {
+  x: number
+  y: number
+  rx: number
+  ry: number
+  rot: number
+}
+
+function canopyTop(tier: PlantTier): number {
+  return Math.max(15, 42 - tier * 2.9)
+}
+
+function leafFan(tier: PlantTier): LeafSpec[] {
+  const pairs = Math.min(tier, 5)
+  const top = canopyTop(tier)
+  const leaves: LeafSpec[] = []
+  for (let i = 0; i < pairs; i++) {
+    const t = pairs === 1 ? 0.5 : i / (pairs - 1)
+    const y = 39 - t * (39 - (top + 5))
+    const spread = 4 + t * 2.4
+    const size = 3.6 + t * 0.9
+    const angle = 28 + t * 14
+    leaves.push({ x: 20 - spread, y, rx: size, ry: size * 0.62, rot: -angle })
+    leaves.push({ x: 20 + spread, y, rx: size, ry: size * 0.62, rot: angle })
+  }
+  return leaves
+}
+
+const StemPath = ({ tier, color, width }: { tier: PlantTier; color: string; width: number }) => {
+  if (tier === 0) return null
+  const top = canopyTop(tier)
+  return (
+    <path
+      d={`M20 42 Q21.2 ${((42 + top) / 2).toFixed(1)} 20 ${top}`}
+      stroke={color}
+      strokeWidth={width}
+      strokeLinecap="round"
+      fill="none"
+    />
+  )
+}
+
+const LeafGroup = ({ leaves, color, outline }: { leaves: LeafSpec[]; color: string; outline: string }) => (
+  <>
+    {leaves.map((l, i) => (
+      <ellipse
+        key={i}
+        cx={l.x}
+        cy={l.y}
+        rx={l.rx}
+        ry={l.ry}
+        fill={color}
+        stroke={outline}
+        strokeWidth={1.4}
+        transform={`rotate(${l.rot} ${l.x} ${l.y})`}
+      />
+    ))}
+  </>
+)
+
+const BloomCluster = ({
+  x,
+  y,
+  color,
+  glow,
+  outline,
+  scale = 1,
+}: {
+  x: number
+  y: number
+  color: string
+  glow: string
+  outline: string
+  scale?: number
+}) => (
+  <g transform={`translate(${x}, ${y})`}>
+    {[0, 72, 144, 216, 288].map((angle) => {
+      const rad = (angle * Math.PI) / 180
+      const px = Math.cos(rad) * 3.2 * scale
+      const py = Math.sin(rad) * 3.2 * scale
+      return <circle key={angle} cx={px} cy={py} r={2.4 * scale} fill={color} stroke={outline} strokeWidth="1" />
+    })}
+    <circle cx="0" cy="0" r={1.8 * scale} fill={glow} stroke={outline} strokeWidth="0.8" />
+  </g>
+)
+
+const FruitDot = ({
+  x,
+  y,
+  color,
+  leafColor,
+  outline,
+  r = 3.4,
+}: {
+  x: number
+  y: number
+  color: string
+  leafColor: string
+  outline: string
+  r?: number
+}) => (
+  <g transform={`translate(${x}, ${y})`}>
+    <circle cx="0" cy="0" r={r} fill={color} stroke={outline} strokeWidth="1.2" />
+    <ellipse
+      cx={r * 0.08}
+      cy={-r * 0.9}
+      rx={r * 0.28}
+      ry={r * 0.18}
+      fill={leafColor}
+      stroke={outline}
+      strokeWidth="0.6"
+      transform={`rotate(20 ${(r * 0.08).toFixed(2)} ${(-r * 0.9).toFixed(2)})`}
+    />
+    <circle cx={-r * 0.3} cy={-r * 0.3} r={r * 0.28} fill="white" opacity={0.4} />
+  </g>
+)
+
+interface CanopyColors {
+  stem: string
+  leaf: string
+  flower: string
+  fruit: string
+  glow: string
+  outline: string
+}
+
+const FlowerCanopy = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  const leaves = leafFan(tier)
+  const top = canopyTop(tier)
+  const lowLeaf = leaves[0]
+  const highLeaf = leaves[leaves.length - 1]
+  return (
+    <>
+      <StemPath tier={tier} color={colors.stem} width={3} />
+      <LeafGroup leaves={leaves} color={colors.leaf} outline={colors.outline} />
+      {hasFlower && <BloomCluster x={20} y={top - 2} color={colors.flower} glow={colors.glow} outline={colors.outline} />}
+      {hasFruit && lowLeaf && <FruitDot x={lowLeaf.x} y={lowLeaf.y + 3} color={colors.fruit} leafColor={colors.leaf} outline={colors.outline} r={3.6} />}
+      {hasFruit && highLeaf && leaves.length > 2 && (
+        <FruitDot x={highLeaf.x} y={highLeaf.y + 3} color={colors.fruit} leafColor={colors.leaf} outline={colors.outline} r={2.8} />
+      )}
+    </>
+  )
+}
+
+const TreeCanopy = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  const top = canopyTop(tier)
+  const crownR = 4 + tier * 0.9
+  const blobs = [
+    { x: 20, y: top, r: crownR },
+    { x: 20 - crownR * 0.65, y: top + crownR * 0.35, r: crownR * 0.75 },
+    { x: 20 + crownR * 0.65, y: top + crownR * 0.35, r: crownR * 0.75 },
+  ]
+  const accents = [
+    { x: -crownR * 0.3, y: -crownR * 0.2 },
+    { x: crownR * 0.35, y: crownR * 0.1 },
+    { x: 0, y: crownR * 0.45 },
+    { x: -crownR * 0.5, y: crownR * 0.5 },
+    { x: crownR * 0.5, y: -crownR * 0.4 },
+  ]
+  return (
+    <>
+      <StemPath tier={tier} color={colors.stem} width={4} />
+      {tier >= 2 &&
+        blobs.map((b, i) => (
+          <circle key={i} cx={b.x} cy={b.y} r={b.r} fill={colors.leaf} stroke={colors.outline} strokeWidth={1.5} />
+        ))}
+      {tier === 1 && <ellipse cx="20" cy={top} rx={4} ry={3} fill={colors.leaf} stroke={colors.outline} strokeWidth={1.4} />}
+      {hasFlower &&
+        accents.slice(0, 3).map((a, i) => (
+          <circle key={i} cx={20 + a.x} cy={top + a.y} r={1.4} fill={colors.flower} stroke={colors.outline} strokeWidth={0.7} />
+        ))}
+      {hasFruit &&
+        accents.map((a, i) => (
+          <circle key={`fruit-${i}`} cx={20 + a.x} cy={top + a.y} r={1.3} fill={colors.fruit} stroke={colors.outline} strokeWidth={0.7} />
+        ))}
+    </>
+  )
+}
+
+const CactusBody = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  if (tier === 0) return null
+  const segments = Math.min(1 + Math.floor((tier - 1) / 1.5), 6)
+  const segHeight = 4.2
+  const baseY = 42
+  const parts: ReactNode[] = []
+  for (let i = 0; i < segments; i++) {
+    const cy = baseY - segHeight * (i + 0.5) - i * 0.4
+    const width = 6.5 - i * 0.2
+    parts.push(
+      <rect
+        key={`seg-${i}`}
+        x={20 - width / 2}
+        y={cy - segHeight / 2}
+        width={width}
+        height={segHeight}
+        rx={width / 2}
+        fill={colors.stem}
+        stroke={colors.outline}
+        strokeWidth={1.5}
+      />
+    )
+    for (const s of [-1, 0, 1]) {
+      parts.push(
+        <line
+          key={`spine-${i}-${s}`}
+          x1={20 + s * width * 0.28}
+          y1={cy - segHeight * 0.3}
+          x2={20 + s * width * 0.28}
+          y2={cy + segHeight * 0.3}
+          stroke={colors.leaf}
+          strokeWidth="0.6"
+          strokeLinecap="round"
+        />
+      )
+    }
+  }
+  const top = baseY - segHeight * segments - (segments - 1) * 0.4
+  return (
+    <>
+      {parts}
+      {hasFlower && <BloomCluster x={20} y={top - 1} color={colors.flower} glow={colors.glow} outline={colors.outline} scale={0.65} />}
+      {hasFruit && <FruitDot x={23} y={top + 2} color={colors.fruit} leafColor={colors.leaf} outline={colors.outline} r={2.2} />}
+    </>
+  )
+}
+
+const SucculentRosette = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  if (tier === 0) return null
+  const count = Math.min(4 + tier, 12)
+  const baseY = 40
+  const reach = 3.5 + Math.min(tier, 6) * 0.9
+  const spreadDeg = 150
+  const leaves: ReactNode[] = []
+  for (let i = 0; i < count; i++) {
+    const angle = count === 1 ? 0 : -spreadDeg / 2 + (spreadDeg / (count - 1)) * i
+    const rad = (angle * Math.PI) / 180
+    const px = 20 + Math.sin(rad) * reach
+    const py = baseY - Math.cos(rad) * reach * 0.8
+    leaves.push(
+      <ellipse
+        key={i}
+        cx={px}
+        cy={py}
+        rx={2.6}
+        ry={1.4}
+        fill={colors.leaf}
+        stroke={colors.outline}
+        strokeWidth="1.2"
+        transform={`rotate(${angle.toFixed(1)} ${px.toFixed(1)} ${py.toFixed(1)})`}
+      />
+    )
+  }
+  const spikeTop = 40 - Math.min(tier, 9) * 2.2
+  return (
+    <>
+      {leaves}
+      <circle cx="20" cy={baseY} r="2.2" fill={colors.stem} stroke={colors.outline} strokeWidth="1" />
+      {hasFlower && (
+        <>
+          <path d={`M20 ${baseY} L20 ${spikeTop}`} stroke={colors.stem} strokeWidth="1.6" strokeLinecap="round" />
+          <BloomCluster x={20} y={spikeTop - 1} color={colors.flower} glow={colors.glow} outline={colors.outline} scale={0.6} />
+        </>
+      )}
+      {hasFruit && <FruitDot x={20} y={spikeTop + 3} color={colors.fruit} leafColor={colors.leaf} outline={colors.outline} r={1.8} />}
+    </>
+  )
+}
+
+const FernFronds = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  const count = Math.min(2 + tier, 8)
+  const baseY = 42
+  const fronds: { tipX: number; tipY: number }[] = []
+  const parts: ReactNode[] = []
+  for (let i = 0; i < count; i++) {
+    const t = count === 1 ? 0.5 : i / (count - 1)
+    const angle = -65 + 130 * t
+    const rad = (angle * Math.PI) / 180
+    const length = 9 + Math.min(tier, 7) * 2.1
+    const tipX = 20 + Math.sin(rad) * length * 0.55
+    const tipY = baseY - Math.cos(rad) * length
+    fronds.push({ tipX, tipY })
+    const midX = 20 + Math.sin(rad) * length * 0.3
+    const midY = baseY - Math.cos(rad) * length * 0.55
+    parts.push(
+      <path
+        key={`spine-${i}`}
+        d={`M20 ${baseY} Q${midX.toFixed(1)} ${midY.toFixed(1)} ${tipX.toFixed(1)} ${tipY.toFixed(1)}`}
+        stroke={colors.stem}
+        strokeWidth={1.6}
+        fill="none"
+        strokeLinecap="round"
+      />
+    )
+    for (let j = 1; j <= 4; j++) {
+      const lt = j / 5
+      const lx = 20 + (tipX - 20) * lt
+      const ly = baseY + (tipY - baseY) * lt
+      const size = 1.7 * (1 - lt * 0.4)
+      parts.push(
+        <ellipse
+          key={`leaflet-${i}-${j}`}
+          cx={lx}
+          cy={ly}
+          rx={size}
+          ry={size * 0.55}
+          fill={colors.leaf}
+          stroke={colors.outline}
+          strokeWidth={0.8}
+          transform={`rotate(${angle} ${lx.toFixed(1)} ${ly.toFixed(1)})`}
+        />
+      )
+    }
+  }
+  const tallest = fronds.reduce((a, b) => (b.tipY < a.tipY ? b : a), fronds[0] ?? { tipX: 20, tipY: baseY })
+  return (
+    <>
+      {parts}
+      {hasFlower && <BloomCluster x={tallest.tipX} y={tallest.tipY} color={colors.flower} glow={colors.glow} outline={colors.outline} scale={0.5} />}
+      {hasFruit && <FruitDot x={20} y={baseY - 2} color={colors.fruit} leafColor={colors.leaf} outline={colors.outline} r={1.8} />}
+    </>
+  )
+}
+
+function quadPoint(p0: { x: number; y: number }, p1: { x: number; y: number }, p2: { x: number; y: number }, t: number) {
+  const mt = 1 - t
+  return { x: mt * mt * p0.x + 2 * mt * t * p1.x + t * t * p2.x, y: mt * mt * p0.y + 2 * mt * t * p1.y + t * t * p2.y }
+}
+
+// Tendrils anchor to alternating sides of the rim (not one shared center point) and bow
+// outward before drooping, so they read as trailing over the pot edge instead of a bundle
+// of straight lines fanning from the middle. Leaflets follow the actual curve via
+// quadPoint rather than a straight lerp between endpoints, which drifted off-curve on wide bends.
+const VineDrape = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  const count = Math.min(1 + Math.floor(tier / 2), 5)
+  const baseY = 41
+  const tips: { x: number; y: number }[] = []
+  const parts: ReactNode[] = []
+  for (let i = 0; i < count; i++) {
+    const side = i % 2 === 0 ? -1 : 1
+    const originX = 20 + side * (6 + Math.floor(i / 2) * 2)
+    const length = 4 + Math.min(tier, 8) * 0.65
+    const p0 = { x: originX, y: baseY }
+    const p1 = { x: originX + side * 4, y: baseY + length * 0.3 }
+    const p2 = { x: originX + side * 1.2, y: baseY + length }
+    tips.push(p2)
+    parts.push(
+      <path
+        key={`tendril-${i}`}
+        d={`M${p0.x} ${p0.y} Q${p1.x.toFixed(1)} ${p1.y.toFixed(1)} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`}
+        stroke={colors.stem}
+        strokeWidth={1.3}
+        fill="none"
+        strokeLinecap="round"
+      />
+    )
+    for (let j = 1; j <= 4; j++) {
+      const lt = j / 5
+      const { x: lx, y: ly } = quadPoint(p0, p1, p2, lt)
+      const size = 1.5 + lt * 0.6
+      parts.push(
+        <ellipse
+          key={`leaflet-${i}-${j}`}
+          cx={lx}
+          cy={ly}
+          rx={size}
+          ry={size * 0.68}
+          fill={colors.leaf}
+          stroke={colors.outline}
+          strokeWidth={0.9}
+          transform={`rotate(${side * (25 + lt * 20)} ${lx.toFixed(1)} ${ly.toFixed(1)})`}
+        />
+      )
+    }
+  }
+  const longest = tips.reduce((a, b) => (b.y > a.y ? b : a), tips[0] ?? { x: 20, y: baseY })
+  return (
+    <>
+      {parts}
+      {hasFlower && <BloomCluster x={longest.x} y={longest.y} color={colors.flower} glow={colors.glow} outline={colors.outline} scale={0.5} />}
+      {hasFruit && tips[1] && <FruitDot x={tips[1].x} y={tips[1].y} color={colors.fruit} leafColor={colors.leaf} outline={colors.outline} r={1.6} />}
+    </>
+  )
+}
+
+const BambooStalk = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  if (tier === 0) return null
+  const segments = Math.min(2 + Math.floor(tier / 1.2), 7)
+  const segHeight = 5
+  const baseY = 42
+  const width = 2.4
+  const parts: ReactNode[] = []
+  for (let i = 0; i < segments; i++) {
+    const cy = baseY - segHeight * (i + 0.5)
+    parts.push(
+      <rect
+        key={`joint-${i}`}
+        x={20 - width / 2}
+        y={cy - segHeight / 2}
+        width={width}
+        height={segHeight}
+        rx={width / 2}
+        fill={colors.stem}
+        stroke={colors.outline}
+        strokeWidth={1.3}
+      />
+    )
+    if (i > 0) {
+      const jointY = cy + segHeight / 2
+      const side = i % 2 === 0 ? 1 : -1
+      const leafX = 20 + side * 3.4
+      const leafY = jointY - 1.5
+      parts.push(
+        <line key={`band-${i}`} x1={20 - width / 2 - 0.3} y1={jointY} x2={20 + width / 2 + 0.3} y2={jointY} stroke={colors.outline} strokeWidth={0.7} />
+      )
+      parts.push(
+        <ellipse
+          key={`tuft-${i}`}
+          cx={leafX}
+          cy={leafY}
+          rx={2.6}
+          ry={0.8}
+          fill={colors.leaf}
+          stroke={colors.outline}
+          strokeWidth={0.7}
+          transform={`rotate(${side * 25} ${leafX} ${leafY})`}
+        />
+      )
+    }
+  }
+  const top = baseY - segHeight * segments
+  return (
+    <>
+      {parts}
+      {hasFlower && <BloomCluster x={20} y={top - 1} color={colors.flower} glow={colors.glow} outline={colors.outline} scale={0.55} />}
+      {hasFruit && <FruitDot x={22.5} y={top + 2} color={colors.fruit} leafColor={colors.leaf} outline={colors.outline} r={1.8} />}
+    </>
+  )
+}
+
+const PalmCrown = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  const top = canopyTop(tier)
+  const ringCount = Math.min(tier, 4)
+  const rings: ReactNode[] = []
+  for (let i = 1; i <= ringCount; i++) {
+    const ry = 42 - (42 - top) * (i / (ringCount + 1))
+    rings.push(<line key={`ring-${i}`} x1={18.2} y1={ry} x2={21.8} y2={ry} stroke={colors.outline} strokeWidth={0.6} opacity={0.5} />)
+  }
+  const frondCount = Math.min(3 + tier, 9)
+  const fronds: ReactNode[] = []
+  for (let i = 0; i < frondCount; i++) {
+    const t = frondCount === 1 ? 0.5 : i / (frondCount - 1)
+    const angle = -80 + 160 * t
+    const rad = (angle * Math.PI) / 180
+    const reach = 6 + Math.min(tier, 6) * 1.1
+    const tipX = 20 + Math.sin(rad) * reach
+    const tipY = top - Math.cos(rad) * reach * 0.45 + Math.abs(Math.sin(rad)) * reach * 0.3
+    const ctrlX = 20 + Math.sin(rad) * reach * 0.5
+    const ctrlY = top - reach * 0.3
+    fronds.push(
+      <path
+        key={`frond-${i}`}
+        d={`M20 ${top.toFixed(1)} Q${ctrlX.toFixed(1)} ${ctrlY.toFixed(1)} ${tipX.toFixed(1)} ${tipY.toFixed(1)}`}
+        stroke={colors.leaf}
+        strokeWidth={1.8}
+        fill="none"
+        strokeLinecap="round"
+      />
+    )
+  }
+  return (
+    <>
+      <StemPath tier={tier} color={colors.stem} width={2.3} />
+      {rings}
+      {fronds}
+      {hasFlower && <BloomCluster x={20} y={top + 1} color={colors.flower} glow={colors.glow} outline={colors.outline} scale={0.5} />}
+      {hasFruit && <FruitDot x={23} y={top + 3} color={colors.fruit} leafColor={colors.leaf} outline={colors.outline} r={1.8} />}
+    </>
+  )
+}
+
+const MushroomCluster = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  const count = Math.min(2 + Math.floor(tier / 1.4), 6)
+  const baseY = 42
+  const parts: ReactNode[] = []
+  let tallestCapY = baseY
+  for (let i = 0; i < count; i++) {
+    const t = count === 1 ? 0.5 : i / (count - 1)
+    const x = 20 + (t - 0.5) * 16
+    const h = 3 + Math.min(tier, 8) * 0.85 + (i % 2 === 0 ? 1 : 0)
+    const stalkTop = baseY - h
+    const capRx = 2.6 + Math.min(tier, 8) * 0.28 + (i % 2) * 0.4
+    const capRy = capRx * 0.55
+    const capFill = hasFlower ? colors.flower : colors.stem
+    tallestCapY = Math.min(tallestCapY, stalkTop)
+    parts.push(<rect key={`stalk-${i}`} x={x - 0.55} y={stalkTop} width={1.1} height={h} rx={0.5} fill={colors.leaf} stroke={colors.outline} strokeWidth={1} />)
+    parts.push(<ellipse key={`cap-${i}`} cx={x} cy={stalkTop} rx={capRx} ry={capRy} fill={capFill} stroke={colors.outline} strokeWidth={1.2} />)
+    if (hasFlower) {
+      parts.push(<circle key={`spot-${i}-a`} cx={x - capRx * 0.35} cy={stalkTop - capRy * 0.2} r={0.5} fill="white" opacity={0.75} />)
+      parts.push(<circle key={`spot-${i}-b`} cx={x + capRx * 0.3} cy={stalkTop + capRy * 0.1} r={0.4} fill="white" opacity={0.65} />)
+    }
+  }
+  return (
+    <>
+      {parts}
+      {hasFruit && (
+        <>
+          <rect x={28.5} y={baseY - 2} width={0.9} height={2} rx={0.4} fill={colors.leaf} stroke={colors.outline} strokeWidth={0.7} />
+          <ellipse cx={29} cy={baseY - 2} rx={1.6} ry={0.9} fill={colors.fruit} stroke={colors.outline} strokeWidth={0.8} />
+        </>
+      )}
+    </>
+  )
+}
+
+const PineTiers = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  const trunkH = 2
+  const baseY = 42
+  const tiersN = Math.min(2 + tier, 8)
+  const layerH = 4.4
+  const parts: ReactNode[] = [
+    <rect key="trunk" x={19.3} y={baseY - trunkH} width={1.4} height={trunkH} fill={colors.stem} stroke={colors.outline} strokeWidth={1} />,
+  ]
+  const accents: { x: number; y: number }[] = []
+  let topY = baseY - trunkH
+  for (let i = 0; i < tiersN; i++) {
+    const width = Math.max(3, 11 - i * 0.95)
+    const layerTopY = topY - layerH
+    parts.push(
+      <polygon
+        key={`tier-${i}`}
+        points={`20,${layerTopY.toFixed(1)} ${(20 - width / 2).toFixed(1)},${topY.toFixed(1)} ${(20 + width / 2).toFixed(1)},${topY.toFixed(1)}`}
+        fill={colors.leaf}
+        stroke={colors.outline}
+        strokeWidth={1.2}
+        strokeLinejoin="round"
+      />
+    )
+    accents.push({ x: -width * 0.22, y: layerTopY + layerH * 0.55 })
+    accents.push({ x: width * 0.22, y: layerTopY + layerH * 0.3 })
+    topY = topY - layerH * 0.6
+  }
+  return (
+    <>
+      {parts}
+      {hasFlower &&
+        accents.slice(0, 3).map((a, i) => (
+          <circle key={`orn-${i}`} cx={20 + a.x} cy={a.y} r={1.1} fill={colors.flower} stroke={colors.outline} strokeWidth={0.6} />
+        ))}
+      {hasFruit &&
+        accents.map((a, i) => (
+          <ellipse key={`cone-${i}`} cx={20 + a.x} cy={a.y} rx={0.9} ry={1.6} fill={colors.fruit} stroke={colors.outline} strokeWidth={0.6} />
+        ))}
+    </>
+  )
+}
+
+const CloverMound = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  const count = Math.min(3 + tier, 9)
+  const baseY = 41
+  const spread = 7 + Math.min(tier, 7) * 1.1
+  const parts: ReactNode[] = []
+  let tallest: { x: number; y: number } | null = null
+  for (let i = 0; i < count; i++) {
+    const t = count === 1 ? 0.5 : i / (count - 1)
+    const x = 20 + (t - 0.5) * 2 * spread
+    const riseFactor = 1 - Math.abs(t - 0.5) * 2
+    const y = baseY - (1.4 + riseFactor * 2.4)
+    parts.push(<line key={`stem-${i}`} x1={x} y1={baseY} x2={x} y2={y + 1} stroke={colors.stem} strokeWidth={0.9} strokeLinecap="round" />)
+    for (const angDeg of [-90, 30, 150]) {
+      const rad = (angDeg * Math.PI) / 180
+      const lx = x + Math.cos(rad) * 1.4
+      const ly = y + Math.sin(rad) * 1.4
+      parts.push(<circle key={`leaflet-${i}-${angDeg}`} cx={lx} cy={ly} r={1.3} fill={colors.leaf} stroke={colors.outline} strokeWidth={0.9} />)
+    }
+    if (!tallest || y < tallest.y) tallest = { x, y }
+  }
+  return (
+    <>
+      {parts}
+      {hasFlower && tallest && <BloomCluster x={tallest.x} y={tallest.y - 2} color={colors.flower} glow={colors.glow} outline={colors.outline} scale={0.45} />}
+      {hasFruit && tallest && (
+        <circle cx={tallest.x + 1.6} cy={tallest.y - 1.6} r={1.1} fill={colors.fruit} stroke={colors.outline} strokeWidth={0.7} />
+      )}
+    </>
+  )
+}
+
+const OrchidStem = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  const baseY = 42
+  const top = canopyTop(tier)
+  const driftX = Math.min(4 + tier * 0.6, 10)
+  const tipX = 20 + driftX
+  const ctrlX = 20 + driftX * 0.5
+  const ctrlY = (baseY + top) / 2
+  const bloomCount = hasFlower ? Math.min(Math.max(1, Math.floor((tier - 4) / 1.2)), 4) : 0
+  const blossoms: ReactNode[] = []
+  for (let j = 1; j <= bloomCount; j++) {
+    const lt = j / (bloomCount + 1)
+    const bx = 20 + (tipX - 20) * lt
+    const by = baseY + (top - baseY) * lt
+    blossoms.push(
+      <g key={`blossom-${j}`}>
+        <ellipse cx={bx - 1.6} cy={by} rx={1.8} ry={1.1} fill={colors.flower} stroke={colors.outline} strokeWidth={0.8} transform={`rotate(-25 ${(bx - 1.6).toFixed(1)} ${by.toFixed(1)})`} />
+        <ellipse cx={bx + 1.6} cy={by} rx={1.8} ry={1.1} fill={colors.flower} stroke={colors.outline} strokeWidth={0.8} transform={`rotate(25 ${(bx + 1.6).toFixed(1)} ${by.toFixed(1)})`} />
+        <circle cx={bx} cy={by} r={0.7} fill={colors.glow} stroke={colors.outline} strokeWidth={0.5} />
+      </g>
+    )
+  }
+  return (
+    <>
+      <path d={`M20 ${baseY} Q${ctrlX.toFixed(1)} ${ctrlY.toFixed(1)} ${tipX.toFixed(1)} ${top.toFixed(1)}`} stroke={colors.stem} strokeWidth={1.6} fill="none" strokeLinecap="round" />
+      <ellipse cx={17} cy={baseY - 1} rx={1.8} ry={4} fill={colors.leaf} stroke={colors.outline} strokeWidth={1} transform={`rotate(-12 17 ${baseY - 1})`} />
+      <ellipse cx={23} cy={baseY - 1} rx={1.8} ry={4} fill={colors.leaf} stroke={colors.outline} strokeWidth={1} transform={`rotate(12 23 ${baseY - 1})`} />
+      {blossoms}
+      {hasFruit && <ellipse cx={tipX} cy={top + 2} rx={0.9} ry={2.4} fill={colors.fruit} stroke={colors.outline} strokeWidth={0.8} transform={`rotate(15 ${tipX.toFixed(1)} ${(top + 2).toFixed(1)})`} />}
+    </>
+  )
+}
+
+const CoralFronds = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  const count = Math.min(2 + Math.floor(tier / 1.3), 7)
+  const baseY = 42
+  const parts: ReactNode[] = []
+  for (let i = 0; i < count; i++) {
+    const t = count === 1 ? 0.5 : i / (count - 1)
+    const angle = -70 + 140 * t
+    const rad = (angle * Math.PI) / 180
+    const length = 7 + Math.min(tier, 7) * 1.6
+    const tipX = 20 + Math.sin(rad) * length * 0.6
+    const tipY = baseY - Math.cos(rad) * length
+    const perpRad = rad + Math.PI / 2
+    const wobble = (i % 2 === 0 ? 1 : -1) * 2.2
+    const ctrlX = 20 + Math.sin(rad) * length * 0.5 + Math.cos(perpRad) * wobble
+    const ctrlY = baseY - Math.cos(rad) * length * 0.5 + Math.sin(perpRad) * wobble
+    const bulbR = 1.5 + Math.min(tier, 8) * 0.15
+    parts.push(
+      <path
+        key={`tentacle-${i}`}
+        d={`M20 ${baseY} Q${ctrlX.toFixed(1)} ${ctrlY.toFixed(1)} ${tipX.toFixed(1)} ${tipY.toFixed(1)}`}
+        stroke={colors.stem}
+        strokeWidth={2.2}
+        fill="none"
+        strokeLinecap="round"
+      />
+    )
+    parts.push(<circle key={`bulb-${i}`} cx={tipX} cy={tipY} r={bulbR} fill={hasFlower ? colors.flower : colors.leaf} stroke={colors.outline} strokeWidth={1} />)
+  }
+  return (
+    <>
+      {parts}
+      {hasFruit && <FruitDot x={20} y={baseY - 3} color={colors.fruit} leafColor={colors.leaf} outline={colors.outline} r={1.6} />}
+    </>
+  )
+}
+
+const GrassTuft = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  const count = Math.min(6 + tier, 14)
+  const baseY = 42
+  const blades: { x: number; y: number }[] = []
+  const parts: ReactNode[] = []
+  for (let i = 0; i < count; i++) {
+    const t = count === 1 ? 0.5 : i / (count - 1)
+    const angle = -60 + 120 * t
+    const rad = (angle * Math.PI) / 180
+    const length = 7 + Math.min(tier, 7) * 1.5
+    const tipX = 20 + Math.sin(rad) * length * 0.7
+    const tipY = baseY - Math.cos(rad) * length
+    const ctrlX = 20 + Math.sin(rad) * length * 0.3
+    const ctrlY = baseY - Math.cos(rad) * length * 0.75
+    blades.push({ x: tipX, y: tipY })
+    parts.push(
+      <path
+        key={`blade-${i}`}
+        d={`M20 ${baseY} Q${ctrlX.toFixed(1)} ${ctrlY.toFixed(1)} ${tipX.toFixed(1)} ${tipY.toFixed(1)}`}
+        stroke={colors.stem}
+        strokeWidth={0.9}
+        fill="none"
+        strokeLinecap="round"
+      />
+    )
+  }
+  const tallest = blades.reduce((a, b) => (b.y < a.y ? b : a), blades[0] ?? { x: 20, y: baseY })
+  return (
+    <>
+      {parts}
+      {hasFlower && <BloomCluster x={tallest.x} y={tallest.y} color={colors.flower} glow={colors.glow} outline={colors.outline} scale={0.4} />}
+      {hasFruit && <FruitDot x={20} y={baseY - 3} color={colors.fruit} leafColor={colors.leaf} outline={colors.outline} r={1.4} />}
+    </>
+  )
+}
+
+const LotusPads = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  const padCount = Math.min(2 + Math.floor(tier / 1.5), 6)
+  const baseY = 41.5
+  const parts: ReactNode[] = []
+  for (let i = 0; i < padCount; i++) {
+    const t = padCount === 1 ? 0.5 : i / (padCount - 1)
+    const x = 20 + (t - 0.5) * 14
+    const y = baseY - (i % 2 === 0 ? 0 : 0.6)
+    const padRx = 3.2 + Math.min(tier, 7) * 0.3
+    const padRy = padRx * 0.32
+    parts.push(<ellipse key={`pad-${i}`} cx={x} cy={y} rx={padRx} ry={padRy} fill={colors.leaf} stroke={colors.outline} strokeWidth={1} />)
+  }
+  const stemTopY = baseY - (6 + Math.min(tier, 9) * 1.4)
+  return (
+    <>
+      {parts}
+      {hasFlower && (
+        <>
+          <path d={`M20 ${baseY - 1} L20 ${stemTopY.toFixed(1)}`} stroke={colors.stem} strokeWidth={1.2} strokeLinecap="round" />
+          <BloomCluster x={20} y={stemTopY} color={colors.flower} glow={colors.glow} outline={colors.outline} scale={0.9} />
+          <BloomCluster x={20} y={stemTopY} color={colors.glow} glow={colors.flower} outline={colors.outline} scale={0.5} />
+        </>
+      )}
+      {hasFruit && <FruitDot x={20} y={stemTopY + 2.5} color={colors.fruit} leafColor={colors.leaf} outline={colors.outline} r={1.6} />}
+    </>
+  )
+}
+
+const BonsaiPads = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  const segs = Math.min(1 + Math.floor(tier / 2.2), 4)
+  const baseY = 42
+  const segLen = 3.4
+  const points: { x: number; y: number }[] = [{ x: 20, y: baseY }]
+  let cur = { x: 20, y: baseY }
+  for (let i = 0; i < segs; i++) {
+    const side = i % 2 === 0 ? 1 : -1
+    cur = { x: cur.x + side * 2, y: cur.y - segLen }
+    points.push(cur)
+  }
+  const trunkPath = points.map((p) => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" L")
+  const padCount = Math.min(1 + Math.floor(tier / 2), 3)
+  const pads: { x: number; y: number }[] = []
+  const padParts: ReactNode[] = []
+  for (let i = 0; i < padCount; i++) {
+    const anchor = points[points.length - 1 - i] ?? cur
+    const side = i % 2 === 0 ? -1 : 1
+    const px = anchor.x + side * (3.5 + i * 0.5)
+    const py = anchor.y - 0.5
+    pads.push({ x: px, y: py })
+    padParts.push(<ellipse key={`pad-${i}`} cx={px} cy={py} rx={4 - i * 0.4} ry={1.2} fill={colors.leaf} stroke={colors.outline} strokeWidth={1.1} />)
+  }
+  return (
+    <>
+      <path d={`M${trunkPath}`} stroke={colors.stem} strokeWidth={2.2} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      {padParts}
+      {hasFlower &&
+        pads.slice(0, 2).map((p, i) => <circle key={`blossom-${i}`} cx={p.x} cy={p.y - 1} r={1} fill={colors.flower} stroke={colors.outline} strokeWidth={0.6} />)}
+      {hasFruit && pads[0] && <circle cx={pads[0].x - 1.5} cy={pads[0].y} r={1} fill={colors.fruit} stroke={colors.outline} strokeWidth={0.6} />}
+    </>
+  )
+}
+
+const FlytrapJaws = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  const count = Math.min(2 + Math.floor(tier / 1.5), 6)
+  const baseY = 42
+  const parts: ReactNode[] = []
+  const traps: { x: number; y: number }[] = []
+  for (let i = 0; i < count; i++) {
+    const t = count === 1 ? 0.5 : i / (count - 1)
+    const angle = -60 + 120 * t
+    const rad = (angle * Math.PI) / 180
+    const stalkLen = 5 + Math.min(tier, 8) * 0.9
+    const tipX = 20 + Math.sin(rad) * stalkLen * 0.7
+    const tipY = baseY - Math.cos(rad) * stalkLen
+    traps.push({ x: tipX, y: tipY })
+    parts.push(
+      <path
+        key={`stalk-${i}`}
+        d={`M20 ${baseY} Q${(20 + Math.sin(rad) * stalkLen * 0.3).toFixed(1)} ${(baseY - Math.cos(rad) * stalkLen * 0.5).toFixed(1)} ${tipX.toFixed(1)} ${tipY.toFixed(1)}`}
+        stroke={colors.stem}
+        strokeWidth={1.3}
+        fill="none"
+        strokeLinecap="round"
+      />
+    )
+    for (const side of [-1, 1]) {
+      const lobeRot = angle + side * 22
+      const lobeRad = (lobeRot * Math.PI) / 180
+      const lobeCx = tipX + Math.sin(lobeRad) * 2.2
+      const lobeCy = tipY - Math.cos(lobeRad) * 2.2
+      parts.push(
+        <ellipse
+          key={`lobe-${i}-${side}`}
+          cx={lobeCx}
+          cy={lobeCy}
+          rx={3}
+          ry={1.6}
+          fill={colors.leaf}
+          stroke={colors.outline}
+          strokeWidth={1}
+          transform={`rotate(${lobeRot.toFixed(0)} ${lobeCx.toFixed(1)} ${lobeCy.toFixed(1)})`}
+        />
+      )
+    }
+  }
+  return (
+    <>
+      {parts}
+      {hasFlower && traps[0] && <circle cx={traps[0].x} cy={traps[0].y} r={0.9} fill={colors.flower} stroke={colors.outline} strokeWidth={0.5} />}
+      {hasFruit && traps[1] && <circle cx={traps[1].x} cy={traps[1].y} r={0.6} fill={colors.outline} opacity={0.8} />}
+    </>
+  )
+}
+
+const SunflowerStem = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  if (tier === 0) return null
+  const top = canopyTop(tier)
+  const parts: ReactNode[] = [<StemPath key="stem" tier={tier} color={colors.stem} width={3.2} />]
+  if (tier >= 2) parts.push(<ellipse key="leaf-l" cx={14.5} cy={38} rx={3.4} ry={2.2} fill={colors.leaf} stroke={colors.outline} strokeWidth={1.3} transform="rotate(-25 14.5 38)" />)
+  if (tier >= 4) parts.push(<ellipse key="leaf-r" cx={25.5} cy={32} rx={3.6} ry={2.3} fill={colors.leaf} stroke={colors.outline} strokeWidth={1.3} transform="rotate(25 25.5 32)" />)
+  if (hasFlower) {
+    const petals: ReactNode[] = []
+    for (let a = 0; a < 360; a += 30) {
+      const rad = (a * Math.PI) / 180
+      const px = 20 + Math.sin(rad) * 5.4
+      const py = top - Math.cos(rad) * 5.4
+      petals.push(<ellipse key={`petal-${a}`} cx={px} cy={py} rx={2.6} ry={1.1} fill={colors.flower} stroke={colors.outline} strokeWidth={0.8} transform={`rotate(${a} ${px.toFixed(1)} ${py.toFixed(1)})`} />)
+    }
+    parts.push(<g key="head">{petals}</g>)
+    parts.push(<circle key="disc" cx={20} cy={top} r={3.2} fill={colors.fruit} stroke={colors.outline} strokeWidth={1.1} />)
+    if (hasFruit) {
+      parts.push(
+        <g key="seeds">
+          {[-1.3, 0, 1.3].map((dx, i) => (
+            <circle key={i} cx={20 + dx} cy={top + (i % 2 === 0 ? -0.8 : 0.9)} r={0.4} fill={colors.outline} opacity={0.6} />
+          ))}
+        </g>
+      )
+    }
+  } else {
+    parts.push(<circle key="bud" cx={20} cy={top} r={1.8} fill={colors.leaf} stroke={colors.outline} strokeWidth={1} />)
+  }
+  return <>{parts}</>
+}
+
+const PomPomTopiary = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  if (tier === 0) return null
+  const top = canopyTop(tier)
+  const ballR = 3 + tier * 0.85
+  const accents = [
+    { x: -ballR * 0.4, y: -ballR * 0.3 }, { x: ballR * 0.35, y: ballR * 0.1 }, { x: 0, y: ballR * 0.4 },
+    { x: -ballR * 0.5, y: ballR * 0.35 }, { x: ballR * 0.45, y: -ballR * 0.35 },
+  ]
+  return (
+    <>
+      <StemPath tier={tier} color={colors.stem} width={2.4} />
+      <circle cx={20} cy={top} r={ballR} fill={colors.leaf} stroke={colors.outline} strokeWidth={1.6} />
+      {hasFlower && accents.slice(0, 3).map((a, i) => <circle key={`bloom-${i}`} cx={20 + a.x} cy={top + a.y} r={1.2} fill={colors.flower} stroke={colors.outline} strokeWidth={0.7} />)}
+      {hasFruit && accents.map((a, i) => <circle key={`fruit-${i}`} cx={20 + a.x} cy={top + a.y} r={1} fill={colors.fruit} stroke={colors.outline} strokeWidth={0.7} />)}
+    </>
+  )
+}
+
+const HEART_PATH = (x: number, y: number) =>
+  `M${x} ${(y + 1.6).toFixed(1)} C${(x - 2.6).toFixed(1)} ${(y - 0.6).toFixed(1)} ${(x - 1.1).toFixed(1)} ${(y - 2.6).toFixed(1)} ${x} ${(y - 0.9).toFixed(1)} C${(x + 1.1).toFixed(1)} ${(y - 2.6).toFixed(1)} ${(x + 2.6).toFixed(1)} ${(y - 0.6).toFixed(1)} ${x} ${(y + 1.6).toFixed(1)} Z`
+
+const StrawberryPatch = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  const count = Math.min(3 + tier, 8)
+  const baseY = 41
+  const spread = 6 + Math.min(tier, 7)
+  const parts: ReactNode[] = []
+  let tallest: { x: number; y: number } | null = null
+  const positions: { x: number; y: number }[] = []
+  for (let i = 0; i < count; i++) {
+    const t = count === 1 ? 0.5 : i / (count - 1)
+    const x = 20 + (t - 0.5) * 2 * spread
+    const riseFactor = 1 - Math.abs(t - 0.5) * 2
+    const y = baseY - (1 + riseFactor * 1.8)
+    positions.push({ x, y })
+    parts.push(<line key={`stem-${i}`} x1={x} y1={baseY} x2={x} y2={y + 1.5} stroke={colors.stem} strokeWidth={0.8} strokeLinecap="round" />)
+    parts.push(<path key={`heart-${i}`} d={HEART_PATH(x, y)} fill={colors.leaf} stroke={colors.outline} strokeWidth={0.9} />)
+    if (!tallest || y < tallest.y) tallest = { x, y }
+  }
+  return (
+    <>
+      {parts}
+      {hasFlower && tallest && <BloomCluster x={tallest.x} y={tallest.y - 2.4} color={colors.flower} glow={colors.glow} outline={colors.outline} scale={0.45} />}
+      {hasFruit &&
+        positions.slice(0, 2).map((p, i) => (
+          <g key={`berry-${i}`} transform={`translate(${p.x + (i === 0 ? -1.5 : 1.8)}, ${p.y + 3})`}>
+            <path d="M0 0 L-1.6 2.6 Q0 4.4 1.6 2.6 Z" fill={colors.fruit} stroke={colors.outline} strokeWidth={0.7} />
+            <ellipse cx={0} cy={-0.3} rx={1.3} ry={0.6} fill={colors.leaf} stroke={colors.outline} strokeWidth={0.5} />
+            <circle cx={-0.5} cy={1.6} r={0.25} fill={colors.outline} opacity={0.6} />
+            <circle cx={0.6} cy={2.3} r={0.25} fill={colors.outline} opacity={0.6} />
+          </g>
+        ))}
+    </>
+  )
+}
+
+const TulipCluster = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  if (tier === 0) return null
+  const count = Math.min(1 + Math.floor(tier / 2.5), 4)
+  const baseY = 42
+  const parts: ReactNode[] = []
+  for (let i = 0; i < count; i++) {
+    const t = count === 1 ? 0.5 : i / (count - 1)
+    const x = 20 + (t - 0.5) * 10
+    const stemLen = Math.min(6 + tier * 1.8, 24)
+    const topY = baseY - stemLen
+    parts.push(<line key={`stem-${i}`} x1={x} y1={baseY} x2={x} y2={topY} stroke={colors.stem} strokeWidth={1.8} strokeLinecap="round" />)
+    if (i === 0) parts.push(<ellipse key="base-leaf" cx={x - 2} cy={baseY - 1} rx={1.6} ry={4} fill={colors.leaf} stroke={colors.outline} strokeWidth={1} transform={`rotate(-15 ${x - 2} ${baseY - 1})`} />)
+    if (hasFlower) {
+      const cup = `M${(x - 2.2).toFixed(1)} ${(topY + 3).toFixed(1)} Q${(x - 2.6).toFixed(1)} ${(topY - 1).toFixed(1)} ${(x - 0.8).toFixed(1)} ${(topY - 3).toFixed(1)} Q${x.toFixed(1)} ${(topY - 3.6).toFixed(1)} ${(x + 0.8).toFixed(1)} ${(topY - 3).toFixed(1)} Q${(x + 2.6).toFixed(1)} ${(topY - 1).toFixed(1)} ${(x + 2.2).toFixed(1)} ${(topY + 3).toFixed(1)} Q${x.toFixed(1)} ${(topY + 1.5).toFixed(1)} ${(x - 2.2).toFixed(1)} ${(topY + 3).toFixed(1)} Z`
+      parts.push(<path key={`cup-${i}`} d={cup} fill={colors.flower} stroke={colors.outline} strokeWidth={1} />)
+    } else {
+      parts.push(<ellipse key={`bud-${i}`} cx={x} cy={topY} rx={1.6} ry={2} fill={colors.leaf} stroke={colors.outline} strokeWidth={1} />)
+    }
+  }
+  return (
+    <>
+      {parts}
+      {hasFruit && <ellipse cx={20 + (count - 1) * 2.5 + 2} cy={baseY - 2} rx={1} ry={1.6} fill={colors.fruit} stroke={colors.outline} strokeWidth={0.7} />}
+    </>
+  )
+}
+
+const PumpkinVine = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  if (tier === 0) return null
+  const reach = Math.min(4 + tier * 1.1, 13)
+  const baseY = 42
+  const leftX = 20 - reach
+  const rightX = 20 + reach
+  const bow = baseY - 2
+  const count = Math.min(2 + Math.floor(tier / 1.5), 6)
+  const leaves: ReactNode[] = []
+  for (let i = 0; i < count; i++) {
+    const lt = count === 1 ? 0.5 : i / (count - 1)
+    const { x: lx, y: ly } = quadPoint({ x: leftX, y: baseY }, { x: 20, y: bow }, { x: rightX, y: baseY }, lt)
+    const side = i % 2 === 0 ? -1 : 1
+    leaves.push(<ellipse key={`leaf-${i}`} cx={lx} cy={ly + side * 1.6} rx={2.6} ry={2} fill={colors.leaf} stroke={colors.outline} strokeWidth={0.9} transform={`rotate(${side * 20} ${lx.toFixed(1)} ${(ly + side * 1.6).toFixed(1)})`} />)
+  }
+  return (
+    <>
+      <path d={`M${leftX} ${baseY} Q20 ${bow} ${rightX} ${baseY}`} stroke={colors.stem} strokeWidth={1.6} fill="none" strokeLinecap="round" />
+      {leaves}
+      {hasFlower && (
+        <>
+          <BloomCluster x={leftX + 2} y={baseY - 1} color={colors.flower} glow={colors.glow} outline={colors.outline} scale={0.4} />
+          <BloomCluster x={rightX - 2} y={baseY - 1} color={colors.flower} glow={colors.glow} outline={colors.outline} scale={0.4} />
+        </>
+      )}
+      {hasFruit && (
+        <>
+          <circle cx={leftX + 3} cy={baseY + 1.5} r={2.6} fill={colors.fruit} stroke={colors.outline} strokeWidth={1} />
+          <rect x={leftX + 2.6} y={baseY - 1.6} width={0.8} height={1.4} fill={colors.leaf} stroke={colors.outline} strokeWidth={0.5} />
+        </>
+      )}
+    </>
+  )
+}
+
+const SpeciesCanopy = ({
+  species,
+  tier,
+  colors,
+  hasFlower,
+  hasFruit,
+}: {
+  species: PlantSpecies
+  tier: PlantTier
+  colors: CanopyColors
+  hasFlower: boolean
+  hasFruit: boolean
+}) => {
+  switch (species) {
+    case "tree":
+      return <TreeCanopy tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "cactus":
+      return <CactusBody tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "succulent":
+      return <SucculentRosette tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "fern":
+      return <FernFronds tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "vine":
+      return <VineDrape tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "bamboo":
+      return <BambooStalk tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "palm":
+      return <PalmCrown tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "mushroom":
+      return <MushroomCluster tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "pine":
+      return <PineTiers tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "clover":
+      return <CloverMound tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "orchid":
+      return <OrchidStem tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "coral":
+      return <CoralFronds tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "grass":
+      return <GrassTuft tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "lotus":
+      return <LotusPads tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "bonsai":
+      return <BonsaiPads tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "flytrap":
+      return <FlytrapJaws tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "sunflower":
+      return <SunflowerStem tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "topiary":
+      return <PomPomTopiary tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "strawberry":
+      return <StrawberryPatch tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "tulip":
+      return <TulipCluster tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "pumpkin-vine":
+      return <PumpkinVine tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "flower":
+    default:
+      return <FlowerCanopy tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+  }
 }
 
 const growthBarGradients = {
@@ -468,6 +1498,16 @@ export const SeedlingPlant = ({ tier = 0, active, className, variant, showPartic
                   <circle cx="27" cy="44" r="0.5" fill={outlineColor} opacity={0.2} />
                 </>
               )}
+              {/* Cute pot face — a small constant of charm on every species, not tier-gated */}
+              {active && (
+                <>
+                  <circle cx="17" cy="47" r="0.75" fill={outlineColor} />
+                  <circle cx="23" cy="47" r="0.75" fill={outlineColor} />
+                  <path d="M17.5 48.6 Q20 50 22.5 48.6" stroke={outlineColor} strokeWidth="0.7" strokeLinecap="round" fill="none" />
+                  <circle cx="14.5" cy="48" r="1.3" fill="#f4a6c1" opacity={0.4} />
+                  <circle cx="25.5" cy="48" r="1.3" fill="#f4a6c1" opacity={0.4} />
+                </>
+              )}
               {/* Growth-points flourish: pot-rim accent (bronze/silver/gold) */}
               {active && flourishTier > 0 && (
                 <path
@@ -483,7 +1523,7 @@ export const SeedlingPlant = ({ tier = 0, active, className, variant, showPartic
 
             {/* Plant, tilted per-user via variant.stem */}
             <g transform={`rotate(${stemTilt} 20 44)`}>
-              {/* Tier 0: Dormant — plump seed in soil */}
+              {/* Tier 0: Dormant — plump seed in soil, shared by every species */}
               {tier === 0 && (
                 <g>
                   <ellipse cx="20" cy="42" rx="3" ry="2.2" fill={stemColor} stroke={outlineColor} strokeWidth="1" />
@@ -491,115 +1531,29 @@ export const SeedlingPlant = ({ tier = 0, active, className, variant, showPartic
                 </g>
               )}
 
-              {/* Tier 1: single curled sprout */}
               {tier >= 1 && (
-                <g opacity={tier >= 1 ? 1 : 0}>
+                <SpeciesCanopy
+                  species={variant?.species ?? "flower"}
+                  tier={tier}
+                  colors={{ stem: stemColor, leaf: leafColor, flower: flowerColor, fruit: fruitColor, glow: config.glowColor, outline: outlineColor }}
+                  hasFlower={config.hasFlower}
+                  hasFruit={config.hasFruit}
+                />
+              )}
+
+              {/* Sparkle crown — top tier only, floats clear above the canopy */}
+              {tier >= 9 && (
+                <>
                   <path
-                    d="M20 42 C18.5 39 18 36.5 20 34 C21 32.7 21.3 32 20.5 31"
-                    stroke={stemColor}
-                    strokeWidth="2.8"
-                    strokeLinecap="round"
-                    fill="none"
-                  />
-                  <ellipse cx="18.5" cy="31.5" rx="3.4" ry="2.2" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(-35 18.5 31.5)" />
-                </g>
-              )}
-
-              {/* Tier 2: twin round leaf pair + tiny topknot */}
-              {tier >= 2 && (
-                <g opacity={tier >= 2 ? 1 : 0}>
-                  <path d="M20 42 L20 29" stroke={stemColor} strokeWidth="3" strokeLinecap="round" />
-                  <ellipse cx="15" cy="33" rx="3.6" ry="2.4" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(-30 15 33)" />
-                  <ellipse cx="25" cy="33" rx="3.6" ry="2.4" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(30 25 33)" />
-                  <circle cx="20" cy="28" r="2" fill={leafColor} stroke={outlineColor} strokeWidth="1.2" />
-                </g>
-              )}
-
-              {/* Tier 3: fuller canopy + closed bud */}
-              {tier >= 3 && (
-                <g opacity={tier >= 3 ? 1 : 0}>
-                  <path d="M20 42 Q21 36 19.5 30 Q19 26 20 22" stroke={stemColor} strokeWidth="3.2" strokeLinecap="round" fill="none" />
-                  <ellipse cx="14.5" cy="35" rx="4" ry="2.6" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(-30 14.5 35)" />
-                  <ellipse cx="25.5" cy="35" rx="4" ry="2.6" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(30 25.5 35)" />
-                  <ellipse cx="13" cy="27" rx="3.6" ry="2.4" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(-35 13 27)" />
-                  <ellipse cx="27" cy="27" rx="3.6" ry="2.4" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(35 27 27)" />
-                  {/* Closed bud — same overlapping-petal motif as the tier 4/5 bloom, drawn tight and unopened */}
-                  <ellipse cx="17.6" cy="23.5" rx="2.2" ry="1.6" fill={leafColor} stroke={outlineColor} strokeWidth="1.2" transform="rotate(-30 17.6 23.5)" />
-                  <ellipse cx="22.4" cy="23.5" rx="2.2" ry="1.6" fill={leafColor} stroke={outlineColor} strokeWidth="1.2" transform="rotate(30 22.4 23.5)" />
-                  <g transform="translate(20, 20)">
-                    <circle cx="0" cy="-1.5" r="2.2" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
-                    <circle cx="-1.8" cy="1" r="2.2" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
-                    <circle cx="1.8" cy="1" r="2.2" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
-                    <ellipse cx="-0.7" cy="-2" rx="0.7" ry="0.9" fill="white" opacity={0.4} />
-                  </g>
-                </g>
-              )}
-
-              {/* Tier 4: open chunky bloom + denser canopy */}
-              {tier >= 4 && (
-                <g opacity={tier >= 4 ? 1 : 0}>
-                  <path d="M20 42 Q21.5 36 20 30 Q19 26 20 19" stroke={stemColor} strokeWidth="3.4" strokeLinecap="round" fill="none" />
-                  <ellipse cx="13.5" cy="37" rx="4.2" ry="2.7" fill={leafColor} stroke={outlineColor} strokeWidth="1.5" transform="rotate(-32 13.5 37)" />
-                  <ellipse cx="26.5" cy="37" rx="4.2" ry="2.7" fill={leafColor} stroke={outlineColor} strokeWidth="1.5" transform="rotate(32 26.5 37)" />
-                  <ellipse cx="12.5" cy="29" rx="3.8" ry="2.5" fill={leafColor} stroke={outlineColor} strokeWidth="1.5" transform="rotate(-38 12.5 29)" />
-                  <ellipse cx="27.5" cy="29" rx="3.8" ry="2.5" fill={leafColor} stroke={outlineColor} strokeWidth="1.5" transform="rotate(38 27.5 29)" />
-                  <ellipse cx="14.5" cy="23" rx="3.2" ry="2.1" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(-40 14.5 23)" />
-                  <ellipse cx="25.5" cy="23" rx="3.2" ry="2.1" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(40 25.5 23)" />
-                  {/* Chunky open bloom: 5-petal circle cluster */}
-                  <g transform="translate(20, 16)">
-                    {[0, 72, 144, 216, 288].map((angle) => {
-                      const rad = (angle * Math.PI) / 180
-                      const px = Math.cos(rad) * 3.4
-                      const py = Math.sin(rad) * 3.4
-                      return <circle key={angle} cx={px} cy={py} r="2.6" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
-                    })}
-                    <circle cx="0" cy="0" r="2" fill={config.glowColor} stroke={outlineColor} strokeWidth="0.8" />
-                  </g>
-                </g>
-              )}
-
-              {/* Tier 5: bloom + two plump fruits + sparkle crown */}
-              {tier >= 5 && (
-                <g opacity={tier >= 5 ? 1 : 0}>
-                  <path d="M20 42 Q22 35 20 28 Q19 24 20 17" stroke={stemColor} strokeWidth="3.6" strokeLinecap="round" fill="none" />
-                  <ellipse cx="13" cy="37" rx="4.4" ry="2.8" fill={leafColor} stroke={outlineColor} strokeWidth="1.5" transform="rotate(-32 13 37)" />
-                  <ellipse cx="27" cy="37" rx="4.4" ry="2.8" fill={leafColor} stroke={outlineColor} strokeWidth="1.5" transform="rotate(32 27 37)" />
-                  <ellipse cx="11.5" cy="28" rx="4" ry="2.6" fill={leafColor} stroke={outlineColor} strokeWidth="1.5" transform="rotate(-38 11.5 28)" />
-                  <ellipse cx="28.5" cy="28" rx="4" ry="2.6" fill={leafColor} stroke={outlineColor} strokeWidth="1.5" transform="rotate(38 28.5 28)" />
-                  <ellipse cx="14" cy="22" rx="3.4" ry="2.2" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(-40 14 22)" />
-                  <ellipse cx="26" cy="22" rx="3.4" ry="2.2" fill={leafColor} stroke={outlineColor} strokeWidth="1.4" transform="rotate(40 26 22)" />
-                  {/* Bloom */}
-                  <g transform="translate(20, 14)">
-                    {[0, 72, 144, 216, 288].map((angle) => {
-                      const rad = (angle * Math.PI) / 180
-                      const px = Math.cos(rad) * 3.6
-                      const py = Math.sin(rad) * 3.6
-                      return <circle key={angle} cx={px} cy={py} r="2.8" fill={flowerColor} stroke={outlineColor} strokeWidth="1" />
-                    })}
-                    <circle cx="0" cy="0" r="2.2" fill={config.glowColor} stroke={outlineColor} strokeWidth="0.8" />
-                  </g>
-                  {/* Sparkle crown — floats clear above the bloom instead of cutting through it */}
-                  <path
-                    d="M20 1.7 L20.7 3.8 L22.8 4.5 L20.7 5.2 L20 7.3 L19.3 5.2 L17.2 4.5 L19.3 3.8 Z"
+                    d={`M20 ${canopyTop(tier) - 13} L20.7 ${canopyTop(tier) - 10.9} L22.8 ${canopyTop(tier) - 10.2} L20.7 ${canopyTop(tier) - 9.5} L20 ${canopyTop(tier) - 7.4} L19.3 ${canopyTop(tier) - 9.5} L17.2 ${canopyTop(tier) - 10.2} L19.3 ${canopyTop(tier) - 10.9} Z`}
                     fill={config.glowColor}
                     stroke={outlineColor}
                     strokeWidth="0.6"
                     opacity={0.95}
                   />
-                  <circle cx="25" cy="6.5" r="0.9" fill={config.glowColor} opacity={0.8} />
-                  <circle cx="15" cy="7.5" r="0.6" fill={config.glowColor} opacity={0.7} />
-                  {/* Fruit — plump, with a small leafy calyx instead of a bare line */}
-                  <g transform="translate(14.5, 33)">
-                    <circle cx="0" cy="0" r="3.8" fill={fruitColor} stroke={outlineColor} strokeWidth="1.3" />
-                    <ellipse cx="0.3" cy="-3.6" rx="1.1" ry="0.7" fill={leafColor} stroke={outlineColor} strokeWidth="0.7" transform="rotate(20 0.3 -3.6)" />
-                    <circle cx="-1.1" cy="-1.1" r="1.1" fill="white" opacity={0.4} />
-                  </g>
-                  <g transform="translate(26.5, 26)">
-                    <circle cx="0" cy="0" r="3" fill={fruitColor} stroke={outlineColor} strokeWidth="1.1" />
-                    <ellipse cx="0.25" cy="-2.8" rx="0.9" ry="0.6" fill={leafColor} stroke={outlineColor} strokeWidth="0.6" transform="rotate(20 0.25 -2.8)" />
-                    <circle cx="-0.9" cy="-0.9" r="0.9" fill="white" opacity={0.35} />
-                  </g>
-                </g>
+                  <circle cx="25" cy={canopyTop(tier) - 8.2} r="0.9" fill={config.glowColor} opacity={0.8} />
+                  <circle cx="15" cy={canopyTop(tier) - 7.2} r="0.6" fill={config.glowColor} opacity={0.7} />
+                </>
               )}
             </g>
           </svg>

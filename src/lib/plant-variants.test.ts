@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { getPlantVariant, getUnlockedPalettes, getPaletteUnlockTier, getAllPalettes } from "./plant-variants";
+import { getPlantVariant, getAllPalettes } from "./plant-variants";
 
 describe("getPlantVariant palette override", () => {
-  it("applies the override when given an unlocked palette name", () => {
+  it("applies the override when given a valid palette name", () => {
     const base = getPlantVariant("user-123");
     const overridden = getPlantVariant("user-123", "Ocean");
 
@@ -12,6 +12,7 @@ describe("getPlantVariant palette override", () => {
     expect(overridden.leaf).toBe(base.leaf);
     expect(overridden.flower).toBe(base.flower);
     expect(overridden.stem).toBe(base.stem);
+    expect(overridden.species).toBe(base.species);
   });
 
   it("falls back to the hash-derived default when no override is given", () => {
@@ -25,33 +26,23 @@ describe("getPlantVariant palette override", () => {
     const unknownOverride = getPlantVariant("user-123", "Not A Real Palette");
     expect(unknownOverride.palette.name).toBe(base.palette.name);
   });
-});
 
-describe("palette unlock progression", () => {
-  it("unlocks no palettes below tier 2", () => {
-    expect(getUnlockedPalettes(0)).toHaveLength(0);
-    expect(getUnlockedPalettes(1)).toHaveLength(0);
-  });
-
-  it("unlocks all palettes at max tier", () => {
-    expect(getUnlockedPalettes(5)).toHaveLength(getAllPalettes().length);
-  });
-
-  it("is cumulative — every palette unlocked at a tier stays unlocked at higher tiers", () => {
-    const tiers = [0, 1, 2, 3, 4, 5] as const;
-    for (let i = 0; i < tiers.length - 1; i++) {
-      expect(getUnlockedPalettes(tiers[i]).length).toBeLessThanOrEqual(getUnlockedPalettes(tiers[i + 1]).length);
+  it("is deterministic per userId and picks a species from the full pool", () => {
+    const species = new Set([
+      "flower", "cactus", "succulent", "tree", "fern", "vine", "bamboo", "palm",
+      "mushroom", "pine", "clover", "orchid", "coral", "grass", "lotus", "bonsai", "flytrap",
+      "sunflower", "topiary", "strawberry", "tulip", "pumpkin-vine",
+    ]);
+    for (const id of ["a", "b", "c", "d", "e", "f"]) {
+      const variant = getPlantVariant(id);
+      expect(species.has(variant.species)).toBe(true);
+      expect(getPlantVariant(id)).toEqual(variant);
     }
   });
+});
 
-  it("getPaletteUnlockTier matches getUnlockedPalettes boundaries", () => {
-    const all = getAllPalettes();
-    all.forEach((_, index) => {
-      const tier = getPaletteUnlockTier(index);
-      expect(getUnlockedPalettes(tier).length).toBeGreaterThan(index);
-      if (tier > 0) {
-        expect(getUnlockedPalettes((tier - 1) as 0 | 1 | 2 | 3 | 4).length).toBeLessThanOrEqual(index);
-      }
-    });
+describe("getAllPalettes", () => {
+  it("returns every palette, unlock-free", () => {
+    expect(getAllPalettes().length).toBeGreaterThanOrEqual(16);
   });
 });
