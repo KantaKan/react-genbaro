@@ -215,6 +215,10 @@ export function getEffectivePlantDays(streak: number, growthPoints: number): num
 
 const TIER_THRESHOLDS: Record<PlantTier, number> = { 0: 0, 1: 1, 2: 10, 3: 20, 4: 30, 5: 50 }
 
+export function getTierDayThreshold(tier: PlantTier): number {
+  return TIER_THRESHOLDS[tier]
+}
+
 export type FlourishTier = 0 | 1 | 2 | 3
 
 const FLOURISH_THRESHOLDS: Record<FlourishTier, number> = { 0: 0, 1: 50, 2: 150, 3: 300 }

@@ -38,7 +38,11 @@ export const userService = {
     await api.post(`/users/${userId}/profile/reactions`, payload);
   },
 
-  async updateUserPersonalDetails(userId: string, payload: { bio?: string; social_links?: SocialLinks; pinned_badge_ids?: string[] }): Promise<void> {
+  async addPlantReaction(userId: string, payload: { type: string; value: string }): Promise<void> {
+    await api.post(`/users/${userId}/plant/reactions`, payload);
+  },
+
+  async updateUserPersonalDetails(userId: string, payload: { bio?: string; social_links?: SocialLinks; pinned_badge_ids?: string[]; selected_palette?: string }): Promise<void> {
     await api.put(`/users/${userId}/personal-details`, payload);
   },
 
@@ -60,6 +64,7 @@ export const getCohort = userService.getUsersByCohort;
 export const getMyGenmateGarden = userService.getMyGenmateGarden;
 export const addProfileComment = userService.addProfileComment;
 export const addProfileReaction = userService.addProfileReaction;
+export const addPlantReaction = userService.addPlantReaction;
 export const getUserById = userService.getUserById;
 export const updateUserPersonalDetails = userService.updateUserPersonalDetails;
 export const deleteUserById = userService.deleteUserById;

@@ -10,6 +10,10 @@ vi.mock("@/lib/api", () => ({
   getMyGenmateGarden: vi.fn(),
 }));
 
+vi.mock("@/AuthContext", () => ({
+  useAuth: () => ({ userId: "current-user" }),
+}));
+
 import { getMyGenmateGarden } from "@/lib/api";
 const mockedGetGarden = vi.mocked(getMyGenmateGarden);
 
