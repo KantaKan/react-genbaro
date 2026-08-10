@@ -30,6 +30,7 @@ interface User {
   _id: string;
   badges?: Badge[];
   fertilizer_log?: FertilizerLogEntry[];
+  growth_points?: number;
 }
 
 const StatCard = ({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string | number | JSX.Element }) => (
@@ -178,7 +179,7 @@ export default function UserReflectionsPage() {
                 <StatCard icon={School} label="JSD Number" value={user.jsd_number} />
                 <StatCard icon={ClipboardList} label="Total Reflections" value={reflections.length} />
                 <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-                  <StreakIcon streakData={streakData} showMilestoneToast={false} />
+                  <StreakIcon streakData={streakData} showMilestoneToast={false} growthPoints={user.growth_points ?? 0} />
                 </div>
               </div>
               {user.badges && user.badges.length > 0 && (

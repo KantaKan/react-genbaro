@@ -3,7 +3,7 @@ import type { Reflection } from "@/hooks/use-reflections";
 import type { GenmateGardenMember } from "@/domain/types";
 import type { GardenMember } from "@/components/genmate-garden";
 import { getPlantVariant } from "@/lib/plant-variants";
-import { getPlantTier } from "@/lib/streak-milestones";
+import { getPlantTier, getEffectivePlantDays } from "@/lib/streak-milestones";
 
 export function mapGenmateMembers(members: GenmateGardenMember[]): GardenMember[] {
   return members.map((m) => {
@@ -25,7 +25,7 @@ export function mapGenmateMembers(members: GenmateGardenMember[]): GardenMember[
       streakData,
       variant: getPlantVariant(m._id),
       displayStreak,
-      tier: getPlantTier(displayStreak),
+      tier: getPlantTier(getEffectivePlantDays(displayStreak, m.growth_points ?? 0)),
       growthPoints: m.growth_points ?? 0,
     };
   });

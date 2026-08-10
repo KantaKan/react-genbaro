@@ -14,8 +14,8 @@ export const fertilizerService = {
     await api.post<FertilizerActionResponse>(`/users/${userId}/fertilizer/protect`, { date });
   },
 
-  async feed(userId: string): Promise<void> {
-    await api.post<FertilizerActionResponse>(`/users/${userId}/fertilizer/feed`);
+  async feed(userId: string, quantity = 1): Promise<void> {
+    await api.post<FertilizerActionResponse>(`/users/${userId}/fertilizer/feed`, { quantity });
   },
 };
 

@@ -11,6 +11,7 @@ import {
   getPlantTierConfig,
   getFlourishTier,
   flourishAccentColors,
+  getEffectivePlantDays,
   type PlantTier,
 } from "@/lib/streak-milestones"
 
@@ -705,7 +706,7 @@ export const SeedlingPlant = ({ tier = 0, active, className, variant, showPartic
 export const StreakIcon = ({ streakData, showMilestoneToast = true, variant, growthPoints = 0 }: { streakData: StreakData; showMilestoneToast?: boolean; variant?: PlantVariantConfig; growthPoints?: number }) => {
   const { currentStreak, oldStreak, hasCurrentStreak } = streakData
   const displayStreak = hasCurrentStreak ? currentStreak : oldStreak > 0 ? oldStreak : 0
-  const tier = getPlantTier(displayStreak);
+  const tier = getPlantTier(getEffectivePlantDays(displayStreak, growthPoints));
   const prevStreakRef = useRef(0)
   const [celebrating, setCelebrating] = useState(false)
   const [celebrationEffect, setCelebrationEffect] = useState<CelebrationEffect>("petalBurst")
