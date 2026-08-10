@@ -2,6 +2,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { fertilizerService } from "@/lib/api";
 import { toast } from "sonner";
 import { Shield, Sparkles } from "lucide-react";
@@ -17,6 +27,7 @@ export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedAmount, setFeedAmount] = useState(1);
+  const [showFeedAllConfirm, setShowFeedAllConfirm] = useState(false);
 
   if (balance <= 0) return null;
 
@@ -98,13 +109,35 @@ export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate
             size="sm"
             className="justify-start gap-2 text-muted-foreground"
             disabled={isSubmitting}
-            onClick={() => handleFeed(balance)}
+            onClick={() => setShowFeedAllConfirm(true)}
           >
             <Sparkles className="h-4 w-4" />
             Feed all ({balance} fertilizer → +{balance * 10} growth)
           </Button>
         </div>
       </PopoverContent>
+
+      <AlertDialog open={showFeedAllConfirm} onOpenChange={setShowFeedAllConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Feed all your fertilizer?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This uses all {balance} fertilizer at once for +{balance * 10} growth. This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowFeedAllConfirm(false);
+                handleFeed(balance);
+              }}
+            >
+              Feed all
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Popover>
   );
 }
