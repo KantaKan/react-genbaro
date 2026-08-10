@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
-import { useQuery } from "react-query";
+import { useMemo, useState, type MouseEvent } from "react";
+import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Sprout } from "lucide-react";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -17,6 +18,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { SkeletonWarm } from "@/components/loading-skeleton";
+import { BoardReactionPicker } from "@/components/board-reaction-picker";
+import { BoardReactionSummary } from "@/components/board-reaction-summary";
 import { api } from "@/lib/api";
 import { getPlantVariant } from "@/lib/plant-variants";
 import {
@@ -31,6 +34,9 @@ import {
   getDisplayStreak,
 } from "@/hooks/use-streak-calculation";
 import type { Reflection } from "@/hooks/use-reflections";
+import type { ProfileReaction } from "@/domain/types";
+import { addPlantReaction } from "@/application/services/userService";
+import { useAuth } from "@/AuthContext";
 import { SeedlingPlant } from "@/components/streak-components";
 import { getUserAvatarUrl, getAvatarFallback } from "@/lib/avatar";
 import { formatDate } from "@/lib/utils";
@@ -43,6 +49,8 @@ export interface GardenUser {
   genmate_group?: string;
   reflections?: Reflection[];
   growth_points?: number;
+  plant_reactions?: ProfileReaction[];
+  selected_palette?: string;
 }
 
 interface AdminUsersResponse {
@@ -95,7 +103,7 @@ export function GenmateGarden({ cohort }: GenmateGardenProps) {
       const member: GardenMember = {
         user,
         streakData,
-        variant: getPlantVariant(user._id),
+        variant: getPlantVariant(user._id, user.selected_palette),
         displayStreak,
         tier: getPlantTier(getEffectivePlantDays(displayStreak, user.growth_points ?? 0)),
         growthPoints: user.growth_points ?? 0,
@@ -224,6 +232,31 @@ export function PlantTile({ member }: { member: GardenMember }) {
   const daysToNext = nextMilestone ? nextMilestone.days - displayStreak : 0;
   const tierConfig = getPlantTierConfig(tier);
 
+  const { userId: currentUserId } = useAuth();
+  const queryClient = useQueryClient();
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const plantReactions = user.plant_reactions ?? [];
+  const currentReaction = plantReactions.find((r) => r.userId === currentUserId);
+
+  const cheerMutation = useMutation(
+    (payload: { type: string; value: string }) => addPlantReaction(user._id, payload),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["learnerGenmateGarden"]);
+        queryClient.invalidateQueries(["adminGenmateGarden"]);
+      },
+      onError: () => {
+        toast.error("Couldn't cheer that plant. Please try again.");
+      },
+    }
+  );
+
+  const handleCheer = (event: MouseEvent, reaction: string) => {
+    event.preventDefault();
+    cheerMutation.mutate({ type: "emoji", value: reaction });
+    setShowReactionPicker(false);
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -334,6 +367,42 @@ export function PlantTile({ member }: { member: GardenMember }) {
               </dd>
             </div>
           </dl>
+
+          <div className="flex flex-col gap-2 border-t pt-3">
+            <div className="flex items-center justify-between gap-2">
+              <BoardReactionSummary
+                reactions={plantReactions.map((r) => ({
+                  ...r,
+                  id: r.id || "",
+                  userId: r.userId || "",
+                  type: (r.type === "image" ? "image" : "emoji") as "emoji" | "image",
+                }))}
+                currentReaction={currentReaction?.value}
+                className="flex items-center gap-2"
+                itemClassName="flex items-center gap-1"
+              />
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  disabled={cheerMutation.isLoading}
+                  onClick={() => setShowReactionPicker((v) => !v)}
+                >
+                  🌱 {currentReaction ? "Change cheer" : "Cheer"}
+                </Button>
+                {showReactionPicker && (
+                  <BoardReactionPicker
+                    currentReaction={currentReaction?.value}
+                    hasReaction={!!currentReaction}
+                    onReact={handleCheer}
+                    onRemove={() => setShowReactionPicker(false)}
+                    className="absolute top-9 right-0 z-50 flex gap-1.5 bg-card p-2 rounded-2xl border shadow-2xl"
+                  />
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </PopoverContent>
     </Popover>

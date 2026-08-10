@@ -196,16 +196,42 @@ export interface PlantVariantConfig {
   stem: StemStyle
 }
 
-export function getPlantVariant(userId: string): PlantVariantConfig {
+export function getPlantVariant(userId: string, paletteOverride?: string): PlantVariantConfig {
   const seed = hashString(userId)
   const rand = createPRNG(seed)
+  const hashedPalette = PALETTES[Math.floor(rand() * PALETTES.length)]
+  const overridePalette = paletteOverride
+    ? PALETTES.find((p) => p.name === paletteOverride)
+    : undefined
   return {
-    palette: PALETTES[Math.floor(rand() * PALETTES.length)],
+    palette: overridePalette ?? hashedPalette,
     pot: (["round", "square", "tall", "bowl"] as PotStyle[])[Math.floor(rand() * 4)],
     leaf: (["rounded", "pointed", "wide"] as LeafStyle[])[Math.floor(rand() * 3)],
     flower: (["daisy", "tulip", "star"] as FlowerType[])[Math.floor(rand() * 3)],
     stem: (["straight", "curved", "leaning"] as StemStyle[])[Math.floor(rand() * 3)],
   }
+}
+
+/* ─── Unlockable palette progression ─── */
+
+// ponytail: mirrors validPlantPalettes in baro-gofiber/internal/handler/user_handler.go — keep in sync
+const PALETTE_UNLOCK_COUNTS: Record<PlantTier, number> = { 0: 0, 1: 0, 2: 3, 3: 5, 4: 7, 5: 10 }
+
+export function getUnlockedPalettes(tier: PlantTier): PlantPalette[] {
+  return PALETTES.slice(0, PALETTE_UNLOCK_COUNTS[tier])
+}
+
+export function getAllPalettes(): PlantPalette[] {
+  return PALETTES
+}
+
+// The tier at which the palette at this index (into getAllPalettes()) becomes selectable.
+export function getPaletteUnlockTier(index: number): PlantTier {
+  const tiers: PlantTier[] = [0, 1, 2, 3, 4, 5]
+  for (const tier of tiers) {
+    if (index < PALETTE_UNLOCK_COUNTS[tier]) return tier
+  }
+  return 5
 }
 
 /* ─── Tier-specific leaf positions ─── */

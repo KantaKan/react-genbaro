@@ -9,6 +9,10 @@ vi.mock("@/lib/api", () => ({
   api: { get: vi.fn() },
 }));
 
+vi.mock("@/AuthContext", () => ({
+  useAuth: () => ({ userId: "current-user" }),
+}));
+
 import { api } from "@/lib/api";
 const mockedGet = vi.mocked(api.get);
 

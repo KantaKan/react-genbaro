@@ -20,9 +20,11 @@ export interface User {
   salesforce_id?: string;
   profile_comments?: ProfileComment[];
   profile_reactions?: ProfileReaction[];
+  plant_reactions?: ProfileReaction[];
   bio?: string;
   social_links?: SocialLinks;
   pinned_badge_ids?: string[];
+  selected_palette?: string;
   fertilizer_balance?: number;
   growth_points?: number;
   fertilizer_log?: FertilizerLogEntry[];
@@ -88,6 +90,8 @@ export interface GenmateGardenMember {
   reflection_dates: string[];
   growth_points?: number;
   protected_dates?: string[];
+  plant_reactions?: ProfileReaction[];
+  selected_palette?: string;
 }
 
 export interface GenmateGardenResponse {

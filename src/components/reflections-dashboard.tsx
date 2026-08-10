@@ -12,8 +12,9 @@ import { useReflections, type Reflection } from "@/hooks/use-reflections";
 import { useStreakCalculation } from "@/hooks/use-streak-calculation";
 import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflection-zones";
 import { StreakIcon, GrowthBar, ComfortZoneMessage } from "./streak-components";
-import { getMilestoneForStreak, getRandomComfortMessage, getRandomStreakQuote, getNextTierProgress } from "@/lib/streak-milestones";
+import { getMilestoneForStreak, getRandomComfortMessage, getRandomStreakQuote, getNextTierProgress, getPlantTier, getEffectivePlantDays } from "@/lib/streak-milestones";
 import { getPlantVariant } from "@/lib/plant-variants";
+import { getDisplayStreak } from "@/hooks/use-streak-calculation";
 import { ReflectionsTable } from "./reflections-table";
 import FeedbackForm from "./linear-feedback-form";
 import { ReflectionPreview } from "./reflection-preview";
@@ -21,6 +22,7 @@ import { SubmissionStatusCard } from "./submission-status-card";
 import { AchievementsSection } from "./achievements-section";
 import LearnerGenmateGardenWidget from "./learner-genmate-garden-widget";
 import { FertilizerInventoryButton } from "./fertilizer-inventory-button";
+import { PlantPalettePicker } from "./plant-palette-picker";
 import { api } from "@/lib/api";
 import type { Badge } from "@/lib/types";
 import type { FertilizerLogEntry } from "@/domain/types";
@@ -40,6 +42,7 @@ interface User {
   fertilizer_balance?: number;
   growth_points?: number;
   fertilizer_log?: FertilizerLogEntry[];
+  selected_palette?: string;
 }
 
 interface ReflectionsDashboardProps {
@@ -73,8 +76,13 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   );
 
   const plantVariant = useMemo(() => {
-    return user ? getPlantVariant(user._id) : undefined;
+    return user ? getPlantVariant(user._id, user.selected_palette) : undefined;
   }, [user]);
+
+  const currentTier = useMemo(
+    () => getPlantTier(getEffectivePlantDays(getDisplayStreak(streakData), user?.growth_points ?? 0)),
+    [streakData, user?.growth_points]
+  );
 
   const fetchUser = useCallback(async () => {
     if (!userId) return;
@@ -273,6 +281,14 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                     balance={user.fertilizer_balance ?? 0}
                     eligibleProtectDate={streakData.eligibleProtectDate}
                     onUsed={fetchUser}
+                  />
+                )}
+                {user && (
+                  <PlantPalettePicker
+                    userId={user._id}
+                    currentTier={currentTier}
+                    selected={user.selected_palette}
+                    onSaved={fetchUser}
                   />
                 )}
               </div>
