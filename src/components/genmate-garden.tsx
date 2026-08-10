@@ -24,6 +24,7 @@ import {
   getPlantTierConfig,
   getMilestoneForStreak,
   streakMilestones,
+  getEffectivePlantDays,
 } from "@/lib/streak-milestones";
 import {
   calculateStreakData,
@@ -41,6 +42,7 @@ export interface GardenUser {
   cohort_number: number;
   genmate_group?: string;
   reflections?: Reflection[];
+  growth_points?: number;
 }
 
 interface AdminUsersResponse {
@@ -95,7 +97,8 @@ export function GenmateGarden({ cohort }: GenmateGardenProps) {
         streakData,
         variant: getPlantVariant(user._id),
         displayStreak,
-        tier: getPlantTier(displayStreak),
+        tier: getPlantTier(getEffectivePlantDays(displayStreak, user.growth_points ?? 0)),
+        growthPoints: user.growth_points ?? 0,
       };
 
       const list = byGroup.get(user.genmate_group);

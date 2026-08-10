@@ -204,6 +204,15 @@ export function getPlantTier(streak: number): PlantTier {
   return 0
 }
 
+// ponytail: mirrors backend FeedPointsPerFertilizer (fertilizer_service.go) — keep in sync
+const GROWTH_POINTS_PER_DAY = 10
+
+// Feeding the plant adds growth points; every GROWTH_POINTS_PER_DAY counts as one
+// extra "day" toward the same tier thresholds streak days use.
+export function getEffectivePlantDays(streak: number, growthPoints: number): number {
+  return streak + Math.floor(growthPoints / GROWTH_POINTS_PER_DAY)
+}
+
 const TIER_THRESHOLDS: Record<PlantTier, number> = { 0: 0, 1: 1, 2: 10, 3: 20, 4: 30, 5: 50 }
 
 export type FlourishTier = 0 | 1 | 2 | 3
@@ -223,12 +232,13 @@ export function getFlourishTier(growthPoints: number): FlourishTier {
   return 0
 }
 
-export function getNextTierProgress(streak: number): { current: number; max: number; isMaxTier: boolean } {
-  const tier = getPlantTier(streak)
-  if (tier === 5) return { current: streak, max: streak, isMaxTier: true }
+export function getNextTierProgress(streak: number, growthPoints = 0): { current: number; max: number; isMaxTier: boolean } {
+  const days = getEffectivePlantDays(streak, growthPoints)
+  const tier = getPlantTier(days)
+  if (tier === 5) return { current: days, max: days, isMaxTier: true }
   const next = TIER_THRESHOLDS[(tier + 1) as PlantTier]
   const prev = TIER_THRESHOLDS[tier]
-  return { current: streak - prev, max: next - prev, isMaxTier: false }
+  return { current: days - prev, max: next - prev, isMaxTier: false }
 }
 
 export function getPlantTierConfig(tier: PlantTier): PlantTierConfig {

@@ -67,6 +67,21 @@ describe("calculateStreakData protected dates", () => {
     expect(streakData.currentStreak).toBe(daysAfterGap);
   });
 
+  it("targets the real gap day, not today, when today isn't submitted yet", () => {
+    // last 5 workdays excluding today (not submitted yet) and excluding the gap 2 days back
+    const workdays = lastNWorkdays(5);
+    const today = workdays[4];
+    const gapDay = workdays[2];
+    const reflections = workdays
+      .filter((d) => d.getTime() !== gapDay.getTime() && d.getTime() !== today.getTime())
+      .map((d) => makeReflection(localDayString(d)));
+
+    const streakData = calculateStreakData(reflections);
+
+    expect(streakData.eligibleProtectDate).toBe(localDayString(gapDay));
+    expect(streakData.eligibleProtectDate).not.toBe(localDayString(today));
+  });
+
   it("bridges the streak through a protected gap", () => {
     const workdays = lastNWorkdays(5);
     const gapDay = workdays[3];

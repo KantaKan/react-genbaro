@@ -63,8 +63,14 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   }, [user?.fertilizer_log]);
 
   const streakData = useStreakCalculation(reflections, protectedDates);
-  const tierProgress = useMemo(() => getNextTierProgress(streakData.currentStreak), [streakData.currentStreak]);
-  const oldTierProgress = useMemo(() => getNextTierProgress(streakData.oldStreak), [streakData.oldStreak]);
+  const tierProgress = useMemo(
+    () => getNextTierProgress(streakData.currentStreak, user?.growth_points ?? 0),
+    [streakData.currentStreak, user?.growth_points]
+  );
+  const oldTierProgress = useMemo(
+    () => getNextTierProgress(streakData.oldStreak, user?.growth_points ?? 0),
+    [streakData.oldStreak, user?.growth_points]
+  );
 
   const plantVariant = useMemo(() => {
     return user ? getPlantVariant(user._id) : undefined;

@@ -118,7 +118,6 @@ export function calculateStreakData(reflections: Reflection[], protectedDates: S
       }
     }
   } else {
-    eligibleGapDate = new Date(currentDate);
     let checkDate = getPreviousWorkday(today);
 
     while (true) {
@@ -139,6 +138,7 @@ export function calculateStreakData(reflections: Reflection[], protectedDates: S
         oldStreak++;
         checkDate = getPreviousWorkday(checkDate);
       } else {
+        eligibleGapDate = new Date(checkDate);
         break;
       }
     }

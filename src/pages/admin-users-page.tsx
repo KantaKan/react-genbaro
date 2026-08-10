@@ -45,7 +45,7 @@ export function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  const cohort = searchParams.get("cohort") || "12";
+  const cohort = searchParams.get("cohort") || "0";
   const [activeTab, setActiveTab] = useState<Tab>("users");
   const [isBulkRegisterOpen, setIsBulkRegisterOpen] = useState(false);
 

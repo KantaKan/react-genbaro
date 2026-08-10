@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { fertilizerService } from "@/lib/api";
 import { toast } from "sonner";
@@ -15,6 +16,7 @@ interface FertilizerInventoryButtonProps {
 export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate, onUsed }: FertilizerInventoryButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedAmount, setFeedAmount] = useState(1);
 
   if (balance <= 0) return null;
 
@@ -33,12 +35,14 @@ export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate
     }
   };
 
-  const handleFeed = async () => {
+  const handleFeed = async (quantity: number) => {
+    if (quantity < 1) return;
     setIsSubmitting(true);
     try {
-      await fertilizerService.feed(userId);
-      toast.success("Your plant feels nourished! ✨");
+      await fertilizerService.feed(userId, quantity);
+      toast.success(`Your plant feels nourished! +${quantity * 10} growth ✨`);
       setIsOpen(false);
+      setFeedAmount(1);
       onUsed?.();
     } catch {
       toast.error("Couldn't feed your plant. Please try again.");
@@ -66,14 +70,38 @@ export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate
             <Shield className="h-4 w-4" />
             {eligibleProtectDate ? `Protect ${eligibleProtectDate}` : "No missed day to protect"}
           </Button>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              min={1}
+              max={balance}
+              value={feedAmount}
+              disabled={isSubmitting}
+              onChange={(e) => {
+                const n = Math.floor(Number(e.target.value));
+                setFeedAmount(Number.isFinite(n) ? Math.min(Math.max(n, 1), balance) : 1);
+              }}
+              className="w-16"
+            />
+            <Button
+              variant="outline"
+              className="flex-1 justify-start gap-2"
+              disabled={isSubmitting}
+              onClick={() => handleFeed(feedAmount)}
+            >
+              <Sparkles className="h-4 w-4" />
+              Feed (+{feedAmount * 10} growth)
+            </Button>
+          </div>
           <Button
-            variant="outline"
-            className="justify-start gap-2"
+            variant="ghost"
+            size="sm"
+            className="justify-start gap-2 text-muted-foreground"
             disabled={isSubmitting}
-            onClick={handleFeed}
+            onClick={() => handleFeed(balance)}
           >
             <Sparkles className="h-4 w-4" />
-            Feed your plant (+10 growth)
+            Feed all ({balance} fertilizer → +{balance * 10} growth)
           </Button>
         </div>
       </PopoverContent>
