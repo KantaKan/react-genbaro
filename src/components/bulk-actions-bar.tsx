@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 interface BulkActionsBarProps {
   selectedCount: number;
   totalCount: number;
+  onSelectAll: () => void;
   onClearSelection: () => void;
   onBulkBadge: () => void;
   onBulkFertilizer: () => void;
@@ -17,6 +18,7 @@ interface BulkActionsBarProps {
 export function BulkActionsBar({
   selectedCount,
   totalCount,
+  onSelectAll,
   onClearSelection,
   onBulkBadge,
   onBulkFertilizer,
@@ -45,7 +47,8 @@ export function BulkActionsBar({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => {/* select all - handled by parent */}}
+              onClick={onSelectAll}
+              disabled={selectedCount === totalCount}
               className="text-xs h-7 px-2"
             >
               Select All

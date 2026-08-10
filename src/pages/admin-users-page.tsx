@@ -41,11 +41,13 @@ interface ApiResponse {
 
 type Tab = "users" | "register" | "salesforce";
 
+const LAST_COHORT_KEY = "admin-users-last-cohort";
+
 export function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  const cohort = searchParams.get("cohort") || "0";
+  const cohort = searchParams.get("cohort") || localStorage.getItem(LAST_COHORT_KEY) || "0";
   const [activeTab, setActiveTab] = useState<Tab>("users");
   const [isBulkRegisterOpen, setIsBulkRegisterOpen] = useState(false);
 
@@ -97,6 +99,7 @@ export function AdminUsersPage() {
               Cohort:
             </label>
             <Select value={cohort} onValueChange={(value) => {
+              localStorage.setItem(LAST_COHORT_KEY, value);
               setSearchParams((prev) => {
                 if (value === "0") {
                   prev.delete("cohort");

@@ -438,6 +438,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
       <BulkActionsBar
         selectedCount={selectedUserIds.size}
         totalCount={filteredUsers.length}
+        onSelectAll={handleSelectAll}
         onClearSelection={() => setSelectedUserIds(new Set())}
         onBulkBadge={() => setBulkBadgeOpen(true)}
         onBulkFertilizer={() => setBulkFertilizerOpen(true)}
