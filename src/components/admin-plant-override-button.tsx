@@ -7,13 +7,19 @@ import { Sprout } from "lucide-react";
 import { userService } from "@/lib/api";
 import {
   getAllPalettes,
+  getPlantVariant,
   SPECIES,
   POT_STYLES,
   LEAF_STYLES,
   FLOWER_TYPES,
   STEM_STYLES,
 } from "@/lib/plant-variants";
+import { SeedlingPlant } from "@/components/streak-components";
 import { toast } from "sonner";
+
+// Preview always shows the fully-grown look (tier 9) so every part — flower,
+// fruit, etc. — is visible regardless of the learner's actual streak.
+const PREVIEW_TIER = 9;
 
 // Radix Select can't represent an empty string value, so "auto" stands in for
 // "no override — use the hash-derived default" and is converted to "" on submit.
@@ -78,6 +84,16 @@ export function AdminPlantOverrideButton({ userId, current, onSaved }: AdminPlan
             <Sprout className="h-5 w-5" /> Edit Plant
           </DialogTitle>
         </DialogHeader>
+
+        <div className="flex justify-center py-2">
+          <SeedlingPlant
+            tier={PREVIEW_TIER}
+            active
+            showParticles={false}
+            variant={getPlantVariant(userId, values)}
+            className="h-28 w-24"
+          />
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
           {FIELDS.map(({ key, label, options }) => (
