@@ -51,6 +51,11 @@ export interface GardenUser {
   growth_points?: number;
   plant_reactions?: ProfileReaction[];
   selected_palette?: string;
+  selected_species?: string;
+  selected_pot?: string;
+  selected_leaf?: string;
+  selected_flower?: string;
+  selected_stem?: string;
 }
 
 interface AdminUsersResponse {
@@ -103,7 +108,14 @@ export function GenmateGarden({ cohort }: GenmateGardenProps) {
       const member: GardenMember = {
         user,
         streakData,
-        variant: getPlantVariant(user._id, user.selected_palette),
+        variant: getPlantVariant(user._id, {
+          palette: user.selected_palette,
+          species: user.selected_species,
+          pot: user.selected_pot,
+          leaf: user.selected_leaf,
+          flower: user.selected_flower,
+          stem: user.selected_stem,
+        }),
         displayStreak,
         tier: getPlantTier(getEffectivePlantDays(displayStreak, user.growth_points ?? 0)),
         growthPoints: user.growth_points ?? 0,

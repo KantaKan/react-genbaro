@@ -92,6 +92,11 @@ export interface GenmateGardenMember {
   protected_dates?: string[];
   plant_reactions?: ProfileReaction[];
   selected_palette?: string;
+  selected_species?: string;
+  selected_pot?: string;
+  selected_leaf?: string;
+  selected_flower?: string;
+  selected_stem?: string;
 }
 
 export interface GenmateGardenResponse {
