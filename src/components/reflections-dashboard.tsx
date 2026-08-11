@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
+import { useQueryClient } from "react-query";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ interface ReflectionsDashboardProps {
 
 export default function ReflectionsDashboard({ userId, initialReflections = [], onReflectionSubmit }: ReflectionsDashboardProps) {
   const { reflections, isLoading: isLoadingReflections, error: reflectionsError, addReflection, refetch } = useReflections(userId, initialReflections);
+  const queryClient = useQueryClient();
 
   const [user, setUser] = useState<User | null>(null); // New state for user
   const [isLoadingUser, setIsLoadingUser] = useState(false); // New loading state for user
@@ -92,6 +94,11 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
       setIsLoadingUser(false);
     }
   }, [userId]);
+
+  const refreshPlant = useCallback(() => {
+    fetchUser();
+    queryClient.invalidateQueries(["learnerGenmateGarden"]);
+  }, [fetchUser, queryClient]);
 
   useEffect(() => {
     refetch(); // Refetch reflections
@@ -274,14 +281,14 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                     userId={user._id}
                     balance={user.fertilizer_balance ?? 0}
                     eligibleProtectDate={streakData.eligibleProtectDate}
-                    onUsed={fetchUser}
+                    onUsed={refreshPlant}
                   />
                 )}
                 {user && (
                   <PlantPalettePicker
                     userId={user._id}
                     selected={user.selected_palette}
-                    onSaved={fetchUser}
+                    onSaved={refreshPlant}
                   />
                 )}
               </div>
