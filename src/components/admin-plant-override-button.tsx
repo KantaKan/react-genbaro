@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup, SelectLabel } from "@/components/ui/select";
 import { Sprout } from "lucide-react";
 import { userService } from "@/lib/api";
 import {
@@ -10,6 +10,8 @@ import {
   getPlantVariant,
   SPECIES,
   POT_STYLES,
+  SPECIAL_POT_STYLES,
+  SPECIAL_POT_LABELS,
   LEAF_STYLES,
   FLOWER_TYPES,
   STEM_STYLES,
@@ -38,14 +40,29 @@ interface AdminPlantOverrideButtonProps {
   onSaved?: () => void;
 }
 
-const FIELDS: { key: keyof AdminPlantOverrideButtonProps["current"]; label: string; options: string[] }[] = [
-  { key: "palette", label: "Color", options: getAllPalettes().map((p) => p.name) },
-  { key: "species", label: "Species", options: SPECIES },
-  { key: "pot", label: "Pot", options: POT_STYLES },
-  { key: "leaf", label: "Leaf", options: LEAF_STYLES },
-  { key: "flower", label: "Flower", options: FLOWER_TYPES },
-  { key: "stem", label: "Stem", options: STEM_STYLES },
+const FIELDS: {
+  key: keyof AdminPlantOverrideButtonProps["current"];
+  label: string;
+  groups: { label?: string; options: string[] }[];
+}[] = [
+  { key: "palette", label: "Color", groups: [{ options: getAllPalettes().map((p) => p.name) }] },
+  { key: "species", label: "Species", groups: [{ options: SPECIES }] },
+  {
+    key: "pot",
+    label: "Pot",
+    groups: [
+      { label: "Basic", options: POT_STYLES },
+      { label: "Reward (admin-only)", options: SPECIAL_POT_STYLES },
+    ],
+  },
+  { key: "leaf", label: "Leaf", groups: [{ options: LEAF_STYLES }] },
+  { key: "flower", label: "Flower", groups: [{ options: FLOWER_TYPES }] },
+  { key: "stem", label: "Stem", groups: [{ options: STEM_STYLES }] },
 ];
+
+function optionLabel(option: string): string {
+  return SPECIAL_POT_LABELS[option as keyof typeof SPECIAL_POT_LABELS] ?? option;
+}
 
 export function AdminPlantOverrideButton({ userId, current, onSaved }: AdminPlantOverrideButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -96,7 +113,7 @@ export function AdminPlantOverrideButton({ userId, current, onSaved }: AdminPlan
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          {FIELDS.map(({ key, label, options }) => (
+          {FIELDS.map(({ key, label, groups }) => (
             <div key={key} className="space-y-2">
               <Label htmlFor={`plant-${key}`}>{label}</Label>
               <Select
@@ -108,10 +125,15 @@ export function AdminPlantOverrideButton({ userId, current, onSaved }: AdminPlan
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={AUTO}>Auto (default)</SelectItem>
-                  {options.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
+                  {groups.map((group, gi) => (
+                    <SelectGroup key={gi}>
+                      {group.label && <SelectLabel>{group.label}</SelectLabel>}
+                      {group.options.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {optionLabel(option)}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
                 </SelectContent>
               </Select>

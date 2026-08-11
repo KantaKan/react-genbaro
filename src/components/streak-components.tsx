@@ -17,7 +17,15 @@ import {
 
 import { Cat } from "lucide-react"
 import { fireConfetti } from "@/lib/confetti"
-import { getPotPath, getStemTilt, type PlantVariantConfig, type PlantSpecies } from "@/lib/plant-variants"
+import {
+  getPotPath,
+  getStemTilt,
+  isSpecialPotStyle,
+  getSpecialPotColor,
+  type PlantVariantConfig,
+  type PlantSpecies,
+  type SpecialPotStyle,
+} from "@/lib/plant-variants"
 
 const tierTextColors: Record<PlantTier, string> = {
   0: "text-muted-foreground",
@@ -1317,6 +1325,186 @@ const AuraGlow = ({
   />
 )
 
+/* ─── Special reward pot decorations ───
+   Fixed, palette-independent decoration for each admin-only reward pot — the whole point
+   is that these don't recolor with the learner's palette like the 4 basic pots do. */
+
+const TrophyDecoration = () => (
+  <>
+    <path d="M7 44 L33 44 L31 41 L9 41 Z" fill="none" stroke="#d4af37" strokeWidth={1.4} />
+    <path d="M7.5 42.5 C4.5 42.5 4.5 46.5 7.5 46.5" fill="none" stroke="#d4af37" strokeWidth={1.3} />
+    <path d="M32.5 42.5 C35.5 42.5 35.5 46.5 32.5 46.5" fill="none" stroke="#d4af37" strokeWidth={1.3} />
+    <ellipse cx={16} cy={47.5} rx={3.5} ry={1} fill="#d4af37" opacity={0.35} />
+  </>
+)
+
+const StarlightDecoration = () => (
+  <>
+    <path d="M8 42 L32 42 L30 39 L10 39 Z" fill="none" stroke="#cfd8ff" strokeWidth={1} opacity={0.8} />
+    {[[14, 47], [24, 45.5], [19, 49], [27, 48]].map(([x, y], i) => (
+      <path
+        key={i}
+        d={`M${x} ${y - 0.9} L${x + 0.3} ${y - 0.2} L${x + 0.9} ${y} L${x + 0.3} ${y + 0.2} L${x} ${y + 0.9} L${x - 0.3} ${y + 0.2} L${x - 0.9} ${y} L${x - 0.3} ${y - 0.2} Z`}
+        fill="#f4e9c1"
+      />
+    ))}
+  </>
+)
+
+const RainbowDecoration = () => (
+  <>
+    {["#e05252", "#e8974a", "#e8c34d", "#5aa469", "#4a7fc9", "#7a5ac9"].map((c, i) => (
+      <path key={c} d={`M${6 + i} ${46 + i * 1.05} L${34 - i} ${46 + i * 1.05}`} stroke={c} strokeWidth={1.15} opacity={0.9} />
+    ))}
+    <path d="M5 46 L35 46 L32 43 L8 43 Z" fill="none" stroke="#3d3d3d" strokeWidth={1.8} />
+  </>
+)
+
+const CrystalDecoration = () => (
+  <>
+    {[[9, 44, 20, 47], [20, 47, 31, 44], [9, 44, 15, 50], [31, 44, 25, 50], [15, 50, 25, 50]].map(([x1, y1, x2, y2], i) => (
+      <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth={0.6} opacity={0.7} />
+    ))}
+    <path d="M11 45.5 L15 44 L13 48 Z" fill="#ffffff" opacity={0.55} />
+  </>
+)
+
+const SweetheartDecoration = () => (
+  <>
+    {[8, 12, 16, 20, 24, 28, 32].map((x) => (
+      <circle key={x} cx={x} cy={41} r={2} fill="#f3c8d6" stroke="#3d3d3d" strokeWidth={1} />
+    ))}
+    {[[13, 47], [27, 47.5]].map(([x, y], i) => (
+      <path
+        key={i}
+        d={`M${x} ${y - 1} C${x - 1.3} ${y - 1.9} ${x - 2} ${y - 0.4} ${x} ${y + 1} C${x + 2} ${y - 0.4} ${x + 1.3} ${y - 1.9} ${x} ${y - 1} Z`}
+        fill="#e0678e"
+        opacity={0.85}
+      />
+    ))}
+  </>
+)
+
+const LaurelDecoration = () => (
+  <>
+    {[-1, 1].map((side) =>
+      Array.from({ length: 4 }, (_, i) => {
+        const x = 20 + side * (2.5 + i * 1.6)
+        const y = 40.5 + i * 0.35
+        return (
+          <ellipse
+            key={`${side}-${i}`}
+            cx={x}
+            cy={y}
+            rx={1.4}
+            ry={0.7}
+            fill="#4a7c3f"
+            stroke="#3d3d3d"
+            strokeWidth={0.5}
+            transform={`rotate(${side * 35} ${x} ${y})`}
+          />
+        )
+      })
+    )}
+    <path d="M18.5 40.5 L18.2 44 L20 43 L21.8 44 L21.5 40.5" fill="#c9394a" stroke="#3d3d3d" strokeWidth={0.6} />
+  </>
+)
+
+const ConstellationDecoration = () => {
+  const pts: [number, number][] = [[13, 46], [18, 44], [24, 45], [28, 48], [16, 49]]
+  return (
+    <>
+      {pts.slice(0, -1).map(([x1, y1], i) => {
+        const [x2, y2] = pts[i + 1]
+        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#8ea8e8" strokeWidth={0.4} opacity={0.7} />
+      })}
+      {pts.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r={i === 1 ? 1.1 : 0.6} fill="#f4e9c1" />
+      ))}
+    </>
+  )
+}
+
+const MosaicDecoration = () => {
+  const colors = ["#e05252", "#4a7fc9", "#e8c34d", "#5aa469", "#7a5ac9"]
+  const tiles: ReactNode[] = []
+  let i = 0
+  for (let y = 45; y <= 49; y += 2) {
+    for (let x = 9; x <= 31; x += 3) {
+      tiles.push(
+        <rect key={`${x}-${y}`} x={x} y={y} width={1.8} height={1.8} fill={colors[i % colors.length]} opacity={0.85} transform={`rotate(45 ${x + 0.9} ${y + 0.9})`} />
+      )
+      i++
+    }
+  }
+  return (
+    <>
+      {tiles}
+      <path d="M5 46 L35 46 L32 43 L8 43 Z" fill="none" stroke="#3d3d3d" strokeWidth={1.8} />
+    </>
+  )
+}
+
+const RoyalDecoration = () => (
+  <>
+    <path
+      d="M7 41 L9.5 43.5 L12 41 L14.5 43.5 L17 41 L19.5 43.5 L20.5 43.5 L23 41 L25.5 43.5 L28 41 L30.5 43.5 L33 41"
+      fill="none"
+      stroke="#d4af37"
+      strokeWidth={1.3}
+      strokeLinejoin="round"
+    />
+    {[[10, 42.3, "#c9394a"], [16, 42.3, "#4a7fc9"], [24, 42.3, "#4a7fc9"], [30, 42.3, "#c9394a"]].map(([x, y, c], i) => (
+      <circle key={i} cx={x as number} cy={y as number} r={0.7} fill={c as string} />
+    ))}
+  </>
+)
+
+const FireworkDecoration = () => {
+  const rays: ReactNode[] = []
+  for (let a = 0; a < 360; a += 30) {
+    const rad = (a * Math.PI) / 180
+    const x1 = 20 + Math.cos(rad) * 2, y1 = 46 + Math.sin(rad) * 2
+    const x2 = 20 + Math.cos(rad) * 5.5, y2 = 46 + Math.sin(rad) * 5.5
+    rays.push(<line key={a} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#f4c542" strokeWidth={0.7} strokeLinecap="round" />)
+  }
+  return (
+    <>
+      {rays}
+      {[[13, 43, "#e05252"], [27, 44, "#4a7fc9"], [16, 48.5, "#5aa469"]].map(([x, y, c], i) => (
+        <circle key={i} cx={x as number} cy={y as number} r={0.6} fill={c as string} />
+      ))}
+    </>
+  )
+}
+
+const SpecialPotDecoration = ({ style }: { style: SpecialPotStyle }) => {
+  switch (style) {
+    case "trophy":
+      return <TrophyDecoration />
+    case "starlight":
+      return <StarlightDecoration />
+    case "rainbow":
+      return <RainbowDecoration />
+    case "crystal":
+      return <CrystalDecoration />
+    case "sweetheart":
+      return <SweetheartDecoration />
+    case "laurel":
+      return <LaurelDecoration />
+    case "constellation":
+      return <ConstellationDecoration />
+    case "mosaic":
+      return <MosaicDecoration />
+    case "royal":
+      return <RoyalDecoration />
+    case "firework":
+      return <FireworkDecoration />
+    default:
+      return null
+  }
+}
+
 export const SeedlingPlant = ({ tier = 0, active, className, variant, showParticles = true, growthPoints = 0 }: { tier?: PlantTier; active: boolean; className?: string; variant?: PlantVariantConfig; showParticles?: boolean; growthPoints?: number }) => {
   const swayControls = useAnimation()
   const leafBounceControls = useAnimation()
@@ -1350,7 +1538,8 @@ export const SeedlingPlant = ({ tier = 0, active, className, variant, showPartic
   const leafColor = active ? (variant?.palette.leaf ?? config.leafColor) : "#d4d4d8"
   const flowerColor = active ? (variant?.palette.flower ?? config.flowerColor) : "#71717a"
   const fruitColor = active ? (variant?.palette.fruit ?? config.fruitColor) : "#71717a"
-  const potColor = active ? (variant?.palette.pot ?? config.potColor) : "#9c8b7e"
+  const specialPot = variant && isSpecialPotStyle(variant.pot) ? variant.pot : null
+  const potColor = active ? (specialPot ? getSpecialPotColor(specialPot) : (variant?.palette.pot ?? config.potColor)) : "#9c8b7e"
   const soilColor = active ? (variant?.palette.soil ?? config.soilColor) : "#6b5b4e"
   const outlineColor = active ? "#3d3d3d" : "#52525b"
   const strokeW = 1.8
@@ -1498,6 +1687,8 @@ export const SeedlingPlant = ({ tier = 0, active, className, variant, showPartic
                   <circle cx="27" cy="44" r="0.5" fill={outlineColor} opacity={0.2} />
                 </>
               )}
+              {/* Special reward pot decoration — admin-granted only, never random */}
+              {active && specialPot && <SpecialPotDecoration style={specialPot} />}
               {/* Cute pot face — a small constant of charm on every species, not tier-gated */}
               {active && (
                 <>

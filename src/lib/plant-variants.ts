@@ -200,10 +200,10 @@ export interface PotPaths {
   rim: string
 }
 
-export type PotStyle = "round" | "square" | "tall" | "bowl"
-export const POT_STYLES: PotStyle[] = ["round", "square", "tall", "bowl"]
+export type BasicPotStyle = "round" | "square" | "tall" | "bowl"
+export const POT_STYLES: BasicPotStyle[] = ["round", "square", "tall", "bowl"]
 
-const POT_PATHS: Record<PotStyle, PotPaths> = {
+const POT_PATHS: Record<BasicPotStyle, PotPaths> = {
   round: {
     bottom: "M9 44 C9 50 13 51.5 20 51.5 C27 51.5 31 50 31 44 Z",
     rim: "M7 44 L33 44 L31 41 L9 41 Z",
@@ -220,6 +220,87 @@ const POT_PATHS: Record<PotStyle, PotPaths> = {
     bottom: "M7 46 C7 52 13 52 20 52 C27 52 33 52 33 46 Z",
     rim: "M5 46 L35 46 L32 43 L8 43 Z",
   },
+}
+
+/* ─── Special reward pots ───
+   Exclusive pot skins an admin grants a learner — kept out of POT_STYLES so
+   getPlantVariant's random draw never picks one; only reachable through an
+   explicit override. Each reuses one of the 4 base shapes above but wears
+   its own fixed color instead of the learner's palette, plus a decoration
+   drawn by SpecialPotDecoration in streak-components.tsx. */
+
+export type SpecialPotStyle =
+  | "trophy"
+  | "starlight"
+  | "rainbow"
+  | "crystal"
+  | "sweetheart"
+  | "laurel"
+  | "constellation"
+  | "mosaic"
+  | "royal"
+  | "firework"
+
+export const SPECIAL_POT_STYLES: SpecialPotStyle[] = [
+  "trophy",
+  "starlight",
+  "rainbow",
+  "crystal",
+  "sweetheart",
+  "laurel",
+  "constellation",
+  "mosaic",
+  "royal",
+  "firework",
+]
+
+export const SPECIAL_POT_LABELS: Record<SpecialPotStyle, string> = {
+  trophy: "Golden Trophy",
+  starlight: "Starlight",
+  rainbow: "Rainbow",
+  crystal: "Crystal Facet",
+  sweetheart: "Sweetheart",
+  laurel: "Laurel Medal",
+  constellation: "Constellation",
+  mosaic: "Mosaic",
+  royal: "Royal",
+  firework: "Firework",
+}
+
+const SPECIAL_POT_BASE_SHAPE: Record<SpecialPotStyle, BasicPotStyle> = {
+  trophy: "round",
+  starlight: "tall",
+  rainbow: "bowl",
+  crystal: "square",
+  sweetheart: "round",
+  laurel: "tall",
+  constellation: "square",
+  mosaic: "bowl",
+  royal: "round",
+  firework: "tall",
+}
+
+const SPECIAL_POT_COLORS: Record<SpecialPotStyle, string> = {
+  trophy: "#8a3b3b",
+  starlight: "#1a2340",
+  rainbow: "#f6f1e4",
+  crystal: "#bcdcf0",
+  sweetheart: "#f3c8d6",
+  laurel: "#c77d61",
+  constellation: "#242850",
+  mosaic: "#d9c9a3",
+  royal: "#4b2e6b",
+  firework: "#26262e",
+}
+
+export type PotStyle = BasicPotStyle | SpecialPotStyle
+
+export function isSpecialPotStyle(style: string): style is SpecialPotStyle {
+  return (SPECIAL_POT_STYLES as string[]).includes(style)
+}
+
+export function getSpecialPotColor(style: SpecialPotStyle): string {
+  return SPECIAL_POT_COLORS[style]
 }
 
 /* ─── Leaf Shapes (relative, pointing up-left) ─── */
@@ -354,7 +435,10 @@ export function getPlantVariant(userId: string, overrides?: PlantVariantOverride
 
   return {
     palette: overridePalette ?? hashedPalette,
-    pot: overrides?.pot && (POT_STYLES as string[]).includes(overrides.pot) ? (overrides.pot as PotStyle) : hashedPot,
+    pot:
+      overrides?.pot && ((POT_STYLES as string[]).includes(overrides.pot) || isSpecialPotStyle(overrides.pot))
+        ? (overrides.pot as PotStyle)
+        : hashedPot,
     leaf: overrides?.leaf && (LEAF_STYLES as string[]).includes(overrides.leaf) ? (overrides.leaf as LeafStyle) : hashedLeaf,
     flower:
       overrides?.flower && (FLOWER_TYPES as string[]).includes(overrides.flower)
@@ -375,7 +459,8 @@ export function getAllPalettes(): PlantPalette[] {
 /* ─── Exported utilities ─── */
 
 export function getPotPath(style: PotStyle): PotPaths {
-  return POT_PATHS[style]
+  const baseShape = isSpecialPotStyle(style) ? SPECIAL_POT_BASE_SHAPE[style] : style
+  return POT_PATHS[baseShape]
 }
 
 export function getLeafPath(style: LeafStyle): string {
