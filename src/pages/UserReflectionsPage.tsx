@@ -16,6 +16,8 @@ import { useStreakCalculation } from "@/hooks/use-streak-calculation";
 import { StreakIcon } from "@/components/streak-components";
 import { AwardBadgeButton } from "@/components/award-badge-button";
 import { AwardFertilizerButton } from "@/components/award-fertilizer-button";
+import { AdminPlantOverrideButton } from "@/components/admin-plant-override-button";
+import { getPlantVariant } from "@/lib/plant-variants";
 import type { Badge } from "@/lib/types";
 import type { Reflection } from "@/hooks/use-reflections";
 import type { FertilizerLogEntry } from "@/domain/types";
@@ -31,6 +33,12 @@ interface User {
   badges?: Badge[];
   fertilizer_log?: FertilizerLogEntry[];
   growth_points?: number;
+  selected_palette?: string;
+  selected_species?: string;
+  selected_pot?: string;
+  selected_leaf?: string;
+  selected_flower?: string;
+  selected_stem?: string;
 }
 
 const StatCard = ({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string | number | JSX.Element }) => (
@@ -105,6 +113,21 @@ export default function UserReflectionsPage() {
 
   const streakData = useStreakCalculation(reflections, protectedDates);
 
+  const plantVariant = useMemo(
+    () =>
+      user
+        ? getPlantVariant(user._id, {
+            palette: user.selected_palette,
+            species: user.selected_species,
+            pot: user.selected_pot,
+            leaf: user.selected_leaf,
+            flower: user.selected_flower,
+            stem: user.selected_stem,
+          })
+        : undefined,
+    [user]
+  );
+
   if (isLoading) {
   return (
     <div className="container mx-auto pt-16 pb-10 space-y-6">
@@ -163,6 +186,18 @@ export default function UserReflectionsPage() {
           <div className="flex items-center gap-2">
             <AwardBadgeButton userId={id} onBadgeAwarded={handleBadgeAwarded} />
             <AwardFertilizerButton userId={id} onFertilizerAwarded={handleBadgeAwarded} />
+            <AdminPlantOverrideButton
+              userId={id}
+              current={{
+                palette: user?.selected_palette,
+                species: user?.selected_species,
+                pot: user?.selected_pot,
+                leaf: user?.selected_leaf,
+                flower: user?.selected_flower,
+                stem: user?.selected_stem,
+              }}
+              onSaved={handleBadgeAwarded}
+            />
           </div>
         )}
       </motion.div>
@@ -179,7 +214,7 @@ export default function UserReflectionsPage() {
                 <StatCard icon={School} label="JSD Number" value={user.jsd_number} />
                 <StatCard icon={ClipboardList} label="Total Reflections" value={reflections.length} />
                 <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-                  <StreakIcon streakData={streakData} showMilestoneToast={false} growthPoints={user.growth_points ?? 0} />
+                  <StreakIcon streakData={streakData} showMilestoneToast={false} variant={plantVariant} growthPoints={user.growth_points ?? 0} />
                 </div>
               </div>
               {user.badges && user.badges.length > 0 && (

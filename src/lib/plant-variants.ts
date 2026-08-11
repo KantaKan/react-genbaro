@@ -200,7 +200,8 @@ export interface PotPaths {
   rim: string
 }
 
-type PotStyle = "round" | "square" | "tall" | "bowl"
+export type PotStyle = "round" | "square" | "tall" | "bowl"
+export const POT_STYLES: PotStyle[] = ["round", "square", "tall", "bowl"]
 
 const POT_PATHS: Record<PotStyle, PotPaths> = {
   round: {
@@ -223,7 +224,8 @@ const POT_PATHS: Record<PotStyle, PotPaths> = {
 
 /* ─── Leaf Shapes (relative, pointing up-left) ─── */
 
-type LeafStyle = "rounded" | "pointed" | "wide"
+export type LeafStyle = "rounded" | "pointed" | "wide"
+export const LEAF_STYLES: LeafStyle[] = ["rounded", "pointed", "wide"]
 
 const LEAF_PATHS: Record<LeafStyle, string> = {
   rounded: "M0 0 Q-5 -3 -4.5 -6 Q-2.5 -4 0 0",
@@ -233,11 +235,13 @@ const LEAF_PATHS: Record<LeafStyle, string> = {
 
 /* ─── Flower Types ─── */
 
-type FlowerType = "daisy" | "tulip" | "star"
+export type FlowerType = "daisy" | "tulip" | "star"
+export const FLOWER_TYPES: FlowerType[] = ["daisy", "tulip", "star"]
 
 /* ─── Stem Styles ─── */
 
-type StemStyle = "straight" | "curved" | "leaning"
+export type StemStyle = "straight" | "curved" | "leaning"
+export const STEM_STYLES: StemStyle[] = ["straight", "curved", "leaning"]
 
 const STEM_TILTS: Record<StemStyle, number> = {
   straight: 0,
@@ -284,7 +288,7 @@ export type PlantSpecies =
   | "tulip"
   | "pumpkin-vine"
 
-const SPECIES: PlantSpecies[] = [
+export const SPECIES: PlantSpecies[] = [
   "flower",
   "cactus",
   "succulent",
@@ -320,20 +324,47 @@ export interface PlantVariantConfig {
   species: PlantSpecies
 }
 
-export function getPlantVariant(userId: string, paletteOverride?: string): PlantVariantConfig {
+// Every field is a plain string because callers thread these straight through from
+// API responses (e.g. member.selected_pot); invalid/unknown values fall back to the
+// hash-derived default rather than erroring, same as the original palette override.
+export interface PlantVariantOverrides {
+  palette?: string
+  species?: string
+  pot?: string
+  leaf?: string
+  flower?: string
+  stem?: string
+}
+
+export function getPlantVariant(userId: string, overrides?: PlantVariantOverrides): PlantVariantConfig {
   const seed = hashString(userId)
   const rand = createPRNG(seed)
+  // Draw order must stay palette, pot, leaf, flower, stem, species — reordering would
+  // reshuffle every unoverridden user's existing plant look.
   const hashedPalette = PALETTES[Math.floor(rand() * PALETTES.length)]
-  const overridePalette = paletteOverride
-    ? PALETTES.find((p) => p.name === paletteOverride)
+  const hashedPot = POT_STYLES[Math.floor(rand() * POT_STYLES.length)]
+  const hashedLeaf = LEAF_STYLES[Math.floor(rand() * LEAF_STYLES.length)]
+  const hashedFlower = FLOWER_TYPES[Math.floor(rand() * FLOWER_TYPES.length)]
+  const hashedStem = STEM_STYLES[Math.floor(rand() * STEM_STYLES.length)]
+  const hashedSpecies = SPECIES[Math.floor(rand() * SPECIES.length)]
+
+  const overridePalette = overrides?.palette
+    ? PALETTES.find((p) => p.name === overrides.palette)
     : undefined
+
   return {
     palette: overridePalette ?? hashedPalette,
-    pot: (["round", "square", "tall", "bowl"] as PotStyle[])[Math.floor(rand() * 4)],
-    leaf: (["rounded", "pointed", "wide"] as LeafStyle[])[Math.floor(rand() * 3)],
-    flower: (["daisy", "tulip", "star"] as FlowerType[])[Math.floor(rand() * 3)],
-    stem: (["straight", "curved", "leaning"] as StemStyle[])[Math.floor(rand() * 3)],
-    species: SPECIES[Math.floor(rand() * SPECIES.length)],
+    pot: overrides?.pot && (POT_STYLES as string[]).includes(overrides.pot) ? (overrides.pot as PotStyle) : hashedPot,
+    leaf: overrides?.leaf && (LEAF_STYLES as string[]).includes(overrides.leaf) ? (overrides.leaf as LeafStyle) : hashedLeaf,
+    flower:
+      overrides?.flower && (FLOWER_TYPES as string[]).includes(overrides.flower)
+        ? (overrides.flower as FlowerType)
+        : hashedFlower,
+    stem: overrides?.stem && (STEM_STYLES as string[]).includes(overrides.stem) ? (overrides.stem as StemStyle) : hashedStem,
+    species:
+      overrides?.species && (SPECIES as string[]).includes(overrides.species)
+        ? (overrides.species as PlantSpecies)
+        : hashedSpecies,
   }
 }
 

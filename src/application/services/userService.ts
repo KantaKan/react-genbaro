@@ -50,6 +50,13 @@ export const userService = {
     await api.delete(`/admin/users/${userId}`);
   },
 
+  async updatePlantOverride(
+    userId: string,
+    payload: { palette?: string; species?: string; pot?: string; leaf?: string; flower?: string; stem?: string }
+  ): Promise<void> {
+    await api.patch(`/admin/users/${userId}/plant`, payload);
+  },
+
   async updateUser(userId: string, payload: Partial<User>): Promise<void> {
     await api.put(`/users/${userId}`, payload);
   },
@@ -68,6 +75,7 @@ export const addPlantReaction = userService.addPlantReaction;
 export const getUserById = userService.getUserById;
 export const updateUserPersonalDetails = userService.updateUserPersonalDetails;
 export const deleteUserById = userService.deleteUserById;
+export const updatePlantOverride = userService.updatePlantOverride;
 export const updateUser = userService.updateUser;
 export const deleteProfileComment = userService.deleteProfileComment;
 

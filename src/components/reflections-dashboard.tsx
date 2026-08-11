@@ -43,6 +43,11 @@ interface User {
   growth_points?: number;
   fertilizer_log?: FertilizerLogEntry[];
   selected_palette?: string;
+  selected_species?: string;
+  selected_pot?: string;
+  selected_leaf?: string;
+  selected_flower?: string;
+  selected_stem?: string;
 }
 
 interface ReflectionsDashboardProps {
@@ -77,7 +82,16 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   );
 
   const plantVariant = useMemo(() => {
-    return user ? getPlantVariant(user._id, user.selected_palette) : undefined;
+    return user
+      ? getPlantVariant(user._id, {
+          palette: user.selected_palette,
+          species: user.selected_species,
+          pot: user.selected_pot,
+          leaf: user.selected_leaf,
+          flower: user.selected_flower,
+          stem: user.selected_stem,
+        })
+      : undefined;
   }, [user]);
 
   const fetchUser = useCallback(async () => {
