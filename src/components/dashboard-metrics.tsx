@@ -4,9 +4,17 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, FileText, AlertTriangle, TrendingUp, Activity } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, getBarometerData } from "@/lib/api";
 import { useQuery } from "react-query";
 import { SkeletonWarm } from "@/components/loading-skeleton";
+import { getThailandTime } from "@/utils/date-utils";
+import type { BarometerData } from "@/domain/types";
+
+const sumZones = (row: BarometerData) =>
+  Object.entries(row).reduce(
+    (sum, [key, val]) => (key === "date" || typeof val !== "number" ? sum : sum + val),
+    0
+  );
 
 interface MetricCardProps {
   title: string;
@@ -71,12 +79,30 @@ export function DashboardMetrics({ cohort }: DashboardMetricsProps) {
     { refetchOnWindowFocus: false }
   );
 
+  const { data: barometerData } = useQuery(
+    ["barometerData90d", cohort],
+    () => getBarometerData("90d", cohort),
+    { refetchOnWindowFocus: false }
+  );
+
   const totalLearners = usersData?.data?.data?.users?.length || 0;
-  
+
   const currentWeekSummary = reflectionsData?.data?.data?.summaries?.[0];
-  const atRiskCount = 
-    (currentWeekSummary?.overwhelmed_students?.length || 0) + 
+  const atRiskCount =
+    (currentWeekSummary?.overwhelmed_students?.length || 0) +
     (currentWeekSummary?.stressed_students?.length || 0);
+
+  const totalReflections = barometerData?.reduce((sum, row) => sum + sumZones(row), 0) ?? 0;
+
+  const last7Days = new Set(
+    Array.from({ length: 7 }, (_, i) => {
+      const d = getThailandTime();
+      d.setDate(d.getDate() - i);
+      return d.toLocaleDateString("en-CA");
+    })
+  );
+  const reflectionsThisWeek =
+    barometerData?.filter((row) => last7Days.has(row.date)).reduce((sum, row) => sum + sumZones(row), 0) ?? 0;
 
   if (isLoadingUsers) {
     return (
@@ -106,8 +132,8 @@ export function DashboardMetrics({ cohort }: DashboardMetricsProps) {
       />
       <MetricCard
         title="Total Reflections"
-        value={totalLearners > 0 ? "—" : "0"}
-        description="All time submissions"
+        value={totalReflections}
+        description="Last 90 days"
         icon={FileText}
         color="bg-emerald-500"
       />
@@ -119,9 +145,9 @@ export function DashboardMetrics({ cohort }: DashboardMetricsProps) {
         color="bg-red-500"
       />
       <MetricCard
-        title="Active This Week"
-        value={totalLearners > 0 ? totalLearners - atRiskCount : "—"}
-        description="Submitted reflections"
+        title="Reflections This Week"
+        value={reflectionsThisWeek}
+        description="Last 7 days, all zones"
         icon={Activity}
         color="bg-purple-500"
       />
