@@ -3,8 +3,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useQueryClient } from "react-query";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { Plus, BookOpen, CheckCircle } from "lucide-react";
@@ -13,12 +12,10 @@ import { useReflections, type Reflection } from "@/hooks/use-reflections";
 import { useStreakCalculation } from "@/hooks/use-streak-calculation";
 import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflection-zones";
 import { StreakIcon, GrowthBar, ComfortZoneMessage } from "./streak-components";
-import { getMilestoneForStreak, getRandomComfortMessage, getRandomStreakQuote, getNextTierProgress } from "@/lib/streak-milestones";
+import { getNextTierProgress, getMilestoneForStreak, getRandomStreakQuote } from "@/lib/streak-milestones";
 import { getPlantVariant } from "@/lib/plant-variants";
 import { ReflectionsTable } from "./reflections-table";
 import FeedbackForm from "./linear-feedback-form";
-import { ReflectionPreview } from "./reflection-preview";
-import { SubmissionStatusCard } from "./submission-status-card";
 import { AchievementsSection } from "./achievements-section";
 import LearnerGenmateGardenWidget from "./learner-genmate-garden-widget";
 import { FertilizerInventoryButton } from "./fertilizer-inventory-button";
@@ -56,6 +53,20 @@ interface ReflectionsDashboardProps {
   onReflectionSubmit?: () => Promise<void>;
 }
 
+const getGreeting = (hour: number) => {
+  if (hour >= 5 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 17) return "Good afternoon";
+  if (hour >= 17 && hour < 21) return "Good evening";
+  return "Good night";
+};
+
+const zoneCount = (zoneStats: ReturnType<typeof calculateZoneStats>, zoneId: string) => {
+  if (zoneId === "comfort") return zoneStats.comfort;
+  if (zoneId === "stretch-enjoying") return zoneStats.stretchEnjoying;
+  if (zoneId === "stretch-overwhelmed") return zoneStats.stretchOverwhelmed;
+  return zoneStats.panic;
+};
+
 export default function ReflectionsDashboard({ userId, initialReflections = [], onReflectionSubmit }: ReflectionsDashboardProps) {
   const { reflections, isLoading: isLoadingReflections, error: reflectionsError, addReflection, refetch } = useReflections(userId, initialReflections);
   const queryClient = useQueryClient();
@@ -63,6 +74,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   const [user, setUser] = useState<User | null>(null); // New state for user
   const [isLoadingUser, setIsLoadingUser] = useState(false); // New loading state for user
   const [userError, setUserError] = useState<string | null>(null); // New error state for user
+  const [zoneInfoOpen, setZoneInfoOpen] = useState(false);
 
   const protectedDates = useMemo(() => {
     const dates = (user?.fertilizer_log ?? [])
@@ -75,10 +87,6 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   const tierProgress = useMemo(
     () => getNextTierProgress(streakData.currentStreak, user?.growth_points ?? 0),
     [streakData.currentStreak, user?.growth_points]
-  );
-  const oldTierProgress = useMemo(
-    () => getNextTierProgress(streakData.oldStreak, user?.growth_points ?? 0),
-    [streakData.oldStreak, user?.growth_points]
   );
 
   const plantVariant = useMemo(() => {
@@ -201,40 +209,14 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
 
   if (totalIsLoading) {
     return (
-      <div className="container mx-auto py-10 space-y-8">
-        <div className="space-y-4">
-          <div className="h-24 w-full">
-            <motion.div
-              className="h-full w-full bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 rounded-xl"
-              animate={{
-                backgroundPosition: ["0% 0%", "100% 0%", "0% 0%"],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Number.POSITIVE_INFINITY,
-                ease: "linear",
-              }}
-            />
+      <div className="container mx-auto py-6 space-y-4">
+        <div className="h-14 w-full rounded-xl bg-muted/40 animate-pulse" />
+        <div className="grid grid-cols-1 lg:grid-cols-[200px_minmax(0,1fr)] gap-4">
+          <div className="space-y-3">
+            <div className="h-20 rounded-lg bg-muted/40 animate-pulse" />
+            <div className="h-20 rounded-lg bg-muted/40 animate-pulse" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Array(4)
-              .fill(null)
-              .map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="h-36 bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 rounded-xl"
-                  animate={{
-                    backgroundPosition: ["0% 0%", "100% 0%", "0% 0%"],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Number.POSITIVE_INFINITY,
-                    ease: "linear",
-                    delay: i * 0.2,
-                  }}
-                />
-              ))}
-          </div>
+          <div className="h-64 rounded-lg bg-muted/40 animate-pulse" />
         </div>
       </div>
     );
@@ -247,7 +229,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
           <Card className="border-destructive/30 bg-destructive/5">
             <CardContent className="p-8">
               <div className="text-center">
-                <h2 
+                <h2
                   className="text-xl font-semibold mb-2"
                   style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                 >
@@ -263,555 +245,182 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   }
 
   const zoneStats = calculateZoneStats(reflections);
-  const dominantZoneId = findDominantZone(zoneStats);
-  const currentZone = todaysReflection ? reflectionZones.find((zone) => zone.label === todaysReflection.reflection.barometer) : null;
+  const dominantZone = reflectionZones.find((z) => z.id === findDominantZone(zoneStats));
+  const greeting = getGreeting(new Date().getHours());
+  const milestone = streakData.hasCurrentStreak && streakData.currentStreak > 0 ? getMilestoneForStreak(streakData.currentStreak) : null;
 
   return (
-    <div className="container mx-auto py-10">
-      {/* Hero section - Editorial Style */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }} 
-        animate={{ opacity: 1, y: 0 }} 
-        transition={{ duration: 0.6, ease: "easeOut" }} 
-        className="mb-10 relative"
+    <div className="container mx-auto py-6 space-y-5">
+      {/* Hero - the one loud element on the page */}
+      <div
+        className="flex flex-wrap items-center justify-between gap-4 p-5 px-6 border-4 border-foreground bg-primary"
+        style={{ boxShadow: "6px 6px 0 0 hsl(var(--foreground))" }}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-amber-300/5 to-transparent rounded-2xl -z-10" />
-        <div className="p-8 md:p-10">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 flex-wrap">
-                <motion.h1 
-                  className="text-4xl md:text-5xl font-bold tracking-tight"
-                  initial={{ opacity: 0, x: -20 }} 
-                  animate={{ opacity: 1, x: 0 }} 
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-                >
-                  Daily Reflections
-                </motion.h1>
-                <StreakIcon streakData={streakData} variant={plantVariant} growthPoints={user?.growth_points ?? 0} />
-                {user && (
-                  <FertilizerInventoryButton
-                    userId={user._id}
-                    balance={user.fertilizer_balance ?? 0}
-                    eligibleProtectDate={streakData.eligibleProtectDate}
-                    onUsed={refreshPlant}
-                  />
-                )}
-                {user && (
-                  <PlantPalettePicker
-                    userId={user._id}
-                    selected={user.selected_palette}
-                    onSaved={refreshPlant}
-                  />
-                )}
-              </div>
-              <motion.p 
-                className="text-lg text-muted-foreground max-w-xl leading-relaxed"
-                initial={{ opacity: 0 }} 
-                animate={{ opacity: 1 }} 
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                {streakData.hasCurrentStreak && streakData.currentStreak > 0 ? (
-                  (() => {
-                    const milestone = getMilestoneForStreak(streakData.currentStreak);
-                    return milestone ? (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-primary font-semibold">{milestone.emoji} {milestone.message}</span>
-                        <span className="text-sm text-muted-foreground/70 italic">{getRandomStreakQuote()}</span>
-                      </div>
-                    ) : (
-                      <>
-                        You've been reflecting consistently for <span className="text-primary font-semibold">{streakData.currentStreak} day{streakData.currentStreak !== 1 ? "s" : ""}</span>. Keep the momentum going.
-                      </>
-                    );
-                  })()
-                ) : streakData.oldStreak > 0 ? (
-                  <ComfortZoneMessage type="comeback" />
-                ) : (
-                  "Track your learning journey and grow through daily reflection"
-                )}
-              </motion.p>
-
-              <LearnerGenmateGardenWidget />
-            </div>
-            <div className="flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              {hasSubmittedToday ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="relative"
-                >
-                  <div className="absolute -inset-1 rounded-full bg-amber-500/20" style={{ filter: 'blur(8px)' }} />
-                  <Button
-                    size="lg"
-                    className="relative shadow-lg font-medium px-6 py-6 text-base bg-amber-600/80 text-amber-100 cursor-default"
-                    disabled
-                  >
-                    <CheckCircle className="mr-2 h-5 w-5" />
-                    <span>Completed for Today</span>
-                  </Button>
-                </motion.div>
-              ) : (
-                <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
-                  <DialogTrigger asChild>
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="relative">
-                        <div
-                          className="absolute -inset-1 rounded-full"
-                          style={{
-                            background: 'linear-gradient(45deg, #d97706, #f59e0b, #fbbf24, #f59e0b, #d97706)',
-                            filter: 'blur(16px)',
-                            opacity: '0.5',
-                            animation: 'warmGlow 4s ease-in-out infinite',
-                          }}
-                        />
-                        <style>{`
-                          @keyframes warmGlow {
-                            0%, 100% { opacity: 0.4; transform: scale(1); }
-                            50% { opacity: 0.7; transform: scale(1.03); }
-                          }
-                        `}</style>
-                        <Button
-                          size="lg"
-                          className="relative shadow-lg font-medium px-6 py-6 text-base bg-amber-600 hover:bg-amber-700 text-white"
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting ? (
-                            <motion.div className="absolute inset-0 flex items-center justify-center bg-amber-700 rounded-md overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                              <motion.div className="h-5 w-5 rounded-full border-2 border-t-transparent border-white" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
-                            </motion.div>
-                          ) : (
-                            <>
-                              <Plus className="mr-2 h-5 w-5" />
-                              {(() => {
-                                const hour = new Date().getHours();
-                                if (hour >= 5 && hour < 12) {
-                                  return "Add Morning Reflection";
-                                } else if (hour >= 12 && hour < 17) {
-                                  return "Add Afternoon Reflection";
-                                } else if (hour >= 17 && hour < 21) {
-                                  return "Add Evening Reflection";
-                                } else {
-                                  return "Add Night Reflection";
-                                }
-                              })()}
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </motion.div>
-                  </DialogTrigger>
-                  <DialogContent className="w-screen h-screen md:w-full md:h-auto sm:max-w-[1000px] max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Add Daily Reflection</DialogTitle>
-                    </DialogHeader>
-                    <div className="overflow-y-auto">
-                      <FeedbackForm
-                        initialData={formData}
-                        onSubmit={handleSubmit}
-                        onChange={setFormData}
-                        onSuccess={() => {
-                          setFormData(undefined);
-                          setIsDialogOpen(false);
-                        }}
-                        isLoading={isSubmitting}
-                      />
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              )}
-              </div>
-            </div>
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="rounded-xl bg-card shadow-sm px-4 py-3">
+            <StreakIcon streakData={streakData} variant={plantVariant} growthPoints={user?.growth_points ?? 0} />
           </div>
-        </motion.div>
-
-      {/* Submission Status Card */}
-      <SubmissionStatusCard hasSubmitted={hasSubmittedToday} todaysReflection={todaysReflection} />
-
-      {/* Achievements Section - Editorial Header */}
-      {user && user.badges && user.badges.length > 0 && (
-        <div className="mt-12">
-          <h2 
-            className="text-2xl md:text-3xl font-bold mb-6"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-          >
-            Your Achievements
-          </h2>
-          <AchievementsSection badges={user.badges} />
+          <div>
+            <p className="text-xl font-medium text-primary-foreground" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+              {greeting}
+              {user?.first_name ? `, ${user.first_name}` : ""}
+            </p>
+            <div className="text-sm text-primary-foreground/85" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+              {milestone ? (
+                <span className="italic">{milestone.emoji} {milestone.message}</span>
+              ) : streakData.hasCurrentStreak && streakData.currentStreak > 0 ? (
+                <span className="italic">
+                  You've been reflecting consistently for {streakData.currentStreak} day{streakData.currentStreak !== 1 ? "s" : ""}. Keep the momentum going.
+                </span>
+              ) : streakData.oldStreak > 0 ? (
+                <ComfortZoneMessage type="comeback" />
+              ) : (
+                <span className="italic">Track your learning journey and grow through daily reflection</span>
+              )}
+            </div>
+            {milestone && <p className="text-xs text-primary-foreground/70 italic mt-0.5">{getRandomStreakQuote()}</p>}
+          </div>
+          {user && (
+            <FertilizerInventoryButton
+              userId={user._id}
+              balance={user.fertilizer_balance ?? 0}
+              eligibleProtectDate={streakData.eligibleProtectDate}
+              onUsed={refreshPlant}
+            />
+          )}
+          {user && <PlantPalettePicker userId={user._id} selected={user.selected_palette} onSaved={refreshPlant} />}
         </div>
-      )}
 
-      {/* Zone Journey - Editorial Insights */}
-      <div className="mt-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 
-            className="text-2xl md:text-3xl font-bold"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-          >
-            Your Zone Journey
-          </h2>
-          <Dialog>
+        {hasSubmittedToday ? (
+          <span className="inline-flex items-center gap-1.5 text-sm font-medium border-2 border-neutral-900 bg-neutral-900 text-neutral-50 px-4 py-2">
+            <CheckCircle className="h-4 w-4" />
+            Completed today
+          </span>
+        ) : (
+          <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <BookOpen className="h-4 w-4" />
-                Learn about zones
-              </Button>
+              <button
+                disabled={isSubmitting}
+                className="inline-flex items-center gap-1.5 text-sm font-medium border-2 border-neutral-900 bg-neutral-900 text-neutral-50 hover:opacity-90 disabled:opacity-70 px-4 py-2"
+              >
+                {isSubmitting ? (
+                  <motion.div className="h-4 w-4 rounded-full border-2 border-t-transparent border-neutral-50" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+                Add reflection
+              </button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+            <DialogContent className="w-screen h-screen md:w-full md:h-auto sm:max-w-[1000px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Understanding Learning Zones</DialogTitle>
+                <DialogTitle>Add Daily Reflection</DialogTitle>
               </DialogHeader>
-              <div className="space-y-6 p-6">
-                <img src="/baronzone.png" alt="Learning Barometer Zones" className="w-full rounded-lg shadow-md" />
-                <div className="grid gap-4">
-                  {reflectionZones.map((zone) => (
-                    <motion.div key={zone.id} whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300 }}>
-                      <Card className="overflow-hidden">
-                        <CardContent className={`p-4 flex items-center gap-4 ${zone.bgColor} bg-opacity-10`}>
-                          <div className="text-2xl">{zone.emoji}</div>
-                          <div>
-                            <h3 className="font-semibold">{zone.label}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {zone.id === "comfort" && "You're confident and can work independently"}
-                              {zone.id === "stretch-enjoying" && "You're challenged but growing and learning"}
-                              {zone.id === "stretch-overwhelmed" && "You're finding the challenges difficult"}
-                              {zone.id === "panic" && "You're feeling stuck and need support"}
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </div>
+              <div className="overflow-y-auto">
+                <FeedbackForm
+                  initialData={formData}
+                  onSubmit={handleSubmit}
+                  onChange={setFormData}
+                  onSuccess={() => {
+                    setFormData(undefined);
+                    setIsDialogOpen(false);
+                  }}
+                  isLoading={isSubmitting}
+                />
               </div>
             </DialogContent>
           </Dialog>
+        )}
+      </div>
+
+      <LearnerGenmateGardenWidget />
+
+      {user && user.badges && user.badges.length > 0 && <AchievementsSection badges={user.badges} />}
+
+      {/* Stat rail + reflection history */}
+      <div className="grid grid-cols-1 lg:grid-cols-[200px_minmax(0,1fr)] gap-6">
+        <div className="space-y-5">
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Growth points</p>
+            <p className="text-xl font-semibold mb-2">✨ {user?.growth_points ?? 0}</p>
+            <GrowthBar value={tierProgress.current} max={tierProgress.max} />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              {tierProgress.isMaxTier ? "Max tier 🌟" : `${tierProgress.current}/${tierProgress.max} days to next tier`}
+            </p>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs text-muted-foreground">Zone mix</p>
+              <button
+                type="button"
+                onClick={() => setZoneInfoOpen(true)}
+                className="text-muted-foreground hover:text-foreground"
+                aria-label="Learn about zones"
+              >
+                <BookOpen className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            {zoneStats.total > 0 ? (
+              <>
+                <div className="flex h-2 overflow-hidden mb-2">
+                  {reflectionZones.map((zone) => {
+                    const count = zoneCount(zoneStats, zone.id);
+                    const percentage = (count / zoneStats.total) * 100;
+                    if (percentage === 0) return null;
+                    return <div key={zone.id} className={zone.bgColor} style={{ width: `${percentage}%` }} title={`${zone.label}: ${count}`} />;
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground">Mostly {dominantZone?.label.split(" - ")[0].toLowerCase() || "—"}</p>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground">No reflections yet</p>
+            )}
+          </div>
+
+          {!streakData.hasCurrentStreak && streakData.oldStreak > 0 && (
+            <div>
+              <ComfortZoneMessage type="comeback" className="text-xs" />
+              {streakData.lastActiveDate && (
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Last active {streakData.lastActiveDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Progress Bar - Zone Distribution */}
-        {zoneStats.total > 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            className="mb-8"
-          >
-            <div className="flex h-4 rounded-full overflow-hidden">
-              {reflectionZones.map((zone) => {
-                const count = zone.id === "comfort" ? zoneStats.comfort : 
-                              zone.id === "stretch-enjoying" ? zoneStats.stretchEnjoying : 
-                              zone.id === "stretch-overwhelmed" ? zoneStats.stretchOverwhelmed : 
-                              zoneStats.panic;
-                const percentage = (count / zoneStats.total) * 100;
-                if (percentage === 0) return null;
-                return (
-                  <div
-                    key={zone.id}
-                    className={zone.bgColor}
-                    style={{ width: `${percentage}%` }}
-                    title={`${zone.label}: ${count} (${Math.round(percentage)}%)`}
-                  />
-                );
-              })}
-            </div>
-            <div className="flex flex-wrap gap-3 mt-3 justify-center">
-              {reflectionZones.map((zone) => {
-                const count = zone.id === "comfort" ? zoneStats.comfort : 
-                              zone.id === "stretch-enjoying" ? zoneStats.stretchEnjoying : 
-                              zone.id === "stretch-overwhelmed" ? zoneStats.stretchOverwhelmed : 
-                              zoneStats.panic;
-                const percentage = Math.round((count / zoneStats.total) * 100) || 0;
-                return (
-                  <div key={zone.id} className="flex items-center gap-1.5 text-sm">
-                    <span className={zone.bgColor + " w-3 h-3 rounded-full"} />
-                    <span className="text-muted-foreground">{zone.id === "comfort" ? "Comfort" : zone.id === "stretch-enjoying" ? "Stretch+" : zone.id === "stretch-overwhelmed" ? "Stretch-" : "Panic"}</span>
-                    <span className="font-medium">{percentage}%</span>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
+        <ReflectionsTable reflections={reflections} isAdmin={false} />
+      </div>
 
-        {/* Insight Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Dominant Zone Card */}
-          {(() => {
-            const dominantZone = reflectionZones.find(z => z.id === dominantZoneId);
-            const dominantCount = dominantZone?.id === "comfort" ? zoneStats.comfort : 
-                                  dominantZone?.id === "stretch-enjoying" ? zoneStats.stretchEnjoying : 
-                                  dominantZone?.id === "stretch-overwhelmed" ? zoneStats.stretchOverwhelmed : 
-                                  zoneStats.panic;
-            const dominantPercentage = Math.round((dominantCount / zoneStats.total) * 100) || 0;
-            
-            return (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                <Card className="h-full border-2 border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                      Most Common Zone
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex items-center gap-4 mb-4">
-                      <span className="text-5xl">{dominantZone?.emoji}</span>
-                      <div>
-                        <div className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-                          {dominantZone?.label.split(' - ')[0]}
-                        </div>
-                        <div className="text-amber-600 font-medium">{dominantPercentage}% of time</div>
-                      </div>
+      {/* Zone info dialog */}
+      <Dialog open={zoneInfoOpen} onOpenChange={setZoneInfoOpen}>
+        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Understanding Learning Zones</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 p-6">
+            <img src="/baronzone.png" alt="Learning Barometer Zones" className="w-full rounded-lg shadow-md" />
+            <div className="grid gap-4">
+              {reflectionZones.map((zone) => (
+                <Card key={zone.id} className="overflow-hidden">
+                  <CardContent className={`p-4 flex items-center gap-4 ${zone.bgColor} bg-opacity-10`}>
+                    <div className="text-2xl">{zone.emoji}</div>
+                    <div>
+                      <h3 className="font-semibold">{zone.label}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {zone.id === "comfort" && "You're confident and can work independently"}
+                        {zone.id === "stretch-enjoying" && "You're challenged but growing and learning"}
+                        {zone.id === "stretch-overwhelmed" && "You're finding the challenges difficult"}
+                        {zone.id === "panic" && "You're feeling stuck and need support"}
+                      </p>
                     </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <motion.div 
-                        className={`h-full ${dominantZone?.bgColor}`}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${dominantPercentage}%` }}
-                        transition={{ delay: 0.3, duration: 0.8 }}
-                      />
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-3">
-                      {dominantCount} out of {zoneStats.total} reflections
-                    </p>
                   </CardContent>
                 </Card>
-              </motion.div>
-            );
-          })()}
-
-          {/* Today's Zone Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card className="h-full border-2 border-amber-500/40 bg-amber-500/5">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-amber-700 uppercase tracking-wider flex items-center gap-2" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                  <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-                  Today's Zone
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                {currentZone ? (
-                  <>
-                    <div className="flex items-center gap-4 mb-4">
-                      <span className="text-5xl">{currentZone.emoji}</span>
-                      <div>
-                        <div className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-                          {currentZone.label.split(' - ')[0]}
-                        </div>
-                        <div className="text-amber-600 text-sm">
-                          {currentZone.id === "comfort" && "You're feeling confident"}
-                          {currentZone.id === "stretch-enjoying" && "You're growing & learning"}
-                          {currentZone.id === "stretch-overwhelmed" && "It's getting challenging"}
-                          {currentZone.id === "panic" && "You need support"}
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex items-center gap-4">
-                    <span className="text-4xl">❓</span>
-                    <div>
-                      <div className="text-lg font-medium">No reflection yet</div>
-                      <p className="text-sm text-muted-foreground">Add your reflection to see your zone</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Quick Stats Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card className="h-full">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                  Quick Stats
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Total Reflections</span>
-                  <span className="font-bold text-lg">{zoneStats.total}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Current Streak</span>
-                  <span className="font-bold text-lg flex items-center gap-1">
-                    <span className="text-amber-500">🔥</span>
-                    {streakData.currentStreak}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Days in Comfort</span>
-                  <span className="font-bold text-lg text-green-600">{zoneStats.comfort}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Days Need Support</span>
-                  <span className="font-bold text-lg text-purple-600">{zoneStats.panic}</span>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Today's Reflection - Editorial Card */}
-      {todaysReflection && (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ duration: 0.5 }} 
-          className="mb-16"
-        >
-          <Card className="overflow-hidden border-2 border-amber-500/20 bg-gradient-to-br from-card to-amber-500/5 mt-4">
-            <CardHeader className="pb-2">
-              <CardTitle 
-                className="flex items-center gap-3 text-xl"
-                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-              >
-                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/20 text-amber-600">
-                  ✦
-                </span>
-                Today's Reflection
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                <div className="space-y-4">
-                  <motion.p 
-                    className="text-xl font-medium flex items-center gap-3" 
-                    initial={{ opacity: 0, x: -10 }} 
-                    animate={{ opacity: 1, x: 0 }} 
-                    transition={{ duration: 0.3, delay: 0.2 }}
-                  >
-                    <span className="text-3xl">{currentZone?.emoji}</span>
-                    <span>You're in the <span className="text-primary font-semibold">{currentZone?.label}</span> zone</span>
-                  </motion.p>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <GrowthBar value={tierProgress.current} max={tierProgress.max} />
-                      <div className="flex items-center gap-1">
-                        <span className="tabular-nums font-medium">{streakData.currentStreak} day streak</span>
-                        <span className="text-xs text-muted-foreground tabular-nums">
-                          {tierProgress.isMaxTier ? "· max tier 🌟" : `· ${tierProgress.current}/${tierProgress.max} to next tier`}
-                        </span>
-                      </div>
-                    </div>
-                    {user && (user.growth_points ?? 0) > 0 && (
-                      <div className="flex items-center gap-3">
-                        <GrowthBar
-                          variant="growth"
-                          value={(user.growth_points ?? 0) % 50 || 50}
-                          max={50}
-                        />
-                        <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
-                          ✨ {user.growth_points} growth points
-                        </span>
-                      </div>
-                    )}
-                    {streakData.currentStreak >= 5 && (
-                      <motion.div 
-                        initial={{ opacity: 0, height: 0 }} 
-                        animate={{ opacity: 1, height: "auto" }} 
-                        transition={{ duration: 0.3 }} 
-                        className="text-sm text-amber-700 font-medium dark:text-amber-400"
-                      >
-                        {getRandomComfortMessage("gentle")}
-                      </motion.div>
-                    )}
-                  </div>
-                </div>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full md:w-auto">
-                  <ReflectionPreview reflection={todaysReflection} />
-                </motion.div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
-      {/* Streak History Card */}
-      {!streakData.hasCurrentStreak && streakData.oldStreak > 0 && (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ duration: 0.5, delay: 0.2 }} 
-          className="mb-10"
-        >
-          <Card className="overflow-hidden border border-border/50">
-            <CardHeader className="pb-4">
-              <CardTitle 
-                className="text-xl flex items-center gap-2"
-                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-              >
-                <span className="text-muted-foreground">Previous Streak</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="space-y-2">
-                  <p className="text-lg font-medium">
-                    <ComfortZoneMessage type="comeback" />
-                  </p>
-                  {streakData.lastActiveDate && (
-                    <p className="text-sm text-muted-foreground">
-                      Last active: {streakData.lastActiveDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                    </p>
-                  )}
-                  <div className="mt-4">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => !hasSubmittedToday && setIsDialogOpen(true)} 
-                      disabled={hasSubmittedToday} 
-                      className="border-amber-500/30 hover:bg-amber-500/10"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      {hasSubmittedToday ? "Added for Today" : "Start New Streak"}
-                    </Button>
-                  </div>
-                </div>
-                <div className="w-full md:w-1/3">
-                  <div className="relative h-3 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-amber-500 to-amber-400"
-                      style={{ width: `${oldTierProgress.isMaxTier ? 100 : (oldTierProgress.current / oldTierProgress.max) * 100}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                    <span>0</span>
-                    <span>{Math.round(oldTierProgress.max / 2)}</span>
-                    <span>{oldTierProgress.max} days</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
-      {/* Reflections Table - Editorial Header */}
-      <div className="mt-12">
-        <h2 
-          className="text-2xl md:text-3xl font-bold mb-6"
-          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-        >
-          Your Reflection History
-        </h2>
-        <ReflectionsTable reflections={reflections} todaysReflection={todaysReflection} isAdmin={false} />
-      </div>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Warning Dialog */}
       <AlertDialog open={showCloseWarning} onOpenChange={setShowCloseWarning}>
