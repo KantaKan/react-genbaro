@@ -37,6 +37,8 @@ import type { Reflection } from "@/hooks/use-reflections";
 import type { ProfileReaction } from "@/domain/types";
 import { addPlantReaction } from "@/application/services/userService";
 import { useAuth } from "@/AuthContext";
+import { useUserData } from "@/UserDataContext";
+import { fertilizerService } from "@/application/services/fertilizerService";
 import { SeedlingPlant } from "@/components/streak-components";
 import { getUserAvatarUrl, getAvatarFallback } from "@/lib/avatar";
 import { formatDate } from "@/lib/utils";
@@ -263,6 +265,25 @@ export function PlantTile({ member }: { member: GardenMember }) {
     }
   );
 
+  const { userData, refetchUserData } = useUserData();
+  const myBalance = userData?.fertilizer_balance ?? 0;
+  const isSelf = user._id === currentUserId;
+
+  const giftMutation = useMutation(() => fertilizerService.gift(user._id, 1), {
+    onSuccess: () => {
+      queryClient.invalidateQueries(["learnerGenmateGarden"]);
+      queryClient.invalidateQueries(["adminGenmateGarden"]);
+      void refetchUserData();
+      toast.success(`Sent fertilizer to ${user.first_name ?? "your genmate"} 🌱`);
+    },
+    onError: (error: unknown) => {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        "Couldn't send fertilizer. Please try again.";
+      toast.error(message);
+    },
+  });
+
   const handleCheer = (event: MouseEvent, reaction: string) => {
     event.preventDefault();
     cheerMutation.mutate({ type: "emoji", value: reaction });
@@ -414,6 +435,22 @@ export function PlantTile({ member }: { member: GardenMember }) {
                 )}
               </div>
             </div>
+            {!isSelf && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full rounded-full"
+                disabled={giftMutation.isLoading || myBalance < 1}
+                onClick={() => giftMutation.mutate()}
+              >
+                🧪 Fertilize · 1 → +10 🌱
+              </Button>
+            )}
+            {!isSelf && myBalance < 1 && (
+              <p className="text-center text-xs text-muted-foreground">
+                You have no fertilizer left.
+              </p>
+            )}
           </div>
         </div>
       </PopoverContent>

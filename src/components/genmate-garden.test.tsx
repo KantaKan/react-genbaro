@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { GenmateGarden } from "./genmate-garden";
@@ -12,6 +12,22 @@ vi.mock("@/lib/api", () => ({
 vi.mock("@/AuthContext", () => ({
   useAuth: () => ({ userId: "current-user" }),
 }));
+
+const refetchUserData = vi.fn();
+let mockBalance = 3;
+vi.mock("@/UserDataContext", () => ({
+  useUserData: () => ({
+    userData: { fertilizer_balance: mockBalance },
+    refetchUserData,
+  }),
+}));
+
+vi.mock("@/application/services/fertilizerService", () => ({
+  fertilizerService: { gift: vi.fn().mockResolvedValue(undefined) },
+}));
+
+import { fertilizerService } from "@/application/services/fertilizerService";
+const mockedGift = vi.mocked(fertilizerService.gift);
 
 import { api } from "@/lib/api";
 const mockedGet = vi.mocked(api.get);
@@ -88,6 +104,8 @@ function renderGarden() {
 describe("GenmateGarden", () => {
   beforeEach(() => {
     mockedGet.mockReset();
+    mockedGift.mockClear();
+    mockBalance = 3;
   });
 
   afterEach(() => {
@@ -160,5 +178,39 @@ describe("GenmateGarden", () => {
     expect(await screen.findByText("Alice Smith")).toBeInTheDocument();
     expect(screen.getByText("Reflections")).toBeInTheDocument();
     expect(screen.getByText("Next milestone")).toBeInTheDocument();
+  });
+
+  it("gifts one fertilizer to a genmate and hides the button on your own tile", async () => {
+    const { alice, bob, carol } = makeUsers();
+    const me = { ...bob, _id: "current-user", first_name: "Me", last_name: "Myself" };
+    mockedGet.mockResolvedValue({
+      data: { data: { users: [alice, bob, carol, me] } },
+    } as never);
+
+    renderGarden();
+
+    fireEvent.click(await screen.findByRole("button", { name: /Alice/ }));
+    const fertilize = await screen.findByRole("button", { name: /Fertilize/ });
+    fireEvent.click(fertilize);
+    await waitFor(() => expect(mockedGift).toHaveBeenCalledWith("user-1", 1));
+
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    fireEvent.click(await screen.findByRole("button", { name: /Me/ }));
+    expect(await screen.findByText("Me Myself")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Fertilize/ })).toBeNull();
+  });
+
+  it("disables the fertilize button when you have no fertilizer", async () => {
+    mockBalance = 0;
+    const { alice, bob, carol } = makeUsers();
+    mockedGet.mockResolvedValue({
+      data: { data: { users: [alice, bob, carol] } },
+    } as never);
+
+    renderGarden();
+
+    fireEvent.click(await screen.findByRole("button", { name: /Alice/ }));
+    expect(await screen.findByRole("button", { name: /Fertilize/ })).toBeDisabled();
+    expect(screen.getByText("You have no fertilizer left.")).toBeInTheDocument();
   });
 });
