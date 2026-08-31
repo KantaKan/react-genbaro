@@ -1,6 +1,6 @@
 export interface FertilizerLogEntry {
   _id?: string;
-  kind: "grant" | "protect" | "feed" | "gift" | "gifted";
+  kind: "grant" | "protect" | "feed" | "gift" | "gifted" | "rescue";
   amount: number;
   relatedDate?: string;
   note?: string;

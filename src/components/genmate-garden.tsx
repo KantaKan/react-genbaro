@@ -284,6 +284,28 @@ export function PlantTile({ member }: { member: GardenMember }) {
     },
   });
 
+  const rescueDate = streakData.eligibleProtectDate;
+
+  const rescueMutation = useMutation(
+    () => fertilizerService.rescue(user._id, rescueDate as string),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["learnerGenmateGarden"]);
+        queryClient.invalidateQueries(["adminGenmateGarden"]);
+        void refetchUserData();
+        toast.success(
+          `Rescued ${rescueDate} for ${user.first_name ?? "your genmate"} — their streak is safe!`
+        );
+      },
+      onError: (error: unknown) => {
+        const message =
+          (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+          "Couldn't rescue that day. Please try again.";
+        toast.error(message);
+      },
+    }
+  );
+
   const handleCheer = (event: MouseEvent, reaction: string) => {
     event.preventDefault();
     cheerMutation.mutate({ type: "emoji", value: reaction });
@@ -444,6 +466,19 @@ export function PlantTile({ member }: { member: GardenMember }) {
                 onClick={() => giftMutation.mutate()}
               >
                 🧪 Fertilize · 1 → +10 🌱
+              </Button>
+            )}
+            {!isSelf && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full rounded-full"
+                disabled={rescueMutation.isLoading || myBalance < 1 || !rescueDate}
+                onClick={() => rescueMutation.mutate()}
+              >
+                {rescueDate
+                  ? `🛡️ Rescue ${rescueDate} · costs you 1`
+                  : "🛡️ No missed day to rescue"}
               </Button>
             )}
             {!isSelf && myBalance < 1 && (
