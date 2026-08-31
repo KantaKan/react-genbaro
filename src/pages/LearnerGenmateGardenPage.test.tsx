@@ -14,6 +14,17 @@ vi.mock("@/AuthContext", () => ({
   useAuth: () => ({ userId: "current-user" }),
 }));
 
+vi.mock("@/UserDataContext", () => ({
+  useUserData: () => ({
+    userData: { fertilizer_balance: 3 },
+    refetchUserData: vi.fn(),
+  }),
+}));
+
+vi.mock("@/application/services/fertilizerService", () => ({
+  fertilizerService: { gift: vi.fn().mockResolvedValue(undefined) },
+}));
+
 import { getMyGenmateGarden } from "@/lib/api";
 const mockedGetGarden = vi.mocked(getMyGenmateGarden);
 
