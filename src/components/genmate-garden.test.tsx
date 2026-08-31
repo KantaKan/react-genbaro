@@ -23,11 +23,28 @@ vi.mock("@/UserDataContext", () => ({
 }));
 
 vi.mock("@/application/services/fertilizerService", () => ({
-  fertilizerService: { gift: vi.fn().mockResolvedValue(undefined) },
+  fertilizerService: {
+    gift: vi.fn().mockResolvedValue(undefined),
+    rescue: vi.fn().mockResolvedValue(undefined),
+  },
 }));
 
 import { fertilizerService } from "@/application/services/fertilizerService";
+import { isValidWorkday } from "@/utils/date-utils";
 const mockedGift = vi.mocked(fertilizerService.gift);
+const mockedRescue = vi.mocked(fertilizerService.rescue);
+
+// Walk back from today collecting `count` workdays (skipping weekends), oldest first.
+function lastNWorkdays(count: number): Date[] {
+  const days: Date[] = [];
+  const cursor = new Date();
+  cursor.setHours(0, 0, 0, 0);
+  while (days.length < count) {
+    if (isValidWorkday(cursor)) days.unshift(new Date(cursor));
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return days;
+}
 
 import { api } from "@/lib/api";
 const mockedGet = vi.mocked(api.get);
@@ -105,6 +122,7 @@ describe("GenmateGarden", () => {
   beforeEach(() => {
     mockedGet.mockReset();
     mockedGift.mockClear();
+    mockedRescue.mockClear();
     mockBalance = 3;
   });
 
@@ -198,6 +216,48 @@ describe("GenmateGarden", () => {
     fireEvent.click(await screen.findByRole("button", { name: /Me/ }));
     expect(await screen.findByText("Me Myself")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Fertilize/ })).toBeNull();
+  });
+
+  it("rescues a genmate's missed workday", async () => {
+    const workdays = lastNWorkdays(5);
+    const gapDay = workdays[3];
+    const gappy = {
+      _id: "user-gap",
+      first_name: "Gap",
+      last_name: "Person",
+      cohort_number: 12,
+      genmate_group: "Garden Alpha",
+      reflections: workdays
+        .filter((d) => d.getTime() !== gapDay.getTime())
+        .map((d) => makeReflection(localDayString(d))),
+    };
+    const { bob } = makeUsers();
+    mockedGet.mockResolvedValue({
+      data: { data: { users: [gappy, bob] } },
+    } as never);
+
+    renderGarden();
+
+    fireEvent.click(await screen.findByRole("button", { name: /Gap/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Rescue/ }));
+    await waitFor(() =>
+      expect(mockedRescue).toHaveBeenCalledWith("user-gap", localDayString(gapDay))
+    );
+  });
+
+  it("offers no rescue when the genmate has no missed day", async () => {
+    const { alice, bob, carol } = makeUsers();
+    mockedGet.mockResolvedValue({
+      data: { data: { users: [alice, bob, carol] } },
+    } as never);
+
+    renderGarden();
+
+    // Bob has never reflected, so there is no gap day to protect.
+    fireEvent.click(await screen.findByRole("button", { name: /Bob/ }));
+    expect(
+      await screen.findByRole("button", { name: /No missed day to rescue/ })
+    ).toBeDisabled();
   });
 
   it("disables the fertilize button when you have no fertilizer", async () => {

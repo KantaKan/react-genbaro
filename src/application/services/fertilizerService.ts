@@ -21,6 +21,10 @@ export const fertilizerService = {
   async gift(userId: string, quantity = 1): Promise<void> {
     await api.post<FertilizerActionResponse>(`/users/${userId}/fertilizer/gift`, { quantity });
   },
+
+  async rescue(userId: string, date: string): Promise<void> {
+    await api.post<FertilizerActionResponse>(`/users/${userId}/fertilizer/rescue`, { date });
+  },
 };
 
 export default fertilizerService;
