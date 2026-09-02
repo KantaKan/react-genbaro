@@ -15,6 +15,7 @@ import {
   Bell,
   Sprout,
   Stamp,
+  History,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -99,6 +100,11 @@ const navigationConfig: Record<UserRole, NavItem[]> = {
           title: "Notifications",
           url: "/admin/notifications",
           icon: Bell,
+        },
+        {
+          title: "History",
+          url: "/admin/history",
+          icon: History,
         },
         {
           title: "Tools",
