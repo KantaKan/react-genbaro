@@ -42,6 +42,7 @@ import { StudentAttendance } from "./components/student-attendance";
 import { LeaveRequestsTable } from "./components/leave-requests-table";
 import { StudentAttendanceDetail } from "./pages/student-attendance-detail";
 import { AdminNotificationManager } from "./components/admin-notification-manager";
+import AdminHistoryPage from "./pages/admin-history-page";
 
 function AppContent() {
   const { isAuthenticated, error } = useAuth();
@@ -117,6 +118,7 @@ function AppContent() {
             <Route path="attendance/student/:id" element={<StudentAttendanceDetail />} />
             <Route path="leave-requests" element={<LeaveRequestsTable />} />
             <Route path="notifications" element={<AdminNotificationManager />} />
+            <Route path="history" element={<AdminHistoryPage />} />
           </Route>
 
           <Route path="/learner" element={<LearnerLayout />}>

@@ -30,6 +30,7 @@ export default function Page({ children }: { children: React.ReactNode }) {
           'table': 'All Reflections',
           'users': 'User Management',
           'weekly-summary': 'Weekly Summary',
+          'history': 'History',
         };
         
         const pageName = pageNames[pathSegments[1]] || pathSegments[1];

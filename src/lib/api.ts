@@ -11,6 +11,7 @@ export {
   fertilizerService,
   boardService,
   stampService,
+  historyService,
 } from "../application/services";
 
 export { awardBadge } from "../application/services/badgeService";
