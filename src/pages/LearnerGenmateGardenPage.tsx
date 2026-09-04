@@ -1,12 +1,25 @@
-import React, { useMemo } from "react";
+import React, { Suspense, useMemo, useState } from "react";
 import { useQuery } from "react-query";
-import { Sprout } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Sprout, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SkeletonWarm } from "@/components/loading-skeleton";
 import { getMyGenmateGarden } from "@/lib/api";
-import { mapGenmateMembers } from "@/lib/genmate-garden";
+import { mapGenmateMembers, toFarmMembers } from "@/lib/genmate-garden";
 import { PlantTile } from "@/components/genmate-garden";
+import { useWebglSupported } from "@/hooks/use-webgl-support";
+
+// three.js only loads once a learner actually flips to Farm — per the map's
+// standing fact, not bundled into the default garden page weight.
+const GenmateField = React.lazy(() =>
+  import("@/components/farm/GenmateField").then((mod) => ({ default: mod.GenmateField }))
+);
+
+type ViewMode = "grid" | "farm";
 
 const LearnerGenmateGardenPage: React.FC = () => {
   const { data, isLoading, isError, refetch } = useQuery(
@@ -15,22 +28,64 @@ const LearnerGenmateGardenPage: React.FC = () => {
   );
 
   const members = useMemo(() => mapGenmateMembers(data ?? []), [data]);
+  const farmMembers = useMemo(() => toFarmMembers(members), [members]);
+  const webglSupported = useWebglSupported();
+  // The grid stays the default view — ticket 02's placement decision.
+  const [view, setView] = useState<ViewMode>("grid");
 
   const averageStreak =
     members.length > 0
       ? members.reduce((sum, m) => sum + m.displayStreak, 0) / members.length
       : 0;
 
+  const handleFarmContextLost = () => {
+    setView("grid");
+    toast.error("3D view lost — showing the grid instead");
+  };
+
   return (
     <div className="container mx-auto py-10 space-y-6">
-      <div className="flex items-center gap-3">
-        <Sprout className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
-        <h1 className="text-3xl font-bold">Genmate Garden</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Sprout className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+          <h1 className="text-3xl font-bold">Genmate Garden</h1>
+        </div>
+        {!isLoading && !isError && members.length > 0 && (
+          <Tabs value={view} onValueChange={(v) => setView(v as ViewMode)}>
+            <TabsList>
+              <TabsTrigger value="grid">Grid</TabsTrigger>
+              {webglSupported ? (
+                <TabsTrigger value="farm">Farm</TabsTrigger>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <TabsTrigger value="farm" disabled>
+                          Farm
+                        </TabsTrigger>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>3D view isn't supported on this device</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </TabsList>
+          </Tabs>
+        )}
       </div>
 
-      <p className="text-muted-foreground max-w-2xl">
-        Your genmate group, grown through reflection streaks. Cheer your genmates on as their plants grow! 🔥
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-muted-foreground max-w-2xl">
+          Your genmate group, grown through reflection streaks. Cheer your genmates on as their plants grow! 🔥
+        </p>
+        <Button asChild variant="ghost" size="sm" className="gap-1">
+          <Link to="/learner/cohort-garden">
+            See your whole cohort
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Button>
+      </div>
 
       {isLoading && (
         <Card className="w-full">
@@ -107,11 +162,19 @@ const LearnerGenmateGardenPage: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {members.map((member) => (
-                  <PlantTile key={member.user._id} member={member} />
-                ))}
-              </div>
+              {view === "grid" ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {members.map((member) => (
+                    <PlantTile key={member.user._id} member={member} />
+                  ))}
+                </div>
+              ) : (
+                <Suspense
+                  fallback={<SkeletonWarm className="aspect-[4/3] w-full rounded-xl" />}
+                >
+                  <GenmateField members={farmMembers} onContextLost={handleFarmContextLost} />
+                </Suspense>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -73,6 +73,11 @@ const navigationConfig: Record<UserRole, NavItem[]> = {
           icon: Sprout,
         },
         {
+          title: "Cohort Field",
+          url: "/admin/cohort-farm",
+          icon: Sprout,
+        },
+        {
           title: "Learner Directory",
           url: "/learner/directory",
           icon: Users,

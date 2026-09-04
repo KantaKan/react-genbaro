@@ -6,6 +6,8 @@ import type {
   UserData,
   GenmateGardenMember,
   GenmateGardenResponse,
+  CohortGardenGroup,
+  CohortGardenResponse,
   SocialLinks,
 } from "../../domain/types";
 
@@ -18,6 +20,11 @@ export const userService = {
   async getMyGenmateGarden(): Promise<GenmateGardenMember[]> {
     const response = await api.get<GenmateGardenResponse>("/users/genmate-garden");
     return response.data.data.users;
+  },
+
+  async getCohortGarden(cohortNumber: number): Promise<CohortGardenGroup[]> {
+    const response = await api.get<CohortGardenResponse>(`/cohorts/${cohortNumber}/garden`);
+    return response.data.data.groups;
   },
 
   async getAllUsers(): Promise<User[]> {
@@ -69,6 +76,7 @@ export const userService = {
 export const getAllUsers = userService.getAllUsers;
 export const getCohort = userService.getUsersByCohort;
 export const getMyGenmateGarden = userService.getMyGenmateGarden;
+export const getCohortGarden = userService.getCohortGarden;
 export const addProfileComment = userService.addProfileComment;
 export const addProfileReaction = userService.addProfileReaction;
 export const addPlantReaction = userService.addPlantReaction;

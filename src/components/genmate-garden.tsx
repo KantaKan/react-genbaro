@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type MouseEvent } from "react";
+import React, { Suspense, useMemo, useState, type MouseEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Sprout } from "lucide-react";
 import { toast } from "sonner";
@@ -17,10 +17,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SkeletonWarm } from "@/components/loading-skeleton";
 import { BoardReactionPicker } from "@/components/board-reaction-picker";
 import { BoardReactionSummary } from "@/components/board-reaction-summary";
 import { api } from "@/lib/api";
+import { toFarmMembers } from "@/lib/genmate-garden";
+import { useWebglSupported } from "@/hooks/use-webgl-support";
 import { getPlantVariant } from "@/lib/plant-variants";
 import {
   getPlantTier,
@@ -85,7 +89,17 @@ interface GenmateGardenProps {
   cohort?: string;
 }
 
+// three.js only loads once an admin flips to Farm — same lazy boundary as
+// the learner-facing garden pages.
+const GenmateField = React.lazy(() =>
+  import("@/components/farm/GenmateField").then((mod) => ({ default: mod.GenmateField }))
+);
+
+type ViewMode = "grid" | "farm";
+
 export function GenmateGarden({ cohort }: GenmateGardenProps) {
+  const [view, setView] = useState<ViewMode>("grid");
+  const webglSupported = useWebglSupported();
   const { data, isLoading, isError, refetch } = useQuery<AdminUsersResponse>(
     ["adminGenmateGarden", cohort],
     () =>
@@ -210,11 +224,39 @@ export function GenmateGarden({ cohort }: GenmateGardenProps) {
     );
   }
 
+  const handleFarmContextLost = () => {
+    setView("grid");
+    toast.error("3D view lost — showing the grid instead");
+  };
+
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-sm text-muted-foreground">
-        {cohort ? `Cohort ${cohort}` : "All cohorts"} · {groupedLearnerCount} learners across {groups.length} genmate group{groups.length === 1 ? "" : "s"}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          {cohort ? `Cohort ${cohort}` : "All cohorts"} · {groupedLearnerCount} learners across {groups.length} genmate group{groups.length === 1 ? "" : "s"}
+        </p>
+        <Tabs value={view} onValueChange={(v) => setView(v as ViewMode)}>
+          <TabsList>
+            <TabsTrigger value="grid">Grid</TabsTrigger>
+            {webglSupported ? (
+              <TabsTrigger value="farm">Farm</TabsTrigger>
+            ) : (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <TabsTrigger value="farm" disabled>
+                        Farm
+                      </TabsTrigger>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>3D view isn't supported on this device</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </TabsList>
+        </Tabs>
+      </div>
 
       {groups.map((group) => (
         <Card key={group.name} className="w-full">
@@ -227,11 +269,20 @@ export function GenmateGarden({ cohort }: GenmateGardenProps) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {group.members.map((member) => (
-                <PlantTile key={member.user._id} member={member} />
-              ))}
-            </div>
+            {view === "grid" ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {group.members.map((member) => (
+                  <PlantTile key={member.user._id} member={member} />
+                ))}
+              </div>
+            ) : (
+              <Suspense fallback={<SkeletonWarm className="aspect-[4/3] w-full rounded-xl" />}>
+                <GenmateField
+                  members={toFarmMembers(group.members)}
+                  onContextLost={handleFarmContextLost}
+                />
+              </Suspense>
+            )}
           </CardContent>
         </Card>
       ))}
