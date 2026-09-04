@@ -2,8 +2,8 @@ import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { AdditiveBlending, BackSide, BufferAttribute, Color, Group, SphereGeometry, Vector3 } from "three";
 
-const TOP_COLOR = "#7ab8dd";
-const HORIZON_COLOR = "#e8d9ae";
+const TOP_COLOR = "#3d8fd6";
+const HORIZON_COLOR = "#bfe2f5";
 const SUN_COLOR = "#ffe9a3";
 const CLOUD_COLOR = "#fdfaf3";
 const CLOUD_COUNT = 6;
@@ -44,7 +44,12 @@ export function SkyDome({ radius, sunDirection }: SkyDomeProps) {
     const horizon = new Color(HORIZON_COLOR);
     const tmp = new Color();
     for (let i = 0; i < pos.count; i++) {
-      const t = Math.max(0, Math.min(1, pos.getY(i) / radius + 0.15));
+      // Camera pitch is fairly low (~30°), so most of the dome actually in
+      // frame sits near the horizon band — biasing the blend to reach full
+      // top-blue well before the pole (`* 1.6`, was `+ 0.15`) keeps that
+      // visible portion a real sky blue instead of mostly the pale
+      // near-horizon tint.
+      const t = Math.max(0, Math.min(1, (pos.getY(i) / radius) * 1.6 + 0.2));
       tmp.copy(horizon).lerp(top, t);
       colors[i * 3] = tmp.r;
       colors[i * 3 + 1] = tmp.g;
