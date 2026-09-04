@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
+import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import LearnerGenmateGardenPage from "./LearnerGenmateGardenPage";
 import { calculateStreakData } from "@/hooks/use-streak-calculation";
@@ -79,9 +80,11 @@ function renderPage() {
     defaultOptions: { queries: { retry: false } },
   });
   return render(
-    <QueryClientProvider client={queryClient}>
-      <LearnerGenmateGardenPage />
-    </QueryClientProvider>
+    <MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <LearnerGenmateGardenPage />
+      </QueryClientProvider>
+    </MemoryRouter>
   );
 }
 

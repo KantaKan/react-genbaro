@@ -107,6 +107,19 @@ export interface GenmateGardenResponse {
   };
 }
 
+export interface CohortGardenGroup {
+  group_name: string;
+  members: GenmateGardenMember[];
+}
+
+export interface CohortGardenResponse {
+  status: string;
+  message: string;
+  data: {
+    groups: CohortGardenGroup[];
+  };
+}
+
 export interface JWTPayload {
   user_id: string;
   cohort?: number;

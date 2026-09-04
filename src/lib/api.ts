@@ -27,7 +27,7 @@ export {
   deletePost,
   deleteComment,
 } from "../application/services/boardService";
-export { getAllUsers, getCohort, deleteUserById, getMyGenmateGarden } from "../application/services/userService";
+export { getAllUsers, getCohort, deleteUserById, getMyGenmateGarden, getCohortGarden } from "../application/services/userService";
 export { getWeeklyReflections, createReflection, getBarometerData } from "../application/services/reflectionService";
 export {
   listCohorts,

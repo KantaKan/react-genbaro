@@ -2,6 +2,7 @@ import { calculateStreakData, getDisplayStreak } from "@/hooks/use-streak-calcul
 import type { Reflection } from "@/hooks/use-reflections";
 import type { GenmateGardenMember } from "@/domain/types";
 import type { GardenMember } from "@/components/genmate-garden";
+import type { GenmateFieldMember } from "@/components/farm/GenmateField";
 import { getPlantVariant } from "@/lib/plant-variants";
 import { getPlantTier, getEffectivePlantDays } from "@/lib/streak-milestones";
 
@@ -37,4 +38,18 @@ export function mapGenmateMembers(members: GenmateGardenMember[]): GardenMember[
       growthPoints: m.growth_points ?? 0,
     };
   });
+}
+
+/** Adapts the 2D grid's `GardenMember`s into the 3D farm's member shape —
+ * same underlying data (`mapGenmateMembers`), no separate fetch or model. */
+export function toFarmMembers(members: GardenMember[]): GenmateFieldMember[] {
+  return members.map((m) => ({
+    id: m.user._id,
+    name: `${m.user.first_name ?? ""} ${m.user.last_name ?? ""}`.trim() || "Unknown learner",
+    species: m.variant.species,
+    tier: m.tier,
+    palette: m.variant.palette,
+    active: m.streakData.hasCurrentStreak,
+    displayStreakDays: m.displayStreak,
+  }));
 }
