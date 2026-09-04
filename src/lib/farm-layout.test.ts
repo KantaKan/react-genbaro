@@ -50,15 +50,37 @@ describe("tilePositionsForCount — ticket 10's verified fill order", () => {
   });
 });
 
-describe("gridDimensionsForCount — cohort field scaling", () => {
-  it("stays the tuned 3×3 for a genmate-group-sized count", () => {
-    expect(gridDimensionsForCount(5)).toEqual({ cols: GRID_COLS, rows: GRID_ROWS });
+describe("gridDimensionsForCount — sizes the field to the actual headcount", () => {
+  it("shrinks below 3×3 for a small group instead of leaving it in a mostly-empty field", () => {
+    expect(gridDimensionsForCount(1)).toEqual({ cols: 1, rows: 1 });
+    expect(gridDimensionsForCount(2)).toEqual({ cols: 2, rows: 1 });
+    expect(gridDimensionsForCount(3)).toEqual({ cols: 2, rows: 2 });
+    expect(gridDimensionsForCount(4)).toEqual({ cols: 2, rows: 2 });
+    expect(gridDimensionsForCount(5)).toEqual({ cols: 3, rows: 2 });
+    expect(gridDimensionsForCount(6)).toEqual({ cols: 3, rows: 2 });
+  });
+
+  it("only arrives at the tuned 3×3 once a group is actually large enough to need it", () => {
+    expect(gridDimensionsForCount(7)).toEqual({ cols: GRID_COLS, rows: GRID_ROWS });
+    expect(gridDimensionsForCount(8)).toEqual({ cols: GRID_COLS, rows: GRID_ROWS });
     expect(gridDimensionsForCount(9)).toEqual({ cols: GRID_COLS, rows: GRID_ROWS });
   });
 
   it("grows to fit a whole cohort instead of staying capped at 9", () => {
     const { cols, rows } = gridDimensionsForCount(30);
     expect(cols * rows).toBeGreaterThanOrEqual(30);
+  });
+});
+
+describe("tilePositionsForCount — small groups get compact fill, not the corners-first spread", () => {
+  it("does not scatter a 4-person group to corners once the grid is sized to fit them", () => {
+    const { cols, rows } = gridDimensionsForCount(4);
+    const positions = tilePositionsForCount(4, cols, rows);
+    const oldCornersFirst = [
+      { col: 0, row: 0 }, { col: 2, row: 0 }, { col: 0, row: 2 }, { col: 2, row: 2 },
+    ];
+    expect(positions).not.toEqual(oldCornersFirst);
+    expect(positions.length).toBe(4);
   });
 });
 
