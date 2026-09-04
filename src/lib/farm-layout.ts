@@ -58,16 +58,20 @@ const FILL_ORDER: TilePosition[] = [
 ];
 
 /**
- * The 3×3 field is sized for a genmate group, not a whole cohort — a cohort
- * field (COHORT_FARM_SPEC.md's "one big field" option) needs the grid to
- * actually grow with headcount instead of silently dropping anyone past the
- * 9th tile. Defaults preserve the exact tuned 3×3 behavior for every
- * existing caller (single genmate group, ≤9 members).
+ * Sizes the field to the actual headcount, always — a 2-person group gets a
+ * snug 2×1 patch, not a full 3×3 with members flung to opposite corners of a
+ * mostly-empty field. One formula for every size, genmate group or whole
+ * cohort: `ceil(sqrt(count))` columns, enough rows to fit everyone. This
+ * only produces a genuine 3×3 once a group is large enough to actually need
+ * it (7-9 members) — exactly the range `tilePositionsForCount`'s special
+ * corners-first fill order (ticket 10, tuned specifically for a full 3×3)
+ * still applies to; anything smaller gets simple compact fill instead, since
+ * a small grid has no occlusion problem to avoid in the first place.
  */
 export function gridDimensionsForCount(count: number): { cols: number; rows: number } {
-  if (count <= GRID_COLS * GRID_ROWS) return { cols: GRID_COLS, rows: GRID_ROWS };
-  const cols = Math.ceil(Math.sqrt(count));
-  const rows = Math.ceil(count / cols);
+  const n = Math.max(1, count);
+  const cols = Math.ceil(Math.sqrt(n));
+  const rows = Math.ceil(n / cols);
   return { cols, rows };
 }
 
