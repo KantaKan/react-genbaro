@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { Reflection, StreakData } from "./use-reflections";
-import { isHoliday, isProtectedDate, isWeekend, getPreviousWorkday, toLocalDateKey } from "../utils/date-utils";
+import { isHoliday, isProtectedDate, isWeekend, getPreviousWorkday, toLocalDateKey, getThailandTime } from "../utils/date-utils";
 
 // ponytail: 7-day lookback window is a placeholder product number, move to a config constant if it needs tuning
 const PROTECT_LOOKBACK_DAYS = 7;
@@ -21,7 +21,7 @@ export function calculateStreakData(reflections: Reflection[], protectedDates: S
     };
   }
 
-  const today = new Date();
+  const today = getThailandTime();
   today.setHours(0, 0, 0, 0);
 
   // Use the 'day' field for date comparison since it's more reliable
