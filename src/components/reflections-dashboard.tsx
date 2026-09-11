@@ -109,9 +109,11 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
     }
   }, [userId]);
 
-  const refreshPlant = useCallback(() => {
-    fetchUser();
-    queryClient.invalidateQueries(["learnerGenmateGarden"]);
+  const refreshPlant = useCallback(async () => {
+    await Promise.all([
+      fetchUser(),
+      queryClient.invalidateQueries(["learnerGenmateGarden"]),
+    ]);
   }, [fetchUser, queryClient]);
 
   useEffect(() => {

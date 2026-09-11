@@ -20,7 +20,7 @@ interface FertilizerInventoryButtonProps {
   userId: string;
   balance: number;
   eligibleProtectDate: string | null;
-  onUsed?: () => void;
+  onUsed?: () => void | Promise<void>;
 }
 
 export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate, onUsed }: FertilizerInventoryButtonProps) {
@@ -38,7 +38,7 @@ export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate
       await fertilizerService.protect(userId, eligibleProtectDate);
       toast.success(`Protected ${eligibleProtectDate} — your streak is safe!`);
       setIsOpen(false);
-      onUsed?.();
+      await onUsed?.();
     } catch {
       toast.error("Couldn't protect that day. Please try again.");
     } finally {
@@ -54,7 +54,7 @@ export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate
       toast.success(`Your plant feels nourished! +${quantity * 10} growth ✨`);
       setIsOpen(false);
       setFeedAmount(1);
-      onUsed?.();
+      await onUsed?.();
     } catch {
       toast.error("Couldn't feed your plant. Please try again.");
     } finally {
