@@ -14,7 +14,7 @@ import {
 const ALL_SPECIES = [
   "flower", "cactus", "succulent", "tree", "fern", "vine", "bamboo", "palm",
   "mushroom", "pine", "clover", "orchid", "coral", "grass", "lotus", "bonsai", "flytrap",
-  "sunflower", "topiary", "strawberry", "tulip", "pumpkin-vine",
+  "sunflower", "topiary", "strawberry", "tulip", "pumpkin-vine", "coffee",
 ] as const;
 
 const TIERS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] as const satisfies readonly PlantTier[];

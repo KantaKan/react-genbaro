@@ -33,6 +33,7 @@ const SPECIES_TO_ARCHETYPE: Record<PlantSpecies, FarmArchetype> = {
   tree: "canopy",
   palm: "canopy",
   bonsai: "canopy",
+  coffee: "canopy",
   fern: "frond",
   vine: "frond",
   coral: "frond",
