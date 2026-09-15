@@ -120,6 +120,21 @@ const LeafGroup = ({ leaves, color, outline }: { leaves: LeafSpec[]; color: stri
   </>
 )
 
+/** Deterministic lightness jitter on a #rrggbb hex — breaks up flat, identical
+ * fills (e.g. every BloomCluster petal in the same color) with a touch of depth. */
+function shade(hex: string, amount: number): string {
+  const n = parseInt(hex.slice(1), 16)
+  const channel = (shift: number) => {
+    const c = (n >> shift) & 0xff
+    const adjusted = amount >= 0 ? c + (255 - c) * amount : c + c * amount
+    return Math.round(Math.min(255, Math.max(0, adjusted)))
+  }
+  const r = channel(16)
+  const g = channel(8)
+  const b = channel(0)
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`
+}
+
 const BloomCluster = ({
   x,
   y,
@@ -136,11 +151,12 @@ const BloomCluster = ({
   scale?: number
 }) => (
   <g transform={`translate(${x}, ${y})`}>
-    {[0, 72, 144, 216, 288].map((angle) => {
+    {[0, 72, 144, 216, 288].map((angle, i) => {
       const rad = (angle * Math.PI) / 180
       const px = Math.cos(rad) * 3.2 * scale
       const py = Math.sin(rad) * 3.2 * scale
-      return <circle key={angle} cx={px} cy={py} r={2.4 * scale} fill={color} stroke={outline} strokeWidth="1" />
+      const petalColor = i % 2 === 0 ? color : shade(color, -0.14)
+      return <circle key={angle} cx={px} cy={py} r={2.4 * scale} fill={petalColor} stroke={outline} strokeWidth="1" />
     })}
     <circle cx="0" cy="0" r={1.8 * scale} fill={glow} stroke={outline} strokeWidth="0.8" />
   </g>
@@ -1013,6 +1029,94 @@ const PumpkinVine = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; c
   )
 }
 
+// A woody shrub climbing a central trunk, herringbone branch pairs carrying
+// oval leaves — coffee cherries cluster at the branch tips when fruiting,
+// tiny blossoms cap the topmost pair when flowering. Distinct from Tree's
+// blobby crown, Bonsai's flat zigzag pads, and Bamboo's segmented joints.
+const CoffeeShrub = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
+  if (tier === 0) return null
+  const branchPairs = Math.min(1 + Math.floor(tier / 2), 4)
+  const top = canopyTop(tier)
+  const baseY = 42
+  const parts: ReactNode[] = []
+  const tips: { x: number; y: number }[] = []
+
+  parts.push(
+    <path key="trunk" d={`M20 ${baseY} Q20.8 ${((baseY + top) / 2).toFixed(1)} 20 ${top}`} stroke={colors.stem} strokeWidth={2.6} strokeLinecap="round" fill="none" />
+  )
+
+  for (let i = 0; i < branchPairs; i++) {
+    const t = branchPairs === 1 ? 0.5 : i / (branchPairs - 1)
+    const y = baseY - 3 - t * (baseY - top - 6)
+    const len = 3.2 + t * 3
+    for (const side of [-1, 1] as const) {
+      const tipX = 20 + side * len
+      const tipY = y - len * 0.35
+      tips.push({ x: tipX, y: tipY })
+      parts.push(
+        <path
+          key={`b${i}-${side}`}
+          d={`M20 ${y} Q${20 + side * len * 0.55} ${y - len * 0.1} ${tipX} ${tipY}`}
+          stroke={colors.stem}
+          strokeWidth={1.2}
+          fill="none"
+          strokeLinecap="round"
+        />
+      )
+      parts.push(
+        <ellipse
+          key={`la${i}-${side}`}
+          cx={tipX}
+          cy={tipY}
+          rx={2.3}
+          ry={1.4}
+          fill={colors.leaf}
+          stroke={colors.outline}
+          strokeWidth={0.8}
+          transform={`rotate(${side * 30} ${tipX.toFixed(1)} ${tipY.toFixed(1)})`}
+        />
+      )
+      const innerX = 20 + side * len * 0.55
+      const innerY = y - len * 0.12
+      parts.push(
+        <ellipse
+          key={`lb${i}-${side}`}
+          cx={innerX}
+          cy={innerY}
+          rx={1.9}
+          ry={1.15}
+          fill={colors.leaf}
+          stroke={colors.outline}
+          strokeWidth={0.7}
+          transform={`rotate(${side * 18} ${innerX.toFixed(1)} ${innerY.toFixed(1)})`}
+        />
+      )
+      if (hasFruit) {
+        parts.push(
+          <FruitDot key={`fa${i}-${side}`} x={tipX - side * 0.7} y={tipY + 1} color={colors.fruit} leafColor={colors.leaf} outline={colors.outline} r={1.15} />
+        )
+        parts.push(
+          <FruitDot key={`fb${i}-${side}`} x={tipX + side * 0.6} y={tipY + 1.6} color={colors.fruit} leafColor={colors.leaf} outline={colors.outline} r={1} />
+        )
+      }
+    }
+  }
+
+  // Blossoms cap the topmost (last-pushed) branch pair, not the bottom one —
+  // reads as a flowering crown instead of flowers hiding near the pot.
+  const topmost = tips.slice(-2).filter((p): p is { x: number; y: number } => p !== undefined)
+
+  return (
+    <>
+      {parts}
+      {hasFlower &&
+        topmost.map((tip, i) => (
+          <BloomCluster key={`bloom-${i}`} x={tip.x} y={tip.y - 1.5} color={colors.flower} glow={colors.glow} outline={colors.outline} scale={0.4} />
+        ))}
+    </>
+  )
+}
+
 const SpeciesCanopy = ({
   species,
   tier,
@@ -1069,6 +1173,8 @@ const SpeciesCanopy = ({
       return <TulipCluster tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
     case "pumpkin-vine":
       return <PumpkinVine tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
+    case "coffee":
+      return <CoffeeShrub tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
     case "flower":
     default:
       return <FlowerCanopy tier={tier} colors={colors} hasFlower={hasFlower} hasFruit={hasFruit} />
@@ -1654,6 +1760,10 @@ export const SeedlingPlant = ({ tier = 0, active, className, variant, showPartic
           style={{ originX: "50%", originY: "100%" }}
         >
           <svg viewBox="0 0 40 52" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+            {/* Grounding shadow — a soft cue that the pot has weight and sits
+                on something, independent of active/inactive so it never reads
+                as a state signal. */}
+            <ellipse cx="20" cy="51.2" rx="11.5" ry="1.5" fill={outlineColor} opacity={0.14} />
             {/* Pot */}
             <g>
               <path

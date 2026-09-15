@@ -344,7 +344,13 @@ const STEM_TILTS: Record<StemStyle, number> = {
 // sunflower tops a bare stem with one big flower head, topiary balls a single
 // round crown on a stick, strawberry mounds heart leaves with hanging berries,
 // tulip clusters cup-shaped blooms on straight stems, pumpkin-vine creeps low
-// and horizontal with gourds resting on the soil. See SpeciesCanopy in streak-components.tsx.
+// and horizontal with gourds resting on the soil, coffee branches a woody shrub
+// with paired oval leaves and clustered cherries — a nod to the fuel of every
+// coding bootcamp. See SpeciesCanopy in streak-components.tsx.
+//
+// New species append to the END of both this union and the SPECIES array below
+// — getPlantVariant hashes userId against SPECIES by index, so inserting
+// anywhere but the end would reshuffle every existing learner's plant.
 export type PlantSpecies =
   | "flower"
   | "cactus"
@@ -368,6 +374,7 @@ export type PlantSpecies =
   | "strawberry"
   | "tulip"
   | "pumpkin-vine"
+  | "coffee"
 
 export const SPECIES: PlantSpecies[] = [
   "flower",
@@ -392,6 +399,7 @@ export const SPECIES: PlantSpecies[] = [
   "strawberry",
   "tulip",
   "pumpkin-vine",
+  "coffee",
 ]
 
 /* ─── Variant Config ─── */
