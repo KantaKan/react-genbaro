@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -15,7 +15,7 @@ vi.mock("@/AuthContext", () => ({
 
 vi.mock("@/UserDataContext", () => ({
   useUserData: () => ({
-    userData: { fertilizer_balance: 3, cohort_number: 12 },
+    userData: { fertilizer_balance: 3, cohort_number: 12, genmate_group: "Garden Alpha" },
     refetchUserData: vi.fn(),
   }),
 }));
@@ -97,6 +97,24 @@ describe("CohortGenmateGardenPage", () => {
     expect(screen.getByText("Dan")).toBeInTheDocument();
     expect(screen.queryByText("Garden Alpha")).not.toBeInTheDocument();
     expect(screen.queryByText("Garden Beta")).not.toBeInTheDocument();
+  });
+
+  it("shows Fertilize for any cohort member, regardless of genmate group", async () => {
+    const groups: CohortGardenGroup[] = [
+      { group_name: "Garden Alpha", members: [member({ _id: "user-1", first_name: "Alice" })] },
+      { group_name: "Garden Beta", members: [member({ _id: "user-2", first_name: "Dan", genmate_group: "Garden Beta" })] },
+    ];
+    mockedGetCohortGarden.mockResolvedValue(groups);
+
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: /Alice/ }));
+    expect(await screen.findByRole("button", { name: /Fertilize/ })).toBeInTheDocument();
+
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    fireEvent.click(await screen.findByRole("button", { name: /Dan/ }));
+    expect(await screen.findByText("Dan Smith")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Fertilize/ })).toBeInTheDocument();
   });
 
   it("renders the empty state when the cohort has no members", async () => {

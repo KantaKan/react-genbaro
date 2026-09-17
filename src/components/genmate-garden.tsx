@@ -319,6 +319,12 @@ export function PlantTile({ member }: { member: GardenMember }) {
   const { userData, refetchUserData } = useUserData();
   const myBalance = userData?.fertilizer_balance ?? 0;
   const isSelf = user._id === currentUserId;
+  // Backend allows gift/rescue for anyone in the caller's cohort (see
+  // resolveGenmate in user_handler.go), not just the caller's genmate
+  // subgroup - match that here or the buttons show for targets the
+  // server will reject.
+  const sameCohort =
+    !!userData?.cohort_number && userData.cohort_number === user.cohort_number;
 
   const giftMutation = useMutation(() => fertilizerService.gift(user._id, 1), {
     onSuccess: () => {
@@ -508,7 +514,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
                 )}
               </div>
             </div>
-            {!isSelf && (
+            {!isSelf && sameCohort && (
               <Button
                 variant="outline"
                 size="sm"
@@ -519,7 +525,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
                 🧪 Fertilize · 1 → +10 🌱
               </Button>
             )}
-            {!isSelf && (
+            {!isSelf && sameCohort && (
               <Button
                 variant="outline"
                 size="sm"
@@ -532,7 +538,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
                   : "🛡️ No missed day to rescue"}
               </Button>
             )}
-            {!isSelf && myBalance < 1 && (
+            {!isSelf && sameCohort && myBalance < 1 && (
               <p className="text-center text-xs text-muted-foreground">
                 You have no fertilizer left.
               </p>
