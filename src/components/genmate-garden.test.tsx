@@ -17,7 +17,7 @@ const refetchUserData = vi.fn();
 let mockBalance = 3;
 vi.mock("@/UserDataContext", () => ({
   useUserData: () => ({
-    userData: { fertilizer_balance: mockBalance },
+    userData: { fertilizer_balance: mockBalance, cohort_number: 12 },
     refetchUserData,
   }),
 }));
