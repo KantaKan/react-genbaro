@@ -101,7 +101,6 @@ const PostCard: React.FC<PostCardProps> = ({ post, addReactionMutation, removeRe
                 userId={post.userId}
                 name={post.zoomName}
                 className="h-10 w-10 border-2 border-primary/20"
-                fallbackClassName="bg-primary/10 text-primary font-semibold text-sm"
               />
               <div>
                 <p className="font-semibold text-sm">{post.zoomName}</p>
@@ -290,7 +289,6 @@ const TalkBoardPage: React.FC = () => {
                       lastName={composerUser.lastName}
                       email={composerUser.email}
                       className="h-10 w-10 border-2 border-primary/30"
-                      fallbackClassName="bg-primary/10 text-primary font-semibold"
                     />
                     <div className="flex-1">
                       <Textarea

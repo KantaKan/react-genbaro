@@ -1,5 +1,7 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getAvatarFallback, getUserAvatarUrl } from "@/lib/avatar";
+import { Blobatar } from "@blobatar/react";
+import { Avatar } from "@/components/ui/avatar";
+import { getUserAvatarSeed } from "@/lib/avatar";
+import { cn } from "@/lib/utils";
 
 interface UserAvatarProps {
   userId?: string | null;
@@ -8,7 +10,6 @@ interface UserAvatarProps {
   lastName?: string | null;
   email?: string | null;
   className?: string;
-  fallbackClassName?: string;
 }
 
 export function UserAvatar({
@@ -18,16 +19,13 @@ export function UserAvatar({
   lastName,
   email,
   className,
-  fallbackClassName,
 }: UserAvatarProps) {
   const displayName = name || firstName || email || "User";
-  const avatarUrl = getUserAvatarUrl(userId, email, name, firstName);
-  const fallback = getAvatarFallback(name, firstName, lastName, email);
+  const avatarSeed = getUserAvatarSeed(userId, email, name, firstName, lastName);
 
   return (
-    <Avatar className={className}>
-      <AvatarImage src={avatarUrl} alt={displayName} />
-      <AvatarFallback className={fallbackClassName}>{fallback}</AvatarFallback>
+    <Avatar className={cn("bg-muted", className)}>
+      <Blobatar name={avatarSeed} alt={displayName} className="h-full w-full object-cover" />
     </Avatar>
   );
 }

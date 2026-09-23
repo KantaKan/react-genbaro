@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -44,7 +44,6 @@ import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/UserDataContext";
 import { fertilizerService } from "@/application/services/fertilizerService";
 import { SeedlingPlant } from "@/components/streak-components";
-import { getUserAvatarUrl, getAvatarFallback } from "@/lib/avatar";
 import { formatDate } from "@/lib/utils";
 
 export interface GardenUser {
@@ -377,15 +376,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
           aria-label={`${fullName}, ${displayStreak > 0 ? `${displayStreak}-day streak` : "no active streak"}`}
           className="flex flex-col items-center gap-1.5 cursor-pointer rounded-xl border border-transparent p-2 transition-colors hover:border-border hover:bg-muted/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <Avatar className="h-7 w-7">
-            <AvatarImage
-              src={getUserAvatarUrl(user.first_name, user.last_name)}
-              alt={fullName}
-            />
-            <AvatarFallback className="text-[10px]">
-              {getAvatarFallback(user.first_name, user.last_name)}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar userId={user._id} firstName={user.first_name} lastName={user.last_name} className="h-7 w-7" />
           <SeedlingPlant
             tier={tier}
             active={streakData.hasCurrentStreak}
@@ -405,15 +396,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
       <PopoverContent className="w-72">
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage
-                src={getUserAvatarUrl(user.first_name, user.last_name)}
-                alt={fullName}
-              />
-              <AvatarFallback>
-                {getAvatarFallback(user.first_name, user.last_name)}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar userId={user._id} firstName={user.first_name} lastName={user.last_name} className="h-10 w-10" />
             <div className="flex flex-col">
               <span className="text-sm font-semibold">{fullName}</span>
               <span className="text-xs text-muted-foreground">
