@@ -228,6 +228,7 @@ const UserProfilePage: React.FC = () => {
               <UserAvatar 
                 userId={user._id} 
                 name={`${user.first_name} ${user.last_name}`} 
+                followPointer
                 className="w-40 h-40 border-8 border-background shadow-2xl"
               />
             </div>
