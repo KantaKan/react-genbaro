@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import {
   Popover,
   PopoverContent,
@@ -290,6 +291,10 @@ export function GenmateGarden({ cohort }: GenmateGardenProps) {
                 <GenmateField
                   members={toFarmMembers(group.members)}
                   onContextLost={handleFarmContextLost}
+                  renderDetails={(memberId) => {
+                    const member = group.members.find((candidate) => candidate.user._id === memberId);
+                    return member ? <PlantTile member={member} /> : null;
+                  }}
                 />
               </Suspense>
             )}
@@ -310,6 +315,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
   const { userId: currentUserId } = useAuth();
   const queryClient = useQueryClient();
   const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [pendingFertilizerAction, setPendingFertilizerAction] = useState<"gift" | "rescue" | null>(null);
   const plantReactions = user.plant_reactions ?? [];
   const currentReaction = plantReactions.find((r) => r.userId === currentUserId);
 
@@ -380,6 +386,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
   };
 
   return (
+    <>
     <Popover>
       <PopoverTrigger asChild>
         <button
@@ -508,7 +515,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
                 size="sm"
                 className="w-full rounded-full"
                 disabled={giftMutation.isLoading || myBalance < 1}
-                onClick={() => giftMutation.mutate()}
+                onClick={() => setPendingFertilizerAction("gift")}
               >
                 🧪 Fertilize · 1 → +10 🌱
               </Button>
@@ -519,7 +526,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
                 size="sm"
                 className="w-full rounded-full"
                 disabled={rescueMutation.isLoading || myBalance < 1 || !rescueDate}
-                onClick={() => rescueMutation.mutate()}
+                onClick={() => setPendingFertilizerAction("rescue")}
               >
                 {rescueDate
                   ? `🛡️ Rescue ${rescueDate} · costs you 1`
@@ -535,5 +542,32 @@ export function PlantTile({ member }: { member: GardenMember }) {
         </div>
       </PopoverContent>
     </Popover>
+    <AlertDialog open={pendingFertilizerAction !== null} onOpenChange={(open) => !open && setPendingFertilizerAction(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{pendingFertilizerAction === "rescue" ? `Rescue ${fullName}?` : `Fertilize ${fullName}?`}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {pendingFertilizerAction === "rescue"
+              ? `Spend 1 of your fertilizer to protect ${rescueDate ?? "their missed day"}. This supports their streak.`
+              : "Spend 1 of your fertilizer to gift 10 fertilizer to this learner."}
+            {` You have ${myBalance} fertilizer.`}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep fertilizer</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={myBalance < 1 || giftMutation.isLoading || rescueMutation.isLoading || (pendingFertilizerAction === "rescue" && !rescueDate)}
+            onClick={() => {
+              if (pendingFertilizerAction === "gift") giftMutation.mutate();
+              if (pendingFertilizerAction === "rescue" && rescueDate) rescueMutation.mutate();
+              setPendingFertilizerAction(null);
+            }}
+          >
+            Confirm · spend 1 fertilizer
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, ContactShadows } from "@react-three/drei";
+import { useQuery } from "react-query";
 import * as THREE from "three";
 import type { PlantPalette } from "@/lib/plant-variants";
 import type { PlantAppearance } from "@/lib/plant-appearance";
@@ -10,6 +11,8 @@ import { GrassField } from "@/components/farm/GrassField";
 import { SkyDome } from "@/components/farm/SkyDome";
 import { getPartTexture, getToonGradientMap } from "@/lib/farm-textures";
 import { terrainHeightAt, TERRAIN_MARGIN } from "@/lib/farm-terrain";
+import { farmLightingForDate } from "@/lib/farm-lighting";
+import { cosmeticService } from "@/application/services/cosmeticService";
 import { useFarmPlantParts, useFarmPlantHeight } from "@/hooks/use-farm-plant";
 import { buildFenceParts, buildGroundProps, buildBackgroundTrees } from "@/lib/farm-decorations";
 import {
@@ -36,6 +39,7 @@ export interface GenmateFieldMember {
 interface GenmateFieldProps {
   members: GenmateFieldMember[];
   onContextLost?: () => void;
+  renderDetails?: (memberId: string) => ReactNode;
 }
 
 // Shared between the key light and the visible sun in the sky dome, so the
@@ -59,7 +63,7 @@ function clamp(value: number, min: number, max: number): number {
  * ported here to real @react-three/fiber primitives rather than the spike's
  * hand-rolled software renderer.
  */
-export function GenmateField({ members, onContextLost }: GenmateFieldProps) {
+export function GenmateField({ members, onContextLost, renderDetails }: GenmateFieldProps) {
   const tileSize = useMemo(() => computeTileSize(), []);
   // Sized to the actual headcount — a genmate group stays the tuned 3×3, a
   // whole cohort field grows instead of silently dropping anyone past 9.
@@ -67,7 +71,48 @@ export function GenmateField({ members, onContextLost }: GenmateFieldProps) {
   const positions = useMemo(() => tilePositionsForCount(members.length, cols, rows), [members.length, cols, rows]);
   const [rotationStep, setRotationStep] = useState(() => leastOccludingRotationStep(positions, tileSize, cols, rows));
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [wateringId, setWateringId] = useState<string | null>(null);
+  const [growthFeedback, setGrowthFeedback] = useState("");
+  const previousAppearances = useRef<Map<string, string> | null>(null);
+  const [lighting, setLighting] = useState(() => farmLightingForDate(new Date()));
   const [zoom, setZoom] = useState(1);
+  const { data: cosmeticCatalog = [] } = useQuery("plantCosmeticCatalog", cosmeticService.getCatalog, { staleTime: 300_000 });
+  const selectedMember = members.find((member) => member.id === selectedId);
+  const selectedCosmetics = selectedMember
+    ? cosmeticCatalog.filter((item) => Object.values(selectedMember.appearance.cosmetics).includes(item.id))
+    : [];
+  const selectMember = (memberId: string) => {
+    setSelectedId(memberId);
+    setGrowthFeedback("");
+  };
+
+  useEffect(() => {
+    const current = new Map(members.map((member) => [member.id, `${member.appearance.tier}|${Object.values(member.appearance.cosmetics).join("|")}`]));
+    const previous = previousAppearances.current;
+    if (previous && selectedId) {
+      const member = members.find((candidate) => candidate.id === selectedId);
+      const before = previous.get(selectedId)?.split("|");
+      const after = current.get(selectedId)?.split("|");
+      if (member && before && after && before[0] !== after[0]) {
+        setGrowthFeedback(`${member.name} grew into ${member.appearance.tierCapabilities.name}!`);
+      } else if (member && before && after && before.slice(1).join("|") !== after.slice(1).join("|")) {
+        setGrowthFeedback(`${member.name} has a new look!`);
+      }
+    }
+    previousAppearances.current = current;
+  }, [members, selectedId]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setLighting(farmLightingForDate(new Date())), 60_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!wateringId) return;
+    const timeout = window.setTimeout(() => setWateringId(null), 2200);
+    return () => window.clearTimeout(timeout);
+  }, [wateringId]);
 
   const landW = cols * tileSize;
   const landD = rows * tileSize;
@@ -117,8 +162,8 @@ export function GenmateField({ members, onContextLost }: GenmateFieldProps) {
         >
           <FieldCamera fieldDiag={fieldDiag} rotationStep={rotationStep} zoom={zoom} />
           <SkyDome radius={fieldDiag * 1.8} sunDirection={SUN_DIRECTION} />
-          <ambientLight intensity={0.35} />
-          <directionalLight position={SUN_DIRECTION} intensity={0.9} castShadow />
+          <ambientLight intensity={lighting === "night" ? 0.2 : lighting === "evening" ? 0.28 : 0.35} />
+          <directionalLight position={SUN_DIRECTION} intensity={lighting === "night" ? 0.25 : lighting === "evening" ? 0.55 : 0.9} color={lighting === "night" ? "#b9d5ff" : lighting === "evening" ? "#ffd2a2" : "#ffffff"} castShadow />
           <directionalLight position={[-5, 6, -3]} intensity={0.3} color="#cfe4ff" />
           <directionalLight position={[0, 4, -8]} intensity={0.28} color="#fff8e6" />
           <Ground landW={landW} landD={landD} />
@@ -147,12 +192,15 @@ export function GenmateField({ members, onContextLost }: GenmateFieldProps) {
                 worldZ={center.z}
                 isHovered={hoveredId === member.id}
                 onHoverChange={(hovered) => setHoveredId(hovered ? member.id : null)}
+                onSelect={() => selectMember(member.id)}
+                isWatering={wateringId === member.id}
               />
             );
           })}
         </Canvas>
+        {lighting !== "day" && <div aria-hidden="true" className={`pointer-events-none absolute inset-0 ${lighting === "night" ? "bg-indigo-950/25" : lighting === "evening" ? "bg-amber-400/10" : "bg-rose-100/5"}`} />}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={() => setRotationStep((s) => (s + 3) % 4)}
@@ -167,7 +215,28 @@ export function GenmateField({ members, onContextLost }: GenmateFieldProps) {
         >
           ⟳ Rotate
         </button>
+        <span className="ml-auto text-xs text-muted-foreground">{lighting} in Thailand · tap a plant to inspect</span>
       </div>
+      <div className="flex flex-wrap gap-2" aria-label="Farm plants">
+        {members.map((member) => (
+          <button key={member.id} type="button" onClick={() => selectMember(member.id)} aria-pressed={selectedId === member.id} className={`rounded-full border px-3 py-1.5 text-xs transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${selectedId === member.id ? "border-emerald-600 bg-emerald-50 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-50" : "border-border bg-card hover:bg-accent"}`}>
+            {member.name}
+          </button>
+        ))}
+      </div>
+      {selectedMember && (
+        <section className="flex flex-wrap items-center gap-4 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-800 dark:bg-emerald-950/30" aria-label={`${selectedMember.name}'s plant`}>
+          <div className="min-w-44 flex-1" aria-live="polite">
+            <p className="font-semibold">{selectedMember.name} · {selectedMember.appearance.tierCapabilities.name}</p>
+            <p className="text-sm text-muted-foreground">{selectedMember.displayStreakDays} day streak · {selectedMember.appearance.state === "resting" ? "Resting gently" : "Growing"}</p>
+            {selectedCosmetics.length > 0 && <p className="mt-1 text-xs">Equipped: {selectedCosmetics.map((item) => `${item.name}${item.rarity !== "Common" ? ` · ${item.rarity} ✨` : ""}`).join(", ")}</p>}
+            {wateringId === selectedId && <p className="text-sm text-sky-700 dark:text-sky-300">💧 A little water for {selectedMember.name}!</p>}
+            {growthFeedback && <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">✨ {growthFeedback}</p>}
+          </div>
+          <button type="button" onClick={() => setWateringId(selectedId)} className="rounded-full border border-sky-400 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-900 hover:bg-sky-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:bg-sky-950 dark:text-sky-100">💧 Water · free</button>
+          {renderDetails?.(selectedMember.id)}
+        </section>
+      )}
     </div>
   );
 }
@@ -319,12 +388,16 @@ function MemberOnTile({
   worldZ,
   isHovered,
   onHoverChange,
+  onSelect,
+  isWatering,
 }: {
   member: GenmateFieldMember;
   worldX: number;
   worldZ: number;
   isHovered: boolean;
   onHoverChange: (hovered: boolean) => void;
+  onSelect: () => void;
+  isWatering: boolean;
 }) {
   const parts = useFarmPlantParts(member.appearance);
   const height = useFarmPlantHeight(parts);
@@ -344,13 +417,18 @@ function MemberOnTile({
           e.stopPropagation();
           onHoverChange(false);
         }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect();
+        }}
       >
         <PlantMesh appearance={member.appearance} />
       </group>
       {particleDefs.length > 0 && glowColor && (
         <Particles defs={particleDefs} anchorHeight={height * 0.7} palette={member.appearance.palette} glowColor={glowColor} />
       )}
-      {isHovered && <TileHighlight />}
+      {(isHovered || isWatering) && <TileHighlight />}
+      {isWatering && <Html position={[0, height + 0.8, 0]} center style={{ pointerEvents: "none" }}><span className="text-2xl" aria-hidden="true">💧</span></Html>}
       {/* Keyboard access: a real focusable DOM element per tile, not a canvas-only
           hit region — ticket 05. Same hover treatment fires on focus. */}
       <Html position={[0, 0.05, 0]} center distanceFactor={undefined} style={{ pointerEvents: "none" }}>
@@ -360,9 +438,10 @@ function MemberOnTile({
           onBlur={() => onHoverChange(false)}
           onMouseEnter={() => onHoverChange(true)}
           onMouseLeave={() => onHoverChange(false)}
+          onClick={onSelect}
           className="h-2 w-2 rounded-full border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-ring"
           style={{ pointerEvents: "auto" }}
-          aria-label={`${member.name}, ${member.displayStreakDays} day streak, ${tierName}`}
+          aria-label={`Inspect ${member.name}, ${member.displayStreakDays} day streak, ${tierName}`}
         />
       </Html>
       {isHovered && (

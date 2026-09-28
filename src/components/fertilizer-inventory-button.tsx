@@ -27,7 +27,7 @@ export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedAmount, setFeedAmount] = useState(1);
-  const [showFeedAllConfirm, setShowFeedAllConfirm] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{ kind: "protect" } | { kind: "feed"; quantity: number } | null>(null);
 
   if (balance <= 0) return null;
 
@@ -76,7 +76,7 @@ export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate
             variant="outline"
             className="justify-start gap-2"
             disabled={!eligibleProtectDate || isSubmitting}
-            onClick={handleProtect}
+            onClick={() => setPendingAction({ kind: "protect" })}
           >
             <Shield className="h-4 w-4" />
             {eligibleProtectDate ? `Protect ${eligibleProtectDate}` : "No missed day to protect"}
@@ -98,7 +98,7 @@ export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate
               variant="outline"
               className="flex-1 justify-start gap-2"
               disabled={isSubmitting}
-              onClick={() => handleFeed(feedAmount)}
+              onClick={() => setPendingAction({ kind: "feed", quantity: feedAmount })}
             >
               <Sparkles className="h-4 w-4" />
               Feed (+{feedAmount * 10} growth)
@@ -109,7 +109,7 @@ export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate
             size="sm"
             className="justify-start gap-2 text-muted-foreground"
             disabled={isSubmitting}
-            onClick={() => setShowFeedAllConfirm(true)}
+            onClick={() => setPendingAction({ kind: "feed", quantity: balance })}
           >
             <Sparkles className="h-4 w-4" />
             Feed all ({balance} fertilizer → +{balance * 10} growth)
@@ -117,23 +117,27 @@ export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate
         </div>
       </PopoverContent>
 
-      <AlertDialog open={showFeedAllConfirm} onOpenChange={setShowFeedAllConfirm}>
+      <AlertDialog open={pendingAction !== null} onOpenChange={(open) => !open && setPendingAction(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Feed all your fertilizer?</AlertDialogTitle>
+            <AlertDialogTitle>{pendingAction?.kind === "protect" ? "Protect this missed day?" : "Feed your plant?"}</AlertDialogTitle>
             <AlertDialogDescription>
-              This uses all {balance} fertilizer at once for +{balance * 10} growth. This can't be undone.
+              {pendingAction?.kind === "protect"
+                ? `Spend 1 fertilizer to protect ${eligibleProtectDate ?? "this missed day"}.`
+                : `Spend ${pendingAction?.quantity ?? 0} fertilizer for +${(pendingAction?.kind === "feed" ? pendingAction.quantity : 0) * 10} growth.`} This can't be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Keep fertilizer</AlertDialogCancel>
             <AlertDialogAction
+              disabled={isSubmitting || (pendingAction?.kind === "feed" && pendingAction.quantity > balance) || (pendingAction?.kind === "protect" && !eligibleProtectDate)}
               onClick={() => {
-                setShowFeedAllConfirm(false);
-                handleFeed(balance);
+                if (pendingAction?.kind === "protect") void handleProtect();
+                if (pendingAction?.kind === "feed") void handleFeed(pendingAction.quantity);
+                setPendingAction(null);
               }}
             >
-              Feed all
+              Confirm use
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

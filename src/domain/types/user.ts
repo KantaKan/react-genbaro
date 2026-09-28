@@ -97,6 +97,7 @@ export interface GenmateGardenMember {
   selected_leaf?: string;
   selected_flower?: string;
   selected_stem?: string;
+  equipped_cosmetics?: Partial<Record<"palette" | "pot" | "aura" | "particle" | "accessory" | "mutation", string>>;
 }
 
 export interface GenmateGardenResponse {

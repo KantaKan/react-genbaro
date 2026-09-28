@@ -176,7 +176,10 @@ export function AdminCohortFarmPage() {
               </div>
             ) : (
               <Suspense fallback={<SkeletonWarm className="aspect-[4/3] w-full rounded-xl" />}>
-                <GenmateField members={farmMembers} onContextLost={handleFarmContextLost} />
+                <GenmateField members={farmMembers} onContextLost={handleFarmContextLost} renderDetails={(memberId) => {
+                  const member = members.find((candidate) => candidate.user._id === memberId);
+                  return member ? <PlantTile member={member} /> : null;
+                }} />
               </Suspense>
             )}
           </CardContent>

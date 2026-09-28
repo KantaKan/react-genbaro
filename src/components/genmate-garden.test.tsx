@@ -210,6 +210,9 @@ describe("GenmateGarden", () => {
     fireEvent.click(await screen.findByRole("button", { name: /Alice/ }));
     const fertilize = await screen.findByRole("button", { name: /Fertilize/ });
     fireEvent.click(fertilize);
+    expect(mockedGift).not.toHaveBeenCalled();
+    expect(await screen.findByText(/Spend 1 of your fertilizer to gift 10 fertilizer/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Confirm · spend 1 fertilizer/ }));
     await waitFor(() => expect(mockedGift).toHaveBeenCalledWith("user-1", 1));
 
     fireEvent.keyDown(document.body, { key: "Escape" });
@@ -240,6 +243,8 @@ describe("GenmateGarden", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: /Gap/ }));
     fireEvent.click(await screen.findByRole("button", { name: /Rescue/ }));
+    expect(mockedRescue).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: /Confirm · spend 1 fertilizer/ }));
     await waitFor(() =>
       expect(mockedRescue).toHaveBeenCalledWith("user-gap", localDayString(gapDay))
     );

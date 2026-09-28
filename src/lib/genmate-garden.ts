@@ -24,6 +24,7 @@ export function mapGenmateMembers(members: GenmateGardenMember[], holidayDates?:
         genmate_group: m.genmate_group,
         reflections,
         plant_reactions: m.plant_reactions ?? [],
+        equipped_cosmetics: m.equipped_cosmetics,
       },
       streakData,
       appearance: resolvePlantAppearance({
@@ -39,6 +40,7 @@ export function mapGenmateMembers(members: GenmateGardenMember[], holidayDates?:
           flower: m.selected_flower,
           stem: m.selected_stem,
         },
+        cosmetics: m.equipped_cosmetics,
       }),
       displayStreak,
       tier,
