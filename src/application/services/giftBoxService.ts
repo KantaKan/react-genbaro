@@ -27,6 +27,11 @@ export const giftBoxService = {
     return response.data.data;
   },
 
+  async reconcileMilestones(userId: string): Promise<TeacherGiftBox[]> {
+    const response = await api.post<ApiResponse<TeacherGiftBox[]>>(`/users/${userId}/reflection-rewards/reconcile`);
+    return response.data.data;
+  },
+
   async grantCohort(cohort: number, minimumRarity: CosmeticRarity, message: string, idempotencyKey: string): Promise<CohortGiftBoxResult> {
     const response = await api.post<ApiResponse<CohortGiftBoxResult>>(`/admin/cohorts/${cohort}/gift-boxes`, {
       minimum_rarity: minimumRarity,

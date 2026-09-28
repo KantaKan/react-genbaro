@@ -59,8 +59,19 @@ function CollectionCard({ item, busy, onToggle }: { item: CosmeticCollectionItem
   );
 }
 
-export function PlantCollectionDialog({ onLoadoutChanged }: { onLoadoutChanged?: () => void | Promise<void> }) {
-  const [open, setOpen] = useState(false);
+interface PlantCollectionDialogProps {
+  onLoadoutChanged?: () => void | Promise<void>;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function PlantCollectionDialog({ onLoadoutChanged, open: controlledOpen, onOpenChange }: PlantCollectionDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (next: boolean) => {
+    setInternalOpen(next);
+    onOpenChange?.(next);
+  };
   const [slot, setSlot] = useState<CosmeticSlot | "all">("all");
   const [busyId, setBusyId] = useState<string>();
   const collection = useQuery(["plantCosmeticCollection"], () => cosmeticService.getCollection(), { enabled: open });

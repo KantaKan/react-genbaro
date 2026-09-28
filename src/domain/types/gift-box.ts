@@ -10,6 +10,7 @@ export interface TeacherGiftBox {
   reward?: CosmeticCatalogItem;
   created_at: string;
   opened_at?: string;
+  source?: "reflection-milestone" | string;
 }
 
 export interface RewardDrawResult {

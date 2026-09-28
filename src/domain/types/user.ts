@@ -151,6 +151,8 @@ export interface Reflection {
   createdAt?: string;
   reflection: ReflectionData;
   admin_feedback?: string;
+  reward_boxes?: import("./gift-box").TeacherGiftBox[];
+  reward_warning?: string;
 }
 
 export interface ReflectionData {

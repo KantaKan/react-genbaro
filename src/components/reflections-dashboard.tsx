@@ -25,6 +25,7 @@ import { FertilizerInventoryButton } from "./fertilizer-inventory-button";
 import { PlantPalettePicker } from "./plant-palette-picker";
 import { PlantCollectionDialog } from "./plant-collection-dialog";
 import { TeacherGiftBoxesDialog } from "./teacher-gift-boxes-dialog";
+import { giftBoxService } from "@/application/services/giftBoxService";
 import { api } from "@/lib/api";
 import type { Badge } from "@/lib/types";
 import type { FertilizerLogEntry } from "@/domain/types";
@@ -142,6 +143,19 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   >(undefined);
   const [showCloseWarning, setShowCloseWarning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [giftBoxesOpen, setGiftBoxesOpen] = useState(false);
+  const [collectionOpen, setCollectionOpen] = useState(false);
+  const [milestoneCelebration, setMilestoneCelebration] = useState<{ count: number; warning?: string } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    giftBoxService.reconcileMilestones(userId)
+      .then((boxes) => {
+        if (active && boxes.length > 0) setMilestoneCelebration({ count: boxes.length });
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [userId]);
 
   // Helper function to get local date string (YYYY-MM-DD)
   const getLocalDateString = (date: Date): string => {
@@ -169,9 +183,10 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   }, [todaysReflection]);
 
   const handleSubmit = async (newReflection: Omit<Reflection, "_id" | "createdAt" | "day">) => {
+    setIsSubmitting(true);
+    let createdReflection: Reflection;
     try {
-      setIsSubmitting(true);
-      await addReflection({
+      createdReflection = await addReflection({
         ...newReflection,
         _id: undefined,
         createdAt: new Date().toISOString(),
@@ -179,15 +194,29 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
       });
       setFormData(undefined);
       setIsDialogOpen(false);
-      if (onReflectionSubmit) {
-        await onReflectionSubmit();
-      }
     } catch (err) {
       console.error("Error submitting reflection:", err);
-      // Error handling is done in the hook
-    } finally {
       setIsSubmitting(false);
+      return;
     }
+
+    try {
+      if ((createdReflection.reward_boxes?.length ?? 0) > 0 || createdReflection.reward_warning) {
+        setMilestoneCelebration({
+          count: createdReflection.reward_boxes?.length ?? 0,
+          warning: createdReflection.reward_warning,
+        });
+      }
+    } catch (err) {
+      console.error("Reward celebration could not be shown:", err);
+    }
+
+    try {
+      await onReflectionSubmit?.();
+    } catch (err) {
+      console.error("Reflection refresh failed after a successful submission:", err);
+    }
+    setIsSubmitting(false);
   };
 
   const handleDialogClose = useCallback(
@@ -318,8 +347,15 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                     onSaved={refreshPlant}
                   />
                 )}
-                {user && <PlantCollectionDialog onLoadoutChanged={refreshPlant} />}
-                {user && <TeacherGiftBoxesDialog onReward={refreshPlant} />}
+                {user && <PlantCollectionDialog open={collectionOpen} onOpenChange={setCollectionOpen} onLoadoutChanged={refreshPlant} />}
+                {user && (
+                  <TeacherGiftBoxesDialog
+                    open={giftBoxesOpen}
+                    onOpenChange={setGiftBoxesOpen}
+                    onReward={refreshPlant}
+                    onViewCollection={() => setCollectionOpen(true)}
+                  />
+                )}
               </div>
               <motion.p 
                 className="text-lg text-muted-foreground max-w-xl leading-relaxed"
@@ -829,6 +865,30 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
       </div>
 
       {/* Warning Dialog */}
+      <Dialog open={milestoneCelebration !== null} onOpenChange={(open) => { if (!open) setMilestoneCelebration(null); }}>
+        <DialogContent className="overflow-hidden border-emerald-200 bg-gradient-to-b from-amber-50 via-white to-emerald-50 text-center sm:max-w-md">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-4xl shadow-inner" aria-hidden="true">🌱</div>
+          <DialogHeader>
+            <DialogTitle className="text-center font-serif text-3xl text-emerald-950">Your care is showing</DialogTitle>
+          </DialogHeader>
+          {milestoneCelebration?.count ? (
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Your reflection streak reached a new milestone. {milestoneCelebration.count === 1 ? "A permanent collectible is" : `${milestoneCelebration.count} permanent collectibles are`} waiting in your garden gift box.
+            </p>
+          ) : (
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Your reflection is safely saved. We will check your milestone gift again shortly.
+            </p>
+          )}
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {(milestoneCelebration?.count ?? 0) > 0 && (
+              <Button onClick={() => { setMilestoneCelebration(null); setGiftBoxesOpen(true); }}>Open reward</Button>
+            )}
+            <Button variant="outline" onClick={() => setMilestoneCelebration(null)}>Continue</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <AlertDialog open={showCloseWarning} onOpenChange={setShowCloseWarning}>
         <AlertDialogContent>
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="text-center space-y-4">

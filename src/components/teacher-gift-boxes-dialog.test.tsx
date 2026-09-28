@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { describe, expect, it, vi } from "vitest";
 import { giftBoxService } from "@/application/services/giftBoxService";
+import { cosmeticService } from "@/application/services/cosmeticService";
 import { TeacherGiftBoxesDialog } from "./teacher-gift-boxes-dialog";
 
 vi.mock("@/application/services/giftBoxService", () => ({
@@ -28,6 +29,10 @@ vi.mock("@/application/services/giftBoxService", () => ({
   },
 }));
 
+vi.mock("@/application/services/cosmeticService", () => ({
+  cosmeticService: { equip: vi.fn().mockResolvedValue(undefined) },
+}));
+
 describe("TeacherGiftBoxesDialog", () => {
   it("shows the teacher message and reveals the recorded collectible", async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -42,5 +47,19 @@ describe("TeacherGiftBoxesDialog", () => {
     await waitFor(() => expect(giftBoxService.open).toHaveBeenCalledWith("box-1"));
     expect(await screen.findByText("Starlight Pot")).toBeInTheDocument();
     expect(screen.getByText("New permanent collectible")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /equip now/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /view collection/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /later/i })).toBeInTheDocument();
+  });
+
+  it("lets the learner equip the revealed collectible immediately", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><TeacherGiftBoxesDialog /></QueryClientProvider>);
+
+    fireEvent.click(screen.getByRole("button", { name: /gift boxes/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /open this gift/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /equip now/i }));
+
+    await waitFor(() => expect(cosmeticService.equip).toHaveBeenCalledWith("pot", "pot:starlight"));
   });
 });
