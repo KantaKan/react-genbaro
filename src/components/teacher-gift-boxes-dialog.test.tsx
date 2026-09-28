@@ -15,6 +15,7 @@ vi.mock("@/application/services/giftBoxService", () => ({
         message: "You kept showing up with curiosity.",
         granted_by: "admin-1",
         status: "unopened",
+        source: "achievement",
         created_at: "2026-09-28T00:00:00Z",
       },
     ]),
@@ -41,6 +42,7 @@ describe("TeacherGiftBoxesDialog", () => {
     fireEvent.click(screen.getByRole("button", { name: /gift boxes/i }));
     expect(await screen.findByText(/you kept showing up with curiosity/i)).toBeInTheDocument();
     expect(screen.getByText("Rare or better")).toBeInTheDocument();
+    expect(screen.getByText("Achievement unlocked")).toBeInTheDocument();
     expect(screen.getByText(/Rare 66.7% · Epic 26.7% · Legendary 6.6%/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /open this gift/i }));
 

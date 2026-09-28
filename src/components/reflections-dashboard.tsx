@@ -873,7 +873,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
           </DialogHeader>
           {milestoneCelebration?.count ? (
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Your reflection streak reached a new milestone. {milestoneCelebration.count === 1 ? "A permanent collectible is" : `${milestoneCelebration.count} permanent collectibles are`} waiting in your garden gift box.
+              Your reflection journey reached a new milestone. {milestoneCelebration.count === 1 ? "A permanent collectible is" : `${milestoneCelebration.count} permanent collectibles are`} waiting in your garden gift box.
             </p>
           ) : (
             <p className="text-sm leading-relaxed text-muted-foreground">

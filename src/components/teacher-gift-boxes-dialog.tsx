@@ -117,7 +117,9 @@ export function TeacherGiftBoxesDialog({ onReward, open: controlledOpen, onOpenC
                 <div className="absolute inset-y-0 left-0 w-2 bg-[repeating-linear-gradient(45deg,#d97706_0_6px,#fef3c7_6px_12px,#059669_12px_18px,#d1fae5_18px_24px)]" />
                 <div className="pl-3">
                   <div className="flex items-center justify-between gap-3"><Badge variant="outline">{box.minimum_rarity} or better</Badge><Gift className="h-5 w-5 text-rose-500" /></div>
-                  <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">{box.source === "reflection-milestone" ? "Reflection milestone" : "From your teacher"}</p>
+                  <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">
+                    {box.source === "reflection-milestone" ? "Reflection milestone" : box.source === "achievement" ? "Achievement unlocked" : "From your teacher"}
+                  </p>
                   <blockquote className="mt-2 font-serif text-lg leading-relaxed text-emerald-950">“{box.message}”</blockquote>
                   <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{oddsByFloor[box.minimum_rarity]}</p>
                   <Button className="mt-5 w-full gap-2" onClick={() => openBox(box.id)} disabled={!!openingId}>
