@@ -4,6 +4,18 @@ import { resolvePlantAppearance } from "@/lib/plant-appearance";
 import { SeedlingPlant } from "./streak-components";
 
 describe("SeedlingPlant", () => {
+  it("keeps the mature vine visible above the pot in both activity states", () => {
+    for (const active of [true, false]) {
+      const appearance = resolvePlantAppearance({ userId: "vine-learner", tier: 9, active, overrides: { species: "vine" } });
+      const { unmount } = render(<SeedlingPlant appearance={appearance} showParticles={false} />);
+      const canopy = screen.getByTestId("vine-canopy");
+      const climbingStem = canopy.querySelector('path[d^="M20 41 C"]');
+      expect(climbingStem).not.toBeNull();
+      expect(canopy.querySelectorAll("ellipse").length).toBeGreaterThan(10);
+      unmount();
+    }
+  });
+
   it.each([
     {
       name: "renders a persisted active variant",

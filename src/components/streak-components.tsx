@@ -400,22 +400,20 @@ function quadPoint(p0: { x: number; y: number }, p1: { x: number; y: number }, p
   return { x: mt * mt * p0.x + 2 * mt * t * p1.x + t * t * p2.x, y: mt * mt * p0.y + 2 * mt * t * p1.y + t * t * p2.y }
 }
 
-// Tendrils anchor to alternating sides of the rim (not one shared center point) and bow
-// outward before drooping, so they read as trailing over the pot edge instead of a bundle
-// of straight lines fanning from the middle. Leaflets follow the actual curve via
-// quadPoint rather than a straight lerp between endpoints, which drifted off-curve on wide bends.
 const VineDrape = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; colors: CanopyColors; hasFlower: boolean; hasFruit: boolean }) => {
-  const count = Math.min(1 + Math.floor(tier / 2), 5)
+  const count = Math.min(2 + Math.floor(tier / 2), 6)
   const baseY = 41
+  const topY = Math.max(16, 37 - tier * 2.4)
   const tips: { x: number; y: number }[] = []
-  const parts: ReactNode[] = []
+  const parts: ReactNode[] = [
+    <path key="climbing-vine" d={`M20 ${baseY} C18 ${baseY - 8} 23 ${topY + 8} 20 ${topY}`} stroke={colors.stem} strokeWidth={1.8} fill="none" strokeLinecap="round" />,
+  ]
   for (let i = 0; i < count; i++) {
     const side = i % 2 === 0 ? -1 : 1
-    const originX = 20 + side * (6 + Math.floor(i / 2) * 2)
-    const length = 4 + Math.min(tier, 8) * 0.65
-    const p0 = { x: originX, y: baseY }
-    const p1 = { x: originX + side * 4, y: baseY + length * 0.3 }
-    const p2 = { x: originX + side * 1.2, y: baseY + length }
+    const branchY = baseY - ((i + 1) / (count + 1)) * (baseY - topY)
+    const p0 = { x: 20, y: branchY }
+    const p1 = { x: 20 + side * (5 + tier * 0.2), y: branchY - 4 }
+    const p2 = { x: 20 + side * (7 + tier * 0.2), y: branchY + 3 }
     tips.push(p2)
     parts.push(
       <path
@@ -446,13 +444,12 @@ const VineDrape = ({ tier, colors, hasFlower, hasFruit }: { tier: PlantTier; col
       )
     }
   }
-  const longest = tips.reduce((a, b) => (b.y > a.y ? b : a), tips[0] ?? { x: 20, y: baseY })
   return (
-    <>
+    <g data-testid="vine-canopy">
       {parts}
-      {hasFlower && <BloomCluster x={longest.x} y={longest.y} color={colors.flower} glow={colors.glow} outline={colors.outline} scale={0.5} />}
+      {hasFlower && <BloomCluster x={20} y={topY} color={colors.flower} glow={colors.glow} outline={colors.outline} scale={0.5} />}
       {hasFruit && tips[1] && <FruitDot x={tips[1].x} y={tips[1].y} color={colors.fruit} leafColor={colors.leaf} outline={colors.outline} r={1.6} />}
-    </>
+    </g>
   )
 }
 

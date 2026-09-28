@@ -41,6 +41,12 @@ interface GenmateFieldProps {
   members: GenmateFieldMember[];
   onContextLost?: () => void;
   renderDetails?: (memberId: string) => ReactNode;
+  onFrameMetrics?: (metrics: FarmFrameMetrics) => void;
+}
+
+export interface FarmFrameMetrics {
+  fps: number;
+  pixelRatio: number;
 }
 
 // Shared between the key light and the visible sun in the sky dome, so the
@@ -64,7 +70,7 @@ function clamp(value: number, min: number, max: number): number {
  * ported here to real @react-three/fiber primitives rather than the spike's
  * hand-rolled software renderer.
  */
-export function GenmateField({ members, onContextLost, renderDetails }: GenmateFieldProps) {
+export function GenmateField({ members, onContextLost, renderDetails, onFrameMetrics }: GenmateFieldProps) {
   const tileSize = useMemo(() => computeTileSize(), []);
   // Sized to the actual headcount — a genmate group stays the tuned 3×3, a
   // whole cohort field grows instead of silently dropping anyone past 9.
@@ -84,7 +90,10 @@ export function GenmateField({ members, onContextLost, renderDetails }: GenmateF
     reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   }));
   const [zoom, setZoom] = useState(1);
-  const { data: cosmeticCatalog = [] } = useQuery("plantCosmeticCatalog", cosmeticService.getCatalog, { staleTime: 300_000 });
+  const { data: cosmeticCatalog = [] } = useQuery("plantCosmeticCatalog", cosmeticService.getCatalog, {
+    enabled: members.some((member) => Object.values(member.appearance.cosmetics).some(Boolean)),
+    staleTime: 300_000,
+  });
   const selectedMember = members.find((member) => member.id === selectedId);
   const selectedCosmetics = selectedMember
     ? cosmeticCatalog.filter((item) => Object.values(selectedMember.appearance.cosmetics).includes(item.id))
@@ -186,6 +195,7 @@ export function GenmateField({ members, onContextLost, renderDetails }: GenmateF
           }}
         >
           {quality.lowPower && !quality.reducedMotion && <RenderCadence />}
+          {onFrameMetrics && <FrameMetricsProbe onMetrics={onFrameMetrics} />}
           <FieldCamera fieldDiag={fieldDiag} rotationStep={rotationStep} zoom={zoom} />
           <SkyDome radius={fieldDiag * 1.8} sunDirection={SUN_DIRECTION} reducedMotion={quality.reducedMotion} />
           <ambientLight intensity={lighting === "night" ? 0.2 : lighting === "evening" ? 0.28 : 0.35} />
@@ -267,6 +277,23 @@ export function GenmateField({ members, onContextLost, renderDetails }: GenmateF
       )}
     </div>
   );
+}
+
+function FrameMetricsProbe({ onMetrics }: { onMetrics: (metrics: FarmFrameMetrics) => void }) {
+  const elapsed = useRef(0);
+  const frames = useRef(0);
+  useFrame(({ gl }, delta) => {
+    elapsed.current += delta;
+    frames.current++;
+    if (elapsed.current < 2) return;
+    onMetrics({
+      fps: Math.round(frames.current / elapsed.current),
+      pixelRatio: gl.getPixelRatio(),
+    });
+    elapsed.current = 0;
+    frames.current = 0;
+  });
+  return null;
 }
 
 function RenderCadence() {
