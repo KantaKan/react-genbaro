@@ -25,6 +25,7 @@ import { BoardReactionSummary } from "@/components/board-reaction-summary";
 import { api } from "@/lib/api";
 import { toFarmMembers } from "@/lib/genmate-garden";
 import { useWebglSupported } from "@/hooks/use-webgl-support";
+import { useHolidayDates } from "@/hooks/use-holiday-dates";
 import { resolvePlantAppearance, type PlantAppearance } from "@/lib/plant-appearance";
 import {
   getPlantTier,
@@ -98,6 +99,7 @@ const GenmateField = React.lazy(() =>
 type ViewMode = "grid" | "farm";
 
 export function GenmateGarden({ cohort }: GenmateGardenProps) {
+  const holidayDates = useHolidayDates();
   const [view, setView] = useState<ViewMode>("grid");
   const webglSupported = useWebglSupported();
   const { data, isLoading, isError, refetch } = useQuery<AdminUsersResponse>(
@@ -119,9 +121,9 @@ export function GenmateGarden({ cohort }: GenmateGardenProps) {
     for (const user of users) {
       if (!user.genmate_group) continue;
 
-      const streakData = calculateStreakData(user.reflections ?? []);
+      const streakData = calculateStreakData(user.reflections ?? [], new Set(), holidayDates);
       const displayStreak = getDisplayStreak(streakData);
-      const tier = getPlantTier(getEffectivePlantDays(displayStreak, user.growth_points ?? 0));
+      const tier = getPlantTier(getEffectivePlantDays(streakData.bestStreak, user.growth_points ?? 0));
       const member: GardenMember = {
         user,
         streakData,
@@ -164,7 +166,7 @@ export function GenmateGarden({ cohort }: GenmateGardenProps) {
     }
 
     return result.sort((a, b) => a.name.localeCompare(b.name));
-  }, [users]);
+  }, [users, holidayDates]);
 
   const groupedLearnerCount = groups.reduce((sum, g) => sum + g.members.length, 0);
 

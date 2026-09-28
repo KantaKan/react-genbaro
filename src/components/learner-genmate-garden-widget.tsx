@@ -7,6 +7,7 @@ import { SkeletonWarm } from "@/components/loading-skeleton";
 import { getMyGenmateGarden } from "@/lib/api";
 import { mapGenmateMembers } from "@/lib/genmate-garden";
 import { SeedlingPlant } from "@/components/streak-components";
+import { useHolidayDates } from "@/hooks/use-holiday-dates";
 
 const MiniPlant = ({ member }: { member: ReturnType<typeof mapGenmateMembers>[number] }) => {
   const fullName = `${member.user.first_name} ${member.user.last_name}`.trim() || "Unknown learner";
@@ -30,6 +31,7 @@ const MiniPlant = ({ member }: { member: ReturnType<typeof mapGenmateMembers>[nu
 };
 
 const LearnerGenmateGardenWidget: React.FC = () => {
+  const holidayDates = useHolidayDates();
   const { data, isLoading, isError } = useQuery(
     ["learnerGenmateGarden"],
     getMyGenmateGarden
@@ -50,7 +52,7 @@ const LearnerGenmateGardenWidget: React.FC = () => {
     return null;
   }
 
-  const members = mapGenmateMembers(data);
+  const members = mapGenmateMembers(data, holidayDates);
   const groupName = members[0]?.user.genmate_group ?? "Genmate Garden";
 
   return (

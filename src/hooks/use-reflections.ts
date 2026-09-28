@@ -18,6 +18,7 @@ interface ApiResponse<T> {
 export interface StreakData {
   currentStreak: number;
   oldStreak: number;
+  bestStreak: number;
   lastActiveDate: Date | null;
   hasCurrentStreak: boolean;
   eligibleProtectDate: string | null;

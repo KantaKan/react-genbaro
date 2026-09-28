@@ -6,15 +6,15 @@ import type { GenmateFieldMember } from "@/components/farm/GenmateField";
 import { resolvePlantAppearance } from "@/lib/plant-appearance";
 import { getPlantTier, getEffectivePlantDays } from "@/lib/streak-milestones";
 
-export function mapGenmateMembers(members: GenmateGardenMember[]): GardenMember[] {
+export function mapGenmateMembers(members: GenmateGardenMember[], holidayDates?: Set<string>): GardenMember[] {
   return members.map((m) => {
     const reflections = m.reflection_dates.map(
       (d) => ({ day: d }) as unknown as Reflection
     );
     const protectedDates = new Set(m.protected_dates ?? []);
-    const streakData = calculateStreakData(reflections, protectedDates);
+    const streakData = calculateStreakData(reflections, protectedDates, holidayDates);
     const displayStreak = getDisplayStreak(streakData);
-    const tier = getPlantTier(getEffectivePlantDays(displayStreak, m.growth_points ?? 0));
+    const tier = getPlantTier(getEffectivePlantDays(streakData.bestStreak, m.growth_points ?? 0));
     return {
       user: {
         _id: m._id,

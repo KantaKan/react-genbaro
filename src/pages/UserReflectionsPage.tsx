@@ -13,6 +13,7 @@ import { api } from "@/lib/api";
 import { SkeletonWarm } from "@/components/loading-skeleton";
 import { ReflectionsTable } from "@/components/reflections-table";
 import { useStreakCalculation } from "@/hooks/use-streak-calculation";
+import { useHolidayDates } from "@/hooks/use-holiday-dates";
 import { StreakIcon } from "@/components/streak-components";
 import { AwardBadgeButton } from "@/components/award-badge-button";
 import { AwardFertilizerButton } from "@/components/award-fertilizer-button";
@@ -116,14 +117,15 @@ export default function UserReflectionsPage() {
     return new Set(dates);
   }, [user?.fertilizer_log]);
 
-  const streakData = useStreakCalculation(reflections, protectedDates);
+  const holidayDates = useHolidayDates();
+  const streakData = useStreakCalculation(reflections, protectedDates, holidayDates);
 
   const plantAppearance = useMemo(
     () =>
       user
         ? resolvePlantAppearance({
             userId: user._id,
-            tier: getPlantTier(getEffectivePlantDays(streakData.hasCurrentStreak ? streakData.currentStreak : streakData.oldStreak, user.growth_points ?? 0)),
+            tier: getPlantTier(getEffectivePlantDays(streakData.bestStreak, user.growth_points ?? 0)),
             active: streakData.hasCurrentStreak,
             growthPoints: user.growth_points ?? 0,
             overrides: {
@@ -137,7 +139,7 @@ export default function UserReflectionsPage() {
             cosmetics: user.equipped_cosmetics,
           })
         : undefined,
-    [streakData.currentStreak, streakData.hasCurrentStreak, streakData.oldStreak, user]
+    [streakData.bestStreak, streakData.hasCurrentStreak, user]
   );
 
   if (isLoading) {

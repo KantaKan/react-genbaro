@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { getAllPalettes } from "@/lib/plant-variants";
 import { resolvePlantAppearance } from "@/lib/plant-appearance";
+import { restingPalette } from "@/lib/resting-palette";
 import { getPlantTierConfig, type PlantTier } from "@/lib/streak-milestones";
 import {
   archetypeForSpecies,
@@ -76,17 +77,20 @@ describe("buildArchetypeParts", () => {
   });
 });
 
-describe("active vs. inactive (streak-lapsed) coloring — matches SeedlingPlant's grey fallback", () => {
-  it("uses grey, not the palette color, when active is false", () => {
+describe("active vs. resting coloring", () => {
+  it("softens the chosen palette while keeping its identity", () => {
     const forest = getAllPalettes().find((p) => p.name === "Forest")!;
+    const ocean = getAllPalettes().find((p) => p.name === "Ocean")!;
     const tierConfig = getPlantTierConfig(7);
     const active = buildArchetypeParts("bloom", 7, forest, tierConfig, true);
     const inactive = buildArchetypeParts("bloom", 7, forest, tierConfig, false);
+    const restingOcean = buildArchetypeParts("bloom", 7, ocean, tierConfig, false);
     const activeColors = new Set(active.map((p) => p.color));
     const inactiveColors = new Set(inactive.map((p) => p.color));
     expect(activeColors.has(forest.stem)).toBe(true);
     expect(inactiveColors.has(forest.stem)).toBe(false);
-    expect(inactiveColors.has("#a1a1aa")).toBe(true); // real SeedlingPlant grey stem fallback
+    expect(inactiveColors.has(restingPalette(forest).stem)).toBe(true);
+    expect(restingOcean).not.toEqual(inactive);
   });
 
   it("does not change the plant's own height — only color, plus the active-only face", () => {
@@ -95,8 +99,6 @@ describe("active vs. inactive (streak-lapsed) coloring — matches SeedlingPlant
     const active = buildArchetypeParts("bloom", 7, forest, tierConfig, true);
     const inactive = buildArchetypeParts("bloom", 7, forest, tierConfig, false);
     expect(maxPartHeight(active)).toBeCloseTo(maxPartHeight(inactive), 10);
-    // Active gets the 5-part cute pot face (2 eyes, a smile, 2 blush cheeks) —
-    // matches the real 2D SeedlingPlant, which only draws the face when active.
     expect(active.length).toBe(inactive.length + 5);
   });
 });
@@ -143,12 +145,14 @@ describe("getCachedPlantParts — ticket 04's cache", () => {
     expect(flower).not.toEqual(tulip);
   });
 
-  it("keys active vs. inactive separately, so grey never leaks into the active cache slot", () => {
+  it("keys active and resting palettes separately", () => {
     const forest = getAllPalettes().find((p) => p.name === "Forest")!;
     const tierConfig = getPlantTierConfig(6);
     const active = getCachedPlantParts("flower", 6, forest, tierConfig, true);
     const inactive = getCachedPlantParts("flower", 6, forest, tierConfig, false);
     expect(active).not.toBe(inactive);
+    const ocean = getAllPalettes().find((p) => p.name === "Ocean")!;
+    expect(getCachedPlantParts("flower", 6, ocean, tierConfig, false)).not.toBe(inactive);
   });
 
   it("matches buildPlantParts' output for a fresh key", () => {
@@ -219,6 +223,6 @@ describe("buildPlantGeometry", () => {
     });
     expect(geometry.unsupportedCosmetics).toEqual(["aura", "accessory"]);
     expect(geometry.appearance.growth).toMatchObject({ points: 150, flourishTier: 2 });
-    expect(new Set(geometry.parts.map((part) => part.color))).toContain("#a1a1aa");
+    expect(new Set(geometry.parts.map((part) => part.color))).toContain(restingPalette(appearance.palette).stem);
   });
 });

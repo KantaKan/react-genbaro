@@ -11,6 +11,7 @@ import { Plus, BookOpen, CheckCircle } from "lucide-react";
 
 import { useReflections, type Reflection } from "@/hooks/use-reflections";
 import { useStreakCalculation } from "@/hooks/use-streak-calculation";
+import { useHolidayDates } from "@/hooks/use-holiday-dates";
 import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflection-zones";
 import { StreakIcon, GrowthBar, ComfortZoneMessage } from "./streak-components";
 import { getEffectivePlantDays, getMilestoneForStreak, getNextTierProgress, getPlantTier, getRandomComfortMessage, getRandomStreakQuote } from "@/lib/streak-milestones";
@@ -76,7 +77,8 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
     return new Set(dates);
   }, [user?.fertilizer_log]);
 
-  const streakData = useStreakCalculation(reflections, protectedDates);
+  const holidayDates = useHolidayDates();
+  const streakData = useStreakCalculation(reflections, protectedDates, holidayDates);
   const tierProgress = useMemo(
     () => getNextTierProgress(streakData.currentStreak, user?.growth_points ?? 0),
     [streakData.currentStreak, user?.growth_points]
@@ -90,7 +92,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
     return user
       ? resolvePlantAppearance({
           userId: user._id,
-          tier: getPlantTier(getEffectivePlantDays(streakData.hasCurrentStreak ? streakData.currentStreak : streakData.oldStreak, user.growth_points ?? 0)),
+          tier: getPlantTier(getEffectivePlantDays(streakData.bestStreak, user.growth_points ?? 0)),
           active: streakData.hasCurrentStreak,
           growthPoints: user.growth_points ?? 0,
           overrides: {
@@ -104,7 +106,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
           cosmetics: user.equipped_cosmetics,
         })
       : undefined;
-  }, [streakData.currentStreak, streakData.hasCurrentStreak, streakData.oldStreak, user]);
+  }, [streakData.bestStreak, streakData.hasCurrentStreak, user]);
 
   const fetchUser = useCallback(async () => {
     if (!userId) return;
@@ -145,7 +147,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [giftBoxesOpen, setGiftBoxesOpen] = useState(false);
   const [collectionOpen, setCollectionOpen] = useState(false);
-  const [milestoneCelebration, setMilestoneCelebration] = useState<{ count: number; warning?: string } | null>(null);
+  const [milestoneCelebration, setMilestoneCelebration] = useState<{ count: number; comeback?: boolean; warning?: string } | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -183,6 +185,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   }, [todaysReflection]);
 
   const handleSubmit = async (newReflection: Omit<Reflection, "_id" | "createdAt" | "day">) => {
+    const returningToGarden = !streakData.hasCurrentStreak && streakData.oldStreak > 0;
     setIsSubmitting(true);
     let createdReflection: Reflection;
     try {
@@ -201,9 +204,10 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
     }
 
     try {
-      if ((createdReflection.reward_boxes?.length ?? 0) > 0 || createdReflection.reward_warning) {
+      if ((createdReflection.reward_boxes?.length ?? 0) > 0 || createdReflection.reward_warning || returningToGarden) {
         setMilestoneCelebration({
           count: createdReflection.reward_boxes?.length ?? 0,
+          comeback: returningToGarden,
           warning: createdReflection.reward_warning,
         });
       }
@@ -869,15 +873,21 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
         <DialogContent className="overflow-hidden border-emerald-200 bg-gradient-to-b from-amber-50 via-white to-emerald-50 text-center sm:max-w-md">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-4xl shadow-inner" aria-hidden="true">🌱</div>
           <DialogHeader>
-            <DialogTitle className="text-center font-serif text-3xl text-emerald-950">Your care is showing</DialogTitle>
+            <DialogTitle className="text-center font-serif text-3xl text-emerald-950">
+              {milestoneCelebration?.comeback ? "Welcome back to your garden" : "Your care is showing"}
+            </DialogTitle>
           </DialogHeader>
           {milestoneCelebration?.count ? (
             <p className="text-sm leading-relaxed text-muted-foreground">
               Your reflection journey reached a new milestone. {milestoneCelebration.count === 1 ? "A permanent collectible is" : `${milestoneCelebration.count} permanent collectibles are`} waiting in your garden gift box.
             </p>
-          ) : (
+          ) : milestoneCelebration?.warning ? (
             <p className="text-sm leading-relaxed text-muted-foreground">
               Your reflection is safely saved. We will check your milestone gift again shortly.
+            </p>
+          ) : (
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Your plant is awake again. Its growth and everything you collected are still here.
             </p>
           )}
           <div className="mt-2 grid gap-2 sm:grid-cols-2">

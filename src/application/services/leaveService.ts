@@ -49,7 +49,7 @@ export const leaveService = {
   },
 
   async getHolidays(startDate?: string, endDate?: string): Promise<Holiday[]> {
-    let url = "/admin/holidays";
+    let url = "/holidays";
     if (startDate && endDate) {
       url += `?start_date=${startDate}&end_date=${endDate}`;
     }

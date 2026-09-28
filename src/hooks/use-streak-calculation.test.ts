@@ -96,3 +96,68 @@ describe("calculateStreakData protected dates", () => {
     expect(streakData.hasCurrentStreak).toBe(true);
   });
 });
+
+describe("resting and comeback streak states", () => {
+  it("rests after a missed workday while preserving the previous streak", () => {
+    vi.setSystemTime(new Date("2026-10-08T05:00:00Z"));
+    const data = calculateStreakData(["2026-10-02", "2026-10-05"].map(makeReflection));
+
+    expect(data.hasCurrentStreak).toBe(false);
+    expect(data.currentStreak).toBe(0);
+    expect(data.oldStreak).toBe(2);
+    expect(data.eligibleProtectDate).toBe("2026-10-06");
+  });
+
+  it("keeps Friday's streak active through the weekend and Monday before submission", () => {
+    vi.setSystemTime(new Date("2026-10-04T05:00:00Z"));
+    const weekend = calculateStreakData([makeReflection("2026-10-02")]);
+    expect(weekend.hasCurrentStreak).toBe(true);
+    expect(weekend.currentStreak).toBe(1);
+
+    vi.setSystemTime(new Date("2026-10-05T05:00:00Z"));
+    const monday = calculateStreakData([makeReflection("2026-10-02")]);
+    expect(monday.hasCurrentStreak).toBe(true);
+    expect(monday.currentStreak).toBe(1);
+  });
+
+  it("uses the Thailand date when UTC is still on Sunday", () => {
+    vi.setSystemTime(new Date("2026-10-04T18:30:00Z"));
+    const data = calculateStreakData([makeReflection("2026-10-05"), makeReflection("2026-10-02")]);
+
+    expect(data.hasCurrentStreak).toBe(true);
+    expect(data.currentStreak).toBe(2);
+  });
+
+  it("uses configured holidays and protected dates to bridge a streak", () => {
+    vi.setSystemTime(new Date("2026-10-08T05:00:00Z"));
+    const data = calculateStreakData(
+      ["2026-10-02", "2026-10-06", "2026-10-08"].map(makeReflection),
+      new Set(["2026-10-07"]),
+      new Set(["2026-10-05"]),
+    );
+
+    expect(data.hasCurrentStreak).toBe(true);
+    expect(data.currentStreak).toBe(4);
+  });
+
+  it("wakes on a new reflection without carrying a broken streak forward", () => {
+    vi.setSystemTime(new Date("2026-10-08T05:00:00Z"));
+    const data = calculateStreakData(["2026-10-02", "2026-10-05", "2026-10-08"].map(makeReflection));
+
+    expect(data.hasCurrentStreak).toBe(true);
+    expect(data.currentStreak).toBe(1);
+    expect(data.oldStreak).toBe(2);
+    expect(data.bestStreak).toBe(2);
+  });
+
+  it("keeps an earlier high-water streak after later shorter returns", () => {
+    vi.setSystemTime(new Date("2026-10-15T05:00:00Z"));
+    const data = calculateStreakData([
+      "2026-09-28", "2026-09-29", "2026-09-30", "2026-10-01", "2026-10-02",
+      "2026-10-06", "2026-10-12", "2026-10-15",
+    ].map(makeReflection));
+
+    expect(data.currentStreak).toBe(1);
+    expect(data.bestStreak).toBe(5);
+  });
+});

@@ -1,6 +1,7 @@
 import type { PlantPalette, PlantSpecies } from "@/lib/plant-variants";
 import type { PlantAppearance, PlantCosmeticSlot } from "@/lib/plant-appearance";
 import type { PlantTier, PlantTierConfig } from "@/lib/streak-milestones";
+import { restingPalette } from "@/lib/resting-palette";
 
 /**
  * The 22 SVG species collapse into 8 archetypes by silhouette family — decided
@@ -161,7 +162,7 @@ function potParts(pal: PlantPalette): FarmPart[] {
     cyl(3.2, 2.6, 2.2, 0, 1.1, 0, pal.pot),
     cyl(2.9, 2.9, 0.4, 0, 2.4, 0, pal.soil),
   ];
-  const active = pal.name !== "Inactive";
+  const active = pal.name !== "Resting";
   if (active) parts.push(...potFaceParts("#3d3d3d"));
   return parts;
 }
@@ -514,7 +515,7 @@ function speciesSignatureParts(signature: SpeciesSignature, tier: PlantTier, pal
 }
 
 function buildSpeciesParts(species: PlantSpecies, tier: PlantTier, palette: PlantPalette, tierConfig: PlantTierConfig, active: boolean): FarmPart[] {
-  const renderedPalette = active ? palette : INACTIVE_PALETTE;
+  const renderedPalette = active ? palette : restingPalette(palette);
   const modifier = SPECIES_MODIFIERS[species];
   const base = ARCHETYPE_BUILDERS[archetypeForSpecies(species)](tier, renderedPalette, {
     hasFlower: tierConfig.hasFlower,
@@ -530,25 +531,9 @@ function offsetX(part: FarmPart, dx: number): FarmPart {
   return { ...part, position: [part.position[0] + dx, part.position[1], part.position[2]] };
 }
 
-/**
- * Matches `SeedlingPlant`'s exact grey fallback when a learner's streak has
- * lapsed (`active={false}`) — shape and tier stay the same, only color drops
- * to grey. Same values as streak-components.tsx's inline fallbacks.
- */
-const INACTIVE_PALETTE: PlantPalette = {
-  name: "Inactive",
-  stem: "#a1a1aa",
-  leaf: "#d4d4d8",
-  flower: "#71717a",
-  fruit: "#71717a",
-  pot: "#9c8b7e",
-  soil: "#6b5b4e",
-  glow: "#a1a1aa",
-};
-
 export function buildArchetypeParts(archetype: FarmArchetype, tier: PlantTier, palette: PlantPalette, tierConfig: PlantTierConfig, active = true): FarmPart[] {
   const builder = ARCHETYPE_BUILDERS[archetype];
-  return builder(tier, active ? palette : INACTIVE_PALETTE, { hasFlower: tierConfig.hasFlower, hasFruit: tierConfig.hasFruit });
+  return builder(tier, active ? palette : restingPalette(palette), { hasFlower: tierConfig.hasFlower, hasFruit: tierConfig.hasFruit });
 }
 
 export function buildPlantParts(species: PlantSpecies, tier: PlantTier, palette: PlantPalette, tierConfig: PlantTierConfig, active = true): FarmPart[] {
@@ -615,7 +600,7 @@ export function buildPlantGeometry(appearance: PlantAppearance): FarmPlantGeomet
  */
 const partsCache = new Map<string, FarmPart[]>();
 export function getCachedPlantParts(species: PlantSpecies, tier: PlantTier, palette: PlantPalette, tierConfig: PlantTierConfig, active = true): FarmPart[] {
-  const key = `${species}:${tier}:${active ? palette.name : "inactive"}`;
+  const key = `${species}:${tier}:${palette.name}:${active ? "active" : "resting"}`;
   const cached = partsCache.get(key);
   if (cached) return cached;
   const parts = buildSpeciesParts(species, tier, palette, tierConfig, active);

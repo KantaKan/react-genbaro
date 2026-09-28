@@ -21,6 +21,7 @@ import {
   type SpecialPotStyle,
 } from "@/lib/plant-variants"
 import type { PlantAppearance } from "@/lib/plant-appearance"
+import { restingPalette } from "@/lib/resting-palette"
 
 const tierTextColors: Record<PlantTier, string> = {
   0: "text-muted-foreground",
@@ -1613,6 +1614,7 @@ export const SeedlingPlant = ({ appearance, className, showParticles = true }: {
   const tier = appearance.tier
   const active = appearance.state === "active"
   const variant = appearance
+  const displayPalette = active ? variant.palette : restingPalette(variant.palette)
   const config = appearance.tierCapabilities
   const potPaths = getPotPath(appearance.pot)
   const stemTilt = getStemTilt(appearance.stem)
@@ -1638,14 +1640,14 @@ export const SeedlingPlant = ({ appearance, className, showParticles = true }: {
     }
   }, [active, prefersReducedMotion, swayControls, leafBounceControls])
 
-  const stemColor = active ? variant.palette.stem : "#a1a1aa"
-  const leafColor = active ? variant.palette.leaf : "#d4d4d8"
-  const flowerColor = active ? variant.palette.flower : "#71717a"
-  const fruitColor = active ? variant.palette.fruit : "#71717a"
+  const stemColor = displayPalette.stem
+  const leafColor = displayPalette.leaf
+  const flowerColor = displayPalette.flower
+  const fruitColor = displayPalette.fruit
   const specialPot = isSpecialPotStyle(variant.pot) ? variant.pot : null
-  const potColor = active ? (specialPot ? getSpecialPotColor(specialPot) : variant.palette.pot) : "#9c8b7e"
-  const soilColor = active ? variant.palette.soil : "#6b5b4e"
-  const outlineColor = active ? "#3d3d3d" : "#52525b"
+  const potColor = specialPot ? getSpecialPotColor(specialPot) : displayPalette.pot
+  const soilColor = displayPalette.soil
+  const outlineColor = active ? "#3d3d3d" : "#625e57"
   const strokeW = 1.8
 
   const petalPositions = [
@@ -1751,7 +1753,7 @@ export const SeedlingPlant = ({ appearance, className, showParticles = true }: {
       )}
 
       {!active && !prefersReducedMotion && config.growthGlow !== "none" && (
-        <AuraGlow sizePct={60 * config.glowScale} color="#a1a1aa" blurPx={6} opacity={0.1} duration={4} />
+        <AuraGlow sizePct={60 * config.glowScale} color={displayPalette.glow} blurPx={6} opacity={0.1} duration={4} />
       )}
 
       {/* Plant SVG */}
@@ -1804,7 +1806,7 @@ export const SeedlingPlant = ({ appearance, className, showParticles = true }: {
                 </>
               )}
               {/* Special reward pot decoration — admin-granted only, never random */}
-              {active && specialPot && <SpecialPotDecoration style={specialPot} />}
+              {specialPot && <SpecialPotDecoration style={specialPot} />}
               {/* Cute pot face — a small constant of charm on every species, not tier-gated */}
               {active && (
                 <>
