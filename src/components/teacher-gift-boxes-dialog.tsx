@@ -109,7 +109,7 @@ export function TeacherGiftBoxesDialog({ onReward, open: controlledOpen, onOpenC
               <div className="rounded-3xl border border-dashed border-emerald-300 bg-white/70 px-6 py-12 text-center">
                 <PackageOpen className="mx-auto h-9 w-9 text-emerald-600" />
                 <p className="mt-3 font-medium text-emerald-950">Your gift shelf is clear</p>
-                <p className="mt-1 text-sm text-muted-foreground">New boxes from your teachers will wait safely here.</p>
+                <p className="mt-1 text-sm text-muted-foreground">New gifts from your reflections, achievements, and teachers will wait safely here.</p>
               </div>
             )}
             {unopened.map((box) => (
