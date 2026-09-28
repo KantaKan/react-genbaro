@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { getAllPalettes } from "@/lib/plant-variants";
+import { resolvePlantAppearance } from "@/lib/plant-appearance";
 import { getPlantTierConfig, type PlantTier } from "@/lib/streak-milestones";
 import {
   archetypeForSpecies,
@@ -9,6 +10,7 @@ import {
   maxPartHeight,
   maxHorizontalExtent,
   FARM_ARCHETYPE_ORDER,
+  buildPlantGeometry,
 } from "@/lib/farm-geometry";
 
 const ALL_SPECIES = [
@@ -163,5 +165,39 @@ describe("maxHorizontalExtent", () => {
       expect(large).toBeGreaterThanOrEqual(small);
       expect(large).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("buildPlantGeometry", () => {
+  it("carries the canonical appearance into geometry with explicit style fallbacks", () => {
+    const appearance = resolvePlantAppearance({
+      userId: "farm-learner",
+      tier: 7,
+      active: false,
+      growthPoints: 150,
+      overrides: {
+        species: "coffee",
+        palette: "Ocean",
+        pot: "trophy",
+        leaf: "wide",
+        flower: "star",
+        stem: "leaning",
+      },
+      cosmetics: { aura: "aura-gold", accessory: "ladybug" },
+    });
+
+    const geometry = buildPlantGeometry(appearance);
+
+    expect(geometry.appearance).toBe(appearance);
+    expect(geometry.parts.length).toBeGreaterThan(0);
+    expect(geometry.rendererStyles).toEqual({
+      pot: { requested: "trophy", rendered: "round", supported: false },
+      leaf: { requested: "wide", rendered: "rounded", supported: false },
+      flower: { requested: "star", rendered: "daisy", supported: false },
+      stem: { requested: "leaning", rendered: "curved", supported: false },
+    });
+    expect(geometry.unsupportedCosmetics).toEqual(["aura", "accessory"]);
+    expect(geometry.appearance.growth).toMatchObject({ points: 150, flourishTier: 2 });
+    expect(new Set(geometry.parts.map((part) => part.color))).toContain("#a1a1aa");
   });
 });

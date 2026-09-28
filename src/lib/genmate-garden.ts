@@ -53,10 +53,7 @@ export function toFarmMembers(members: GardenMember[]): GenmateFieldMember[] {
   return members.map((m) => ({
     id: m.user._id,
     name: `${m.user.first_name ?? ""} ${m.user.last_name ?? ""}`.trim() || "Unknown learner",
-    species: m.appearance.species,
-    tier: m.tier,
-    palette: m.appearance.palette,
-    active: m.streakData.hasCurrentStreak,
+    appearance: m.appearance,
     displayStreakDays: m.displayStreak,
   }));
 }

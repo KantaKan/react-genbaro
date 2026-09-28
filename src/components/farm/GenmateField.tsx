@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
-import type { PlantPalette, PlantSpecies } from "@/lib/plant-variants";
-import { getPlantTierConfig, type PlantTier } from "@/lib/streak-milestones";
+import type { PlantPalette } from "@/lib/plant-variants";
+import type { PlantAppearance } from "@/lib/plant-appearance";
 import { PlantMesh, PartMesh } from "@/components/farm/PlantMesh";
 import { FarmEffects } from "@/components/farm/FarmEffects";
 import { GrassField } from "@/components/farm/GrassField";
@@ -29,10 +29,7 @@ import {
 export interface GenmateFieldMember {
   id: string;
   name: string;
-  species: PlantSpecies;
-  tier: PlantTier;
-  palette: PlantPalette;
-  active: boolean;
+  appearance: PlantAppearance;
   displayStreakDays: number;
 }
 
@@ -329,11 +326,12 @@ function MemberOnTile({
   isHovered: boolean;
   onHoverChange: (hovered: boolean) => void;
 }) {
-  const parts = useFarmPlantParts(member.species, member.tier, member.palette, member.active);
+  const parts = useFarmPlantParts(member.appearance);
   const height = useFarmPlantHeight(parts);
-  const auraSpec = useMemo(() => auraSpecForTier(member.tier), [member.tier]);
-  const particleDefs = useMemo(() => buildParticleDefs(member.tier), [member.tier]);
-  const tierName = getPlantTierConfig(member.tier).name;
+  const auraSpec = useMemo(() => auraSpecForTier(member.appearance.tier), [member.appearance.tier]);
+  const particleDefs = useMemo(() => buildParticleDefs(member.appearance.tier), [member.appearance.tier]);
+  const tierName = member.appearance.tierCapabilities.name;
+  const glowColor = member.appearance.growth.flourishTier > 0 ? member.appearance.growth.flourishColor : auraSpec?.color;
 
   return (
     <group position={[worldX, 0, worldZ]}>
@@ -347,10 +345,10 @@ function MemberOnTile({
           onHoverChange(false);
         }}
       >
-        <PlantMesh species={member.species} tier={member.tier} palette={member.palette} active={member.active} />
+        <PlantMesh appearance={member.appearance} />
       </group>
-      {particleDefs.length > 0 && auraSpec && (
-        <Particles defs={particleDefs} anchorHeight={height * 0.7} palette={member.palette} glowColor={auraSpec.color} />
+      {particleDefs.length > 0 && glowColor && (
+        <Particles defs={particleDefs} anchorHeight={height * 0.7} palette={member.appearance.palette} glowColor={glowColor} />
       )}
       {isHovered && <TileHighlight />}
       {/* Keyboard access: a real focusable DOM element per tile, not a canvas-only

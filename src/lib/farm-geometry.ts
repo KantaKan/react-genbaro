@@ -1,4 +1,5 @@
 import type { PlantPalette, PlantSpecies } from "@/lib/plant-variants";
+import type { PlantAppearance, PlantCosmeticSlot } from "@/lib/plant-appearance";
 import type { PlantTier, PlantTierConfig } from "@/lib/streak-milestones";
 
 /**
@@ -407,6 +408,59 @@ export function buildArchetypeParts(archetype: FarmArchetype, tier: PlantTier, p
 
 export function buildPlantParts(species: PlantSpecies, tier: PlantTier, palette: PlantPalette, tierConfig: PlantTierConfig, active = true): FarmPart[] {
   return buildArchetypeParts(archetypeForSpecies(species), tier, palette, tierConfig, active);
+}
+
+export interface FarmRendererStyle {
+  requested: string;
+  rendered: string;
+  supported: boolean;
+}
+
+export interface FarmPlantGeometry {
+  appearance: PlantAppearance;
+  parts: FarmPart[];
+  rendererStyles: {
+    pot: FarmRendererStyle;
+    leaf: FarmRendererStyle;
+    flower: FarmRendererStyle;
+    stem: FarmRendererStyle;
+  };
+  unsupportedCosmetics: PlantCosmeticSlot[];
+}
+
+const FARM_STYLE_DEFAULTS = {
+  pot: "round",
+  leaf: "rounded",
+  flower: "daisy",
+  stem: "curved",
+} as const;
+
+const FARM_COSMETIC_SLOTS: PlantCosmeticSlot[] = ["palette", "pot", "aura", "particle", "accessory", "mutation"];
+
+function rendererStyle(requested: string, rendered: string): FarmRendererStyle {
+  return { requested, rendered, supported: requested === rendered };
+}
+
+export function buildPlantGeometry(appearance: PlantAppearance): FarmPlantGeometry {
+  return {
+    appearance,
+    parts: getCachedPlantParts(
+      appearance.species,
+      appearance.tier,
+      appearance.palette,
+      appearance.tierCapabilities,
+      appearance.state === "active",
+    ),
+    rendererStyles: {
+      pot: rendererStyle(appearance.pot, FARM_STYLE_DEFAULTS.pot),
+      leaf: rendererStyle(appearance.leaf, FARM_STYLE_DEFAULTS.leaf),
+      flower: rendererStyle(appearance.flower, FARM_STYLE_DEFAULTS.flower),
+      stem: rendererStyle(appearance.stem, FARM_STYLE_DEFAULTS.stem),
+    },
+    unsupportedCosmetics: FARM_COSMETIC_SLOTS.filter(
+      (slot) => slot !== "palette" && slot !== "pot" && appearance.cosmetics[slot] !== null,
+    ),
+  };
 }
 
 /**
