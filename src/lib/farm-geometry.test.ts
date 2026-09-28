@@ -10,6 +10,7 @@ import {
   maxPartHeight,
   maxHorizontalExtent,
   FARM_ARCHETYPE_ORDER,
+  SPECIES_MODIFIERS,
   buildPlantGeometry,
 } from "@/lib/farm-geometry";
 
@@ -22,10 +23,14 @@ const ALL_SPECIES = [
 const TIERS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] as const satisfies readonly PlantTier[];
 
 describe("archetypeForSpecies", () => {
-  it("maps every one of the 22 real species to one of the 8 archetypes — ticket 09", () => {
+  it("maps every one of the 23 real species to one of the 8 archetypes — ticket 09", () => {
     for (const species of ALL_SPECIES) {
       expect(FARM_ARCHETYPE_ORDER).toContain(archetypeForSpecies(species));
     }
+  });
+
+  it("defines an explicit 3D modifier for every species", () => {
+    expect(Object.keys(SPECIES_MODIFIERS).sort()).toEqual([...ALL_SPECIES].sort());
   });
 });
 
@@ -129,14 +134,13 @@ describe("getCachedPlantParts — ticket 04's cache", () => {
     expect(a).toBe(b);
   });
 
-  it("shares one cache entry across two species mapping to the same archetype", () => {
-    // "flower" and "tulip" both resolve to Bloom — deliberately not part of the
-    // cache key, since they'd produce identical geometry.
+  it("keeps distinct cache entries for species sharing an archetype", () => {
     const forest = getAllPalettes().find((p) => p.name === "Forest")!;
     const tierConfig = getPlantTierConfig(6);
     const flower = getCachedPlantParts("flower", 6, forest, tierConfig);
     const tulip = getCachedPlantParts("tulip", 6, forest, tierConfig);
-    expect(flower).toBe(tulip);
+    expect(flower).not.toBe(tulip);
+    expect(flower).not.toEqual(tulip);
   });
 
   it("keys active vs. inactive separately, so grey never leaks into the active cache slot", () => {
@@ -152,6 +156,23 @@ describe("getCachedPlantParts — ticket 04's cache", () => {
     const tierConfig = getPlantTierConfig(3);
     expect(getCachedPlantParts("cactus", 3, ocean, tierConfig)).toEqual(
       buildPlantParts("cactus", 3, ocean, tierConfig)
+    );
+  });
+});
+
+describe("species signatures", () => {
+  it.each([
+    ["flower", "sunflower"],
+    ["cactus", "bamboo"],
+    ["succulent", "pumpkin-vine"],
+    ["tree", "palm"],
+    ["fern", "lotus"],
+  ] as const)("makes %s and %s geometrically distinct", (first, second) => {
+    const forest = getAllPalettes().find((palette) => palette.name === "Forest")!;
+    const tierConfig = getPlantTierConfig(7);
+
+    expect(buildPlantParts(first, 7, forest, tierConfig)).not.toEqual(
+      buildPlantParts(second, 7, forest, tierConfig),
     );
   });
 });

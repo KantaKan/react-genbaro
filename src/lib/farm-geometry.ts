@@ -48,6 +48,61 @@ export function archetypeForSpecies(species: PlantSpecies): FarmArchetype {
   return SPECIES_TO_ARCHETYPE[species] ?? "bloom";
 }
 
+export type SpeciesSignature =
+  | "petal-ring"
+  | "tulip-cup"
+  | "sun-disk"
+  | "orchid-pair"
+  | "cactus-arms"
+  | "bamboo-nodes"
+  | "pine-layers"
+  | "rosette"
+  | "clover"
+  | "grass"
+  | "berries"
+  | "pumpkin"
+  | "tree-crown"
+  | "palm-fronds"
+  | "bonsai-crown"
+  | "fern-fronds"
+  | "vine-drape"
+  | "coral-branches"
+  | "lotus-bloom"
+  | "mushroom-cap"
+  | "topiary-balls"
+  | "flytrap-jaws";
+
+export interface SpeciesModifier {
+  scale: [number, number, number];
+  signature: SpeciesSignature;
+}
+
+export const SPECIES_MODIFIERS: Record<PlantSpecies, SpeciesModifier> = {
+  flower: { scale: [1, 1, 1], signature: "petal-ring" },
+  tulip: { scale: [0.82, 1.12, 0.82], signature: "tulip-cup" },
+  sunflower: { scale: [1.18, 1.2, 1.18], signature: "sun-disk" },
+  orchid: { scale: [1.08, 0.96, 0.92], signature: "orchid-pair" },
+  cactus: { scale: [0.9, 1.05, 0.9], signature: "cactus-arms" },
+  bamboo: { scale: [0.68, 1.28, 0.68], signature: "bamboo-nodes" },
+  pine: { scale: [1.2, 1.2, 1.2], signature: "pine-layers" },
+  succulent: { scale: [1.2, 0.72, 1.2], signature: "rosette" },
+  clover: { scale: [1.05, 0.75, 1.05], signature: "clover" },
+  grass: { scale: [1.3, 0.82, 1.3], signature: "grass" },
+  strawberry: { scale: [1.08, 0.82, 1.08], signature: "berries" },
+  "pumpkin-vine": { scale: [1.38, 0.62, 1.38], signature: "pumpkin" },
+  tree: { scale: [1, 1.1, 1], signature: "tree-crown" },
+  palm: { scale: [1.12, 1.3, 1.12], signature: "palm-fronds" },
+  bonsai: { scale: [1.22, 0.72, 1.08], signature: "bonsai-crown" },
+  coffee: { scale: [0.94, 0.94, 0.94], signature: "berries" },
+  fern: { scale: [1.12, 0.86, 1.12], signature: "fern-fronds" },
+  vine: { scale: [0.92, 1.05, 1.16], signature: "vine-drape" },
+  coral: { scale: [1.02, 1.02, 1.02], signature: "coral-branches" },
+  lotus: { scale: [1.28, 0.72, 1.28], signature: "lotus-bloom" },
+  mushroom: { scale: [1.12, 0.82, 1.12], signature: "mushroom-cap" },
+  topiary: { scale: [0.92, 1.15, 0.92], signature: "topiary-balls" },
+  flytrap: { scale: [1.08, 0.9, 1.08], signature: "flytrap-jaws" },
+};
+
 export type FarmPartKind = "cylinder" | "sphere" | "box" | "torus";
 
 export interface FarmPart {
@@ -378,6 +433,96 @@ export const FARM_ARCHETYPE_ORDER: FarmArchetype[] = [
   "flytrap",
 ];
 
+function scalePlantPart(part: FarmPart, scale: [number, number, number]): FarmPart {
+  const anchorY = part.pivot?.position[1] ?? part.position[1];
+  if (anchorY <= POT_TOP_Y) return part;
+  const scaled: FarmPart = {
+    ...part,
+    position: [part.position[0] * scale[0], POT_TOP_Y + (part.position[1] - POT_TOP_Y) * scale[1], part.position[2] * scale[2]],
+    scale: [
+      (part.scale?.[0] ?? 1) * scale[0],
+      (part.scale?.[1] ?? 1) * scale[1],
+      (part.scale?.[2] ?? 1) * scale[2],
+    ],
+  };
+  if (part.pivot) {
+    scaled.pivot = {
+      ...part.pivot,
+      position: [
+        part.pivot.position[0] * scale[0],
+        POT_TOP_Y + (part.pivot.position[1] - POT_TOP_Y) * scale[1],
+        part.pivot.position[2] * scale[2],
+      ],
+    };
+  }
+  return scaled;
+}
+
+function speciesSignatureParts(signature: SpeciesSignature, tier: PlantTier, palette: PlantPalette): FarmPart[] {
+  if (tier === 0) return [];
+  const top = POT_TOP_Y + 1.8 + tier * 0.72;
+  const size = 0.28 + tier * 0.025;
+  switch (signature) {
+    case "petal-ring":
+      return ringAccents(6, 0.65, top, size, palette.flower);
+    case "tulip-cup":
+      return [-0.34, 0, 0.34].map((x) => sph(size * 1.35, x, top, 0, palette.flower, [0.8, 1.5, 0.8]));
+    case "sun-disk":
+      return [sph(size * 2.1, 0, top, 0, palette.fruit, [1, 1, 0.45]), ...ringAccents(10, size * 2.1, top, size, palette.flower)];
+    case "orchid-pair":
+      return [sph(size * 1.5, -0.6, top, 0, palette.flower, [1.5, 0.65, 0.8]), sph(size * 1.5, 0.6, top - 0.2, 0, palette.flower, [1.5, 0.65, 0.8])];
+    case "cactus-arms":
+      return [cyl(0.28, 0.32, 1.5, -1, top - 1.4, 0, palette.stem), cyl(0.28, 0.32, 1.15, 1, top - 0.9, 0, palette.stem)];
+    case "bamboo-nodes":
+      return Array.from({ length: Math.min(3 + Math.floor(tier / 2), 6) }, (_, index) => cyl(0.5, 0.5, 0.12, 0, POT_TOP_Y + 0.8 + index * 1.1, 0, palette.flower));
+    case "pine-layers":
+      return [0, 1, 2].map((index) => cyl(0, 1.8 - index * 0.35, 1.8, 0, top - 2.3 + index * 1.1, 0, palette.leaf));
+    case "rosette":
+      return ringAccents(9, 1.1, POT_TOP_Y + 0.45, size * 1.2, palette.leaf);
+    case "clover":
+      return [0, 1, 2, 3].map((index) => {
+        const angle = (index / 4) * Math.PI * 2;
+        return sph(size * 1.5, Math.cos(angle) * 0.65, POT_TOP_Y + 1, Math.sin(angle) * 0.65, palette.leaf, [1.4, 0.65, 1.4]);
+      });
+    case "grass":
+      return Array.from({ length: 7 }, (_, index) => sideLeaf(POT_TOP_Y, (index / 7) * Math.PI * 2, -0.35, 1.8 + (index % 3) * 0.4, palette.leaf));
+    case "berries":
+      return ringAccents(6, 0.9, top - 1, size, palette.fruit);
+    case "pumpkin":
+      return [sph(1.55, 0, POT_TOP_Y + 0.7, 0, palette.fruit, [1.3, 0.78, 1.3]), cyl(0.18, 0.22, 0.6, 0, POT_TOP_Y + 1.55, 0, palette.stem)];
+    case "tree-crown":
+      return [sph(1.25, 0, top - 0.5, 0, palette.leaf, [1.35, 0.9, 1.35])];
+    case "palm-fronds":
+      return Array.from({ length: 7 }, (_, index) => sideLeaf(top - 0.8, (index / 7) * Math.PI * 2, -1.05, 2.2, palette.leaf));
+    case "bonsai-crown":
+      return [sph(1.1, -0.85, top - 1.6, 0, palette.leaf, [1.45, 0.7, 1.1]), sph(0.9, 0.9, top - 1, 0, palette.leaf, [1.35, 0.7, 1.1])];
+    case "fern-fronds":
+      return Array.from({ length: 6 }, (_, index) => sideLeaf(POT_TOP_Y + 0.2, (index / 6) * Math.PI * 2, -0.72, 2.4, palette.leaf));
+    case "vine-drape":
+      return [cyl(0.12, 0.14, 2.8, -1.1, POT_TOP_Y + 0.1, 0, palette.stem), cyl(0.12, 0.14, 2.2, 1.1, POT_TOP_Y + 0.35, 0, palette.stem)];
+    case "coral-branches":
+      return [-1, -0.4, 0.4, 1].map((x, index) => cyl(0.16, 0.3, 1.8 + index * 0.35, x, POT_TOP_Y + 1, 0, palette.flower));
+    case "lotus-bloom":
+      return [sph(1.45, 0, POT_TOP_Y + 0.3, 0, palette.leaf, [1, 0.12, 1]), ...ringAccents(8, 0.65, POT_TOP_Y + 0.75, size, palette.flower)];
+    case "mushroom-cap":
+      return ringAccents(7, 0.8, top - 0.9, size * 0.55, palette.flower);
+    case "topiary-balls":
+      return [0, 1, 2].map((index) => sph(0.72 + index * 0.12, 0, POT_TOP_Y + 2 + index * 1.25, 0, palette.leaf));
+    case "flytrap-jaws":
+      return ringAccents(5, 0.8, top - 1, size * 0.65, palette.flower);
+  }
+}
+
+function buildSpeciesParts(species: PlantSpecies, tier: PlantTier, palette: PlantPalette, tierConfig: PlantTierConfig, active: boolean): FarmPart[] {
+  const renderedPalette = active ? palette : INACTIVE_PALETTE;
+  const modifier = SPECIES_MODIFIERS[species];
+  const base = ARCHETYPE_BUILDERS[archetypeForSpecies(species)](tier, renderedPalette, {
+    hasFlower: tierConfig.hasFlower,
+    hasFruit: tierConfig.hasFruit,
+  });
+  return [...base.map((part) => scalePlantPart(part, modifier.scale)), ...speciesSignatureParts(modifier.signature, tier, renderedPalette)];
+}
+
 function offsetY(part: FarmPart, dy: number): FarmPart {
   return { ...part, position: [part.position[0], part.position[1] + dy, part.position[2]] };
 }
@@ -407,7 +552,7 @@ export function buildArchetypeParts(archetype: FarmArchetype, tier: PlantTier, p
 }
 
 export function buildPlantParts(species: PlantSpecies, tier: PlantTier, palette: PlantPalette, tierConfig: PlantTierConfig, active = true): FarmPart[] {
-  return buildArchetypeParts(archetypeForSpecies(species), tier, palette, tierConfig, active);
+  return buildSpeciesParts(species, tier, palette, tierConfig, active);
 }
 
 export interface FarmRendererStyle {
@@ -464,24 +609,16 @@ export function buildPlantGeometry(appearance: PlantAppearance): FarmPlantGeomet
 }
 
 /**
- * Ticket 04's cache: keyed on `(archetype, tier, paletteName)`, not species or
- * userId — geometry is a pure function of those three things, so two learners
- * with the same archetype/tier/palette combo share one cached entry. Species
- * is deliberately excluded from the key too: two species mapping to the same
- * archetype (e.g. "flower" and "tulip", both Bloom) produce identical parts,
- * so keying on species would cache the same geometry twice for no reason.
- * There is no staleness to invalidate — a tier or palette change just looks up
- * a different key, and the combination space is small enough (8 archetypes ×
- * 10 tiers × ~16 palettes ≈ 1,280 entries, each a few hundred triangles) to
- * keep every entry forever with no eviction policy.
+ * Ticket 04's cache is species-aware because signature geometry differs even
+ * when two plants share the same base archetype. There is no staleness to
+ * invalidate: a species, tier, palette, or activity change uses another key.
  */
 const partsCache = new Map<string, FarmPart[]>();
 export function getCachedPlantParts(species: PlantSpecies, tier: PlantTier, palette: PlantPalette, tierConfig: PlantTierConfig, active = true): FarmPart[] {
-  const archetype = archetypeForSpecies(species);
-  const key = `${archetype}:${tier}:${active ? palette.name : "inactive"}`;
+  const key = `${species}:${tier}:${active ? palette.name : "inactive"}`;
   const cached = partsCache.get(key);
   if (cached) return cached;
-  const parts = buildArchetypeParts(archetype, tier, palette, tierConfig, active);
+  const parts = buildSpeciesParts(species, tier, palette, tierConfig, active);
   partsCache.set(key, parts);
   return parts;
 }
