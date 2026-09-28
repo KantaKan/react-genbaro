@@ -42,6 +42,10 @@ export function PlantMesh({ appearance, reducedMotion = false }: PlantMeshProps)
   }
 
   useFrame((_, delta) => {
+    if (reducedMotion) {
+      groupRef.current?.scale.setScalar(1);
+      return;
+    }
     if (growElapsed.current >= GROW_DURATION_S || !groupRef.current) return;
     growElapsed.current = Math.min(GROW_DURATION_S, growElapsed.current + delta);
     const t = growElapsed.current / GROW_DURATION_S;
