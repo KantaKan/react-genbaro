@@ -23,6 +23,7 @@ import { AchievementsSection } from "./achievements-section";
 import LearnerGenmateGardenWidget from "./learner-genmate-garden-widget";
 import { FertilizerInventoryButton } from "./fertilizer-inventory-button";
 import { PlantPalettePicker } from "./plant-palette-picker";
+import { PlantCollectionDialog } from "./plant-collection-dialog";
 import { api } from "@/lib/api";
 import type { Badge } from "@/lib/types";
 import type { FertilizerLogEntry } from "@/domain/types";
@@ -313,6 +314,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                     onSaved={refreshPlant}
                   />
                 )}
+                {user && <PlantCollectionDialog />}
               </div>
               <motion.p 
                 className="text-lg text-muted-foreground max-w-xl leading-relaxed"

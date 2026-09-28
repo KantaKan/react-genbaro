@@ -5,3 +5,4 @@ export * from "./attendance";
 export * from "./badge";
 export * from "./fertilizer";
 export * from "./history";
+export * from "./cosmetic";

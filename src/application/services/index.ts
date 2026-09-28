@@ -9,3 +9,4 @@ export { boardService, default as boardServiceDefault } from "./boardService";
 export { stampService, default as stampServiceDefault } from "./stampService";
 export { notificationService, default as notificationServiceDefault } from "./notificationService";
 export { historyService, default as historyServiceDefault } from "./historyService";
+export { cosmeticService, default as cosmeticServiceDefault } from "./cosmeticService";

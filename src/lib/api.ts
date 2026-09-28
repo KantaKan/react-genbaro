@@ -12,6 +12,7 @@ export {
   boardService,
   stampService,
   historyService,
+  cosmeticService,
 } from "../application/services";
 
 export { awardBadge } from "../application/services/badgeService";
