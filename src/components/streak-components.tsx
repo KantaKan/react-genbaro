@@ -7,11 +7,6 @@ import {
   getMilestoneForStreak,
   isMilestoneReached,
   getRandomComfortMessage,
-  getPlantTier,
-  getPlantTierConfig,
-  getFlourishTier,
-  flourishAccentColors,
-  getEffectivePlantDays,
   type PlantTier,
 } from "@/lib/streak-milestones"
 
@@ -22,10 +17,10 @@ import {
   getStemTilt,
   isSpecialPotStyle,
   getSpecialPotColor,
-  type PlantVariantConfig,
   type PlantSpecies,
   type SpecialPotStyle,
 } from "@/lib/plant-variants"
+import type { PlantAppearance } from "@/lib/plant-appearance"
 
 const tierTextColors: Record<PlantTier, string> = {
   0: "text-muted-foreground",
@@ -1611,15 +1606,18 @@ const SpecialPotDecoration = ({ style }: { style: SpecialPotStyle }) => {
   }
 }
 
-export const SeedlingPlant = ({ tier = 0, active, className, variant, showParticles = true, growthPoints = 0 }: { tier?: PlantTier; active: boolean; className?: string; variant?: PlantVariantConfig; showParticles?: boolean; growthPoints?: number }) => {
+export const SeedlingPlant = ({ appearance, className, showParticles = true }: { appearance: PlantAppearance; className?: string; showParticles?: boolean }) => {
   const swayControls = useAnimation()
   const leafBounceControls = useAnimation()
   const prefersReducedMotion = useReducedMotion()
-  const config = getPlantTierConfig(tier)
-  const potPaths = variant ? getPotPath(variant.pot) : null
-  const stemTilt = variant ? getStemTilt(variant.stem) : 0
-  const flourishTier = getFlourishTier(growthPoints)
-  const flourishColor = flourishAccentColors[flourishTier]
+  const tier = appearance.tier
+  const active = appearance.state === "active"
+  const variant = appearance
+  const config = appearance.tierCapabilities
+  const potPaths = getPotPath(appearance.pot)
+  const stemTilt = getStemTilt(appearance.stem)
+  const flourishTier = appearance.growth.flourishTier
+  const flourishColor = appearance.growth.flourishColor
 
   useEffect(() => {
     if (active && !prefersReducedMotion) {
@@ -1640,13 +1638,13 @@ export const SeedlingPlant = ({ tier = 0, active, className, variant, showPartic
     }
   }, [active, prefersReducedMotion, swayControls, leafBounceControls])
 
-  const stemColor = active ? (variant?.palette.stem ?? config.stemColor) : "#a1a1aa"
-  const leafColor = active ? (variant?.palette.leaf ?? config.leafColor) : "#d4d4d8"
-  const flowerColor = active ? (variant?.palette.flower ?? config.flowerColor) : "#71717a"
-  const fruitColor = active ? (variant?.palette.fruit ?? config.fruitColor) : "#71717a"
-  const specialPot = variant && isSpecialPotStyle(variant.pot) ? variant.pot : null
-  const potColor = active ? (specialPot ? getSpecialPotColor(specialPot) : (variant?.palette.pot ?? config.potColor)) : "#9c8b7e"
-  const soilColor = active ? (variant?.palette.soil ?? config.soilColor) : "#6b5b4e"
+  const stemColor = active ? variant.palette.stem : "#a1a1aa"
+  const leafColor = active ? variant.palette.leaf : "#d4d4d8"
+  const flowerColor = active ? variant.palette.flower : "#71717a"
+  const fruitColor = active ? variant.palette.fruit : "#71717a"
+  const specialPot = isSpecialPotStyle(variant.pot) ? variant.pot : null
+  const potColor = active ? (specialPot ? getSpecialPotColor(specialPot) : variant.palette.pot) : "#9c8b7e"
+  const soilColor = active ? variant.palette.soil : "#6b5b4e"
   const outlineColor = active ? "#3d3d3d" : "#52525b"
   const strokeW = 1.8
 
@@ -1699,7 +1697,15 @@ export const SeedlingPlant = ({ tier = 0, active, className, variant, showPartic
   const lightCount = config.particleCount - pollenCount - petalCount - leafParticleCount
 
   return (
-    <div className={`relative ${className}`}>
+    <div
+      className={`relative ${className ?? ""}`}
+      data-testid="seedling-plant"
+      data-species={appearance.species}
+      data-state={appearance.state}
+      data-tier={appearance.tier}
+      data-palette={appearance.palette.name}
+      data-pot={appearance.pot}
+    >
       {/* Glow effects — one clean light source per tier instead of stacked multi-hue smudges */}
       {active && !prefersReducedMotion && config.growthGlow === "glow" && (
         <>
@@ -1834,7 +1840,7 @@ export const SeedlingPlant = ({ tier = 0, active, className, variant, showPartic
 
               {tier >= 1 && (
                 <SpeciesCanopy
-                  species={variant?.species ?? "flower"}
+                  species={variant.species}
                   tier={tier}
                   colors={{ stem: stemColor, leaf: leafColor, flower: flowerColor, fruit: fruitColor, glow: config.glowColor, outline: outlineColor }}
                   hasFlower={config.hasFlower}
@@ -1958,10 +1964,10 @@ export const SeedlingPlant = ({ tier = 0, active, className, variant, showPartic
   )
 }
 
-export const StreakIcon = ({ streakData, showMilestoneToast = true, variant, growthPoints = 0 }: { streakData: StreakData; showMilestoneToast?: boolean; variant?: PlantVariantConfig; growthPoints?: number }) => {
+export const StreakIcon = ({ streakData, appearance, showMilestoneToast = true }: { streakData: StreakData; appearance: PlantAppearance; showMilestoneToast?: boolean }) => {
   const { currentStreak, oldStreak, hasCurrentStreak } = streakData
   const displayStreak = hasCurrentStreak ? currentStreak : oldStreak > 0 ? oldStreak : 0
-  const tier = getPlantTier(getEffectivePlantDays(displayStreak, growthPoints));
+  const tier = appearance.tier
   const prevStreakRef = useRef(0)
   const [celebrating, setCelebrating] = useState(false)
   const [celebrationEffect, setCelebrationEffect] = useState<CelebrationEffect>("petalBurst")
@@ -2004,10 +2010,7 @@ export const StreakIcon = ({ streakData, showMilestoneToast = true, variant, gro
           className="flex items-center gap-2 relative z-20"
         >
           <SeedlingPlant
-            tier={tier}
-            active={hasCurrentStreak}
-            variant={variant}
-            growthPoints={growthPoints}
+            appearance={appearance}
             className="w-10 h-12 flex-shrink-0"
           />
           <div className="flex flex-col leading-none">

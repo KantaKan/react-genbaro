@@ -18,10 +18,7 @@ const MiniPlant = ({ member }: { member: ReturnType<typeof mapGenmateMembers>[nu
       className="flex flex-col items-center gap-0.5 cursor-pointer rounded-lg border border-transparent p-1.5 transition-colors hover:border-border hover:bg-muted/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <SeedlingPlant
-        tier={member.tier}
-        active={member.streakData.hasCurrentStreak}
-        variant={member.variant}
-        growthPoints={member.growthPoints}
+        appearance={member.appearance}
         showParticles={false}
         className="h-8 w-7 flex-shrink-0"
       />

@@ -17,7 +17,8 @@ import { StreakIcon } from "@/components/streak-components";
 import { AwardBadgeButton } from "@/components/award-badge-button";
 import { AwardFertilizerButton } from "@/components/award-fertilizer-button";
 import { AdminPlantOverrideButton } from "@/components/admin-plant-override-button";
-import { getPlantVariant } from "@/lib/plant-variants";
+import { resolvePlantAppearance } from "@/lib/plant-appearance";
+import { getEffectivePlantDays, getPlantTier } from "@/lib/streak-milestones";
 import type { Badge } from "@/lib/types";
 import type { Reflection } from "@/hooks/use-reflections";
 import type { FertilizerLogEntry } from "@/domain/types";
@@ -113,19 +114,25 @@ export default function UserReflectionsPage() {
 
   const streakData = useStreakCalculation(reflections, protectedDates);
 
-  const plantVariant = useMemo(
+  const plantAppearance = useMemo(
     () =>
       user
-        ? getPlantVariant(user._id, {
-            palette: user.selected_palette,
-            species: user.selected_species,
-            pot: user.selected_pot,
-            leaf: user.selected_leaf,
-            flower: user.selected_flower,
-            stem: user.selected_stem,
+        ? resolvePlantAppearance({
+            userId: user._id,
+            tier: getPlantTier(getEffectivePlantDays(streakData.hasCurrentStreak ? streakData.currentStreak : streakData.oldStreak, user.growth_points ?? 0)),
+            active: streakData.hasCurrentStreak,
+            growthPoints: user.growth_points ?? 0,
+            overrides: {
+              palette: user.selected_palette,
+              species: user.selected_species,
+              pot: user.selected_pot,
+              leaf: user.selected_leaf,
+              flower: user.selected_flower,
+              stem: user.selected_stem,
+            },
           })
         : undefined,
-    [user]
+    [streakData.currentStreak, streakData.hasCurrentStreak, streakData.oldStreak, user]
   );
 
   if (isLoading) {
@@ -214,7 +221,7 @@ export default function UserReflectionsPage() {
                 <StatCard icon={School} label="JSD Number" value={user.jsd_number} />
                 <StatCard icon={ClipboardList} label="Total Reflections" value={reflections.length} />
                 <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-                  <StreakIcon streakData={streakData} showMilestoneToast={false} variant={plantVariant} growthPoints={user.growth_points ?? 0} />
+                  {plantAppearance && <StreakIcon streakData={streakData} showMilestoneToast={false} appearance={plantAppearance} />}
                 </div>
               </div>
               {user.badges && user.badges.length > 0 && (

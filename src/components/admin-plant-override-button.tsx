@@ -7,7 +7,6 @@ import { Sprout } from "lucide-react";
 import { userService } from "@/lib/api";
 import {
   getAllPalettes,
-  getPlantVariant,
   SPECIES,
   POT_STYLES,
   SPECIAL_POT_STYLES,
@@ -16,6 +15,7 @@ import {
   FLOWER_TYPES,
   STEM_STYLES,
 } from "@/lib/plant-variants";
+import { resolvePlantAppearance } from "@/lib/plant-appearance";
 import { SeedlingPlant } from "@/components/streak-components";
 import { toast } from "sonner";
 
@@ -104,10 +104,8 @@ export function AdminPlantOverrideButton({ userId, current, onSaved }: AdminPlan
 
         <div className="flex justify-center py-2">
           <SeedlingPlant
-            tier={PREVIEW_TIER}
-            active
             showParticles={false}
-            variant={getPlantVariant(userId, values)}
+            appearance={resolvePlantAppearance({ userId, tier: PREVIEW_TIER, active: true, overrides: values })}
             className="h-28 w-24"
           />
         </div>

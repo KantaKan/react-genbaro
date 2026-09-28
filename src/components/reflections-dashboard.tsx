@@ -13,8 +13,8 @@ import { useReflections, type Reflection } from "@/hooks/use-reflections";
 import { useStreakCalculation } from "@/hooks/use-streak-calculation";
 import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflection-zones";
 import { StreakIcon, GrowthBar, ComfortZoneMessage } from "./streak-components";
-import { getMilestoneForStreak, getRandomComfortMessage, getRandomStreakQuote, getNextTierProgress } from "@/lib/streak-milestones";
-import { getPlantVariant } from "@/lib/plant-variants";
+import { getEffectivePlantDays, getMilestoneForStreak, getNextTierProgress, getPlantTier, getRandomComfortMessage, getRandomStreakQuote } from "@/lib/streak-milestones";
+import { resolvePlantAppearance } from "@/lib/plant-appearance";
 import { ReflectionsTable } from "./reflections-table";
 import FeedbackForm from "./linear-feedback-form";
 import { ReflectionPreview } from "./reflection-preview";
@@ -81,18 +81,24 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
     [streakData.oldStreak, user?.growth_points]
   );
 
-  const plantVariant = useMemo(() => {
+  const plantAppearance = useMemo(() => {
     return user
-      ? getPlantVariant(user._id, {
-          palette: user.selected_palette,
-          species: user.selected_species,
-          pot: user.selected_pot,
-          leaf: user.selected_leaf,
-          flower: user.selected_flower,
-          stem: user.selected_stem,
+      ? resolvePlantAppearance({
+          userId: user._id,
+          tier: getPlantTier(getEffectivePlantDays(streakData.hasCurrentStreak ? streakData.currentStreak : streakData.oldStreak, user.growth_points ?? 0)),
+          active: streakData.hasCurrentStreak,
+          growthPoints: user.growth_points ?? 0,
+          overrides: {
+            palette: user.selected_palette,
+            species: user.selected_species,
+            pot: user.selected_pot,
+            leaf: user.selected_leaf,
+            flower: user.selected_flower,
+            stem: user.selected_stem,
+          },
         })
       : undefined;
-  }, [user]);
+  }, [streakData.currentStreak, streakData.hasCurrentStreak, streakData.oldStreak, user]);
 
   const fetchUser = useCallback(async () => {
     if (!userId) return;
@@ -291,7 +297,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                 >
                   Daily Reflections
                 </motion.h1>
-                <StreakIcon streakData={streakData} variant={plantVariant} growthPoints={user?.growth_points ?? 0} />
+                {plantAppearance && <StreakIcon streakData={streakData} appearance={plantAppearance} />}
                 {user && (
                   <FertilizerInventoryButton
                     userId={user._id}

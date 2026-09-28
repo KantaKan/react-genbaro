@@ -25,7 +25,7 @@ import { BoardReactionSummary } from "@/components/board-reaction-summary";
 import { api } from "@/lib/api";
 import { toFarmMembers } from "@/lib/genmate-garden";
 import { useWebglSupported } from "@/hooks/use-webgl-support";
-import { getPlantVariant } from "@/lib/plant-variants";
+import { resolvePlantAppearance, type PlantAppearance } from "@/lib/plant-appearance";
 import {
   getPlantTier,
   getPlantTierConfig,
@@ -72,7 +72,7 @@ interface AdminUsersResponse {
 export interface GardenMember {
   user: GardenUser;
   streakData: ReturnType<typeof calculateStreakData>;
-  variant: ReturnType<typeof getPlantVariant>;
+  appearance: PlantAppearance;
   displayStreak: number;
   tier: ReturnType<typeof getPlantTier>;
   growthPoints?: number;
@@ -120,19 +120,26 @@ export function GenmateGarden({ cohort }: GenmateGardenProps) {
 
       const streakData = calculateStreakData(user.reflections ?? []);
       const displayStreak = getDisplayStreak(streakData);
+      const tier = getPlantTier(getEffectivePlantDays(displayStreak, user.growth_points ?? 0));
       const member: GardenMember = {
         user,
         streakData,
-        variant: getPlantVariant(user._id, {
-          palette: user.selected_palette,
-          species: user.selected_species,
-          pot: user.selected_pot,
-          leaf: user.selected_leaf,
-          flower: user.selected_flower,
-          stem: user.selected_stem,
+        appearance: resolvePlantAppearance({
+          userId: user._id,
+          tier,
+          active: streakData.hasCurrentStreak,
+          growthPoints: user.growth_points ?? 0,
+          overrides: {
+            palette: user.selected_palette,
+            species: user.selected_species,
+            pot: user.selected_pot,
+            leaf: user.selected_leaf,
+            flower: user.selected_flower,
+            stem: user.selected_stem,
+          },
         }),
         displayStreak,
-        tier: getPlantTier(getEffectivePlantDays(displayStreak, user.growth_points ?? 0)),
+        tier,
         growthPoints: user.growth_points ?? 0,
       };
 
@@ -290,7 +297,7 @@ export function GenmateGarden({ cohort }: GenmateGardenProps) {
 }
 
 export function PlantTile({ member }: { member: GardenMember }) {
-  const { user, streakData, variant, displayStreak, tier, growthPoints } = member;
+  const { user, streakData, appearance, displayStreak, tier } = member;
   const fullName = `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || "Unknown learner";
   const nextMilestone = streakMilestones.find((m) => m.days > displayStreak) ?? null;
   const daysToNext = nextMilestone ? nextMilestone.days - displayStreak : 0;
@@ -378,10 +385,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
         >
           <UserAvatar userId={user._id} firstName={user.first_name} lastName={user.last_name} className="h-7 w-7" />
           <SeedlingPlant
-            tier={tier}
-            active={streakData.hasCurrentStreak}
-            variant={variant}
-            growthPoints={growthPoints}
+            appearance={appearance}
             showParticles={false}
             className="h-16 w-14 flex-shrink-0"
           />
@@ -407,10 +411,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
 
           <div className="flex items-center gap-2">
             <SeedlingPlant
-              tier={tier}
-              active={streakData.hasCurrentStreak}
-              variant={variant}
-              growthPoints={growthPoints}
+              appearance={appearance}
               className="h-14 w-12 flex-shrink-0"
             />
             <div className="flex flex-col gap-0.5 text-sm">
