@@ -1,10 +1,10 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { ReflectionsTable } from './reflections-table';
 import type { Reflection } from '@/hooks/use-reflections';
 
 describe('ReflectionsTable', () => {
-  it('renders reflection cards and expands to show session details', () => {
+  it('renders reflection rows and opens a dialog with session details on click', () => {
     const mockReflections: Reflection[] = [
       {
         _id: '1',
@@ -29,14 +29,17 @@ describe('ReflectionsTable', () => {
 
     render(<ReflectionsTable reflections={mockReflections} />);
 
-    // The zone label is visible on the collapsed card header.
-    expect(screen.getByText('Comfort Zone')).toBeInTheDocument();
+    // The zone label and a one-line preview are visible directly on the timeline row.
+    expect(screen.getByText(/Comfort Zone/)).toBeInTheDocument();
+    expect(screen.getByText('Learning hooks · Good communication')).toBeInTheDocument();
 
-    // Session details are only rendered once the card is expanded.
-    expect(screen.queryByText('Learning hooks')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { expanded: false }));
+    // Full detail (both happy/improve fields) is only rendered once the row is clicked, opening the detail dialog.
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText(/Comfort Zone/).closest('[role="button"]')!);
 
-    expect(screen.getByText('Learning hooks')).toBeInTheDocument();
-    expect(screen.getByText('Good communication')).toBeInTheDocument();
+    const dialog = within(screen.getByRole('dialog'));
+    expect(dialog.getByText('State management')).toBeInTheDocument();
+    expect(dialog.getByText('Good communication')).toBeInTheDocument();
+    expect(dialog.getByText('More focus')).toBeInTheDocument();
   });
 });
