@@ -18,6 +18,7 @@ import { AwardBadgeButton } from "@/components/award-badge-button";
 import { AwardFertilizerButton } from "@/components/award-fertilizer-button";
 import { AdminPlantOverrideButton } from "@/components/admin-plant-override-button";
 import { AdminCosmeticGrantDialog } from "@/components/admin-cosmetic-grant-dialog";
+import { AdminGiftBoxDialog } from "@/components/admin-gift-box-dialog";
 import { resolvePlantAppearance } from "@/lib/plant-appearance";
 import { getEffectivePlantDays, getPlantTier } from "@/lib/streak-milestones";
 import type { Badge } from "@/lib/types";
@@ -194,10 +195,14 @@ export default function UserReflectionsPage() {
           {userRole === "admin" && <UiBadge variant="default">Admin</UiBadge>}
         </div>
         {id && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <AwardBadgeButton userId={id} onBadgeAwarded={handleBadgeAwarded} />
             <AwardFertilizerButton userId={id} onFertilizerAwarded={handleBadgeAwarded} />
             <AdminCosmeticGrantDialog
+              userId={id}
+              learnerName={user ? `${user.first_name} ${user.last_name}` : "this learner"}
+            />
+            <AdminGiftBoxDialog
               userId={id}
               learnerName={user ? `${user.first_name} ${user.last_name}` : "this learner"}
             />

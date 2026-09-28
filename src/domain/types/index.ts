@@ -6,3 +6,4 @@ export * from "./badge";
 export * from "./fertilizer";
 export * from "./history";
 export * from "./cosmetic";
+export * from "./gift-box";

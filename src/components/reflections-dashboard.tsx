@@ -24,6 +24,7 @@ import LearnerGenmateGardenWidget from "./learner-genmate-garden-widget";
 import { FertilizerInventoryButton } from "./fertilizer-inventory-button";
 import { PlantPalettePicker } from "./plant-palette-picker";
 import { PlantCollectionDialog } from "./plant-collection-dialog";
+import { TeacherGiftBoxesDialog } from "./teacher-gift-boxes-dialog";
 import { api } from "@/lib/api";
 import type { Badge } from "@/lib/types";
 import type { FertilizerLogEntry } from "@/domain/types";
@@ -318,6 +319,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                   />
                 )}
                 {user && <PlantCollectionDialog onLoadoutChanged={refreshPlant} />}
+                {user && <TeacherGiftBoxesDialog onReward={refreshPlant} />}
               </div>
               <motion.p 
                 className="text-lg text-muted-foreground max-w-xl leading-relaxed"
