@@ -17,6 +17,7 @@ import { StreakIcon } from "@/components/streak-components";
 import { AwardBadgeButton } from "@/components/award-badge-button";
 import { AwardFertilizerButton } from "@/components/award-fertilizer-button";
 import { AdminPlantOverrideButton } from "@/components/admin-plant-override-button";
+import { AdminCosmeticGrantDialog } from "@/components/admin-cosmetic-grant-dialog";
 import { resolvePlantAppearance } from "@/lib/plant-appearance";
 import { getEffectivePlantDays, getPlantTier } from "@/lib/streak-milestones";
 import type { Badge } from "@/lib/types";
@@ -193,6 +194,10 @@ export default function UserReflectionsPage() {
           <div className="flex items-center gap-2">
             <AwardBadgeButton userId={id} onBadgeAwarded={handleBadgeAwarded} />
             <AwardFertilizerButton userId={id} onFertilizerAwarded={handleBadgeAwarded} />
+            <AdminCosmeticGrantDialog
+              userId={id}
+              learnerName={user ? `${user.first_name} ${user.last_name}` : "this learner"}
+            />
             <AdminPlantOverrideButton
               userId={id}
               current={{
