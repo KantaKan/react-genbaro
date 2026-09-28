@@ -27,6 +27,7 @@ import { PlantCollectionDialog } from "./plant-collection-dialog";
 import { api } from "@/lib/api";
 import type { Badge } from "@/lib/types";
 import type { FertilizerLogEntry } from "@/domain/types";
+import type { PlantCosmeticSelection } from "@/lib/plant-appearance";
 
 // Define the User interface
 interface User {
@@ -49,6 +50,7 @@ interface User {
   selected_leaf?: string;
   selected_flower?: string;
   selected_stem?: string;
+  equipped_cosmetics?: PlantCosmeticSelection;
 }
 
 interface ReflectionsDashboardProps {
@@ -97,6 +99,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
             flower: user.selected_flower,
             stem: user.selected_stem,
           },
+          cosmetics: user.equipped_cosmetics,
         })
       : undefined;
   }, [streakData.currentStreak, streakData.hasCurrentStreak, streakData.oldStreak, user]);
@@ -314,7 +317,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                     onSaved={refreshPlant}
                   />
                 )}
-                {user && <PlantCollectionDialog />}
+                {user && <PlantCollectionDialog onLoadoutChanged={refreshPlant} />}
               </div>
               <motion.p 
                 className="text-lg text-muted-foreground max-w-xl leading-relaxed"

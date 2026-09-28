@@ -23,6 +23,7 @@ import { getEffectivePlantDays, getPlantTier } from "@/lib/streak-milestones";
 import type { Badge } from "@/lib/types";
 import type { Reflection } from "@/hooks/use-reflections";
 import type { FertilizerLogEntry } from "@/domain/types";
+import type { PlantCosmeticSelection } from "@/lib/plant-appearance";
 
 interface User {
   cohort_number: number;
@@ -41,6 +42,7 @@ interface User {
   selected_leaf?: string;
   selected_flower?: string;
   selected_stem?: string;
+  equipped_cosmetics?: PlantCosmeticSelection;
 }
 
 const StatCard = ({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string | number | JSX.Element }) => (
@@ -131,6 +133,7 @@ export default function UserReflectionsPage() {
               flower: user.selected_flower,
               stem: user.selected_stem,
             },
+            cosmetics: user.equipped_cosmetics,
           })
         : undefined,
     [streakData.currentStreak, streakData.hasCurrentStreak, streakData.oldStreak, user]

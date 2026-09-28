@@ -61,6 +61,7 @@ export interface GardenUser {
   selected_leaf?: string;
   selected_flower?: string;
   selected_stem?: string;
+  equipped_cosmetics?: Partial<Record<"palette" | "pot" | "aura" | "particle" | "accessory" | "mutation", string>>;
 }
 
 interface AdminUsersResponse {
@@ -137,6 +138,7 @@ export function GenmateGarden({ cohort }: GenmateGardenProps) {
             flower: user.selected_flower,
             stem: user.selected_stem,
           },
+          cosmetics: user.equipped_cosmetics,
         }),
         displayStreak,
         tier,

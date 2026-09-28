@@ -37,6 +37,8 @@ vi.mock("@/application/services/cosmeticService", () => ({
         },
       ],
     }),
+    equip: vi.fn().mockResolvedValue(undefined),
+    unequip: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
@@ -57,5 +59,20 @@ describe("PlantCollectionDialog", () => {
     expect(screen.getByLabelText("Locked")).toBeInTheDocument();
     expect(screen.getByText("Legendary")).toBeInTheDocument();
     expect(screen.getByText("Secret achievements")).toBeInTheDocument();
+  });
+
+  it("equips an owned cosmetic through its slot", async () => {
+    const { cosmeticService } = await import("@/application/services/cosmeticService");
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PlantCollectionDialog />
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /collection/i }));
+    fireEvent.click(await screen.findByRole("button", { name: "Unequip" }));
+
+    expect(cosmeticService.unequip).toHaveBeenCalledWith("palette");
   });
 });

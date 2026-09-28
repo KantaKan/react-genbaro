@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { CosmeticCollectionItem, CosmeticRarity, CosmeticSlot } from "@/domain/types";
+import { toast } from "sonner";
 
 const SLOTS: Array<{ value: CosmeticSlot | "all"; label: string; symbol: string }> = [
   { value: "all", label: "All", symbol: "🌿" },
@@ -25,7 +26,7 @@ const RARITY_STYLES: Record<CosmeticRarity, string> = {
   Legendary: "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-600 dark:bg-amber-950/40 dark:text-amber-100",
 };
 
-function CollectionCard({ item }: { item: CosmeticCollectionItem }) {
+function CollectionCard({ item, busy, onToggle }: { item: CosmeticCollectionItem; busy: boolean; onToggle: (item: CosmeticCollectionItem) => void }) {
   const slot = SLOTS.find((entry) => entry.value === item.slot);
   return (
     <article
@@ -49,17 +50,41 @@ function CollectionCard({ item }: { item: CosmeticCollectionItem }) {
           <span key={pool} className="rounded-full border border-current/20 px-2 py-0.5 text-[10px] opacity-75">{pool}</span>
         ))}
       </div>
+      {item.owned && (
+        <Button type="button" size="sm" variant={item.equipped ? "outline" : "default"} className="mt-4 w-full" disabled={busy} onClick={() => onToggle(item)}>
+          {item.equipped ? "Unequip" : "Equip"}
+        </Button>
+      )}
     </article>
   );
 }
 
-export function PlantCollectionDialog() {
+export function PlantCollectionDialog({ onLoadoutChanged }: { onLoadoutChanged?: () => void | Promise<void> }) {
   const [open, setOpen] = useState(false);
   const [slot, setSlot] = useState<CosmeticSlot | "all">("all");
+  const [busyId, setBusyId] = useState<string>();
   const collection = useQuery(["plantCosmeticCollection"], () => cosmeticService.getCollection(), { enabled: open });
   const items = collection.data?.items.filter((item) => slot === "all" || item.slot === slot) ?? [];
   const owned = collection.data?.items.filter((item) => item.owned).length ?? 0;
   const total = collection.data?.items.length ?? 0;
+
+  const toggleEquipped = async (item: CosmeticCollectionItem) => {
+    setBusyId(item.id);
+    try {
+      if (item.equipped) {
+        await cosmeticService.unequip(item.slot);
+      } else {
+        await cosmeticService.equip(item.slot, item.id);
+      }
+      await collection.refetch();
+      await onLoadoutChanged?.();
+      toast.success(item.equipped ? `${item.name} put back on the shelf` : `${item.name} equipped`);
+    } catch {
+      toast.error("Couldn't update your plant. Please try again.");
+    } finally {
+      setBusyId(undefined);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -76,7 +101,7 @@ export function PlantCollectionDialog() {
                 <Leaf className="h-3.5 w-3.5" /> Garden shelf
               </p>
               <DialogTitle className="mt-1 text-2xl">Your plant collection</DialogTitle>
-              <p className="mt-1 text-sm text-muted-foreground">Every find stays with you. Equip choices arrive in the next garden upgrade.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Every find stays with you. Equip one favorite in each slot.</p>
             </div>
             <div className="rounded-2xl border border-emerald-200 bg-white/70 px-4 py-3 text-center shadow-sm dark:border-emerald-800 dark:bg-black/20">
               <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{owned}/{total}</p>
@@ -96,7 +121,7 @@ export function PlantCollectionDialog() {
         <div className="max-h-[58vh] overflow-y-auto px-5 pb-6 pt-4">
           {collection.isLoading && <div className="flex min-h-52 items-center justify-center text-sm text-muted-foreground"><Sparkles className="mr-2 h-4 w-4 animate-pulse" /> Opening your garden shelf…</div>}
           {collection.isError && <div className="flex min-h-52 flex-col items-center justify-center text-center"><Gift className="mb-3 h-8 w-8 text-muted-foreground" /><p className="font-medium">The shelf could not open.</p><p className="text-sm text-muted-foreground">Try again when your connection is ready.</p></div>}
-          {!collection.isLoading && !collection.isError && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{items.map((item) => <CollectionCard key={item.id} item={item} />)}</div>}
+          {!collection.isLoading && !collection.isError && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{items.map((item) => <CollectionCard key={item.id} item={item} busy={busyId === item.id} onToggle={toggleEquipped} />)}</div>}
         </div>
       </DialogContent>
     </Dialog>

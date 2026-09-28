@@ -31,6 +31,14 @@ export const cosmeticService = {
     );
     return response.data.data;
   },
+
+  async equip(slot: string, cosmeticId: string): Promise<void> {
+    await api.put(`/plant-cosmetics/equipment/${slot}`, { cosmetic_id: cosmeticId });
+  },
+
+  async unequip(slot: string): Promise<void> {
+    await api.delete(`/plant-cosmetics/equipment/${slot}`);
+  },
 };
 
 export default cosmeticService;
