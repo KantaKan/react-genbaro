@@ -45,6 +45,7 @@ import { LeaveRequestsTable } from "./components/leave-requests-table";
 import { StudentAttendanceDetail } from "./pages/student-attendance-detail";
 import { AdminNotificationManager } from "./components/admin-notification-manager";
 import AdminHistoryPage from "./pages/admin-history-page";
+import PlantVisualQaPage from "./pages/PlantVisualQaPage";
 
 function AppContent() {
   const { isAuthenticated, error } = useAuth();
@@ -56,6 +57,7 @@ function AppContent() {
         {error && <AppErrorBanner error={error} />}
 
         <Routes>
+          {import.meta.env.DEV && <Route path="/dev/plant-matrix" element={<PlantVisualQaPage />} />}
           <Route
             path="/login"
             element={
