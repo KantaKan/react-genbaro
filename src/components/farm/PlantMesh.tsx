@@ -11,6 +11,7 @@ export const OUTLINE_COLOR = "#1a1410";
 
 interface PlantMeshProps {
   appearance: PlantAppearance;
+  reducedMotion?: boolean;
 }
 
 const GROW_DURATION_S = 1.2;
@@ -29,14 +30,14 @@ const GROW_DURATION_S = 1.2;
  * seeing it at rest to full size reads as "growing" without needing to solve
  * that harder problem.
  */
-export function PlantMesh({ appearance }: PlantMeshProps) {
+export function PlantMesh({ appearance, reducedMotion = false }: PlantMeshProps) {
   const parts = useFarmPlantParts(appearance);
   const groupRef = useRef<Group>(null);
   const growElapsed = useRef(GROW_DURATION_S); // starts fully grown; only animates on a later change
   const prevPartsRef = useRef(parts);
 
   if (prevPartsRef.current !== parts) {
-    growElapsed.current = 0;
+    growElapsed.current = reducedMotion ? GROW_DURATION_S : 0;
     prevPartsRef.current = parts;
   }
 

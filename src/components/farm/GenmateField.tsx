@@ -12,6 +12,7 @@ import { SkyDome } from "@/components/farm/SkyDome";
 import { getPartTexture, getToonGradientMap } from "@/lib/farm-textures";
 import { terrainHeightAt, TERRAIN_MARGIN } from "@/lib/farm-terrain";
 import { farmLightingForDate } from "@/lib/farm-lighting";
+import { farmQualityForDevice } from "@/lib/farm-quality";
 import { cosmeticService } from "@/application/services/cosmeticService";
 import { useFarmPlantParts, useFarmPlantHeight } from "@/hooks/use-farm-plant";
 import { buildFenceParts, buildGroundProps, buildBackgroundTrees } from "@/lib/farm-decorations";
@@ -76,6 +77,12 @@ export function GenmateField({ members, onContextLost, renderDetails }: GenmateF
   const [growthFeedback, setGrowthFeedback] = useState("");
   const previousAppearances = useRef<Map<string, string> | null>(null);
   const [lighting, setLighting] = useState(() => farmLightingForDate(new Date()));
+  const [quality, setQuality] = useState(() => farmQualityForDevice({
+    width: window.innerWidth,
+    cores: navigator.hardwareConcurrency,
+    memoryGb: (navigator as Navigator & { deviceMemory?: number }).deviceMemory,
+    reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  }));
   const [zoom, setZoom] = useState(1);
   const { data: cosmeticCatalog = [] } = useQuery("plantCosmeticCatalog", cosmeticService.getCatalog, { staleTime: 300_000 });
   const selectedMember = members.find((member) => member.id === selectedId);
@@ -109,6 +116,22 @@ export function GenmateField({ members, onContextLost, renderDetails }: GenmateF
   }, []);
 
   useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setQuality(farmQualityForDevice({
+      width: window.innerWidth,
+      cores: navigator.hardwareConcurrency,
+      memoryGb: (navigator as Navigator & { deviceMemory?: number }).deviceMemory,
+      reducedMotion: media.matches,
+    }));
+    media.addEventListener("change", update);
+    window.addEventListener("resize", update);
+    return () => {
+      media.removeEventListener("change", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!wateringId) return;
     const timeout = window.setTimeout(() => setWateringId(null), 2200);
     return () => window.clearTimeout(timeout);
@@ -137,8 +160,10 @@ export function GenmateField({ members, onContextLost, renderDetails }: GenmateF
     <div className="flex flex-col gap-3">
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-border bg-gradient-to-b from-sky-200 to-emerald-50 dark:from-slate-800 dark:to-slate-900">
         <Canvas
-          shadows
-          gl={{ toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.95 }}
+          shadows={!quality.lowPower}
+          dpr={quality.pixelRatio}
+          frameloop={quality.lowPower || quality.reducedMotion ? "demand" : "always"}
+          gl={{ toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.95, powerPreference: quality.lowPower ? "low-power" : "high-performance" }}
           onCreated={({ gl }) => {
             gl.domElement.addEventListener("webglcontextlost", (e) => {
               e.preventDefault();
@@ -160,15 +185,16 @@ export function GenmateField({ members, onContextLost, renderDetails }: GenmateF
             );
           }}
         >
+          {quality.lowPower && !quality.reducedMotion && <RenderCadence />}
           <FieldCamera fieldDiag={fieldDiag} rotationStep={rotationStep} zoom={zoom} />
-          <SkyDome radius={fieldDiag * 1.8} sunDirection={SUN_DIRECTION} />
+          <SkyDome radius={fieldDiag * 1.8} sunDirection={SUN_DIRECTION} reducedMotion={quality.reducedMotion} />
           <ambientLight intensity={lighting === "night" ? 0.2 : lighting === "evening" ? 0.28 : 0.35} />
           <directionalLight position={SUN_DIRECTION} intensity={lighting === "night" ? 0.25 : lighting === "evening" ? 0.55 : 0.9} color={lighting === "night" ? "#b9d5ff" : lighting === "evening" ? "#ffd2a2" : "#ffffff"} castShadow />
           <directionalLight position={[-5, 6, -3]} intensity={0.3} color="#cfe4ff" />
           <directionalLight position={[0, 4, -8]} intensity={0.28} color="#fff8e6" />
           <Ground landW={landW} landD={landD} />
-          <GrassField landW={landW} landD={landD} />
-          <ContactShadows position={[0, 0.01, 0]} opacity={0.4} blur={2} far={fieldDiag} />
+          <GrassField landW={landW} landD={landD} count={quality.grassBlades} />
+          {!quality.lowPower && <ContactShadows position={[0, 0.01, 0]} opacity={0.4} blur={2} far={fieldDiag} />}
           {fenceParts.map((part, i) => (
             <PartMesh key={`fence-${i}`} part={part} />
           ))}
@@ -178,8 +204,8 @@ export function GenmateField({ members, onContextLost, renderDetails }: GenmateF
           {backgroundTreeParts.map((part, i) => (
             <PartMesh key={`tree-${i}`} part={part} />
           ))}
-          <Butterflies count={5} spread={Math.min(landW, landD) * 0.4} />
-          <FarmEffects />
+          {quality.butterflies > 0 && <Butterflies count={quality.butterflies} spread={Math.min(landW, landD) * 0.4} />}
+          {!quality.lowPower && <FarmEffects />}
           {members.map((member, i) => {
             const pos = positions[i];
             if (!pos) return null;
@@ -194,6 +220,8 @@ export function GenmateField({ members, onContextLost, renderDetails }: GenmateF
                 onHoverChange={(hovered) => setHoveredId(hovered ? member.id : null)}
                 onSelect={() => selectMember(member.id)}
                 isWatering={wateringId === member.id}
+                reducedMotion={quality.reducedMotion}
+                lowPower={quality.lowPower}
               />
             );
           })}
@@ -239,6 +267,15 @@ export function GenmateField({ members, onContextLost, renderDetails }: GenmateF
       )}
     </div>
   );
+}
+
+function RenderCadence() {
+  const invalidate = useThree((state) => state.invalidate);
+  useEffect(() => {
+    const interval = window.setInterval(() => invalidate(), 34);
+    return () => window.clearInterval(interval);
+  }, [invalidate]);
+  return null;
 }
 
 function FieldCamera({ fieldDiag, rotationStep, zoom }: { fieldDiag: number; rotationStep: number; zoom: number }) {
@@ -390,6 +427,8 @@ function MemberOnTile({
   onHoverChange,
   onSelect,
   isWatering,
+  reducedMotion,
+  lowPower,
 }: {
   member: GenmateFieldMember;
   worldX: number;
@@ -398,6 +437,8 @@ function MemberOnTile({
   onHoverChange: (hovered: boolean) => void;
   onSelect: () => void;
   isWatering: boolean;
+  reducedMotion: boolean;
+  lowPower: boolean;
 }) {
   const parts = useFarmPlantParts(member.appearance);
   const height = useFarmPlantHeight(parts);
@@ -422,10 +463,10 @@ function MemberOnTile({
           onSelect();
         }}
       >
-        <PlantMesh appearance={member.appearance} />
+        <PlantMesh appearance={member.appearance} reducedMotion={reducedMotion} />
       </group>
-      {particleDefs.length > 0 && glowColor && (
-        <Particles defs={particleDefs} anchorHeight={height * 0.7} palette={member.appearance.palette} glowColor={glowColor} />
+      {!reducedMotion && particleDefs.length > 0 && glowColor && (
+        <Particles defs={lowPower ? particleDefs.slice(0, Math.ceil(particleDefs.length / 2)) : particleDefs} anchorHeight={height * 0.7} palette={member.appearance.palette} glowColor={glowColor} />
       )}
       {(isHovered || isWatering) && <TileHighlight />}
       {isWatering && <Html position={[0, height + 0.8, 0]} center style={{ pointerEvents: "none" }}><span className="text-2xl" aria-hidden="true">💧</span></Html>}
