@@ -48,6 +48,14 @@
     --chart-3: 25 60% 50%;
     --chart-4: 280 50% 45%;
     --chart-5: 340 65% 50%;
+    --character-normal: 151 38% 84%;
+    --character-normal-foreground: 158 38% 28%;
+    --character-meme: 28 78% 85%;
+    --character-meme-foreground: 20 48% 36%;
+    --character-legendary: 269 52% 87%;
+    --character-legendary-foreground: 269 34% 38%;
+    --character-lawn: 145 32% 89%;
+    --character-lawn-deep: 148 29% 72%;
   }
   
   .dark {
@@ -92,6 +100,14 @@
     --chart-3: 25 65% 45%;
     --chart-4: 280 50% 50%;
     --chart-5: 340 65% 55%;
+    --character-normal: 157 24% 22%;
+    --character-normal-foreground: 151 42% 76%;
+    --character-meme: 24 31% 23%;
+    --character-meme-foreground: 29 72% 76%;
+    --character-legendary: 270 25% 25%;
+    --character-legendary-foreground: 269 55% 80%;
+    --character-lawn: 145 18% 17%;
+    --character-lawn-deep: 148 20% 26%;
   }
 }
 

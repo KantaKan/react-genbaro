@@ -102,41 +102,41 @@ export default function BaroCharacterPage() {
     ? previewItem.preview_value
     : cosmetics.data?.items.find((item) => item.slot === slot && item.equipped)?.preview_value;
 
-  return <main className="min-h-[calc(100vh-5rem)] bg-[#f7f0e6] px-4 py-8 font-['Trebuchet_MS',sans-serif] text-[#292542] sm:px-8 lg:py-12">
+  return <main className="min-h-[calc(100vh-5rem)] bg-background px-4 py-8 font-register-body text-foreground transition-colors sm:px-8 lg:py-12">
     <div className="mx-auto max-w-6xl">
-      <Link to="/" className="inline-flex items-center gap-2 rounded-full border-2 border-[#292542] bg-white/75 px-4 py-2 text-sm font-bold transition-transform hover:-translate-x-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#292542]"><ArrowLeft className="h-4 w-4" /> กลับหน้าแรก</Link>
+      <Link to="/" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-card-foreground shadow-sm transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ArrowLeft className="h-4 w-4" /> กลับหน้าแรก</Link>
       <div className="mt-7 grid items-center gap-12 lg:grid-cols-[1.08fr_.92fr]">
         <div className="order-2 lg:order-1">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#292542] px-4 py-2 text-xs font-black uppercase tracking-[.18em] text-[#fffaf0]"><Sparkles className="h-4 w-4" /> Your little companion</div>
-          <h1 className="mt-5 max-w-[15ch] text-4xl font-black leading-[1.08] tracking-tight sm:text-5xl">เพื่อนตัวจิ๋ว<br />ที่เป็นคุณคนเดียว</h1>
-          <p className="mt-5 max-w-xl text-base leading-8 text-[#5b5870]">ตัวละคร Baro จะอยู่กับคุณตลอดทาง หน้าตาและลายเกิดจากชุดลักษณะเฉพาะของคุณ ส่วนการเติบโตและของแต่งจะค่อย ๆ ตามมาเมื่อคุณใช้ชีวิตใน Baro</p>
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-bold uppercase tracking-[.18em] text-primary-foreground"><Sparkles className="h-4 w-4" /> Your little companion</div>
+          <h1 className="mt-5 max-w-[15ch] font-register-heading text-4xl leading-[1.08] sm:text-5xl">เพื่อนตัวจิ๋ว<br />ที่เป็นคุณคนเดียว</h1>
+          <p className="mt-5 max-w-xl text-base leading-8 text-muted-foreground">ตัวละคร Baro จะอยู่กับคุณตลอดทาง หน้าตาและลายเกิดจากชุดลักษณะเฉพาะของคุณ ส่วนการเติบโตและของแต่งจะค่อย ๆ ตามมาเมื่อคุณใช้ชีวิตใน Baro</p>
 
-          {collection.isLoading && <div className="mt-9 rounded-3xl border-2 border-[#292542] bg-white/65 p-6" role="status">กำลังตามหาเพื่อนตัวจิ๋วของคุณ…</div>}
-          {collection.isError && <div className="mt-9 rounded-3xl border-2 border-[#a9505e] bg-[#fff4f1] p-6"><p className="font-bold">ยังโหลดสมุดตัวละครไม่ได้</p><p className="mt-1 text-sm">ข้อมูลยังไม่เปลี่ยน ลองอีกครั้งได้เลย</p><button type="button" onClick={() => collection.refetch()} className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#292542] px-5 py-3 font-bold text-white"><RotateCw className="h-4 w-4" /> ลองใหม่</button></div>}
+          {collection.isLoading && <div className="mt-9 rounded-2xl border border-border bg-card p-6 shadow-sm" role="status">กำลังตามหาเพื่อนตัวจิ๋วของคุณ…</div>}
+          {collection.isError && <div className="mt-9 rounded-2xl border border-destructive/40 bg-destructive/10 p-6 text-destructive"><p className="font-bold">ยังโหลดสมุดตัวละครไม่ได้</p><p className="mt-1 text-sm">ข้อมูลยังไม่เปลี่ยน ลองอีกครั้งได้เลย</p><button type="button" onClick={() => collection.refetch()} className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 font-bold text-primary-foreground"><RotateCw className="h-4 w-4" /> ลองใหม่</button></div>}
 
-          {!collection.isLoading && !collection.isError && !starter && <div className="mt-9 rounded-[28px] border-2 border-[#292542] bg-white/75 p-6 shadow-[7px_8px_0_#d5c9db] sm:p-8">
-            <p className="text-xs font-black uppercase tracking-[.2em] text-[#8b699d]">FIRST REVEAL</p>
-            <h2 className="mt-2 text-2xl font-black">อยากเจอคู่หูของคุณไหม?</h2>
-            <p className="mt-2 text-sm leading-7 text-[#5b5870]">กดเปิดเมื่อพร้อมได้เลย ไม่จำเป็นต้องเปิดก่อนเขียน reflection และเปิดแล้วจะเป็นตัวเดิมถาวร ไม่มีการสุ่มใหม่</p>
+          {!collection.isLoading && !collection.isError && !starter && <div className="mt-9 rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm sm:p-8">
+            <p className="text-xs font-bold uppercase tracking-[.2em] text-primary">FIRST REVEAL</p>
+            <h2 className="mt-2 font-register-heading text-2xl">อยากเจอคู่หูของคุณไหม?</h2>
+            <p className="mt-2 text-sm leading-7 text-muted-foreground">กดเปิดเมื่อพร้อมได้เลย ไม่จำเป็นต้องเปิดก่อนเขียน reflection และเปิดแล้วจะเป็นตัวเดิมถาวร ไม่มีการสุ่มใหม่</p>
             <div className="mt-6 grid grid-cols-3 gap-2" aria-label="โอกาสได้ตัวละครแต่ละระดับ">
-              <div className="rounded-2xl bg-[#e3f3e7] p-3 text-center"><span className="block text-2xl font-black">83%</span><span className="text-[11px] font-bold">ปกติ</span></div>
-              <div className="rounded-2xl bg-[#fde3ca] p-3 text-center"><span className="block text-2xl font-black">15%</span><span className="text-[11px] font-bold">มีมแรร์</span></div>
-              <div className="rounded-2xl bg-[#eadcf7] p-3 text-center"><span className="block text-2xl font-black">2%</span><span className="text-[11px] font-bold">ตำนาน</span></div>
+              <div className="rounded-xl bg-[hsl(var(--character-normal))] p-3 text-center text-[hsl(var(--character-normal-foreground))]"><span className="block text-2xl font-bold">83%</span><span className="text-[11px] font-bold">ปกติ</span></div>
+              <div className="rounded-xl bg-[hsl(var(--character-meme))] p-3 text-center text-[hsl(var(--character-meme-foreground))]"><span className="block text-2xl font-bold">15%</span><span className="text-[11px] font-bold">มีมแรร์</span></div>
+              <div className="rounded-xl bg-[hsl(var(--character-legendary))] p-3 text-center text-[hsl(var(--character-legendary-foreground))]"><span className="block text-2xl font-bold">2%</span><span className="text-[11px] font-bold">ตำนาน</span></div>
             </div>
-            <button type="button" disabled={reveal.isLoading} onClick={() => reveal.mutate()} className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-full border-2 border-[#292542] bg-[#f4bd80] px-6 text-base font-black shadow-[4px_5px_0_#292542] transition-transform hover:-translate-y-1 disabled:cursor-wait disabled:opacity-70">{reveal.isLoading ? "กำลังเปิดตัวละคร…" : "เปิดตัวละครของฉัน"}<ArrowRight className="h-5 w-5" /></button>
-            {reveal.isError && <p role="alert" className="mt-4 text-sm font-bold text-[#a9505e]">เปิดไม่สำเร็จ ลองกดใหม่ได้เลย ข้อมูลเดิมยังปลอดภัย</p>}
+            <button type="button" disabled={reveal.isLoading} onClick={() => reveal.mutate()} className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-full bg-primary px-6 text-base font-bold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70">{reveal.isLoading ? "กำลังเปิดตัวละคร…" : "เปิดตัวละครของฉัน"}<ArrowRight className="h-5 w-5" /></button>
+            {reveal.isError && <p role="alert" className="mt-4 text-sm font-bold text-destructive">เปิดไม่สำเร็จ ลองกดใหม่ได้เลย ข้อมูลเดิมยังปลอดภัย</p>}
           </div>}
 
-          {character && <div className="mt-9 rounded-[28px] border-2 border-[#292542] bg-white/75 p-6 shadow-[7px_8px_0_#d5c9db] sm:p-8">
-            <div className="flex items-center gap-3"><div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#dcefe4]"><Fingerprint className="h-6 w-6" /></div><div><p className="text-xs font-black uppercase tracking-[.15em] text-[#7c7990]">PERMANENT DNA</p><h2 className="text-xl font-black">เจอกันแล้ว!</h2></div></div>
-            <p className="mt-5 text-sm leading-7 text-[#5b5870]">นี่คือคู่หูของคุณ จะกลับมาดูอีกกี่ครั้งก็ยังเป็นตัวเดิม ลาย {patternNames[character.dna.pattern] ?? character.dna.pattern} และชุดลักษณะนี้ไม่ซ้ำใคร</p>
-            <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold"><span className="rounded-full bg-[#e3f3e7] px-3 py-2">สี {character.dna.palette}</span><span className="rounded-full bg-[#fde3ca] px-3 py-2">{rarityLabels[character.dna.rarity]}</span><span className="rounded-full bg-[#eadcf7] px-3 py-2">ลาย #{character.dna.pattern_seed}</span></div>
-            {growth.data && <div className="mt-6 rounded-2xl bg-[#e8f2e9] p-4 text-sm leading-6"><p className="font-black">โตตามวันที่คุณตั้งใจ 🔥</p><p className="mt-1">สถิติสูงสุด {growth.data.best_streak} วันทำงาน · ตอนนี้ {growth.data.current_streak} วัน</p><p className="text-[#5b5870]">{growth.data.mood === "resting" ? "ช่วงพักก็ไม่ทำให้ร่างที่เคยโตหดลงนะ" : growth.data.next_detail_at ? `อีกก้าวที่ ${growth.data.next_detail_at} วัน จะมีดีเทลใหม่` : "ปลดล็อกดีเทลครบแล้ว"}</p></div>}
+          {character && <div className="mt-9 rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm sm:p-8">
+            <div className="flex items-center gap-3"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary"><Fingerprint className="h-6 w-6 text-primary" /></div><div><p className="text-xs font-bold uppercase tracking-[.15em] text-muted-foreground">PERMANENT DNA</p><h2 className="font-register-heading text-xl">เจอกันแล้ว!</h2></div></div>
+            <p className="mt-5 text-sm leading-7 text-muted-foreground">นี่คือคู่หูของคุณ จะกลับมาดูอีกกี่ครั้งก็ยังเป็นตัวเดิม ลาย {patternNames[character.dna.pattern] ?? character.dna.pattern} และชุดลักษณะนี้ไม่ซ้ำใคร</p>
+            <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold"><span className="rounded-full bg-secondary px-3 py-2">สี {character.dna.palette}</span><span className="rounded-full bg-secondary px-3 py-2">{rarityLabels[character.dna.rarity]}</span><span className="rounded-full bg-secondary px-3 py-2">ลาย #{character.dna.pattern_seed}</span></div>
+            {growth.data && <div className="mt-6 rounded-xl border border-border bg-muted p-4 text-sm leading-6"><p className="font-bold">โตตามวันที่คุณตั้งใจ 🔥</p><p className="mt-1">สถิติสูงสุด {growth.data.best_streak} วันทำงาน · ตอนนี้ {growth.data.current_streak} วัน</p><p className="text-muted-foreground">{growth.data.mood === "resting" ? "ช่วงพักก็ไม่ทำให้ร่างที่เคยโตหดลงนะ" : growth.data.next_detail_at ? `อีกก้าวที่ ${growth.data.next_detail_at} วัน จะมีดีเทลใหม่` : "ปลดล็อกดีเทลครบแล้ว"}</p></div>}
             {growth.isError && <p className="mt-6 text-sm text-[#a9505e]">ยังอ่านสถานะการโตไม่ได้ <button type="button" onClick={() => growth.refetch()} className="font-black underline">ลองใหม่</button></p>}
             <CharacterCarePanel state={careEnergy.data} loading={careEnergy.isLoading} caring={care.isLoading} error={careEnergy.isError || care.isError} onCare={() => care.mutate()} onRetry={() => careEnergy.refetch()} />
             {selection.isError && <p className="mt-4 text-sm text-[#a9505e]">ยังอ่านตัวที่เลือกไว้ไม่ได้ <button type="button" onClick={() => selection.refetch()} className="font-black underline">ลองใหม่</button></p>}
             {(equip.isError || pin.isError) && <p role="alert" className="mt-4 text-sm text-[#a9505e]">เปลี่ยนตัวละครไม่สำเร็จ ลองอีกครั้งได้เลย</p>}
-            <p className="mt-6 text-xs leading-6 text-[#79758a]">การ์ดและตัวละครเป็นของสะสมใน Baro เท่านั้น ไม่มีการซื้อขายหรือเงินจริง</p>
+            <p className="mt-6 text-xs leading-6 text-muted-foreground">การ์ดและตัวละครเป็นของสะสมใน Baro เท่านั้น ไม่มีการซื้อขายหรือเงินจริง</p>
           </div>}
         </div>
 
