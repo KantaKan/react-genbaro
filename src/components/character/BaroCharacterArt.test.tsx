@@ -14,4 +14,14 @@ describe("BaroCharacterArt", () => {
     const second = renderToStaticMarkup(<BaroCharacterArt dna={{ ...base, pattern, pattern_seed: 2 }} id="sample" />);
     expect(first).not.toBe(second);
   });
+
+  it.each([
+    ["headphones", "#5fa9c9"],
+    ["pixel-glasses", "#9cd7e8"],
+    ["tiny-crown", "#f5c451"],
+  ])("renders the %s collectible prop", (prop, color) => {
+    const art = renderToStaticMarkup(<BaroCharacterArt dna={base} id={prop} prop={prop} />);
+    expect(art).toContain(`data-character-prop="${prop}"`);
+    expect(art).toContain(color);
+  });
 });

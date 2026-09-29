@@ -184,6 +184,10 @@
   font-family: 'DM Sans', system-ui, sans-serif;
 }
 
+.character-prototype-stage {
+  height: clamp(24rem, 65vh, 35rem);
+}
+
 /* Attendance stamp colors — semantic status markers */
 @layer base {
   :root {

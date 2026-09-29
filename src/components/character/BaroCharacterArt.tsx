@@ -69,6 +69,9 @@ function CharacterProp({ prop }: { prop?: string }) {
   if (prop === "cat-ears") return <g><path d="M53 99 L54 45 Q75 50 85 81 M135 81 Q145 50 166 45 L167 99" fill="#f4abc1" stroke={ink} strokeWidth="5" strokeLinejoin="round" /><path d="M55 92 Q108 60 165 92" fill="none" stroke="#f4abc1" strokeWidth="8" /></g>;
   if (prop === "egg") return <g><path d="M131 75 Q139 60 153 67 Q173 55 180 74 Q192 84 177 95 Q168 109 151 98 Q133 105 130 89 Q121 83 131 75 Z" fill="#fffaf0" stroke={ink} strokeWidth="3" /><circle cx="155" cy="83" r="12" fill="#f5bd4f" /></g>;
   if (prop === "halo") return <g><ellipse cx="110" cy="45" rx="43" ry="12" fill="none" stroke="#fff1a9" strokeWidth="9" /><ellipse cx="110" cy="45" rx="43" ry="12" fill="none" stroke={ink} strokeWidth="2" /></g>;
+  if (prop === "headphones") return <g fill="none" stroke={ink} strokeLinecap="round"><path d="M51 139 Q49 57 110 57 Q171 57 169 139" strokeWidth="13" /><path d="M51 139 Q49 57 110 57 Q171 57 169 139" stroke="#5fa9c9" strokeWidth="7" /><rect x="39" y="126" width="25" height="45" rx="10" fill="#f4bd80" strokeWidth="4" /><rect x="156" y="126" width="25" height="45" rx="10" fill="#f4bd80" strokeWidth="4" /></g>;
+  if (prop === "pixel-glasses") return <g stroke={ink} strokeWidth="5" strokeLinejoin="round"><path d="M62 125 H101 V151 H62 Z M119 125 H158 V151 H119 Z" fill="#9cd7e8" fillOpacity=".75" /><path d="M101 134 H119 M50 132 H62 M158 132 H170" fill="none" /></g>;
+  if (prop === "tiny-crown") return <g stroke={ink} strokeWidth="4" strokeLinejoin="round"><path d="M75 83 L72 45 L91 60 L110 35 L129 60 L148 45 L145 83 Z" fill="#f5c451" /><path d="M77 72 H143" fill="none" /><circle cx="110" cy="59" r="5" fill="#f48670" strokeWidth="2" /></g>;
   return null;
 }
 

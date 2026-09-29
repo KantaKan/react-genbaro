@@ -74,10 +74,14 @@ function BodyPattern({ look }: { look: Appearance }) {
 }
 
 function CharacterProp({ look }: { look: Appearance }) {
+  const faceZ = look.bodyScale[2] + 0.13;
   if (look.prop === "halo") return <mesh position={[0, 1.04, 0]} rotation={[0.2, 0, 0]}><torusGeometry args={[0.39, 0.055, 8, 32]} /><meshToonMaterial color="#fff1a9" /></mesh>;
   if (look.prop === "cat-ears") return <group>{[-1, 1].map((side) => <mesh key={side} position={[side * 0.49, 1.05, 0.08]} rotation={[0, 0, side * 0.15]}><coneGeometry args={[0.2, 0.37, 4]} /><meshToonMaterial color="#f4abc1" /></mesh>)}</group>;
   if (look.prop === "egg" || look.pattern === "egg") return <group position={[0.57, 0.96, look.body === "mushroom" ? 0.78 : 0.29]}><Ball position={[0, 0, 0]} scale={[0.22, 0.17, 0.07]} color="#fffaf0" /><Ball position={[0, 0, 0.07]} scale={[0.1, 0.1, 0.025]} color="#f5bd4f" /></group>;
   if (look.prop === "flower") return <group position={[0.58, 0.95, 0.28]}>{Array.from({ length: 5 }, (_, index) => <Ball key={index} position={[Math.sin(index * Math.PI * 2 / 5) * 0.13, Math.cos(index * Math.PI * 2 / 5) * 0.13, 0]} scale={[0.09, 0.09, 0.04]} color="#fff1d5" />)}<Ball position={[0, 0, 0.05]} scale={[0.08, 0.08, 0.03]} color="#f2bb63" /></group>;
+  if (look.prop === "headphones") return <group><mesh position={[0, 0.46, 0]}><torusGeometry args={[0.82, 0.065, 8, 32, Math.PI]} /><meshToonMaterial color="#5fa9c9" /></mesh>{[-1, 1].map((side) => <Ball key={side} position={[side * 0.83, 0.14, 0]} scale={[0.13, 0.27, 0.16]} color="#f4bd80" outline />)}</group>;
+  if (look.prop === "pixel-glasses") return <group position={[0, 0.09, faceZ]}>{[-1, 1].map((side) => <mesh key={side} position={[side * 0.29, 0, 0]}><boxGeometry args={[0.37, 0.25, 0.055]} /><meshToonMaterial color="#78c6df" transparent opacity={0.82} /></mesh>)}<mesh><boxGeometry args={[0.21, 0.055, 0.045]} /><meshBasicMaterial color={characterInk} /></mesh></group>;
+  if (look.prop === "tiny-crown") return <group position={[0, 1.03, 0]}><mesh position={[0, -0.08, 0]}><boxGeometry args={[0.72, 0.18, 0.28]} /><meshToonMaterial color="#f5c451" /></mesh>{[-0.28, 0, 0.28].map((x, index) => <mesh key={x} position={[x, 0.16 + (index === 1 ? 0.08 : 0), 0]}><coneGeometry args={[0.17, index === 1 ? 0.5 : 0.38, 4]} /><meshToonMaterial color="#f5c451" /></mesh>)}</group>;
   return null;
 }
 
