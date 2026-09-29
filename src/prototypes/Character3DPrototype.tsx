@@ -78,7 +78,6 @@ export function Prototype() {
 
         <section className="order-1 min-w-0 lg:order-2 lg:col-span-6">
           <div className="relative overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm">
-            <div className={`absolute inset-x-0 top-0 h-1.5 ${rarity.className}`} />
             <div className="flex items-center justify-between gap-4 px-5 pb-3 pt-6 sm:px-7">
               <div><p className="font-register-mono text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">BARO / GEN-001 / {String(example.dna.pattern_seed).padStart(6, "0")}</p><h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">{example.title}</h2></div>
               <div className="flex rounded-xl border border-border bg-background p-1 text-xs font-bold">
