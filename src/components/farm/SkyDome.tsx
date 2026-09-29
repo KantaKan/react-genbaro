@@ -15,6 +15,7 @@ function hash(n: number): number {
 
 interface SkyDomeProps {
   radius: number;
+  reducedMotion?: boolean;
   /** Same direction the scene's key light shines from, so the visible sun
    * sits where the light actually comes from instead of floating decoratively
    * in an unrelated part of the sky. */
@@ -35,7 +36,7 @@ interface SkyDomeProps {
  * subject and this small on screen, the outline pass would read as noise
  * rather than the clean rim that works for the plants and ground.
  */
-export function SkyDome({ radius, sunDirection }: SkyDomeProps) {
+export function SkyDome({ radius, sunDirection, reducedMotion = false }: SkyDomeProps) {
   const geometry = useMemo(() => {
     const geo = new SphereGeometry(radius, 24, 16);
     const pos = geo.attributes.position;
@@ -88,7 +89,7 @@ export function SkyDome({ radius, sunDirection }: SkyDomeProps) {
           blending={AdditiveBlending}
         />
       </mesh>
-      <Clouds radius={radius} />
+      <Clouds radius={radius} reducedMotion={reducedMotion} />
     </group>
   );
 }
@@ -107,7 +108,7 @@ interface CloudDef {
   puffs: CloudPuff[];
 }
 
-function Clouds({ radius }: { radius: number }) {
+function Clouds({ radius, reducedMotion }: { radius: number; reducedMotion: boolean }) {
   const groupRefs = useRef<(Group | null)[]>([]);
 
   const cloudDefs = useMemo<CloudDef[]>(() => {
@@ -131,6 +132,7 @@ function Clouds({ radius }: { radius: number }) {
   }, [radius]);
 
   useFrame(({ clock }) => {
+    if (reducedMotion) return;
     cloudDefs.forEach((def, i) => {
       const group = groupRefs.current[i];
       if (!group) return;
@@ -144,6 +146,7 @@ function Clouds({ radius }: { radius: number }) {
       {cloudDefs.map((def, i) => (
         <group
           key={i}
+          position={[Math.cos(def.angle0) * def.orbitRadius, def.height, Math.sin(def.angle0) * def.orbitRadius]}
           ref={(el) => {
             groupRefs.current[i] = el;
           }}

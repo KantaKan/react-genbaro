@@ -1,0 +1,100 @@
+import { lazy, Suspense, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "react-query";
+import { Link } from "react-router-dom";
+import { ArrowLeft, Box, MapPin, RotateCw, Sparkles } from "lucide-react";
+import { useAuth } from "@/application/contexts/AuthContext";
+import { baroCharacterService } from "@/application/services/baroCharacterService";
+import { showcaseLawnService, type ShowcaseEntry } from "@/application/services/showcaseLawnService";
+import { BaroCharacterArt } from "@/components/character/BaroCharacterArt";
+import { GodEventPanel } from "@/components/character/GodEventPanel";
+import { ShowcaseLawnEnvironment } from "@/components/character/ShowcaseLawnEnvironment";
+
+const rarityColor: Record<string, string> = { normal: "#ccebdd", meme_rare: "#f8d7b7", legendary: "#dfcdf8" };
+const reactionChoices = ["❤️", "✨", "😂", "🙌"];
+const Character3DViewer = lazy(() => import("@/components/character/Character3DViewer").then((module) => ({ default: module.Character3DViewer })));
+
+function LawnCard({ entry, mine, admin, busy, onReact, onModerate, onInspect }: { entry: ShowcaseEntry; mine: boolean; admin: boolean; busy: boolean; onReact: (emoji: string) => void; onModerate: (hidden: boolean) => void; onInspect: () => void }) {
+  return <article className={`min-w-0 rounded-[25px] border-[3px] border-[#292542] p-3 shadow-[5px_6px_0_#579674] ${entry.hidden ? "bg-[#e9e5e8]" : "bg-[#fffaf0]"}`}>
+    <div className="relative overflow-hidden rounded-[17px] p-3" style={{ backgroundColor: rarityColor[entry.character.dna.rarity] ?? rarityColor.normal }}>
+      <div className="flex items-start justify-between gap-2"><p className="text-xs font-black">{entry.name}</p>{entry.hidden ? <span className="rounded-full border border-[#292542] bg-white px-2 py-0.5 text-[10px] font-black">ซ่อนอยู่</span> : mine && <span className="rounded-full border border-[#292542] bg-white px-2 py-0.5 text-[10px] font-black">YOU</span>}</div>
+      <div className="mx-auto h-48 w-40"><BaroCharacterArt dna={entry.character.dna} id={`lawn-${entry.character.id}`} prop={entry.prop} /></div>
+      <div className="flex items-center justify-between gap-2 text-[10px] font-bold"><span className="rounded-full bg-white/85 px-2 py-1">{entry.team || `Cohort ${entry.cohort}`}</span><span className="font-mono">{entry.character.dna.rarity.replace("_", " ")}</span></div>
+    </div>
+    <p className="mt-3 min-h-12 whitespace-pre-wrap break-words px-1 text-sm leading-6">{entry.message || "แวะมาทักทายกันได้นะ 🌱"}</p>
+    <p className="mt-2 border-t border-[#292542]/20 px-1 pt-2 font-mono text-[10px] font-bold">{entry.character.serial}</p>
+    {!entry.hidden && <button type="button" onClick={onInspect} className="mt-3 inline-flex min-h-9 items-center gap-2 rounded-full border-2 border-[#292542] bg-[#d4efe1] px-3 text-xs font-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#292542]"><Box className="h-4 w-4" /> ดูคู่หู 3D</button>}
+    {!entry.hidden && <div className="mt-3 flex flex-wrap gap-2" aria-label={`รีแอคให้ ${entry.name}`}>{reactionChoices.map((emoji) => {
+      const reaction = entry.reactions?.find((item) => item.emoji === emoji);
+      return <button key={emoji} type="button" aria-label={`ส่ง ${emoji} ให้ ${entry.name}`} aria-pressed={reaction?.reacted ?? false} disabled={busy} onClick={() => onReact(emoji)} className={`min-h-9 rounded-full border-2 border-[#292542] px-2.5 text-xs font-black transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#292542] disabled:opacity-50 motion-reduce:transition-none ${reaction?.reacted ? "bg-[#f4bd80]" : "bg-white"}`}>{emoji} <span className="font-mono">{reaction?.count ?? 0}</span></button>;
+    })}</div>}
+    {admin && <button type="button" disabled={busy} onClick={() => onModerate(!entry.hidden)} className="mt-3 min-h-9 rounded-full border-2 border-[#292542] bg-white px-3 text-xs font-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#292542] disabled:opacity-50">{entry.hidden ? "คืนสู่ลาน" : "ซ่อนจากลาน"}</button>}
+  </article>;
+}
+
+export default function ShowcaseLawnPage() {
+  const { userId, userRole } = useAuth();
+  const queryClient = useQueryClient();
+  const [cohort, setCohort] = useState(0);
+  const [team, setTeam] = useState("");
+  const [draftCharacterId, setDraftCharacterId] = useState<string | null>(null);
+  const [draftMessage, setDraftMessage] = useState<string | null>(null);
+  const [inspectedEntry, setInspectedEntry] = useState<ShowcaseEntry | null>(null);
+  const includeHidden = userRole === "admin";
+  const baseKey = ["showcase-lawn", userId, 0, "", includeHidden];
+  const base = useQuery(baseKey, () => showcaseLawnService.list(undefined, undefined, includeHidden), { enabled: Boolean(userId), retry: false });
+  const filtered = useQuery(["showcase-lawn", userId, cohort, team, includeHidden], () => showcaseLawnService.list(cohort || undefined, team || undefined, includeHidden), { enabled: Boolean(userId && (cohort || team)), retry: false });
+  const view = cohort || team ? filtered : base;
+  const own = useQuery(["showcase-lawn-mine", userId], showcaseLawnService.mine, { enabled: Boolean(userId), retry: false });
+  const collection = useQuery(["baro-character-collection", userId], baroCharacterService.collection, { enabled: Boolean(userId), retry: false });
+  const selection = useQuery(["baro-character-selection", userId], baroCharacterService.selection, { enabled: Boolean(userId), retry: false });
+  const mine = own.data;
+  const chosenId = draftCharacterId ?? (selection.data?.pinned_id || collection.data?.[0]?.id || "");
+  const message = draftMessage ?? mine?.message ?? "";
+  const cohorts = [...new Set((base.data ?? []).map((entry) => entry.cohort).filter((value) => value > 0))].sort((a, b) => a - b);
+  const teams = [...new Set((base.data ?? []).filter((entry) => !cohort || entry.cohort === cohort).map((entry) => entry.team).filter(Boolean))].sort();
+  const save = useMutation(() => showcaseLawnService.save(chosenId, message), {
+    onSuccess: () => { setDraftCharacterId(null); setDraftMessage(null); queryClient.invalidateQueries(["showcase-lawn"]); queryClient.invalidateQueries(["showcase-lawn-mine", userId]); queryClient.invalidateQueries(["baro-character-selection", userId]); },
+  });
+  const remove = useMutation(showcaseLawnService.remove, {
+    onSuccess: () => { setDraftCharacterId(null); setDraftMessage(null); queryClient.invalidateQueries(["showcase-lawn"]); queryClient.invalidateQueries(["showcase-lawn-mine", userId]); queryClient.invalidateQueries(["baro-character-selection", userId]); },
+  });
+  const react = useMutation(({ ownerId, emoji }: { ownerId: string; emoji: string }) => showcaseLawnService.react(ownerId, emoji), { onSuccess: () => queryClient.invalidateQueries(["showcase-lawn"]) });
+  const moderate = useMutation(({ ownerId, hidden }: { ownerId: string; hidden: boolean }) => showcaseLawnService.moderate(ownerId, hidden), { onSuccess: () => { queryClient.invalidateQueries(["showcase-lawn"]); queryClient.invalidateQueries(["showcase-lawn-mine", userId]); } });
+  const busy = save.isLoading || remove.isLoading;
+
+  return <main className="min-h-[calc(100vh-5rem)] bg-[#f7f0e6] px-4 py-8 font-['Trebuchet_MS',sans-serif] text-[#292542] sm:px-8 lg:py-12">
+    <div className="mx-auto max-w-6xl">
+      <Link to="/character" className="inline-flex items-center gap-2 rounded-full border-2 border-[#292542] bg-white px-4 py-2 text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#292542]"><ArrowLeft className="h-4 w-4" /> กลับไปหาตัวละคร</Link>
+      <div className="mb-8 mt-7 flex flex-wrap items-end justify-between gap-5"><div><p className="flex items-center gap-2 text-xs font-black uppercase tracking-[.2em] text-[#647d6a]"><MapPin className="h-4 w-4" /> THE SHOWCASE LAWN</p><h1 className="mt-2 text-4xl font-black leading-tight sm:text-5xl">ลานนัดพบของเพื่อนตัวจิ๋ว</h1><p className="mt-3 max-w-2xl text-sm leading-7 text-[#5b5870]">ปักคู่หูไว้พร้อมคำทักทาย แล้วแวะมาดูเพื่อนในรุ่นได้ทุกเมื่อ ไม่ต้องออนไลน์พร้อมกัน</p></div><span className="rounded-full border-2 border-[#292542] bg-[#f4bd80] px-4 py-2 font-mono text-xs font-black">{base.data?.filter((entry) => !entry.hidden).length ?? 0} FRIENDS VISITING</span></div>
+
+      <GodEventPanel userId={userId} admin={includeHidden} />
+
+      <section aria-labelledby="my-showcase-heading" className="mb-8 rounded-[27px] border-[3px] border-[#292542] bg-[#fffaf0] p-5 shadow-[6px_7px_0_#d5c9db] sm:p-7">
+        <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-black uppercase tracking-[.18em] text-[#8b699d]">YOUR PLACE ON THE LAWN</p><h2 id="my-showcase-heading" className="mt-1 text-2xl font-black">ปักคู่หูของฉัน</h2></div>{mine && <span className={`rounded-full px-3 py-1 text-xs font-black ${mine.hidden ? "bg-[#e9e5e8]" : "bg-[#d4efe1]"}`}>{mine.hidden ? "แอดมินซ่อนจากลาน · ยังแก้ไขได้" : "ปักอยู่แล้ว · แก้ไขได้"}</span>}</div>
+        {own.isError && <p role="alert" className="mt-3 text-sm text-[#a9505e]">ยังโหลดรายการของคุณไม่ได้ <button type="button" onClick={() => own.refetch()} className="font-black underline">ลองใหม่</button></p>}
+        {collection.isLoading && <p role="status" className="mt-5 text-sm">กำลังเปิดสมุดตัวละคร…</p>}
+        {collection.isError && <div role="alert" className="mt-5 text-sm text-[#a9505e]">ยังโหลดตัวละครไม่ได้ <button type="button" onClick={() => collection.refetch()} className="font-black underline">ลองใหม่</button></div>}
+        {collection.data?.length === 0 && <p className="mt-5 text-sm">ยังไม่มีตัวละครในสมุดสะสม <Link to="/character" className="font-black underline">ไปเปิดตัวละครตัวแรก</Link> แล้วกลับมาปักบนลานได้</p>}
+        {collection.data && collection.data.length > 0 && <div className="mt-5 grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <fieldset><legend className="text-sm font-black">เลือกตัวที่อยากให้เพื่อนเจอ</legend><div className="mt-2 flex max-h-44 gap-3 overflow-x-auto pb-2">{collection.data.map((character) => <button key={character.id} type="button" aria-label={`เลือก ${character.serial}`} aria-pressed={chosenId === character.id} onClick={() => setDraftCharacterId(character.id)} className={`w-28 shrink-0 rounded-2xl border-[3px] p-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#292542] ${chosenId === character.id ? "border-[#292542] bg-[#d4efe1]" : "border-transparent bg-[#f0e9ff]"}`}><div className="mx-auto h-20 w-16"><BaroCharacterArt dna={character.dna} id={`lawn-choice-${character.id}`} /></div><span className="block truncate font-mono text-[10px] font-black">{character.serial.slice(-8)}</span></button>)}</div></fieldset>
+          <div><label htmlFor="showcase-message" className="text-sm font-black">ฝากข้อความไว้บนลาน</label><textarea id="showcase-message" maxLength={160} value={message} onChange={(event) => setDraftMessage(event.target.value)} placeholder="วันนี้มีอะไรอยากบอกเพื่อน ๆ ไหม?" rows={3} className="mt-2 w-full resize-none rounded-2xl border-2 border-[#292542] bg-white p-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b699d]" /><p className="mt-1 text-right font-mono text-xs">{[...message].length}/160</p></div>
+        </div>}
+        {collection.data && collection.data.length > 0 && <div className="mt-4 flex flex-wrap gap-3"><button type="button" disabled={busy || !chosenId || [...message].length > 160} onClick={() => save.mutate()} className="min-h-11 rounded-full border-2 border-[#292542] bg-[#f4bd80] px-5 text-sm font-black shadow-[3px_4px_0_#292542] transition-transform hover:-translate-y-0.5 disabled:opacity-50 motion-reduce:transition-none">{save.isLoading ? "กำลังบันทึก…" : mine ? "บันทึกการปัก" : "ปักบนลาน"}</button>{mine && <button type="button" disabled={busy} onClick={() => remove.mutate()} className="min-h-11 rounded-full border-2 border-[#292542] bg-white px-5 text-sm font-black disabled:opacity-50">เอาออกจากลาน</button>}</div>}
+        {save.isError && <p role="alert" className="mt-3 text-sm font-bold text-[#a9505e]">ยังปักตัวละครไม่ได้ ตรวจตัวที่เลือกแล้วลองใหม่</p>}{remove.isError && <p role="alert" className="mt-3 text-sm font-bold text-[#a9505e]">ยังเอาออกจากลานไม่ได้ ลองใหม่ได้เลย</p>}{save.isSuccess && <p role="status" className="mt-3 text-sm font-bold text-[#347c69]">บันทึกการปักแล้ว</p>}{remove.isSuccess && <p role="status" className="mt-3 text-sm font-bold text-[#347c69]">เอาออกจากลานแล้ว</p>}
+      </section>
+
+      <section aria-labelledby="lawn-friends-heading"><div className="mb-4 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[.18em] text-[#647d6a]">WANDER TOGETHER</p><h2 id="lawn-friends-heading" className="mt-1 text-2xl font-black">เดินดูเพื่อนบนลาน</h2></div><div className="flex flex-wrap gap-2">{userRole === "admin" && <select aria-label="กรองรุ่น" value={cohort} onChange={(event) => { setCohort(Number(event.target.value)); setTeam(""); }} className="min-h-10 rounded-full border-2 border-[#292542] bg-white px-3 text-sm font-bold"><option value={0}>ทุกรุ่น</option>{cohorts.map((number) => <option key={number} value={number}>รุ่น {number}</option>)}</select>}<select aria-label="กรองทีม" value={team} onChange={(event) => setTeam(event.target.value)} className="min-h-10 rounded-full border-2 border-[#292542] bg-white px-3 text-sm font-bold"><option value="">ทุกทีม</option>{teams.map((name) => <option key={name} value={name}>{name}</option>)}</select></div></div>
+        <ShowcaseLawnEnvironment>
+          {view.isLoading && <p role="status" className="rounded-2xl bg-white/85 p-6 text-sm font-bold">กำลังดูว่าเพื่อน ๆ ใครมาปักไว้บ้าง…</p>}
+          {view.isError && <div role="alert" className="rounded-2xl bg-white/90 p-6 text-sm"><p className="font-black">ยังเปิดลานไม่ได้</p><p className="mt-1">ลองโหลดใหม่ได้เลย การปักของคุณยังอยู่</p><button type="button" onClick={() => view.refetch()} className="mt-3 inline-flex items-center gap-2 font-black underline"><RotateCw className="h-4 w-4" /> โหลดใหม่</button></div>}
+          {!view.isLoading && !view.isError && view.data?.length === 0 && <div className="rounded-2xl bg-white/90 p-8 text-center"><Sparkles className="mx-auto h-8 w-8" /><p className="mt-2 font-black">ยังไม่มีใครปักตัวละครตรงนี้</p><p className="mt-1 text-sm">ลองเลือกทุกทีม หรือปักคู่หูของคุณเป็นคนแรกได้เลย</p></div>}
+          {view.data && view.data.length > 0 && <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{view.data.map((entry) => <LawnCard key={entry.owner_id} entry={entry} mine={entry.owner_id === userId} admin={includeHidden} busy={react.isLoading || moderate.isLoading} onReact={(emoji) => react.mutate({ ownerId: entry.owner_id, emoji })} onModerate={(hidden) => moderate.mutate({ ownerId: entry.owner_id, hidden })} onInspect={() => setInspectedEntry(entry)} />)}</div>}
+        </ShowcaseLawnEnvironment>
+        {react.isError && <p role="alert" className="mt-4 text-sm font-bold text-[#a9505e]">ยังส่งรีแอคไม่ได้ ลองอีกครั้งได้เลย</p>}
+        {moderate.isError && <p role="alert" className="mt-4 text-sm font-bold text-[#a9505e]">ยังเปลี่ยนสถานะรายการไม่ได้ ลองอีกครั้งได้เลย</p>}
+      </section>
+      <p className="mt-4 text-xs text-[#5b5870]">ลานนี้เป็นภาพที่เพื่อนฝากไว้ ไม่ใช่ห้องออนไลน์สด</p>
+      {inspectedEntry && <Suspense fallback={null}><Character3DViewer entry={inspectedEntry} onClose={() => setInspectedEntry(null)} /></Suspense>}
+    </div>
+  </main>;
+}

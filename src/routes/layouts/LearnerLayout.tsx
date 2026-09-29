@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Page from "../../app/dashboard/page";
-import SplashCursor from "../../components/SplashCursor";
 import { ProtectedRoute } from "../ProtectedRoute";
 import { LearnerNotificationBanner } from "../../components/learner-notification-banner";
 
 const STORAGE_KEY = "splash-cursor-enabled";
+const SplashCursor = lazy(() => import("../../components/SplashCursor"));
 
 export function LearnerLayout() {
   const [cursorEnabled, setCursorEnabled] = useState(true);
@@ -25,7 +25,7 @@ export function LearnerLayout() {
 
   return (
     <ProtectedRoute allowedRoles={["learner", "admin"]}>
-      {cursorEnabled && <SplashCursor />}
+      {cursorEnabled && <Suspense fallback={null}><SplashCursor /></Suspense>}
       <Page>
         <div className="flex items-center justify-between">
           <LearnerNotificationBanner />

@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { getAllPalettes } from "@/lib/plant-variants";
+import { resolvePlantAppearance } from "@/lib/plant-appearance";
+import { restingPalette } from "@/lib/resting-palette";
 import { getPlantTierConfig, type PlantTier } from "@/lib/streak-milestones";
 import {
   archetypeForSpecies,
@@ -9,6 +11,8 @@ import {
   maxPartHeight,
   maxHorizontalExtent,
   FARM_ARCHETYPE_ORDER,
+  SPECIES_MODIFIERS,
+  buildPlantGeometry,
 } from "@/lib/farm-geometry";
 
 const ALL_SPECIES = [
@@ -20,10 +24,14 @@ const ALL_SPECIES = [
 const TIERS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] as const satisfies readonly PlantTier[];
 
 describe("archetypeForSpecies", () => {
-  it("maps every one of the 22 real species to one of the 8 archetypes — ticket 09", () => {
+  it("maps every one of the 23 real species to one of the 8 archetypes — ticket 09", () => {
     for (const species of ALL_SPECIES) {
       expect(FARM_ARCHETYPE_ORDER).toContain(archetypeForSpecies(species));
     }
+  });
+
+  it("defines an explicit 3D modifier for every species", () => {
+    expect(Object.keys(SPECIES_MODIFIERS).sort()).toEqual([...ALL_SPECIES].sort());
   });
 });
 
@@ -69,17 +77,20 @@ describe("buildArchetypeParts", () => {
   });
 });
 
-describe("active vs. inactive (streak-lapsed) coloring — matches SeedlingPlant's grey fallback", () => {
-  it("uses grey, not the palette color, when active is false", () => {
+describe("active vs. resting coloring", () => {
+  it("softens the chosen palette while keeping its identity", () => {
     const forest = getAllPalettes().find((p) => p.name === "Forest")!;
+    const ocean = getAllPalettes().find((p) => p.name === "Ocean")!;
     const tierConfig = getPlantTierConfig(7);
     const active = buildArchetypeParts("bloom", 7, forest, tierConfig, true);
     const inactive = buildArchetypeParts("bloom", 7, forest, tierConfig, false);
+    const restingOcean = buildArchetypeParts("bloom", 7, ocean, tierConfig, false);
     const activeColors = new Set(active.map((p) => p.color));
     const inactiveColors = new Set(inactive.map((p) => p.color));
     expect(activeColors.has(forest.stem)).toBe(true);
     expect(inactiveColors.has(forest.stem)).toBe(false);
-    expect(inactiveColors.has("#a1a1aa")).toBe(true); // real SeedlingPlant grey stem fallback
+    expect(inactiveColors.has(restingPalette(forest).stem)).toBe(true);
+    expect(restingOcean).not.toEqual(inactive);
   });
 
   it("does not change the plant's own height — only color, plus the active-only face", () => {
@@ -88,8 +99,6 @@ describe("active vs. inactive (streak-lapsed) coloring — matches SeedlingPlant
     const active = buildArchetypeParts("bloom", 7, forest, tierConfig, true);
     const inactive = buildArchetypeParts("bloom", 7, forest, tierConfig, false);
     expect(maxPartHeight(active)).toBeCloseTo(maxPartHeight(inactive), 10);
-    // Active gets the 5-part cute pot face (2 eyes, a smile, 2 blush cheeks) —
-    // matches the real 2D SeedlingPlant, which only draws the face when active.
     expect(active.length).toBe(inactive.length + 5);
   });
 });
@@ -127,22 +136,23 @@ describe("getCachedPlantParts — ticket 04's cache", () => {
     expect(a).toBe(b);
   });
 
-  it("shares one cache entry across two species mapping to the same archetype", () => {
-    // "flower" and "tulip" both resolve to Bloom — deliberately not part of the
-    // cache key, since they'd produce identical geometry.
+  it("keeps distinct cache entries for species sharing an archetype", () => {
     const forest = getAllPalettes().find((p) => p.name === "Forest")!;
     const tierConfig = getPlantTierConfig(6);
     const flower = getCachedPlantParts("flower", 6, forest, tierConfig);
     const tulip = getCachedPlantParts("tulip", 6, forest, tierConfig);
-    expect(flower).toBe(tulip);
+    expect(flower).not.toBe(tulip);
+    expect(flower).not.toEqual(tulip);
   });
 
-  it("keys active vs. inactive separately, so grey never leaks into the active cache slot", () => {
+  it("keys active and resting palettes separately", () => {
     const forest = getAllPalettes().find((p) => p.name === "Forest")!;
     const tierConfig = getPlantTierConfig(6);
     const active = getCachedPlantParts("flower", 6, forest, tierConfig, true);
     const inactive = getCachedPlantParts("flower", 6, forest, tierConfig, false);
     expect(active).not.toBe(inactive);
+    const ocean = getAllPalettes().find((p) => p.name === "Ocean")!;
+    expect(getCachedPlantParts("flower", 6, ocean, tierConfig, false)).not.toBe(inactive);
   });
 
   it("matches buildPlantParts' output for a fresh key", () => {
@@ -150,6 +160,23 @@ describe("getCachedPlantParts — ticket 04's cache", () => {
     const tierConfig = getPlantTierConfig(3);
     expect(getCachedPlantParts("cactus", 3, ocean, tierConfig)).toEqual(
       buildPlantParts("cactus", 3, ocean, tierConfig)
+    );
+  });
+});
+
+describe("species signatures", () => {
+  it.each([
+    ["flower", "sunflower"],
+    ["cactus", "bamboo"],
+    ["succulent", "pumpkin-vine"],
+    ["tree", "palm"],
+    ["fern", "lotus"],
+  ] as const)("makes %s and %s geometrically distinct", (first, second) => {
+    const forest = getAllPalettes().find((palette) => palette.name === "Forest")!;
+    const tierConfig = getPlantTierConfig(7);
+
+    expect(buildPlantParts(first, 7, forest, tierConfig)).not.toEqual(
+      buildPlantParts(second, 7, forest, tierConfig),
     );
   });
 });
@@ -163,5 +190,39 @@ describe("maxHorizontalExtent", () => {
       expect(large).toBeGreaterThanOrEqual(small);
       expect(large).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("buildPlantGeometry", () => {
+  it("carries the canonical appearance into geometry with explicit style fallbacks", () => {
+    const appearance = resolvePlantAppearance({
+      userId: "farm-learner",
+      tier: 7,
+      active: false,
+      growthPoints: 150,
+      overrides: {
+        species: "coffee",
+        palette: "Ocean",
+        pot: "trophy",
+        leaf: "wide",
+        flower: "star",
+        stem: "leaning",
+      },
+      cosmetics: { aura: "aura-gold", accessory: "ladybug" },
+    });
+
+    const geometry = buildPlantGeometry(appearance);
+
+    expect(geometry.appearance).toBe(appearance);
+    expect(geometry.parts.length).toBeGreaterThan(0);
+    expect(geometry.rendererStyles).toEqual({
+      pot: { requested: "trophy", rendered: "round", supported: false },
+      leaf: { requested: "wide", rendered: "rounded", supported: false },
+      flower: { requested: "star", rendered: "daisy", supported: false },
+      stem: { requested: "leaning", rendered: "curved", supported: false },
+    });
+    expect(geometry.unsupportedCosmetics).toEqual(["aura", "accessory"]);
+    expect(geometry.appearance.growth).toMatchObject({ points: 150, flourishTier: 2 });
+    expect(new Set(geometry.parts.map((part) => part.color))).toContain(restingPalette(appearance.palette).stem);
   });
 });

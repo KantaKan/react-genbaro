@@ -16,6 +16,7 @@ import {
   Sprout,
   Stamp,
   History,
+  Sparkles,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -75,6 +76,16 @@ const navigationConfig: Record<UserRole, NavItem[]> = {
         {
           title: "Cohort Field",
           url: "/admin/cohort-farm",
+          icon: Sprout,
+        },
+        {
+          title: "My Baro Character",
+          url: "/character",
+          icon: Sparkles,
+        },
+        {
+          title: "Showcase Lawn",
+          url: "/showcase-lawn",
           icon: Sprout,
         },
         {
@@ -191,6 +202,16 @@ const navigationConfig: Record<UserRole, NavItem[]> = {
         {
           title: "Genmate Garden",
           url: "/learner/garden",
+          icon: Sprout,
+        },
+        {
+          title: "My Baro Character",
+          url: "/character",
+          icon: Sparkles,
+        },
+        {
+          title: "Showcase Lawn",
+          url: "/showcase-lawn",
           icon: Sprout,
         },
       ],

@@ -11,6 +11,7 @@ import { getCohortGarden } from "@/lib/api";
 import { mapGenmateMembers, toFarmMembers } from "@/lib/genmate-garden";
 import { PlantTile } from "@/components/genmate-garden";
 import { useWebglSupported } from "@/hooks/use-webgl-support";
+import { useHolidayDates } from "@/hooks/use-holiday-dates";
 import { useUserData } from "@/UserDataContext";
 
 // three.js only loads once a learner flips to Farm for a group — same lazy
@@ -43,7 +44,8 @@ const CohortGenmateGardenPage: React.FC = () => {
   const webglSupported = useWebglSupported();
 
   const allMembersRaw = useMemo(() => (data ?? []).flatMap((g) => g.members), [data]);
-  const members = useMemo(() => mapGenmateMembers(allMembersRaw), [allMembersRaw]);
+  const holidayDates = useHolidayDates();
+  const members = useMemo(() => mapGenmateMembers(allMembersRaw, holidayDates), [allMembersRaw, holidayDates]);
   const farmMembers = useMemo(() => toFarmMembers(members), [members]);
 
   const averageStreak =
@@ -162,7 +164,10 @@ const CohortGenmateGardenPage: React.FC = () => {
                 </div>
               ) : (
                 <Suspense fallback={<SkeletonWarm className="aspect-[4/3] w-full rounded-xl" />}>
-                  <GenmateField members={farmMembers} onContextLost={handleFarmContextLost} />
+                  <GenmateField members={farmMembers} onContextLost={handleFarmContextLost} renderDetails={(memberId) => {
+                    const member = members.find((candidate) => candidate.user._id === memberId);
+                    return member ? <PlantTile member={member} /> : null;
+                  }} />
                 </Suspense>
               )}
             </CardContent>

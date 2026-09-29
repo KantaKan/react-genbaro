@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Award, Calendar, Download, Sprout, X, Users } from "lucide-react";
+import { Award, Calendar, Download, Sparkles, X, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -9,7 +9,7 @@ interface BulkActionsBarProps {
   onSelectAll: () => void;
   onClearSelection: () => void;
   onBulkBadge: () => void;
-  onBulkFertilizer: () => void;
+  onBulkCareEnergy: () => void;
   onBulkAttendance: () => void;
   onBulkExport: () => void;
   isExporting?: boolean;
@@ -21,7 +21,7 @@ export function BulkActionsBar({
   onSelectAll,
   onClearSelection,
   onBulkBadge,
-  onBulkFertilizer,
+  onBulkCareEnergy,
   onBulkAttendance,
   onBulkExport,
   isExporting,
@@ -69,11 +69,11 @@ export function BulkActionsBar({
             <Button
               variant="outline"
               size="sm"
-              onClick={onBulkFertilizer}
+              onClick={onBulkCareEnergy}
               className="gap-1.5"
             >
-              <Sprout className="h-4 w-4" />
-              Grant Fertilizer
+              <Sparkles className="h-4 w-4" />
+              Grant Care Energy
             </Button>
 
             <Button

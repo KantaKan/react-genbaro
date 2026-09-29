@@ -7,6 +7,7 @@ import { SalesforceIDManager } from "@/components/salesforce-id-manager";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
+import { AdminCohortGiftBoxDialog } from "@/components/admin-cohort-gift-box-dialog";
 import {
   Select,
   SelectContent,
@@ -125,6 +126,7 @@ export function AdminUsersPage() {
 
           {/* Salesforce export button — always visible */}
           <SalesforceExportButton cohort={Number(cohort)} />
+          <AdminCohortGiftBoxDialog cohort={Number(cohort)} learnerCount={users.length} teams={[...new Set(users.map((user) => user.genmate_group?.trim()).filter((team): team is string => Boolean(team)))].sort()} />
         </div>
       </div>
 

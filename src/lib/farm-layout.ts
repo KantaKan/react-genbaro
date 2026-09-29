@@ -1,9 +1,8 @@
-import { getAllPalettes, type PlantPalette } from "@/lib/plant-variants";
+import { getAllPalettes, SPECIES, type PlantPalette } from "@/lib/plant-variants";
 import { getPlantTierConfig, type GrowthGlowStyle, type PlantTier } from "@/lib/streak-milestones";
 import {
-  buildArchetypeParts,
+  buildPlantParts,
   maxHorizontalExtent,
-  FARM_ARCHETYPE_ORDER,
   type FarmArchetype,
 } from "@/lib/farm-geometry";
 
@@ -13,11 +12,11 @@ export const GRID_ROWS = 3;
 
 /**
  * Tile pitch measured from the real geometry, not guessed: generate every
- * archetype at tier 9 (the tallest, widest growth state) across every real
+ * species at tier 9 (the tallest, widest growth state) across every real
  * palette, and size the tile from the widest result — ticket 02's answer,
  * verified against a formula-based approach that under-sized tiles once tier
  * scaling changed. Computed once per module load; the combination space is
- * small (8 archetypes × ~16 palettes) so this is cheap.
+ * small (23 species × ~16 palettes) so this is cheap.
  */
 let cachedTileSize: number | null = null;
 export function computeTileSize(): number {
@@ -25,9 +24,9 @@ export function computeTileSize(): number {
   const tier9Config = getPlantTierConfig(9);
   const palettes = getAllPalettes();
   let maxR = 0;
-  for (const archetype of FARM_ARCHETYPE_ORDER) {
+  for (const species of SPECIES) {
     for (const palette of palettes) {
-      const parts = buildArchetypeParts(archetype, 9, palette, tier9Config);
+      const parts = buildPlantParts(species, 9, palette, tier9Config);
       const r = maxHorizontalExtent(parts);
       if (r > maxR) maxR = r;
     }

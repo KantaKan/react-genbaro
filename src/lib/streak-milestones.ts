@@ -271,7 +271,7 @@ export function getPlantTier(streak: number): PlantTier {
   return 0
 }
 
-// ponytail: mirrors backend FeedPointsPerFertilizer (fertilizer_service.go) — keep in sync
+// ponytail: mirrors backend FeedPointsPerCareEnergy (care_energy_service.go) — keep in sync
 const GROWTH_POINTS_PER_DAY = 10
 
 // Feeding the plant adds growth points; every GROWTH_POINTS_PER_DAY counts as one

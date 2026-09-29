@@ -13,14 +13,20 @@ import { api } from "@/lib/api";
 import { SkeletonWarm } from "@/components/loading-skeleton";
 import { ReflectionsTable } from "@/components/reflections-table";
 import { useStreakCalculation } from "@/hooks/use-streak-calculation";
+import { useHolidayDates } from "@/hooks/use-holiday-dates";
 import { StreakIcon } from "@/components/streak-components";
 import { AwardBadgeButton } from "@/components/award-badge-button";
-import { AwardFertilizerButton } from "@/components/award-fertilizer-button";
+import { AwardCareEnergyButton } from "@/components/award-care-energy-button";
 import { AdminPlantOverrideButton } from "@/components/admin-plant-override-button";
-import { getPlantVariant } from "@/lib/plant-variants";
+import { AdminCosmeticGrantDialog } from "@/components/admin-cosmetic-grant-dialog";
+import { AdminGiftBoxDialog } from "@/components/admin-gift-box-dialog";
+import { AdminCharacterDialog } from "@/components/character/AdminCharacterDialog";
+import { resolvePlantAppearance } from "@/lib/plant-appearance";
+import { getEffectivePlantDays, getPlantTier } from "@/lib/streak-milestones";
 import type { Badge } from "@/lib/types";
 import type { Reflection } from "@/hooks/use-reflections";
-import type { FertilizerLogEntry } from "@/domain/types";
+import type { CareEnergyLogEntry } from "@/domain/types";
+import type { PlantCosmeticSelection } from "@/lib/plant-appearance";
 
 interface User {
   cohort_number: number;
@@ -31,7 +37,7 @@ interface User {
   role: string;
   _id: string;
   badges?: Badge[];
-  fertilizer_log?: FertilizerLogEntry[];
+  care_energy_log?: CareEnergyLogEntry[];
   growth_points?: number;
   selected_palette?: string;
   selected_species?: string;
@@ -39,6 +45,7 @@ interface User {
   selected_leaf?: string;
   selected_flower?: string;
   selected_stem?: string;
+  equipped_cosmetics?: PlantCosmeticSelection;
 }
 
 const StatCard = ({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string | number | JSX.Element }) => (
@@ -105,27 +112,35 @@ export default function UserReflectionsPage() {
   };
 
   const protectedDates = useMemo(() => {
-    const dates = (user?.fertilizer_log ?? [])
+    const dates = (user?.care_energy_log ?? [])
       .filter((entry) => entry.kind === "protect" && entry.relatedDate)
       .map((entry) => entry.relatedDate as string);
     return new Set(dates);
-  }, [user?.fertilizer_log]);
+  }, [user?.care_energy_log]);
 
-  const streakData = useStreakCalculation(reflections, protectedDates);
+  const holidayDates = useHolidayDates();
+  const streakData = useStreakCalculation(reflections, protectedDates, holidayDates);
 
-  const plantVariant = useMemo(
+  const plantAppearance = useMemo(
     () =>
       user
-        ? getPlantVariant(user._id, {
-            palette: user.selected_palette,
-            species: user.selected_species,
-            pot: user.selected_pot,
-            leaf: user.selected_leaf,
-            flower: user.selected_flower,
-            stem: user.selected_stem,
+        ? resolvePlantAppearance({
+            userId: user._id,
+            tier: getPlantTier(getEffectivePlantDays(streakData.bestStreak, user.growth_points ?? 0)),
+            active: streakData.hasCurrentStreak,
+            growthPoints: user.growth_points ?? 0,
+            overrides: {
+              palette: user.selected_palette,
+              species: user.selected_species,
+              pot: user.selected_pot,
+              leaf: user.selected_leaf,
+              flower: user.selected_flower,
+              stem: user.selected_stem,
+            },
+            cosmetics: user.equipped_cosmetics,
           })
         : undefined,
-    [user]
+    [streakData.bestStreak, streakData.hasCurrentStreak, user]
   );
 
   if (isLoading) {
@@ -183,9 +198,21 @@ export default function UserReflectionsPage() {
           {userRole === "admin" && <UiBadge variant="default">Admin</UiBadge>}
         </div>
         {id && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <AwardBadgeButton userId={id} onBadgeAwarded={handleBadgeAwarded} />
-            <AwardFertilizerButton userId={id} onFertilizerAwarded={handleBadgeAwarded} />
+            <AwardCareEnergyButton userId={id} onCareEnergyAwarded={handleBadgeAwarded} />
+            <AdminCosmeticGrantDialog
+              userId={id}
+              learnerName={user ? `${user.first_name} ${user.last_name}` : "this learner"}
+            />
+            <AdminCharacterDialog
+              userId={id}
+              learnerName={user ? `${user.first_name} ${user.last_name}` : "this learner"}
+            />
+            <AdminGiftBoxDialog
+              userId={id}
+              learnerName={user ? `${user.first_name} ${user.last_name}` : "this learner"}
+            />
             <AdminPlantOverrideButton
               userId={id}
               current={{
@@ -214,7 +241,7 @@ export default function UserReflectionsPage() {
                 <StatCard icon={School} label="JSD Number" value={user.jsd_number} />
                 <StatCard icon={ClipboardList} label="Total Reflections" value={reflections.length} />
                 <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-                  <StreakIcon streakData={streakData} showMilestoneToast={false} variant={plantVariant} growthPoints={user.growth_points ?? 0} />
+                  {plantAppearance && <StreakIcon streakData={streakData} showMilestoneToast={false} appearance={plantAppearance} />}
                 </div>
               </div>
               {user.badges && user.badges.length > 0 && (

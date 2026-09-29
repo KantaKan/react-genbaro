@@ -8,10 +8,11 @@ export {
   attendanceService,
   leaveService,
   badgeService,
-  fertilizerService,
+  careEnergyService,
   boardService,
   stampService,
   historyService,
+  cosmeticService,
 } from "../application/services";
 
 export { awardBadge } from "../application/services/badgeService";

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import {
   Popover,
   PopoverContent,
@@ -25,7 +26,8 @@ import { BoardReactionSummary } from "@/components/board-reaction-summary";
 import { api } from "@/lib/api";
 import { toFarmMembers } from "@/lib/genmate-garden";
 import { useWebglSupported } from "@/hooks/use-webgl-support";
-import { getPlantVariant } from "@/lib/plant-variants";
+import { useHolidayDates } from "@/hooks/use-holiday-dates";
+import { resolvePlantAppearance, type PlantAppearance } from "@/lib/plant-appearance";
 import {
   getPlantTier,
   getPlantTierConfig,
@@ -42,7 +44,7 @@ import type { ProfileReaction } from "@/domain/types";
 import { addPlantReaction } from "@/application/services/userService";
 import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/UserDataContext";
-import { fertilizerService } from "@/application/services/fertilizerService";
+import { careEnergyService } from "@/application/services/careEnergyService";
 import { SeedlingPlant } from "@/components/streak-components";
 import { formatDate } from "@/lib/utils";
 
@@ -61,6 +63,7 @@ export interface GardenUser {
   selected_leaf?: string;
   selected_flower?: string;
   selected_stem?: string;
+  equipped_cosmetics?: Partial<Record<"palette" | "pot" | "aura" | "particle" | "accessory" | "mutation", string>>;
 }
 
 interface AdminUsersResponse {
@@ -72,7 +75,7 @@ interface AdminUsersResponse {
 export interface GardenMember {
   user: GardenUser;
   streakData: ReturnType<typeof calculateStreakData>;
-  variant: ReturnType<typeof getPlantVariant>;
+  appearance: PlantAppearance;
   displayStreak: number;
   tier: ReturnType<typeof getPlantTier>;
   growthPoints?: number;
@@ -97,6 +100,7 @@ const GenmateField = React.lazy(() =>
 type ViewMode = "grid" | "farm";
 
 export function GenmateGarden({ cohort }: GenmateGardenProps) {
+  const holidayDates = useHolidayDates();
   const [view, setView] = useState<ViewMode>("grid");
   const webglSupported = useWebglSupported();
   const { data, isLoading, isError, refetch } = useQuery<AdminUsersResponse>(
@@ -118,21 +122,29 @@ export function GenmateGarden({ cohort }: GenmateGardenProps) {
     for (const user of users) {
       if (!user.genmate_group) continue;
 
-      const streakData = calculateStreakData(user.reflections ?? []);
+      const streakData = calculateStreakData(user.reflections ?? [], new Set(), holidayDates);
       const displayStreak = getDisplayStreak(streakData);
+      const tier = getPlantTier(getEffectivePlantDays(streakData.bestStreak, user.growth_points ?? 0));
       const member: GardenMember = {
         user,
         streakData,
-        variant: getPlantVariant(user._id, {
-          palette: user.selected_palette,
-          species: user.selected_species,
-          pot: user.selected_pot,
-          leaf: user.selected_leaf,
-          flower: user.selected_flower,
-          stem: user.selected_stem,
+        appearance: resolvePlantAppearance({
+          userId: user._id,
+          tier,
+          active: streakData.hasCurrentStreak,
+          growthPoints: user.growth_points ?? 0,
+          overrides: {
+            palette: user.selected_palette,
+            species: user.selected_species,
+            pot: user.selected_pot,
+            leaf: user.selected_leaf,
+            flower: user.selected_flower,
+            stem: user.selected_stem,
+          },
+          cosmetics: user.equipped_cosmetics,
         }),
         displayStreak,
-        tier: getPlantTier(getEffectivePlantDays(displayStreak, user.growth_points ?? 0)),
+        tier,
         growthPoints: user.growth_points ?? 0,
       };
 
@@ -155,7 +167,7 @@ export function GenmateGarden({ cohort }: GenmateGardenProps) {
     }
 
     return result.sort((a, b) => a.name.localeCompare(b.name));
-  }, [users]);
+  }, [users, holidayDates]);
 
   const groupedLearnerCount = groups.reduce((sum, g) => sum + g.members.length, 0);
 
@@ -279,6 +291,10 @@ export function GenmateGarden({ cohort }: GenmateGardenProps) {
                 <GenmateField
                   members={toFarmMembers(group.members)}
                   onContextLost={handleFarmContextLost}
+                  renderDetails={(memberId) => {
+                    const member = group.members.find((candidate) => candidate.user._id === memberId);
+                    return member ? <PlantTile member={member} /> : null;
+                  }}
                 />
               </Suspense>
             )}
@@ -290,7 +306,7 @@ export function GenmateGarden({ cohort }: GenmateGardenProps) {
 }
 
 export function PlantTile({ member }: { member: GardenMember }) {
-  const { user, streakData, variant, displayStreak, tier, growthPoints } = member;
+  const { user, streakData, appearance, displayStreak, tier } = member;
   const fullName = `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || "Unknown learner";
   const nextMilestone = streakMilestones.find((m) => m.days > displayStreak) ?? null;
   const daysToNext = nextMilestone ? nextMilestone.days - displayStreak : 0;
@@ -299,6 +315,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
   const { userId: currentUserId } = useAuth();
   const queryClient = useQueryClient();
   const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [pendingCareAction, setPendingCareAction] = useState<"gift" | "rescue" | null>(null);
   const plantReactions = user.plant_reactions ?? [];
   const currentReaction = plantReactions.find((r) => r.userId === currentUserId);
 
@@ -316,7 +333,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
   );
 
   const { userData, refetchUserData } = useUserData();
-  const myBalance = userData?.fertilizer_balance ?? 0;
+  const myBalance = userData?.care_energy_balance ?? 0;
   const isSelf = user._id === currentUserId;
   // Backend allows gift/rescue for anyone in the caller's cohort (see
   // resolveGenmate in user_handler.go), not just the caller's genmate
@@ -325,17 +342,17 @@ export function PlantTile({ member }: { member: GardenMember }) {
   const sameCohort =
     !!userData?.cohort_number && userData.cohort_number === user.cohort_number;
 
-  const giftMutation = useMutation(() => fertilizerService.gift(user._id, 1), {
+  const giftMutation = useMutation(() => careEnergyService.gift(user._id, 1), {
     onSuccess: () => {
       queryClient.invalidateQueries(["learnerGenmateGarden"]);
       queryClient.invalidateQueries(["adminGenmateGarden"]);
       void refetchUserData();
-      toast.success(`Sent fertilizer to ${user.first_name ?? "your genmate"} 🌱`);
+      toast.success(`Sent care to ${user.first_name ?? "your genmate"} 🌱`);
     },
     onError: (error: unknown) => {
       const message =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        "Couldn't send fertilizer. Please try again.";
+        "Couldn't send Care Energy. Please try again.";
       toast.error(message);
     },
   });
@@ -343,7 +360,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
   const rescueDate = streakData.eligibleProtectDate;
 
   const rescueMutation = useMutation(
-    () => fertilizerService.rescue(user._id, rescueDate as string),
+    () => careEnergyService.rescue(user._id, rescueDate as string),
     {
       onSuccess: () => {
         queryClient.invalidateQueries(["learnerGenmateGarden"]);
@@ -369,6 +386,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
   };
 
   return (
+    <>
     <Popover>
       <PopoverTrigger asChild>
         <button
@@ -378,10 +396,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
         >
           <UserAvatar userId={user._id} firstName={user.first_name} lastName={user.last_name} className="h-7 w-7" />
           <SeedlingPlant
-            tier={tier}
-            active={streakData.hasCurrentStreak}
-            variant={variant}
-            growthPoints={growthPoints}
+            appearance={appearance}
             showParticles={false}
             className="h-16 w-14 flex-shrink-0"
           />
@@ -407,10 +422,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
 
           <div className="flex items-center gap-2">
             <SeedlingPlant
-              tier={tier}
-              active={streakData.hasCurrentStreak}
-              variant={variant}
-              growthPoints={growthPoints}
+              appearance={appearance}
               className="h-14 w-12 flex-shrink-0"
             />
             <div className="flex flex-col gap-0.5 text-sm">
@@ -503,9 +515,9 @@ export function PlantTile({ member }: { member: GardenMember }) {
                 size="sm"
                 className="w-full rounded-full"
                 disabled={giftMutation.isLoading || myBalance < 1}
-                onClick={() => giftMutation.mutate()}
+                onClick={() => setPendingCareAction("gift")}
               >
-                🧪 Fertilize · 1 → +10 🌱
+                💛 Send care · 1 → +10 growth
               </Button>
             )}
             {!isSelf && sameCohort && (
@@ -514,7 +526,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
                 size="sm"
                 className="w-full rounded-full"
                 disabled={rescueMutation.isLoading || myBalance < 1 || !rescueDate}
-                onClick={() => rescueMutation.mutate()}
+                onClick={() => setPendingCareAction("rescue")}
               >
                 {rescueDate
                   ? `🛡️ Rescue ${rescueDate} · costs you 1`
@@ -523,12 +535,39 @@ export function PlantTile({ member }: { member: GardenMember }) {
             )}
             {!isSelf && sameCohort && myBalance < 1 && (
               <p className="text-center text-xs text-muted-foreground">
-                You have no fertilizer left.
+                You have no Care Energy left.
               </p>
             )}
           </div>
         </div>
       </PopoverContent>
     </Popover>
+    <AlertDialog open={pendingCareAction !== null} onOpenChange={(open) => !open && setPendingCareAction(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{pendingCareAction === "rescue" ? `Rescue ${fullName}?` : `Send care to ${fullName}?`}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {pendingCareAction === "rescue"
+              ? `Spend 1 Care Energy to protect ${rescueDate ?? "their missed day"}. This supports their streak.`
+              : "Spend 1 Care Energy to send this learner +10 growth."}
+            {` You have ${myBalance} Care Energy.`}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep Care Energy</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={myBalance < 1 || giftMutation.isLoading || rescueMutation.isLoading || (pendingCareAction === "rescue" && !rescueDate)}
+            onClick={() => {
+              if (pendingCareAction === "gift") giftMutation.mutate();
+              if (pendingCareAction === "rescue" && rescueDate) rescueMutation.mutate();
+              setPendingCareAction(null);
+            }}
+          >
+            Confirm · spend 1 Care Energy
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

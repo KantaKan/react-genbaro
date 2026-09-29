@@ -12,6 +12,7 @@ import { getCohortGarden } from "@/lib/api";
 import { mapGenmateMembers, toFarmMembers } from "@/lib/genmate-garden";
 import { PlantTile } from "@/components/genmate-garden";
 import { useWebglSupported } from "@/hooks/use-webgl-support";
+import { useHolidayDates } from "@/hooks/use-holiday-dates";
 
 const GenmateField = React.lazy(() =>
   import("@/components/farm/GenmateField").then((mod) => ({ default: mod.GenmateField }))
@@ -42,7 +43,8 @@ export function AdminCohortFarmPage() {
   );
 
   const allMembersRaw = useMemo(() => (data ?? []).flatMap((g) => g.members), [data]);
-  const members = useMemo(() => mapGenmateMembers(allMembersRaw), [allMembersRaw]);
+  const holidayDates = useHolidayDates();
+  const members = useMemo(() => mapGenmateMembers(allMembersRaw, holidayDates), [allMembersRaw, holidayDates]);
   const farmMembers = useMemo(() => toFarmMembers(members), [members]);
 
   const averageStreak =
@@ -174,7 +176,10 @@ export function AdminCohortFarmPage() {
               </div>
             ) : (
               <Suspense fallback={<SkeletonWarm className="aspect-[4/3] w-full rounded-xl" />}>
-                <GenmateField members={farmMembers} onContextLost={handleFarmContextLost} />
+                <GenmateField members={farmMembers} onContextLost={handleFarmContextLost} renderDetails={(memberId) => {
+                  const member = members.find((candidate) => candidate.user._id === memberId);
+                  return member ? <PlantTile member={member} /> : null;
+                }} />
               </Suspense>
             )}
           </CardContent>

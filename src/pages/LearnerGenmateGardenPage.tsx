@@ -12,6 +12,7 @@ import { getMyGenmateGarden } from "@/lib/api";
 import { mapGenmateMembers, toFarmMembers } from "@/lib/genmate-garden";
 import { PlantTile } from "@/components/genmate-garden";
 import { useWebglSupported } from "@/hooks/use-webgl-support";
+import { useHolidayDates } from "@/hooks/use-holiday-dates";
 
 // three.js only loads once a learner actually flips to Farm — per the map's
 // standing fact, not bundled into the default garden page weight.
@@ -27,7 +28,8 @@ const LearnerGenmateGardenPage: React.FC = () => {
     getMyGenmateGarden
   );
 
-  const members = useMemo(() => mapGenmateMembers(data ?? []), [data]);
+  const holidayDates = useHolidayDates();
+  const members = useMemo(() => mapGenmateMembers(data ?? [], holidayDates), [data, holidayDates]);
   const farmMembers = useMemo(() => toFarmMembers(members), [members]);
   const webglSupported = useWebglSupported();
   // The grid stays the default view — ticket 02's placement decision.
@@ -172,7 +174,10 @@ const LearnerGenmateGardenPage: React.FC = () => {
                 <Suspense
                   fallback={<SkeletonWarm className="aspect-[4/3] w-full rounded-xl" />}
                 >
-                  <GenmateField members={farmMembers} onContextLost={handleFarmContextLost} />
+                  <GenmateField members={farmMembers} onContextLost={handleFarmContextLost} renderDetails={(memberId) => {
+                    const member = members.find((candidate) => candidate.user._id === memberId);
+                    return member ? <PlantTile member={member} /> : null;
+                  }} />
                 </Suspense>
               )}
             </CardContent>

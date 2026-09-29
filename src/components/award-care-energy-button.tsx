@@ -3,16 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Sprout } from "lucide-react";
-import { fertilizerService } from "@/lib/api";
+import { Sparkles } from "lucide-react";
+import { careEnergyService } from "@/lib/api";
 import { toast } from "sonner";
 
-interface AwardFertilizerButtonProps {
+interface AwardCareEnergyButtonProps {
   userId: string;
-  onFertilizerAwarded?: () => void;
+  onCareEnergyAwarded?: () => void;
 }
 
-export function AwardFertilizerButton({ userId, onFertilizerAwarded }: AwardFertilizerButtonProps) {
+export function AwardCareEnergyButton({ userId, onCareEnergyAwarded }: AwardCareEnergyButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [amount, setAmount] = useState(1);
@@ -26,15 +26,15 @@ export function AwardFertilizerButton({ userId, onFertilizerAwarded }: AwardFert
 
     setIsSubmitting(true);
     try {
-      await fertilizerService.grant(userId, { amount, note: note || undefined });
-      toast.success(`Granted ${amount} fertilizer${amount !== 1 ? "s" : ""}!`);
+      await careEnergyService.grant(userId, { amount, note: note || undefined });
+      toast.success(`Granted ${amount} Care Energy!`);
       setIsOpen(false);
       setAmount(1);
       setNote("");
-      onFertilizerAwarded?.();
+      onCareEnergyAwarded?.();
     } catch (error) {
-      console.error("Error granting fertilizer:", error);
-      toast.error("Failed to grant fertilizer. Please try again.");
+      console.error("Error granting Care Energy:", error);
+      toast.error("Failed to grant Care Energy. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -44,21 +44,21 @@ export function AwardFertilizerButton({ userId, onFertilizerAwarded }: AwardFert
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
-          <Sprout className="h-4 w-4" /> Grant Fertilizer
+          <Sparkles className="h-4 w-4" /> Grant Care Energy
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sprout className="h-5 w-5" /> Grant Fertilizer
+            <Sparkles className="h-5 w-5" /> Grant Care Energy
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="fertilizer-amount">Amount</Label>
+            <Label htmlFor="care-energy-amount">Amount</Label>
             <Input
-              id="fertilizer-amount"
+              id="care-energy-amount"
               type="number"
               min={1}
               value={amount}
@@ -66,9 +66,9 @@ export function AwardFertilizerButton({ userId, onFertilizerAwarded }: AwardFert
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="fertilizer-note">Note (optional)</Label>
+            <Label htmlFor="care-energy-note">Note (optional)</Label>
             <Input
-              id="fertilizer-note"
+              id="care-energy-note"
               placeholder="e.g., Great job this week!"
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -81,7 +81,7 @@ export function AwardFertilizerButton({ userId, onFertilizerAwarded }: AwardFert
             Cancel
           </Button>
           <Button type="button" onClick={handleAward} disabled={isSubmitting}>
-            {isSubmitting ? "Granting..." : "Grant Fertilizer"}
+            {isSubmitting ? "Granting..." : "Grant Care Energy"}
           </Button>
         </DialogFooter>
       </DialogContent>

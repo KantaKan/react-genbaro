@@ -17,22 +17,22 @@ const refetchUserData = vi.fn();
 let mockBalance = 3;
 vi.mock("@/UserDataContext", () => ({
   useUserData: () => ({
-    userData: { fertilizer_balance: mockBalance, cohort_number: 12 },
+    userData: { care_energy_balance: mockBalance, cohort_number: 12 },
     refetchUserData,
   }),
 }));
 
-vi.mock("@/application/services/fertilizerService", () => ({
-  fertilizerService: {
+vi.mock("@/application/services/careEnergyService", () => ({
+  careEnergyService: {
     gift: vi.fn().mockResolvedValue(undefined),
     rescue: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
-import { fertilizerService } from "@/application/services/fertilizerService";
+import { careEnergyService } from "@/application/services/careEnergyService";
 import { isValidWorkday } from "@/utils/date-utils";
-const mockedGift = vi.mocked(fertilizerService.gift);
-const mockedRescue = vi.mocked(fertilizerService.rescue);
+const mockedGift = vi.mocked(careEnergyService.gift);
+const mockedRescue = vi.mocked(careEnergyService.rescue);
 
 // Walk back from today collecting `count` workdays (skipping weekends), oldest first.
 function lastNWorkdays(count: number): Date[] {
@@ -198,7 +198,7 @@ describe("GenmateGarden", () => {
     expect(screen.getByText("Next milestone")).toBeInTheDocument();
   });
 
-  it("gifts one fertilizer to a genmate and hides the button on your own tile", async () => {
+  it("spends Care Energy to support a genmate and hides the button on your own tile", async () => {
     const { alice, bob, carol } = makeUsers();
     const me = { ...bob, _id: "current-user", first_name: "Me", last_name: "Myself" };
     mockedGet.mockResolvedValue({
@@ -208,14 +208,17 @@ describe("GenmateGarden", () => {
     renderGarden();
 
     fireEvent.click(await screen.findByRole("button", { name: /Alice/ }));
-    const fertilize = await screen.findByRole("button", { name: /Fertilize/ });
-    fireEvent.click(fertilize);
+    const sendCare = await screen.findByRole("button", { name: /Send care/ });
+    fireEvent.click(sendCare);
+    expect(mockedGift).not.toHaveBeenCalled();
+    expect(await screen.findByText(/Spend 1 Care Energy to send this learner \+10 growth/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Confirm · spend 1 Care Energy/ }));
     await waitFor(() => expect(mockedGift).toHaveBeenCalledWith("user-1", 1));
 
     fireEvent.keyDown(document.body, { key: "Escape" });
     fireEvent.click(await screen.findByRole("button", { name: /Me/ }));
     expect(await screen.findByText("Me Myself")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Fertilize/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Send care/ })).toBeNull();
   });
 
   it("rescues a genmate's missed workday", async () => {
@@ -240,6 +243,8 @@ describe("GenmateGarden", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: /Gap/ }));
     fireEvent.click(await screen.findByRole("button", { name: /Rescue/ }));
+    expect(mockedRescue).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: /Confirm · spend 1 Care Energy/ }));
     await waitFor(() =>
       expect(mockedRescue).toHaveBeenCalledWith("user-gap", localDayString(gapDay))
     );
@@ -260,7 +265,7 @@ describe("GenmateGarden", () => {
     ).toBeDisabled();
   });
 
-  it("disables the fertilize button when you have no fertilizer", async () => {
+  it("disables send care when you have no Care Energy", async () => {
     mockBalance = 0;
     const { alice, bob, carol } = makeUsers();
     mockedGet.mockResolvedValue({
@@ -270,7 +275,7 @@ describe("GenmateGarden", () => {
     renderGarden();
 
     fireEvent.click(await screen.findByRole("button", { name: /Alice/ }));
-    expect(await screen.findByRole("button", { name: /Fertilize/ })).toBeDisabled();
-    expect(screen.getByText("You have no fertilizer left.")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Send care/ })).toBeDisabled();
+    expect(screen.getByText("You have no Care Energy left.")).toBeInTheDocument();
   });
 });

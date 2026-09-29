@@ -1,8 +1,7 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { BackSide, type Group } from "three";
-import type { PlantPalette, PlantSpecies } from "@/lib/plant-variants";
-import type { PlantTier } from "@/lib/streak-milestones";
+import type { PlantAppearance } from "@/lib/plant-appearance";
 import type { FarmPart } from "@/lib/farm-geometry";
 import { useFarmPlantParts } from "@/hooks/use-farm-plant";
 import { getPartTexture, getToonGradientMap, repeatForPart } from "@/lib/farm-textures";
@@ -11,11 +10,8 @@ export const OUTLINE_SCALE = 1.06;
 export const OUTLINE_COLOR = "#1a1410";
 
 interface PlantMeshProps {
-  species: PlantSpecies;
-  tier: PlantTier;
-  palette: PlantPalette;
-  /** Matches SeedlingPlant's `active` — false (streak lapsed) renders grey, same shape. */
-  active: boolean;
+  appearance: PlantAppearance;
+  reducedMotion?: boolean;
 }
 
 const GROW_DURATION_S = 1.2;
@@ -34,18 +30,22 @@ const GROW_DURATION_S = 1.2;
  * seeing it at rest to full size reads as "growing" without needing to solve
  * that harder problem.
  */
-export function PlantMesh({ species, tier, palette, active }: PlantMeshProps) {
-  const parts = useFarmPlantParts(species, tier, palette, active);
+export function PlantMesh({ appearance, reducedMotion = false }: PlantMeshProps) {
+  const parts = useFarmPlantParts(appearance);
   const groupRef = useRef<Group>(null);
   const growElapsed = useRef(GROW_DURATION_S); // starts fully grown; only animates on a later change
   const prevPartsRef = useRef(parts);
 
   if (prevPartsRef.current !== parts) {
-    growElapsed.current = 0;
+    growElapsed.current = reducedMotion ? GROW_DURATION_S : 0;
     prevPartsRef.current = parts;
   }
 
   useFrame((_, delta) => {
+    if (reducedMotion) {
+      groupRef.current?.scale.setScalar(1);
+      return;
+    }
     if (growElapsed.current >= GROW_DURATION_S || !groupRef.current) return;
     growElapsed.current = Math.min(GROW_DURATION_S, growElapsed.current + delta);
     const t = growElapsed.current / GROW_DURATION_S;

@@ -15,13 +15,13 @@ vi.mock("@/AuthContext", () => ({
 
 vi.mock("@/UserDataContext", () => ({
   useUserData: () => ({
-    userData: { fertilizer_balance: 3, cohort_number: 12, genmate_group: "Garden Alpha" },
+    userData: { care_energy_balance: 3, cohort_number: 12, genmate_group: "Garden Alpha" },
     refetchUserData: vi.fn(),
   }),
 }));
 
-vi.mock("@/application/services/fertilizerService", () => ({
-  fertilizerService: { gift: vi.fn().mockResolvedValue(undefined) },
+vi.mock("@/application/services/careEnergyService", () => ({
+  careEnergyService: { gift: vi.fn().mockResolvedValue(undefined), rescue: vi.fn().mockResolvedValue(undefined) },
 }));
 
 import { getCohortGarden } from "@/lib/api";
@@ -99,7 +99,7 @@ describe("CohortGenmateGardenPage", () => {
     expect(screen.queryByText("Garden Beta")).not.toBeInTheDocument();
   });
 
-  it("shows Fertilize for any cohort member, regardless of genmate group", async () => {
+  it("shows Send care for any cohort member, regardless of genmate group", async () => {
     const groups: CohortGardenGroup[] = [
       { group_name: "Garden Alpha", members: [member({ _id: "user-1", first_name: "Alice" })] },
       { group_name: "Garden Beta", members: [member({ _id: "user-2", first_name: "Dan", genmate_group: "Garden Beta" })] },
@@ -109,12 +109,12 @@ describe("CohortGenmateGardenPage", () => {
     renderPage();
 
     fireEvent.click(await screen.findByRole("button", { name: /Alice/ }));
-    expect(await screen.findByRole("button", { name: /Fertilize/ })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Send care/ })).toBeInTheDocument();
 
     fireEvent.keyDown(document.body, { key: "Escape" });
     fireEvent.click(await screen.findByRole("button", { name: /Dan/ }));
     expect(await screen.findByText("Dan Smith")).toBeInTheDocument();
-    expect(await screen.findByRole("button", { name: /Fertilize/ })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Send care/ })).toBeInTheDocument();
   });
 
   it("renders the empty state when the cohort has no members", async () => {

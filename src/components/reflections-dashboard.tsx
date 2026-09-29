@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useQueryClient } from "react-query";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,21 +12,26 @@ import { Plus, BookOpen, CheckCircle } from "lucide-react";
 
 import { useReflections, type Reflection } from "@/hooks/use-reflections";
 import { useStreakCalculation } from "@/hooks/use-streak-calculation";
+import { useHolidayDates } from "@/hooks/use-holiday-dates";
 import { reflectionZones, calculateZoneStats, findDominantZone } from "./reflection-zones";
 import { StreakIcon, GrowthBar, ComfortZoneMessage } from "./streak-components";
-import { getMilestoneForStreak, getRandomComfortMessage, getRandomStreakQuote, getNextTierProgress } from "@/lib/streak-milestones";
-import { getPlantVariant } from "@/lib/plant-variants";
+import { getEffectivePlantDays, getMilestoneForStreak, getNextTierProgress, getPlantTier, getRandomComfortMessage, getRandomStreakQuote } from "@/lib/streak-milestones";
+import { resolvePlantAppearance } from "@/lib/plant-appearance";
 import { ReflectionsTable } from "./reflections-table";
 import FeedbackForm from "./linear-feedback-form";
 import { ReflectionPreview } from "./reflection-preview";
 import { SubmissionStatusCard } from "./submission-status-card";
 import { AchievementsSection } from "./achievements-section";
 import LearnerGenmateGardenWidget from "./learner-genmate-garden-widget";
-import { FertilizerInventoryButton } from "./fertilizer-inventory-button";
+import { CareEnergyInventoryButton } from "./care-energy-inventory-button";
 import { PlantPalettePicker } from "./plant-palette-picker";
+import { PlantCollectionDialog } from "./plant-collection-dialog";
+import { TeacherGiftBoxesDialog } from "./teacher-gift-boxes-dialog";
+import { giftBoxService } from "@/application/services/giftBoxService";
 import { api } from "@/lib/api";
 import type { Badge } from "@/lib/types";
-import type { FertilizerLogEntry } from "@/domain/types";
+import type { CareEnergyLogEntry } from "@/domain/types";
+import type { PlantCosmeticSelection } from "@/lib/plant-appearance";
 
 // Define the User interface
 interface User {
@@ -39,15 +45,16 @@ interface User {
   project_group: string;
   genmate_group: string;
   badges?: Badge[];
-  fertilizer_balance?: number;
+  care_energy_balance?: number;
   growth_points?: number;
-  fertilizer_log?: FertilizerLogEntry[];
+  care_energy_log?: CareEnergyLogEntry[];
   selected_palette?: string;
   selected_species?: string;
   selected_pot?: string;
   selected_leaf?: string;
   selected_flower?: string;
   selected_stem?: string;
+  equipped_cosmetics?: PlantCosmeticSelection;
 }
 
 interface ReflectionsDashboardProps {
@@ -57,6 +64,7 @@ interface ReflectionsDashboardProps {
 }
 
 export default function ReflectionsDashboard({ userId, initialReflections = [], onReflectionSubmit }: ReflectionsDashboardProps) {
+  const navigate = useNavigate();
   const { reflections, isLoading: isLoadingReflections, error: reflectionsError, addReflection, refetch } = useReflections(userId, initialReflections);
   const queryClient = useQueryClient();
 
@@ -65,13 +73,14 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   const [userError, setUserError] = useState<string | null>(null); // New error state for user
 
   const protectedDates = useMemo(() => {
-    const dates = (user?.fertilizer_log ?? [])
+    const dates = (user?.care_energy_log ?? [])
       .filter((entry) => entry.kind === "protect" && entry.relatedDate)
       .map((entry) => entry.relatedDate as string);
     return new Set(dates);
-  }, [user?.fertilizer_log]);
+  }, [user?.care_energy_log]);
 
-  const streakData = useStreakCalculation(reflections, protectedDates);
+  const holidayDates = useHolidayDates();
+  const streakData = useStreakCalculation(reflections, protectedDates, holidayDates);
   const tierProgress = useMemo(
     () => getNextTierProgress(streakData.currentStreak, user?.growth_points ?? 0),
     [streakData.currentStreak, user?.growth_points]
@@ -81,18 +90,25 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
     [streakData.oldStreak, user?.growth_points]
   );
 
-  const plantVariant = useMemo(() => {
+  const plantAppearance = useMemo(() => {
     return user
-      ? getPlantVariant(user._id, {
-          palette: user.selected_palette,
-          species: user.selected_species,
-          pot: user.selected_pot,
-          leaf: user.selected_leaf,
-          flower: user.selected_flower,
-          stem: user.selected_stem,
+      ? resolvePlantAppearance({
+          userId: user._id,
+          tier: getPlantTier(getEffectivePlantDays(streakData.bestStreak, user.growth_points ?? 0)),
+          active: streakData.hasCurrentStreak,
+          growthPoints: user.growth_points ?? 0,
+          overrides: {
+            palette: user.selected_palette,
+            species: user.selected_species,
+            pot: user.selected_pot,
+            leaf: user.selected_leaf,
+            flower: user.selected_flower,
+            stem: user.selected_stem,
+          },
+          cosmetics: user.equipped_cosmetics,
         })
       : undefined;
-  }, [user]);
+  }, [streakData.bestStreak, streakData.hasCurrentStreak, user]);
 
   const fetchUser = useCallback(async () => {
     if (!userId) return;
@@ -131,6 +147,19 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   >(undefined);
   const [showCloseWarning, setShowCloseWarning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [giftBoxesOpen, setGiftBoxesOpen] = useState(false);
+  const [collectionOpen, setCollectionOpen] = useState(false);
+  const [milestoneCelebration, setMilestoneCelebration] = useState<{ count: number; comeback?: boolean; warning?: string } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    giftBoxService.reconcileMilestones(userId)
+      .then((boxes) => {
+        if (active && boxes.length > 0) setMilestoneCelebration({ count: boxes.length });
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [userId]);
 
   // Helper function to get local date string (YYYY-MM-DD)
   const getLocalDateString = (date: Date): string => {
@@ -158,9 +187,11 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   }, [todaysReflection]);
 
   const handleSubmit = async (newReflection: Omit<Reflection, "_id" | "createdAt" | "day">) => {
+    const returningToGarden = !streakData.hasCurrentStreak && streakData.oldStreak > 0;
+    setIsSubmitting(true);
+    let createdReflection: Reflection;
     try {
-      setIsSubmitting(true);
-      await addReflection({
+      createdReflection = await addReflection({
         ...newReflection,
         _id: undefined,
         createdAt: new Date().toISOString(),
@@ -168,15 +199,30 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
       });
       setFormData(undefined);
       setIsDialogOpen(false);
-      if (onReflectionSubmit) {
-        await onReflectionSubmit();
-      }
     } catch (err) {
       console.error("Error submitting reflection:", err);
-      // Error handling is done in the hook
-    } finally {
       setIsSubmitting(false);
+      return;
     }
+
+    try {
+      if ((createdReflection.reward_boxes?.length ?? 0) > 0 || createdReflection.reward_warning || returningToGarden) {
+        setMilestoneCelebration({
+          count: createdReflection.reward_boxes?.length ?? 0,
+          comeback: returningToGarden,
+          warning: createdReflection.reward_warning,
+        });
+      }
+    } catch (err) {
+      console.error("Reward celebration could not be shown:", err);
+    }
+
+    try {
+      await onReflectionSubmit?.();
+    } catch (err) {
+      console.error("Reflection refresh failed after a successful submission:", err);
+    }
+    setIsSubmitting(false);
   };
 
   const handleDialogClose = useCallback(
@@ -291,11 +337,11 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                 >
                   Daily Reflections
                 </motion.h1>
-                <StreakIcon streakData={streakData} variant={plantVariant} growthPoints={user?.growth_points ?? 0} />
+                {plantAppearance && <StreakIcon streakData={streakData} appearance={plantAppearance} />}
                 {user && (
-                  <FertilizerInventoryButton
+                  <CareEnergyInventoryButton
                     userId={user._id}
-                    balance={user.fertilizer_balance ?? 0}
+                    balance={user.care_energy_balance ?? 0}
                     eligibleProtectDate={streakData.eligibleProtectDate}
                     onUsed={refreshPlant}
                   />
@@ -305,6 +351,16 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                     userId={user._id}
                     selected={user.selected_palette}
                     onSaved={refreshPlant}
+                  />
+                )}
+                {user && <PlantCollectionDialog open={collectionOpen} onOpenChange={setCollectionOpen} onLoadoutChanged={refreshPlant} />}
+                {user && (
+                  <TeacherGiftBoxesDialog
+                    open={giftBoxesOpen}
+                    onOpenChange={setGiftBoxesOpen}
+                    onReward={refreshPlant}
+                    onViewCollection={() => setCollectionOpen(true)}
+                    onViewCharacterCollection={() => navigate("/character")}
                   />
                 )}
               </div>
@@ -816,6 +872,36 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
       </div>
 
       {/* Warning Dialog */}
+      <Dialog open={milestoneCelebration !== null} onOpenChange={(open) => { if (!open) setMilestoneCelebration(null); }}>
+        <DialogContent className="overflow-hidden border-emerald-200 bg-gradient-to-b from-amber-50 via-white to-emerald-50 text-center sm:max-w-md">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-4xl shadow-inner" aria-hidden="true">🌱</div>
+          <DialogHeader>
+            <DialogTitle className="text-center font-serif text-3xl text-emerald-950">
+              {milestoneCelebration?.comeback ? "Welcome back to your garden" : "Your care is showing"}
+            </DialogTitle>
+          </DialogHeader>
+          {milestoneCelebration?.count ? (
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Your reflection journey reached a new milestone. {milestoneCelebration.count === 1 ? "A permanent collectible is" : `${milestoneCelebration.count} permanent collectibles are`} waiting in your garden gift box.
+            </p>
+          ) : milestoneCelebration?.warning ? (
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Your reflection is safely saved. We will check your milestone gift again shortly.
+            </p>
+          ) : (
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Your plant is awake again. Its growth and everything you collected are still here.
+            </p>
+          )}
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {(milestoneCelebration?.count ?? 0) > 0 && (
+              <Button onClick={() => { setMilestoneCelebration(null); setGiftBoxesOpen(true); }}>Open reward</Button>
+            )}
+            <Button variant="outline" onClick={() => setMilestoneCelebration(null)}>Continue</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <AlertDialog open={showCloseWarning} onOpenChange={setShowCloseWarning}>
         <AlertDialogContent>
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="text-center space-y-4">
