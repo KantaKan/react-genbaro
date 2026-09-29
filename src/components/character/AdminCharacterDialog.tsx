@@ -66,15 +66,15 @@ export function AdminCharacterDialog({ userId, learnerName }: { userId: string; 
         {(collection.data ?? []).map((character) => {
           const equipped = selection.data?.equipped_id === character.id;
           const pinned = selection.data?.pinned_id === character.id;
-          return <article key={character.id} className="overflow-hidden rounded-2xl border-2 border-[#292542] bg-[#fffaf0] p-2 text-[#292542]">
+          return <article key={character.id} className="overflow-hidden rounded-2xl border border-border bg-card p-2 text-card-foreground">
             <div className="flex items-center gap-3 rounded-xl p-2" style={{ backgroundColor: rarityColors[character.dna.rarity] ?? rarityColors.normal }}>
               <div className="h-28 w-24 shrink-0"><BaroCharacterArt dna={character.dna} id={`${character.id}-admin`} /></div>
               <div className="min-w-0"><p className="text-xs font-black uppercase">{character.is_starter ? "STARTER" : "GIFTED"}</p><p className="mt-1 font-black capitalize">{character.dna.pattern}</p><p className="text-xs">{character.dna.palette}</p></div>
             </div>
-            <p className="mt-2 break-all px-1 font-mono text-[11px] font-bold">{character.serial}</p>
+            <p className="mt-2 break-all px-1 font-register-mono text-[11px] font-bold">{character.serial}</p>
             <div className="mt-2 flex gap-2 px-1 pb-1 text-xs font-bold">
-              <button type="button" aria-label={`ให้ใช้ ${character.serial}`} disabled={!selection.data || busy || equipped} onClick={() => equip.mutate(character.id)} className="min-h-9 flex-1 rounded-full border-2 border-[#292542] bg-[#d4efe1] px-2 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#292542]">{equipped ? "ใช้อยู่" : "ให้ใช้"}</button>
-              <button type="button" aria-label={pinned ? `เอา ${character.serial} ออกจากลาน` : `ปัก ${character.serial}`} disabled={!selection.data || busy} onClick={() => pin.mutate(pinned ? "" : character.id)} className="min-h-9 flex-1 rounded-full border-2 border-[#292542] bg-[#f8dbb8] px-2 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#292542]">{pinned ? "เอาออกจากลาน" : "ปักลาน"}</button>
+              <button type="button" aria-label={`ให้ใช้ ${character.serial}`} disabled={!selection.data || busy || equipped} onClick={() => equip.mutate(character.id)} className="min-h-9 flex-1 rounded-full border border-border bg-secondary px-2 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{equipped ? "ใช้อยู่" : "ให้ใช้"}</button>
+              <button type="button" aria-label={pinned ? `เอา ${character.serial} ออกจากลาน` : `ปัก ${character.serial}`} disabled={!selection.data || busy} onClick={() => pin.mutate(pinned ? "" : character.id)} className="min-h-9 flex-1 rounded-full bg-primary px-2 text-primary-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{pinned ? "เอาออกจากลาน" : "ปักลาน"}</button>
             </div>
           </article>;
         })}
