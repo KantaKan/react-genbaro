@@ -44,7 +44,7 @@ import type { ProfileReaction } from "@/domain/types";
 import { addPlantReaction } from "@/application/services/userService";
 import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/UserDataContext";
-import { fertilizerService } from "@/application/services/fertilizerService";
+import { careEnergyService } from "@/application/services/careEnergyService";
 import { SeedlingPlant } from "@/components/streak-components";
 import { formatDate } from "@/lib/utils";
 
@@ -315,7 +315,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
   const { userId: currentUserId } = useAuth();
   const queryClient = useQueryClient();
   const [showReactionPicker, setShowReactionPicker] = useState(false);
-  const [pendingFertilizerAction, setPendingFertilizerAction] = useState<"gift" | "rescue" | null>(null);
+  const [pendingCareAction, setPendingCareAction] = useState<"gift" | "rescue" | null>(null);
   const plantReactions = user.plant_reactions ?? [];
   const currentReaction = plantReactions.find((r) => r.userId === currentUserId);
 
@@ -333,7 +333,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
   );
 
   const { userData, refetchUserData } = useUserData();
-  const myBalance = userData?.fertilizer_balance ?? 0;
+  const myBalance = userData?.care_energy_balance ?? 0;
   const isSelf = user._id === currentUserId;
   // Backend allows gift/rescue for anyone in the caller's cohort (see
   // resolveGenmate in user_handler.go), not just the caller's genmate
@@ -342,17 +342,17 @@ export function PlantTile({ member }: { member: GardenMember }) {
   const sameCohort =
     !!userData?.cohort_number && userData.cohort_number === user.cohort_number;
 
-  const giftMutation = useMutation(() => fertilizerService.gift(user._id, 1), {
+  const giftMutation = useMutation(() => careEnergyService.gift(user._id, 1), {
     onSuccess: () => {
       queryClient.invalidateQueries(["learnerGenmateGarden"]);
       queryClient.invalidateQueries(["adminGenmateGarden"]);
       void refetchUserData();
-      toast.success(`Sent fertilizer to ${user.first_name ?? "your genmate"} 🌱`);
+      toast.success(`Sent care to ${user.first_name ?? "your genmate"} 🌱`);
     },
     onError: (error: unknown) => {
       const message =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        "Couldn't send fertilizer. Please try again.";
+        "Couldn't send Care Energy. Please try again.";
       toast.error(message);
     },
   });
@@ -360,7 +360,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
   const rescueDate = streakData.eligibleProtectDate;
 
   const rescueMutation = useMutation(
-    () => fertilizerService.rescue(user._id, rescueDate as string),
+    () => careEnergyService.rescue(user._id, rescueDate as string),
     {
       onSuccess: () => {
         queryClient.invalidateQueries(["learnerGenmateGarden"]);
@@ -515,9 +515,9 @@ export function PlantTile({ member }: { member: GardenMember }) {
                 size="sm"
                 className="w-full rounded-full"
                 disabled={giftMutation.isLoading || myBalance < 1}
-                onClick={() => setPendingFertilizerAction("gift")}
+                onClick={() => setPendingCareAction("gift")}
               >
-                🧪 Fertilize · 1 → +10 🌱
+                💛 Send care · 1 → +10 growth
               </Button>
             )}
             {!isSelf && sameCohort && (
@@ -526,7 +526,7 @@ export function PlantTile({ member }: { member: GardenMember }) {
                 size="sm"
                 className="w-full rounded-full"
                 disabled={rescueMutation.isLoading || myBalance < 1 || !rescueDate}
-                onClick={() => setPendingFertilizerAction("rescue")}
+                onClick={() => setPendingCareAction("rescue")}
               >
                 {rescueDate
                   ? `🛡️ Rescue ${rescueDate} · costs you 1`
@@ -535,35 +535,35 @@ export function PlantTile({ member }: { member: GardenMember }) {
             )}
             {!isSelf && sameCohort && myBalance < 1 && (
               <p className="text-center text-xs text-muted-foreground">
-                You have no fertilizer left.
+                You have no Care Energy left.
               </p>
             )}
           </div>
         </div>
       </PopoverContent>
     </Popover>
-    <AlertDialog open={pendingFertilizerAction !== null} onOpenChange={(open) => !open && setPendingFertilizerAction(null)}>
+    <AlertDialog open={pendingCareAction !== null} onOpenChange={(open) => !open && setPendingCareAction(null)}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{pendingFertilizerAction === "rescue" ? `Rescue ${fullName}?` : `Fertilize ${fullName}?`}</AlertDialogTitle>
+          <AlertDialogTitle>{pendingCareAction === "rescue" ? `Rescue ${fullName}?` : `Send care to ${fullName}?`}</AlertDialogTitle>
           <AlertDialogDescription>
-            {pendingFertilizerAction === "rescue"
-              ? `Spend 1 of your fertilizer to protect ${rescueDate ?? "their missed day"}. This supports their streak.`
-              : "Spend 1 of your fertilizer to gift 10 fertilizer to this learner."}
-            {` You have ${myBalance} fertilizer.`}
+            {pendingCareAction === "rescue"
+              ? `Spend 1 Care Energy to protect ${rescueDate ?? "their missed day"}. This supports their streak.`
+              : "Spend 1 Care Energy to send this learner +10 growth."}
+            {` You have ${myBalance} Care Energy.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Keep fertilizer</AlertDialogCancel>
+          <AlertDialogCancel>Keep Care Energy</AlertDialogCancel>
           <AlertDialogAction
-            disabled={myBalance < 1 || giftMutation.isLoading || rescueMutation.isLoading || (pendingFertilizerAction === "rescue" && !rescueDate)}
+            disabled={myBalance < 1 || giftMutation.isLoading || rescueMutation.isLoading || (pendingCareAction === "rescue" && !rescueDate)}
             onClick={() => {
-              if (pendingFertilizerAction === "gift") giftMutation.mutate();
-              if (pendingFertilizerAction === "rescue" && rescueDate) rescueMutation.mutate();
-              setPendingFertilizerAction(null);
+              if (pendingCareAction === "gift") giftMutation.mutate();
+              if (pendingCareAction === "rescue" && rescueDate) rescueMutation.mutate();
+              setPendingCareAction(null);
             }}
           >
-            Confirm · spend 1 fertilizer
+            Confirm · spend 1 Care Energy
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

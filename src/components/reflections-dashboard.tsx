@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useQueryClient } from "react-query";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,14 +23,14 @@ import { ReflectionPreview } from "./reflection-preview";
 import { SubmissionStatusCard } from "./submission-status-card";
 import { AchievementsSection } from "./achievements-section";
 import LearnerGenmateGardenWidget from "./learner-genmate-garden-widget";
-import { FertilizerInventoryButton } from "./fertilizer-inventory-button";
+import { CareEnergyInventoryButton } from "./care-energy-inventory-button";
 import { PlantPalettePicker } from "./plant-palette-picker";
 import { PlantCollectionDialog } from "./plant-collection-dialog";
 import { TeacherGiftBoxesDialog } from "./teacher-gift-boxes-dialog";
 import { giftBoxService } from "@/application/services/giftBoxService";
 import { api } from "@/lib/api";
 import type { Badge } from "@/lib/types";
-import type { FertilizerLogEntry } from "@/domain/types";
+import type { CareEnergyLogEntry } from "@/domain/types";
 import type { PlantCosmeticSelection } from "@/lib/plant-appearance";
 
 // Define the User interface
@@ -44,9 +45,9 @@ interface User {
   project_group: string;
   genmate_group: string;
   badges?: Badge[];
-  fertilizer_balance?: number;
+  care_energy_balance?: number;
   growth_points?: number;
-  fertilizer_log?: FertilizerLogEntry[];
+  care_energy_log?: CareEnergyLogEntry[];
   selected_palette?: string;
   selected_species?: string;
   selected_pot?: string;
@@ -63,6 +64,7 @@ interface ReflectionsDashboardProps {
 }
 
 export default function ReflectionsDashboard({ userId, initialReflections = [], onReflectionSubmit }: ReflectionsDashboardProps) {
+  const navigate = useNavigate();
   const { reflections, isLoading: isLoadingReflections, error: reflectionsError, addReflection, refetch } = useReflections(userId, initialReflections);
   const queryClient = useQueryClient();
 
@@ -71,11 +73,11 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   const [userError, setUserError] = useState<string | null>(null); // New error state for user
 
   const protectedDates = useMemo(() => {
-    const dates = (user?.fertilizer_log ?? [])
+    const dates = (user?.care_energy_log ?? [])
       .filter((entry) => entry.kind === "protect" && entry.relatedDate)
       .map((entry) => entry.relatedDate as string);
     return new Set(dates);
-  }, [user?.fertilizer_log]);
+  }, [user?.care_energy_log]);
 
   const holidayDates = useHolidayDates();
   const streakData = useStreakCalculation(reflections, protectedDates, holidayDates);
@@ -337,9 +339,9 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                 </motion.h1>
                 {plantAppearance && <StreakIcon streakData={streakData} appearance={plantAppearance} />}
                 {user && (
-                  <FertilizerInventoryButton
+                  <CareEnergyInventoryButton
                     userId={user._id}
-                    balance={user.fertilizer_balance ?? 0}
+                    balance={user.care_energy_balance ?? 0}
                     eligibleProtectDate={streakData.eligibleProtectDate}
                     onUsed={refreshPlant}
                   />
@@ -358,6 +360,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
                     onOpenChange={setGiftBoxesOpen}
                     onReward={refreshPlant}
                     onViewCollection={() => setCollectionOpen(true)}
+                    onViewCharacterCollection={() => navigate("/character")}
                   />
                 )}
               </div>

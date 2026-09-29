@@ -1,6 +1,6 @@
 import type { UserRole } from "./auth";
 import type { Badge } from "./badge";
-import type { FertilizerLogEntry } from "./fertilizer";
+import type { CareEnergyLogEntry } from "./care-energy";
 
 export type { Badge };
 
@@ -25,9 +25,9 @@ export interface User {
   social_links?: SocialLinks;
   pinned_badge_ids?: string[];
   selected_palette?: string;
-  fertilizer_balance?: number;
+  care_energy_balance?: number;
   growth_points?: number;
-  fertilizer_log?: FertilizerLogEntry[];
+  care_energy_log?: CareEnergyLogEntry[];
 }
 
 export interface SocialLinks {

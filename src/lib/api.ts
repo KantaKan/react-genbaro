@@ -8,7 +8,7 @@ export {
   attendanceService,
   leaveService,
   badgeService,
-  fertilizerService,
+  careEnergyService,
   boardService,
   stampService,
   historyService,

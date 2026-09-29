@@ -12,18 +12,18 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
-import { fertilizerService } from "@/lib/api";
+import { careEnergyService } from "@/lib/api";
 import { toast } from "sonner";
 import { Shield, Sparkles } from "lucide-react";
 
-interface FertilizerInventoryButtonProps {
+interface CareEnergyInventoryButtonProps {
   userId: string;
   balance: number;
   eligibleProtectDate: string | null;
   onUsed?: () => void | Promise<void>;
 }
 
-export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate, onUsed }: FertilizerInventoryButtonProps) {
+export function CareEnergyInventoryButton({ userId, balance, eligibleProtectDate, onUsed }: CareEnergyInventoryButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedAmount, setFeedAmount] = useState(1);
@@ -35,7 +35,7 @@ export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate
     if (!eligibleProtectDate) return;
     setIsSubmitting(true);
     try {
-      await fertilizerService.protect(userId, eligibleProtectDate);
+      await careEnergyService.protect(userId, eligibleProtectDate);
       toast.success(`Protected ${eligibleProtectDate} — your streak is safe!`);
       setIsOpen(false);
       await onUsed?.();
@@ -50,7 +50,7 @@ export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate
     if (quantity < 1) return;
     setIsSubmitting(true);
     try {
-      await fertilizerService.feed(userId, quantity);
+      await careEnergyService.feed(userId, quantity);
       toast.success(`Your plant feels nourished! +${quantity * 10} growth ✨`);
       setIsOpen(false);
       setFeedAmount(1);
@@ -66,12 +66,12 @@ export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1.5 rounded-full">
-          🧪 {balance}
+          💛 {balance}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-72">
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium">Use a fertilizer</p>
+          <p className="text-sm font-medium">Use Care Energy</p>
           <Button
             variant="outline"
             className="justify-start gap-2"
@@ -112,7 +112,7 @@ export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate
             onClick={() => setPendingAction({ kind: "feed", quantity: balance })}
           >
             <Sparkles className="h-4 w-4" />
-            Feed all ({balance} fertilizer → +{balance * 10} growth)
+            Feed all ({balance} Care Energy → +{balance * 10} growth)
           </Button>
         </div>
       </PopoverContent>
@@ -123,12 +123,12 @@ export function FertilizerInventoryButton({ userId, balance, eligibleProtectDate
             <AlertDialogTitle>{pendingAction?.kind === "protect" ? "Protect this missed day?" : "Feed your plant?"}</AlertDialogTitle>
             <AlertDialogDescription>
               {pendingAction?.kind === "protect"
-                ? `Spend 1 fertilizer to protect ${eligibleProtectDate ?? "this missed day"}.`
-                : `Spend ${pendingAction?.quantity ?? 0} fertilizer for +${(pendingAction?.kind === "feed" ? pendingAction.quantity : 0) * 10} growth.`} This can't be undone.
+                ? `Spend 1 Care Energy to protect ${eligibleProtectDate ?? "this missed day"}.`
+                : `Spend ${pendingAction?.quantity ?? 0} Care Energy for +${(pendingAction?.kind === "feed" ? pendingAction.quantity : 0) * 10} growth.`} This can't be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep fertilizer</AlertDialogCancel>
+            <AlertDialogCancel>Keep Care Energy</AlertDialogCancel>
             <AlertDialogAction
               disabled={isSubmitting || (pendingAction?.kind === "feed" && pendingAction.quantity > balance) || (pendingAction?.kind === "protect" && !eligibleProtectDate)}
               onClick={() => {

@@ -126,7 +126,7 @@ export function AdminUsersPage() {
 
           {/* Salesforce export button — always visible */}
           <SalesforceExportButton cohort={Number(cohort)} />
-          <AdminCohortGiftBoxDialog cohort={Number(cohort)} learnerCount={users.length} />
+          <AdminCohortGiftBoxDialog cohort={Number(cohort)} learnerCount={users.length} teams={[...new Set(users.map((user) => user.genmate_group?.trim()).filter((team): team is string => Boolean(team)))].sort()} />
         </div>
       </div>
 

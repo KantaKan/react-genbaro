@@ -16,15 +16,16 @@ import { useStreakCalculation } from "@/hooks/use-streak-calculation";
 import { useHolidayDates } from "@/hooks/use-holiday-dates";
 import { StreakIcon } from "@/components/streak-components";
 import { AwardBadgeButton } from "@/components/award-badge-button";
-import { AwardFertilizerButton } from "@/components/award-fertilizer-button";
+import { AwardCareEnergyButton } from "@/components/award-care-energy-button";
 import { AdminPlantOverrideButton } from "@/components/admin-plant-override-button";
 import { AdminCosmeticGrantDialog } from "@/components/admin-cosmetic-grant-dialog";
 import { AdminGiftBoxDialog } from "@/components/admin-gift-box-dialog";
+import { AdminCharacterDialog } from "@/components/character/AdminCharacterDialog";
 import { resolvePlantAppearance } from "@/lib/plant-appearance";
 import { getEffectivePlantDays, getPlantTier } from "@/lib/streak-milestones";
 import type { Badge } from "@/lib/types";
 import type { Reflection } from "@/hooks/use-reflections";
-import type { FertilizerLogEntry } from "@/domain/types";
+import type { CareEnergyLogEntry } from "@/domain/types";
 import type { PlantCosmeticSelection } from "@/lib/plant-appearance";
 
 interface User {
@@ -36,7 +37,7 @@ interface User {
   role: string;
   _id: string;
   badges?: Badge[];
-  fertilizer_log?: FertilizerLogEntry[];
+  care_energy_log?: CareEnergyLogEntry[];
   growth_points?: number;
   selected_palette?: string;
   selected_species?: string;
@@ -111,11 +112,11 @@ export default function UserReflectionsPage() {
   };
 
   const protectedDates = useMemo(() => {
-    const dates = (user?.fertilizer_log ?? [])
+    const dates = (user?.care_energy_log ?? [])
       .filter((entry) => entry.kind === "protect" && entry.relatedDate)
       .map((entry) => entry.relatedDate as string);
     return new Set(dates);
-  }, [user?.fertilizer_log]);
+  }, [user?.care_energy_log]);
 
   const holidayDates = useHolidayDates();
   const streakData = useStreakCalculation(reflections, protectedDates, holidayDates);
@@ -199,8 +200,12 @@ export default function UserReflectionsPage() {
         {id && (
           <div className="flex flex-wrap items-center justify-end gap-2">
             <AwardBadgeButton userId={id} onBadgeAwarded={handleBadgeAwarded} />
-            <AwardFertilizerButton userId={id} onFertilizerAwarded={handleBadgeAwarded} />
+            <AwardCareEnergyButton userId={id} onCareEnergyAwarded={handleBadgeAwarded} />
             <AdminCosmeticGrantDialog
+              userId={id}
+              learnerName={user ? `${user.first_name} ${user.last_name}` : "this learner"}
+            />
+            <AdminCharacterDialog
               userId={id}
               learnerName={user ? `${user.first_name} ${user.last_name}` : "this learner"}
             />

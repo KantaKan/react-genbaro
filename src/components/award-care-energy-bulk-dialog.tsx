@@ -5,18 +5,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Sprout, Users } from "lucide-react";
-import { fertilizerService } from "@/lib/api";
+import { Sparkles, Users } from "lucide-react";
+import { careEnergyService } from "@/lib/api";
 import { toast } from "sonner";
 
-interface AwardFertilizerBulkDialogProps {
+interface AwardCareEnergyBulkDialogProps {
   isOpen: boolean;
   onClose: () => void;
   userIds: string[];
   onSuccess?: () => void;
 }
 
-export function AwardFertilizerBulkDialog({ isOpen, onClose, userIds, onSuccess }: AwardFertilizerBulkDialogProps) {
+export function AwardCareEnergyBulkDialog({ isOpen, onClose, userIds, onSuccess }: AwardCareEnergyBulkDialogProps) {
   const [amount, setAmount] = useState(1);
   const [note, setNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,11 +29,11 @@ export function AwardFertilizerBulkDialog({ isOpen, onClose, userIds, onSuccess 
 
     setIsSubmitting(true);
     try {
-      await fertilizerService.bulkGrant(userIds, { amount, note: note || undefined });
-      toast.success(`Granted fertilizer to ${userIds.length} learner${userIds.length !== 1 ? "s" : ""}`);
+      await careEnergyService.bulkGrant(userIds, { amount, note: note || undefined });
+      toast.success(`Granted Care Energy to ${userIds.length} learner${userIds.length !== 1 ? "s" : ""}`);
     } catch (error) {
-      console.error("Bulk fertilizer grant failed:", error);
-      toast.error("Failed to grant fertilizer. Please try again.");
+      console.error("Bulk Care Energy grant failed:", error);
+      toast.error("Failed to grant Care Energy. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -49,8 +49,8 @@ export function AwardFertilizerBulkDialog({ isOpen, onClose, userIds, onSuccess 
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sprout className="h-5 w-5" />
-            Bulk Grant Fertilizer
+            <Sparkles className="h-5 w-5" />
+            Bulk Grant Care Energy
           </DialogTitle>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Users className="h-4 w-4" />
@@ -60,9 +60,9 @@ export function AwardFertilizerBulkDialog({ isOpen, onClose, userIds, onSuccess 
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="bulk-fertilizer-amount">Amount (each)</Label>
+            <Label htmlFor="bulk-care-energy-amount">Amount (each)</Label>
             <Input
-              id="bulk-fertilizer-amount"
+              id="bulk-care-energy-amount"
               type="number"
               min={1}
               value={amount}
@@ -70,9 +70,9 @@ export function AwardFertilizerBulkDialog({ isOpen, onClose, userIds, onSuccess 
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="bulk-fertilizer-note">Note (optional)</Label>
+            <Label htmlFor="bulk-care-energy-note">Note (optional)</Label>
             <Input
-              id="bulk-fertilizer-note"
+              id="bulk-care-energy-note"
               placeholder="e.g., End of sprint bonus"
               value={note}
               onChange={(e) => setNote(e.target.value)}

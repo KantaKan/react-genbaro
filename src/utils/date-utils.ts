@@ -155,7 +155,7 @@ export const toLocalDateKey = (date: Date): string => {
   return `${y}-${m}-${d}`;
 };
 
-// Helper function to check if a date has been protected by a fertilizer streak-freeze
+// Helper function to check if a date has been protected by Care Energy
 export const isProtectedDate = (date: Date, protectedDates: Set<string>): boolean => {
   return protectedDates.has(toLocalDateKey(date));
 };

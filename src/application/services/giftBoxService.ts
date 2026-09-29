@@ -1,5 +1,6 @@
 import { api } from "../../infrastructure/api";
 import type { ApiResponse, CosmeticRarity, RewardDrawResult, TeacherGiftBox } from "../../domain/types";
+import type { GiftBoxOdds, GiftBoxRecipient } from "../../domain/types/gift-box";
 
 export interface CohortGiftBoxResult {
   total: number;
@@ -8,16 +9,23 @@ export interface CohortGiftBoxResult {
   failures: Array<{ user_id: string; error: string }>;
 }
 
+export interface GiftBoxAudiencePreview {
+  cohort: number;
+  team?: string;
+  total: number;
+}
+
 export const giftBoxService = {
   async list(): Promise<TeacherGiftBox[]> {
     const response = await api.get<ApiResponse<TeacherGiftBox[]>>("/gift-boxes");
     return response.data.data;
   },
 
-  async grant(userId: string, minimumRarity: CosmeticRarity, message: string): Promise<TeacherGiftBox> {
+  async grant(userId: string, minimumRarity: CosmeticRarity, message: string, rewardPool?: "character-box"): Promise<TeacherGiftBox> {
     const response = await api.post<ApiResponse<TeacherGiftBox>>(`/admin/users/${userId}/gift-boxes`, {
       minimum_rarity: minimumRarity,
       message,
+      reward_pool: rewardPool ?? "",
     });
     return response.data.data;
   },
@@ -27,16 +35,42 @@ export const giftBoxService = {
     return response.data.data;
   },
 
+  async odds(boxId: string): Promise<GiftBoxOdds> {
+    const response = await api.get<ApiResponse<GiftBoxOdds>>(`/gift-boxes/${boxId}/odds`);
+    return response.data.data;
+  },
+
+  async recipients(query: string): Promise<GiftBoxRecipient[]> {
+    const response = await api.get<ApiResponse<GiftBoxRecipient[]>>("/gift-boxes/recipients", { params: { query } });
+    return response.data.data;
+  },
+
+  async transfer(boxId: string, recipientId: string): Promise<TeacherGiftBox> {
+    const response = await api.post<ApiResponse<TeacherGiftBox>>(`/gift-boxes/${boxId}/transfer`, { recipient_id: recipientId });
+    return response.data.data;
+  },
+
   async reconcileMilestones(userId: string): Promise<TeacherGiftBox[]> {
     const response = await api.post<ApiResponse<TeacherGiftBox[]>>(`/users/${userId}/reflection-rewards/reconcile`);
     return response.data.data;
   },
 
   async grantCohort(cohort: number, minimumRarity: CosmeticRarity, message: string, idempotencyKey: string): Promise<CohortGiftBoxResult> {
+    return this.grantAudience(cohort, "", minimumRarity, message, idempotencyKey, "");
+  },
+
+  async previewAudience(cohort: number, team: string): Promise<GiftBoxAudiencePreview> {
+    const response = await api.get<ApiResponse<GiftBoxAudiencePreview>>(`/admin/cohorts/${cohort}/gift-boxes/recipients`, { params: { team } });
+    return response.data.data;
+  },
+
+  async grantAudience(cohort: number, team: string, minimumRarity: CosmeticRarity, message: string, idempotencyKey: string, rewardPool: "" | "character-box"): Promise<CohortGiftBoxResult> {
     const response = await api.post<ApiResponse<CohortGiftBoxResult>>(`/admin/cohorts/${cohort}/gift-boxes`, {
       minimum_rarity: minimumRarity,
       message,
       idempotency_key: idempotencyKey,
+      team,
+      reward_pool: rewardPool,
     });
     return response.data.data;
   },

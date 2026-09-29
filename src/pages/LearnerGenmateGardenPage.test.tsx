@@ -17,13 +17,13 @@ vi.mock("@/AuthContext", () => ({
 
 vi.mock("@/UserDataContext", () => ({
   useUserData: () => ({
-    userData: { fertilizer_balance: 3 },
+    userData: { care_energy_balance: 3 },
     refetchUserData: vi.fn(),
   }),
 }));
 
-vi.mock("@/application/services/fertilizerService", () => ({
-  fertilizerService: { gift: vi.fn().mockResolvedValue(undefined) },
+vi.mock("@/application/services/careEnergyService", () => ({
+  careEnergyService: { gift: vi.fn().mockResolvedValue(undefined), rescue: vi.fn().mockResolvedValue(undefined) },
 }));
 
 import { getMyGenmateGarden } from "@/lib/api";

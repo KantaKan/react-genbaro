@@ -4,7 +4,7 @@ export { reflectionService, default as reflectionServiceDefault } from "./reflec
 export { attendanceService, default as attendanceServiceDefault } from "./attendanceService";
 export { leaveService, default as leaveServiceDefault } from "./leaveService";
 export { badgeService, default as badgeServiceDefault } from "./badgeService";
-export { fertilizerService, default as fertilizerServiceDefault } from "./fertilizerService";
+export { careEnergyService, default as careEnergyServiceDefault } from "./careEnergyService";
 export { boardService, default as boardServiceDefault } from "./boardService";
 export { stampService, default as stampServiceDefault } from "./stampService";
 export { notificationService, default as notificationServiceDefault } from "./notificationService";

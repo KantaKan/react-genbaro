@@ -1,4 +1,6 @@
-export type CosmeticSlot = "palette" | "pot" | "aura" | "particle" | "accessory" | "mutation";
+export type PlantCosmeticSlot = "palette" | "pot" | "aura" | "particle" | "accessory" | "mutation";
+export type CharacterCosmeticSlot = "card_background" | "character_prop";
+export type CosmeticSlot = PlantCosmeticSlot | CharacterCosmeticSlot;
 export type CosmeticRarity = "Common" | "Rare" | "Epic" | "Legendary";
 
 export interface CosmeticCatalogItem {
