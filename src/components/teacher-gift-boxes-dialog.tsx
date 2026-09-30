@@ -35,6 +35,7 @@ function TransferPanel({ box, onTransferred }: { box: TeacherGiftBox; onTransfer
     return () => window.clearTimeout(timer);
   }, [query]);
   const recipients = useQuery(["gift-box-recipients", searchTerm], () => giftBoxService.recipients(searchTerm), { enabled: visible && searchTerm.length >= 2, retry: false });
+  const learnerRecipients = recipients.data?.filter((recipient) => recipient.role === "learner");
 
   const send = async () => {
     if (!selected) return;
@@ -54,14 +55,14 @@ function TransferPanel({ box, onTransferred }: { box: TeacherGiftBox; onTransfer
   return <div className="mt-4 border-t-2 border-dashed border-[#292542]/20 pt-4">
     {!visible ? <button type="button" onClick={() => setVisible(true)} className="rounded-full border-2 border-[#292542] bg-white px-4 py-2 text-xs font-black text-[#292542] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#292542]">ส่งกล่องให้เพื่อน</button> : <div className="rounded-2xl border-2 border-[#292542] bg-[#f7f0e6] p-3 text-[#292542]">
       <p className="font-['Trebuchet_MS',sans-serif] text-sm font-black">เขียนชื่อบนป้ายส่งต่อ</p>
-      <p className="mt-1 text-xs text-[#5b5870]">ส่งให้ใครก็ได้ใน Baro รวมถึงต่างรุ่น ต่างทีม หรือแอดมิน</p>
+      <p className="mt-1 text-xs text-[#5b5870]">ส่งต่อให้นักเรียนใน Baro ได้ แม้อยู่ต่างรุ่นหรือต่างทีม</p>
       <input aria-label="ค้นหาคนรับกล่อง" value={query} onChange={(event) => { setQuery(event.target.value); setSelected(undefined); }} placeholder="ชื่อเล่น ชื่อจริง หรืออีเมล" maxLength={80} className="mt-3 w-full rounded-xl border-2 border-[#292542] bg-white px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[#7957a2]" />
       {query.trim().length < 2 && <p className="mt-2 text-xs text-[#79758a]">พิมพ์อย่างน้อย 2 ตัวอักษร</p>}
       {recipients.isLoading && <p role="status" className="mt-2 text-xs">กำลังค้นหา…</p>}
       {recipients.isError && <p className="mt-2 text-xs text-[#a9505e]">ค้นหาไม่ได้ <button type="button" className="font-black underline" onClick={() => recipients.refetch()}>ลองใหม่</button></p>}
-      {recipients.data && recipients.data.length === 0 && <p className="mt-2 text-xs">ยังไม่เจอชื่อนี้ ลองค้นด้วยชื่ออื่น</p>}
-      {recipients.data && recipients.data.length > 0 && <div className="mt-2 max-h-40 space-y-1 overflow-y-auto" aria-label="ผลการค้นหาคนรับกล่อง">
-        {recipients.data.map((person) => <button key={person.id} type="button" aria-pressed={selected?.id === person.id} onClick={() => setSelected(person)} className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#7957a2] ${selected?.id === person.id ? "bg-[#eadcf7] font-black" : "bg-white hover:bg-[#fffaf0]"}`}><span>{person.display_name}</span><span className="text-[10px] text-[#79758a]">{person.role === "admin" ? "แอดมิน" : `รุ่น ${person.cohort_number}${person.group ? ` · ${person.group}` : ""}`}</span></button>)}
+      {learnerRecipients && learnerRecipients.length === 0 && <p className="mt-2 text-xs">ยังไม่เจอนักเรียนชื่อนี้ ลองค้นด้วยชื่ออื่น</p>}
+      {learnerRecipients && learnerRecipients.length > 0 && <div className="mt-2 max-h-40 space-y-1 overflow-y-auto" aria-label="ผลการค้นหาคนรับกล่อง">
+        {learnerRecipients.map((person) => <button key={person.id} type="button" aria-pressed={selected?.id === person.id} onClick={() => setSelected(person)} className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#7957a2] ${selected?.id === person.id ? "bg-[#eadcf7] font-black" : "bg-white hover:bg-[#fffaf0]"}`}><span>{person.display_name}</span><span className="text-[10px] text-[#79758a]">รุ่น {person.cohort_number}{person.group ? ` · ${person.group}` : ""}</span></button>)}
       </div>}
       <div className="mt-3 flex flex-wrap gap-2"><button type="button" disabled={!selected || sending} onClick={send} className="min-h-10 rounded-full border-2 border-[#292542] bg-[#f4bd80] px-4 text-xs font-black disabled:opacity-50">{sending ? "กำลังส่ง…" : selected ? `ส่งให้ ${selected.display_name}` : "เลือกคนรับก่อน"}</button><button type="button" onClick={() => { setVisible(false); setSelected(undefined); }} className="min-h-10 rounded-full px-3 text-xs font-bold">ยกเลิก</button></div>
     </div>}
