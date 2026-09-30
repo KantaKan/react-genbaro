@@ -24,7 +24,6 @@ export interface YardScene {
   name: string;
   width: number;
   height: number;
-  panoramaWidth: number;
   depthScale: [number, number];
   placeLabels: Record<SpotKind, string>;
   spots: YardSpot[];
@@ -55,7 +54,7 @@ function spot(id: string, kind: SpotKind, x: number, y: number, facing: "left" |
 
 export const YARD_SCENES: Record<YardSceneId, YardScene> = {
   backyard: {
-    id: "backyard", name: "สวนหลังบ้าน", width: 1000, height: 520, panoramaWidth: 820, depthScale: [0.72, 0.62], placeLabels: places,
+    id: "backyard", name: "สวนหลังบ้าน", width: 1000, height: 520, depthScale: [0.72, 0.62], placeLabels: places,
     spots: [
       spot("t1", "table", 262, 262, "right", ["t2"]), spot("t2", "table", 322, 258, "left", ["t1", "t3"]), spot("t3", "table", 382, 262, "left", ["t2"]),
       spot("b1", "bench", 668, 336, "right", ["b2"]), spot("b2", "bench", 734, 336, "left", ["b1"]),
@@ -67,7 +66,7 @@ export const YARD_SCENES: Record<YardSceneId, YardScene> = {
     catSpots: [{ id: "beg", kind: "beg", x: 200, y: 312 }, { id: "loaf1", kind: "loaf", x: 612, y: 472 }, { id: "loaf2", kind: "loaf", x: 968, y: 346 }, { id: "chase", kind: "chase", x: 836, y: 492 }],
   },
   engawa: {
-    id: "engawa", name: "ระเบียงบ้าน", width: 1000, height: 560, panoramaWidth: 820, depthScale: [0.62, 0.7], placeLabels: { ...places, blanket: "ระเบียงบ้าน" },
+    id: "engawa", name: "ระเบียงบ้าน", width: 1000, height: 560, depthScale: [0.62, 0.7], placeLabels: { ...places, blanket: "ระเบียงบ้าน" },
     spots: [
       spot("pr1", "blanket", 250, 478, "right", ["pr2"]), spot("pr2", "blanket", 330, 478, "left", ["pr1"]),
       spot("pr3", "blanket", 560, 478, "right", ["pr4"]), spot("pr4", "blanket", 650, 478, "left", ["pr3"]),
@@ -80,7 +79,7 @@ export const YARD_SCENES: Record<YardSceneId, YardScene> = {
     catSpots: [{ id: "beg", kind: "beg", x: 236, y: 312 }, { id: "loaf1", kind: "loaf", x: 860, y: 436 }, { id: "loaf2", kind: "loaf", x: 430, y: 470 }, { id: "chase", kind: "chase", x: 624, y: 276 }],
   },
   island: {
-    id: "island", name: "เกาะลอยฟ้า", width: 1000, height: 720, panoramaWidth: 600, depthScale: [0.66, 0.6], placeLabels: places,
+    id: "island", name: "เกาะลอยฟ้า", width: 1000, height: 720, depthScale: [0.66, 0.6], placeLabels: places,
     spots: [
       spot("t1", "table", 250, 398, "right", ["t2"]), spot("t2", "table", 320, 396, "left", ["t1"]),
       spot("b1", "bench", 690, 428, "right", ["b2"]), spot("b2", "bench", 752, 428, "left", ["b1"]),

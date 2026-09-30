@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useReducedMotion } from "framer-motion";
 import type { ShowcaseEntry } from "@/application/services/showcaseLawnService";
 import { supportsCssAnimation } from "@/hooks/use-lawn-device";
@@ -91,10 +91,10 @@ export function LawnYard({ plan, scene, userId, lite, cardActions }: { plan: Law
   useEffect(() => {
     const box = scroller.current;
     const mine = box?.querySelector<HTMLElement>("[data-mine='true']");
-    if (box && mine && box.scrollWidth > box.clientWidth) box.scrollLeft = Math.max(0, mine.offsetLeft - box.clientWidth / 2);
+    if (box && box.scrollWidth > box.clientWidth) box.scrollLeft = mine ? Math.max(0, mine.offsetLeft - box.clientWidth / 2) : (box.scrollWidth - box.clientWidth) / 2;
   }, [scene.id, plan.windowIndex]);
-  return <div ref={scroller} role="group" aria-label={`เพื่อนบนลานตอนนี้ · ${scene.name}`} data-scene={scene.id} data-phase={plan.phase} className="overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-2xl border border-border shadow-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-    <div className="relative overflow-hidden" style={{ aspectRatio: `${scene.width} / ${scene.height}`, minWidth: `${scene.panoramaWidth}px` }}>
+  return <div ref={scroller} role="group" aria-label={`เพื่อนบนลานตอนนี้ · ${scene.name}`} data-scene={scene.id} data-phase={plan.phase} className="h-full w-full overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none] md:flex md:items-center md:justify-center [&::-webkit-scrollbar]:hidden">
+    <div className="relative h-full overflow-hidden md:h-auto md:w-[min(100%,calc((100dvh-4rem)*var(--yard-ratio)))]" style={{ aspectRatio: `${scene.width} / ${scene.height}`, "--yard-ratio": scene.width / scene.height } as CSSProperties}>
       <YardBackdrop sceneId={scene.id} phase={plan.phase} width={scene.width} height={scene.height} />
       <YardFronts sceneId={scene.id} phase={plan.phase} width={scene.width} height={scene.height} />
       {items.map((item) => <span key={item.key}>{item.node}</span>)}
