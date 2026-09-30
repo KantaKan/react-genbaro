@@ -11,6 +11,14 @@ export const characterPalettes: Record<string, { body: string; shade: string; ac
   Berry: { body: "#d99dbc", shade: "#b76e9b", accent: "#f2d16f" },
   Moss: { body: "#a6c887", shade: "#779e76", accent: "#f5ae80" },
   Cloud: { body: "#e5d7c8", shade: "#b9aab5", accent: "#96c8b5" },
+  Coffee: { body: "#c89f7e", shade: "#9c7058", accent: "#f3d9b1" },
+  Matcha: { body: "#b6d48a", shade: "#86a866", accent: "#f6c3a0" },
+  Sakura: { body: "#f7c6d4", shade: "#e091a9", accent: "#fff0a8" },
+  Midnight: { body: "#8a8fd0", shade: "#5d62a3", accent: "#f7d774" },
+  Mango: { body: "#ffcf5c", shade: "#e8a33d", accent: "#7fc8a9" },
+  Taro: { body: "#b9a4d8", shade: "#8e76b5", accent: "#f4d6a0" },
+  ThaiTea: { body: "#f0a868", shade: "#cf7d45", accent: "#fff1d6" },
+  Sky: { body: "#a9d8f5", shade: "#79b1db", accent: "#ffd27a" },
 };
 
 export function characterPalette(dna: CharacterDNA) {
