@@ -627,3 +627,59 @@
     animation: none;
   }
 }
+
+.baro-puppet .baro-part {
+  transform-box: fill-box;
+}
+.baro-puppet .baro-torso {
+  transform-origin: 50% 100%;
+}
+.baro-puppet .baro-leg-left,
+.baro-puppet .baro-leg-right {
+  transform-origin: 50% 0%;
+}
+.baro-puppet .baro-arm-left {
+  transform-origin: 100% 0%;
+}
+.baro-puppet .baro-arm-right {
+  transform-origin: 0% 0%;
+}
+.baro-puppet[data-motion="full"] .baro-torso {
+  animation: baro-breathe 3.2s ease-in-out infinite;
+}
+.baro-puppet[data-motion="full"][data-action="walk"] {
+  animation: baro-stroll 9s ease-in-out infinite;
+}
+.baro-puppet[data-motion="full"][data-action="walk"] .baro-torso {
+  animation: baro-step-bob 0.7s ease-in-out infinite;
+}
+.baro-puppet[data-motion="full"][data-action="walk"] .baro-leg-left,
+.baro-puppet[data-motion="full"][data-action="walk"] .baro-arm-right {
+  animation: baro-swing 0.7s ease-in-out infinite;
+}
+.baro-puppet[data-motion="full"][data-action="walk"] .baro-leg-right,
+.baro-puppet[data-motion="full"][data-action="walk"] .baro-arm-left {
+  animation: baro-swing 0.7s ease-in-out infinite reverse;
+}
+@keyframes baro-breathe {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.02, 0.975); }
+}
+@keyframes baro-step-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes baro-swing {
+  0%, 100% { transform: rotate(-12deg); }
+  50% { transform: rotate(12deg); }
+}
+@keyframes baro-stroll {
+  0%, 100% { transform: translateX(-10px); }
+  50% { transform: translateX(10px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .baro-puppet,
+  .baro-puppet .baro-part {
+    animation: none !important;
+  }
+}

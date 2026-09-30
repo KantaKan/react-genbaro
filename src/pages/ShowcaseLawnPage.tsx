@@ -1,35 +1,16 @@
 import { lazy, Suspense, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Box, MapPin, RotateCw, Sparkles } from "lucide-react";
+import { ArrowLeft, MapPin, RotateCw, Sparkles } from "lucide-react";
 import { useAuth } from "@/application/contexts/AuthContext";
 import { baroCharacterService } from "@/application/services/baroCharacterService";
 import { showcaseLawnService, type ShowcaseEntry } from "@/application/services/showcaseLawnService";
 import { BaroCharacterArt } from "@/components/character/BaroCharacterArt";
+import { LawnCharacter } from "@/components/character/LawnCharacter";
 import { GodEventPanel } from "@/components/character/GodEventPanel";
 import { ShowcaseLawnEnvironment } from "@/components/character/ShowcaseLawnEnvironment";
 
-const rarityColor: Record<string, string> = { normal: "#ccebdd", meme_rare: "#f8d7b7", legendary: "#dfcdf8" };
-const reactionChoices = ["❤️", "✨", "😂", "🙌"];
 const Character3DViewer = lazy(() => import("@/components/character/Character3DViewer").then((module) => ({ default: module.Character3DViewer })));
-
-function LawnCard({ entry, mine, admin, busy, onReact, onModerate, onInspect }: { entry: ShowcaseEntry; mine: boolean; admin: boolean; busy: boolean; onReact: (emoji: string) => void; onModerate: (hidden: boolean) => void; onInspect: () => void }) {
-  return <article className={`min-w-0 rounded-2xl border border-border p-3 shadow-sm ${entry.hidden ? "bg-muted" : "bg-card"}`}>
-    <div className="relative overflow-hidden rounded-[17px] p-3" style={{ backgroundColor: rarityColor[entry.character.dna.rarity] ?? rarityColor.normal }}>
-      <div className="flex items-start justify-between gap-2"><p className="text-xs font-black text-[#292542]">{entry.name}</p>{entry.hidden ? <span className="rounded-full border border-[#292542]/25 bg-white/85 px-2 py-0.5 text-[10px] font-black text-[#292542]">ซ่อนอยู่</span> : mine && <span className="rounded-full border border-[#292542]/25 bg-white/85 px-2 py-0.5 text-[10px] font-black text-[#292542]">YOU</span>}</div>
-      <div className="mx-auto h-48 w-40"><BaroCharacterArt dna={entry.character.dna} id={`lawn-${entry.character.id}`} prop={entry.prop} /></div>
-      <div className="flex items-center justify-between gap-2 text-[10px] font-bold"><span className="rounded-full bg-white/85 px-2 py-1">{entry.team || `Cohort ${entry.cohort}`}</span><span className="font-mono">{entry.character.dna.rarity.replace("_", " ")}</span></div>
-    </div>
-    <p className="mt-3 min-h-12 whitespace-pre-wrap break-words px-1 text-sm leading-6">{entry.message || "แวะมาทักทายกันได้นะ 🌱"}</p>
-    <p className="mt-2 border-t border-border px-1 pt-2 font-register-mono text-[10px] font-bold">{entry.character.serial}</p>
-    {!entry.hidden && <button type="button" onClick={onInspect} className="mt-3 inline-flex min-h-9 items-center gap-2 rounded-full border border-border bg-secondary px-3 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Box className="h-4 w-4" /> ดูคู่หู 3D</button>}
-    {!entry.hidden && <div className="mt-3 flex flex-wrap gap-2" aria-label={`รีแอคให้ ${entry.name}`}>{reactionChoices.map((emoji) => {
-      const reaction = entry.reactions?.find((item) => item.emoji === emoji);
-      return <button key={emoji} type="button" aria-label={`ส่ง ${emoji} ให้ ${entry.name}`} aria-pressed={reaction?.reacted ?? false} disabled={busy} onClick={() => onReact(emoji)} className={`min-h-9 rounded-full border border-border px-2.5 text-xs font-bold transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 motion-reduce:transition-none ${reaction?.reacted ? "bg-primary text-primary-foreground" : "bg-background"}`}>{emoji} <span className="font-register-mono">{reaction?.count ?? 0}</span></button>;
-    })}</div>}
-    {admin && <button type="button" disabled={busy} onClick={() => onModerate(!entry.hidden)} className="mt-3 min-h-9 rounded-full border border-border bg-background px-3 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50">{entry.hidden ? "คืนสู่ลาน" : "ซ่อนจากลาน"}</button>}
-  </article>;
-}
 
 export default function ShowcaseLawnPage() {
   const { userId, userRole } = useAuth();
@@ -88,7 +69,7 @@ export default function ShowcaseLawnPage() {
           {view.isLoading && <p role="status" className="rounded-2xl bg-white/85 p-6 text-sm font-bold">กำลังดูว่าเพื่อน ๆ ใครมาปักไว้บ้าง…</p>}
           {view.isError && <div role="alert" className="rounded-2xl bg-white/90 p-6 text-sm"><p className="font-black">ยังเปิดลานไม่ได้</p><p className="mt-1">ลองโหลดใหม่ได้เลย การปักของคุณยังอยู่</p><button type="button" onClick={() => view.refetch()} className="mt-3 inline-flex items-center gap-2 font-black underline"><RotateCw className="h-4 w-4" /> โหลดใหม่</button></div>}
           {!view.isLoading && !view.isError && view.data?.length === 0 && <div className="rounded-2xl bg-white/90 p-8 text-center"><Sparkles className="mx-auto h-8 w-8" /><p className="mt-2 font-black">ยังไม่มีใครปักตัวละครตรงนี้</p><p className="mt-1 text-sm">ลองเลือกทุกทีม หรือปักคู่หูของคุณเป็นคนแรกได้เลย</p></div>}
-          {view.data && view.data.length > 0 && <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{view.data.map((entry) => <LawnCard key={entry.owner_id} entry={entry} mine={entry.owner_id === userId} admin={includeHidden} busy={react.isLoading || moderate.isLoading} onReact={(emoji) => react.mutate({ ownerId: entry.owner_id, emoji })} onModerate={(hidden) => moderate.mutate({ ownerId: entry.owner_id, hidden })} onInspect={() => setInspectedEntry(entry)} />)}</div>}
+          {view.data && view.data.length > 0 && <div className="flex min-h-64 flex-wrap items-end justify-center gap-x-4 gap-y-6 pt-6">{view.data.map((entry, index) => <LawnCharacter key={entry.owner_id} entry={entry} action={index % 3 === 1 ? "walk" : "idle"} mine={entry.owner_id === userId} admin={includeHidden} busy={react.isLoading || moderate.isLoading} onReact={(emoji) => react.mutate({ ownerId: entry.owner_id, emoji })} onModerate={(hidden) => moderate.mutate({ ownerId: entry.owner_id, hidden })} onInspect={() => setInspectedEntry(entry)} />)}</div>}
         </ShowcaseLawnEnvironment>
         {react.isError && <p role="alert" className="mt-4 text-sm font-bold text-[#a9505e]">ยังส่งรีแอคไม่ได้ ลองอีกครั้งได้เลย</p>}
         {moderate.isError && <p role="alert" className="mt-4 text-sm font-bold text-[#a9505e]">ยังเปลี่ยนสถานะรายการไม่ได้ ลองอีกครั้งได้เลย</p>}

@@ -84,9 +84,12 @@ export function BaroCharacterArt({ dna, id, growth, prop }: { dna: CharacterDNA;
     <defs><clipPath id={clipId}><path d={shape} /></clipPath></defs>
     <ellipse cx="110" cy="256" rx="69" ry="10" fill={ink} opacity=".16" />
     <g className="baro-character-buddy" transform={`translate(110 155) scale(${scale}) translate(-110 -155)`}>
-      <path d="M72 213 Q58 245 68 247 Q86 253 91 222 M148 213 Q162 245 152 247 Q134 253 129 222" fill={color.shade} stroke={ink} strokeWidth="5" />
+      <path data-part="leg-left" className="baro-part baro-leg-left" d="M72 213 Q58 245 68 247 Q86 253 91 222" fill={color.shade} stroke={ink} strokeWidth="5" />
+      <path data-part="leg-right" className="baro-part baro-leg-right" d="M148 213 Q162 245 152 247 Q134 253 129 222" fill={color.shade} stroke={ink} strokeWidth="5" />
+      <g data-part="torso" className="baro-part baro-torso">
       <Ears dna={dna} color={color} />
-      <path d="M55 155 Q23 173 35 199 Q46 206 59 181 M165 155 Q197 173 185 199 Q174 206 161 181" fill={color.body} stroke={ink} strokeWidth="5" />
+      <path data-part="arm-left" className="baro-part baro-arm-left" d="M55 155 Q23 173 35 199 Q46 206 59 181" fill={color.body} stroke={ink} strokeWidth="5" />
+      <path data-part="arm-right" className="baro-part baro-arm-right" d="M165 155 Q197 173 185 199 Q174 206 161 181" fill={color.body} stroke={ink} strokeWidth="5" />
       <path d={shape} fill={color.body} stroke={ink} strokeWidth="5" strokeLinejoin="round" />
       <g clipPath={`url(#${clipId})`}><Pattern dna={dna} color={color} /></g>
       <path d="M57 184 Q70 216 107 219" fill="none" stroke={color.shade} strokeWidth="9" opacity=".35" strokeLinecap="round" />
@@ -96,7 +99,8 @@ export function BaroCharacterArt({ dna, id, growth, prop }: { dna: CharacterDNA;
       <Eyes kind={dna.eyes} />
       <path d="M101 161 Q110 170 119 161" fill="none" stroke={ink} strokeWidth="4" strokeLinecap="round" />
       {dna.pattern === "egg" && <g><path d="M148 96 Q153 72 165 58" fill="none" stroke="#7e6c79" strokeWidth="4" /><path d="M150 49 Q157 39 167 44 Q180 37 186 48 Q192 58 181 64 Q176 75 165 69 Q151 72 149 62 Q142 57 150 49 Z" fill="#fffaf0" stroke={ink} strokeWidth="3" /><circle cx="167" cy="56" r="9" fill="#f5bd4f" /></g>}
-      <CharacterProp prop={prop} />
+      <g data-part="prop"><CharacterProp prop={prop} /></g>
+      </g>
     </g>
     {growth && <g fill="#fffaf0" opacity=".95">{Array.from({ length: Math.min(growth.detail_index, 10) }, (_, i) => {
       const x = i % 2 === 0 ? 24 + Math.floor(i / 2) * 7 : 193 - Math.floor(i / 2) * 7;
