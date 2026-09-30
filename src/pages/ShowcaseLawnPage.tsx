@@ -66,7 +66,7 @@ export default function ShowcaseLawnPage() {
   const shownEvent = replay ?? events.data?.find((item) => item.active);
   const visitors = base.data?.filter((entry) => !entry.hidden).length ?? 0;
 
-  return <main className="relative -m-4 h-[calc(100dvh-4rem)] min-h-[440px] overflow-hidden bg-[#bfe3ee] font-register-body text-foreground">
+  return <><main className="relative isolate -m-4 h-[calc(100dvh-4rem)] min-h-[440px] overflow-hidden bg-[#bfe3ee] font-register-body text-foreground">
     <LawnGodEvent event={shownEvent} replay={Boolean(replay)} entries={plan.placements.map((placement) => placement.entry)} motion={motion} onCloseReplay={() => setReplayId(null)}>
       {plan.placements.length > 0 && <LawnYard plan={plan} scene={scene} userId={userId} lite={lite} cardActions={cardActions} />}
     </LawnGodEvent>
@@ -115,6 +115,7 @@ export default function ShowcaseLawnPage() {
         {includeHidden && view.data && view.data.length > plan.placements.length && <details className="mt-6 rounded-2xl border border-border bg-card p-4 text-sm"><summary className="cursor-pointer font-bold">รายการทั้งหมดสำหรับแอดมิน ({view.data.length})</summary><ul className="mt-3 space-y-2">{view.data.map((entry) => <li key={entry.owner_id} className="flex items-center justify-between gap-3"><span className="truncate">{entry.name}{entry.hidden ? " · ซ่อนอยู่" : ""}</span><button type="button" disabled={moderate.isLoading} onClick={() => moderate.mutate({ ownerId: entry.owner_id, hidden: !entry.hidden })} className="min-h-9 shrink-0 rounded-full border border-border bg-background px-3 text-xs font-bold disabled:opacity-50">{entry.hidden ? "คืนสู่ลาน" : "ซ่อนจากลาน"}</button></li>)}</ul></details>}
       </SheetContent>
     </Sheet>
+  </main>
     {inspectedEntry && <Suspense fallback={null}><Character3DViewer entry={inspectedEntry} onClose={() => setInspectedEntry(null)} /></Suspense>}
-  </main>;
+  </>;
 }
