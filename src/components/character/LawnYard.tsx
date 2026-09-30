@@ -101,7 +101,7 @@ export function LawnYard({ plan, scene, userId, lite, cardActions }: { plan: Law
   }, [scene.id, plan.windowIndex]);
   return <div ref={scroller} role="group" aria-label={`เพื่อนบนลานตอนนี้ · ${scene.name}`} data-scene={scene.id} data-phase={plan.phase} className="h-full w-full overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none] md:flex md:items-center md:justify-center [&::-webkit-scrollbar]:hidden">
     <div className="relative h-full overflow-hidden md:h-auto md:w-[min(100%,calc((100dvh-4rem)*var(--yard-ratio)))]" style={{ aspectRatio: `${scene.width} / ${scene.height}`, "--yard-ratio": scene.width / scene.height } as CSSProperties}>
-      <YardBackdrop sceneId={scene.id} phase={plan.phase} width={scene.width} height={scene.height} />
+      <YardBackdrop sceneId={scene.id} phase={plan.phase} width={scene.width} height={scene.height} motion={motion && !lite} />
       <YardFronts sceneId={scene.id} phase={plan.phase} width={scene.width} height={scene.height} />
       {items.map((item) => <span key={item.key}>{item.node}</span>)}
       {plan.phase !== "morning" && !lite && <svg viewBox={`0 0 ${scene.width} ${scene.height}`} className="pointer-events-none absolute inset-0 h-full w-full" style={{ zIndex: 900 }} aria-hidden="true"><Fireflies w={scene.width} h={scene.height} n={plan.phase === "night" ? 18 : 10} /></svg>}
