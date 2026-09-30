@@ -1,6 +1,6 @@
 import { api } from "../../infrastructure/api";
 import type { ApiResponse, CosmeticRarity, RewardDrawResult, TeacherGiftBox } from "../../domain/types";
-import type { GiftBoxOdds, GiftBoxRecipient } from "../../domain/types/gift-box";
+import type { GiftBoxOdds, GiftBoxRecipient, GiftBoxRewardPool } from "../../domain/types/gift-box";
 
 export interface CohortGiftBoxResult {
   total: number;
@@ -21,7 +21,7 @@ export const giftBoxService = {
     return response.data.data;
   },
 
-  async grant(userId: string, minimumRarity: CosmeticRarity, message: string, rewardPool?: "character-box"): Promise<TeacherGiftBox> {
+  async grant(userId: string, minimumRarity: CosmeticRarity, message: string, rewardPool?: GiftBoxRewardPool): Promise<TeacherGiftBox> {
     const response = await api.post<ApiResponse<TeacherGiftBox>>(`/admin/users/${userId}/gift-boxes`, {
       minimum_rarity: minimumRarity,
       message,

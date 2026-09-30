@@ -1,5 +1,7 @@
 import type { CosmeticCatalogItem, CosmeticRarity } from "./cosmetic";
 
+export type GiftBoxRewardPool = "character-box" | "character-egg";
+
 export interface TeacherGiftBox {
   id: string;
   user_id: string;
@@ -11,7 +13,7 @@ export interface TeacherGiftBox {
   created_at: string;
   opened_at?: string;
   source?: "reflection-milestone" | string;
-  reward_pool?: "character-box" | string;
+  reward_pool?: GiftBoxRewardPool;
   transfer_history?: GiftBoxTransfer[];
 }
 
@@ -33,7 +35,7 @@ export interface GiftBoxRecipient {
 
 export interface GiftBoxOdds {
   eligible_count: number;
-  odds: Partial<Record<CosmeticRarity, number>>;
+  odds: Partial<Record<CosmeticRarity | "Normal" | "Meme Rare", number>>;
   complete: boolean;
 }
 

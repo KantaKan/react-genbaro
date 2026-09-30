@@ -12,10 +12,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import type { RewardDrawResult, TeacherGiftBox } from "@/domain/types";
 import type { GiftBoxOdds, GiftBoxRecipient } from "@/domain/types/gift-box";
 
-const rarityOrder = ["Common", "Rare", "Epic", "Legendary"] as const;
+const cosmeticRarityOrder = ["Common", "Rare", "Epic", "Legendary"] as const;
+const characterEggRarityOrder = ["Normal", "Meme Rare", "Legendary"] as const;
 
 function oddsText(preview: GiftBoxOdds) {
-  return rarityOrder.filter((rarity) => preview.odds[rarity] != null)
+  const order = preview.odds.Normal != null ? characterEggRarityOrder : cosmeticRarityOrder;
+  return order.filter((rarity) => preview.odds[rarity] != null)
     .map((rarity) => `${rarity} ${Math.round((preview.odds[rarity] ?? 0) * 1000) / 10}%`).join(" · ");
 }
 
@@ -71,24 +73,26 @@ function TransferPanel({ box, onTransferred }: { box: TeacherGiftBox; onTransfer
 
 function UnopenedBox({ box, openingId, onOpen, onTransferred }: { box: TeacherGiftBox; openingId?: string; onOpen: (id: string) => void; onTransferred: () => Promise<void> }) {
   const character = box.reward_pool === "character-box";
+  const egg = box.reward_pool === "character-egg";
   const preview = useQuery(["gift-box-odds", box.id], () => giftBoxService.odds(box.id), { retry: false });
-  return <article className={`relative overflow-hidden rounded-3xl border-2 p-5 shadow-sm ${character ? "border-[#292542] bg-[#fffaf0] text-[#292542]" : "border-amber-300 bg-white"}`}>
-    <div className={`absolute inset-y-0 left-0 w-2 ${character ? "bg-[repeating-linear-gradient(45deg,#cab2f1_0_8px,#fffaf0_8px_16px,#f4bd80_16px_24px)]" : "bg-[repeating-linear-gradient(45deg,#d97706_0_6px,#fef3c7_6px_12px,#059669_12px_18px,#d1fae5_18px_24px)]"}`} />
+  return <article className={`relative overflow-hidden rounded-3xl border-2 p-5 shadow-sm ${character ? "border-[#292542] bg-[#fffaf0] text-[#292542]" : egg ? "border-orange-300 bg-gradient-to-br from-orange-50 via-white to-violet-50 text-[#292542]" : "border-amber-300 bg-white"}`}>
+    <div className={`absolute inset-y-0 left-0 w-2 ${character ? "bg-[repeating-linear-gradient(45deg,#cab2f1_0_8px,#fffaf0_8px_16px,#f4bd80_16px_24px)]" : egg ? "bg-gradient-to-b from-orange-300 via-violet-300 to-sky-300" : "bg-[repeating-linear-gradient(45deg,#d97706_0_6px,#fef3c7_6px_12px,#059669_12px_18px,#d1fae5_18px_24px)]"}`} />
     <div className="pl-3">
-      <div className="flex items-center justify-between gap-3"><Badge variant="outline">{box.minimum_rarity} or better</Badge><Gift className={`h-5 w-5 ${character ? "text-[#7957a2]" : "text-rose-500"}`} /></div>
-      {character && <p className="mt-4 font-['Trebuchet_MS',sans-serif] text-xs font-black uppercase tracking-[.16em]">✦ BARO CHARACTER GIFT</p>}
+      <div className="flex items-center justify-between gap-3"><Badge variant="outline">{egg ? "Standard Egg" : `${box.minimum_rarity} or better`}</Badge><Gift className={`h-5 w-5 ${character || egg ? "text-[#7957a2]" : "text-rose-500"}`} /></div>
+      {character && <p className="mt-4 font-['Trebuchet_MS',sans-serif] text-xs font-black uppercase tracking-[.16em]">✦ BARO CHARACTER STYLE BOX</p>}
+      {egg && <p className="mt-4 font-['Trebuchet_MS',sans-serif] text-sm font-black">🥚 Standard Character Egg</p>}
       <p className={`mt-4 text-xs font-semibold uppercase tracking-[0.16em] ${character ? "text-[#7957a2]" : "text-emerald-700"}`}>
         {box.source === "reflection-milestone" ? "Reflection milestone" : box.source === "achievement" ? "Achievement unlocked" : "From your teacher"}
       </p>
       <blockquote className={`mt-2 text-lg leading-relaxed ${character ? "font-['Trebuchet_MS',sans-serif] font-black" : "font-serif text-emerald-950"}`}>“{box.message}”</blockquote>
       {preview.isLoading && <p className="mt-3 text-xs text-muted-foreground">Checking what is still in your draw…</p>}
       {preview.isError && <p className="mt-3 text-xs text-destructive">Could not check the draw. <button type="button" className="font-bold underline" onClick={() => preview.refetch()}>Try again</button></p>}
-      {preview.data && !preview.data.complete && <p className="mt-3 font-mono text-xs leading-relaxed text-muted-foreground">Your current chances · {oddsText(preview.data)} · {preview.data.eligible_count} unowned items</p>}
+      {preview.data && !preview.data.complete && <p className="mt-3 font-mono text-xs leading-relaxed text-muted-foreground">{egg ? "Hatch chances" : "Your current chances"} · {oddsText(preview.data)}{!egg && ` · ${preview.data.eligible_count} unowned items`}</p>}
       {preview.data?.complete && <p className="mt-3 text-sm font-bold text-[#7957a2]">You already have every eligible item. This box stays unopened and safe to keep.</p>}
       <GiftBoxJourney box={box} />
-      <Button className={`mt-5 w-full gap-2 ${character ? "border-2 border-[#292542] bg-[#f4bd80] font-black text-[#292542] hover:bg-[#f1ac67]" : ""}`} onClick={() => onOpen(box.id)} disabled={!!openingId || !preview.data || preview.data.complete}>
+      {egg ? <p className="mt-5 rounded-2xl bg-white/80 px-4 py-3 text-center text-sm font-bold text-[#7957a2]">เก็บไข่ไว้ได้อย่างปลอดภัย — ยังเปิดไม่ได้จนกว่าระบบฟักตัวละครจะพร้อม</p> : <Button className={`mt-5 w-full gap-2 ${character ? "border-2 border-[#292542] bg-[#f4bd80] font-black text-[#292542] hover:bg-[#f1ac67]" : ""}`} onClick={() => onOpen(box.id)} disabled={!!openingId || !preview.data || preview.data.complete}>
         <PackageOpen className="h-4 w-4" /> {openingId === box.id ? "Opening…" : "Open this gift"}
-      </Button>
+      </Button>}
       <TransferPanel box={box} onTransferred={onTransferred} />
     </div>
   </article>;

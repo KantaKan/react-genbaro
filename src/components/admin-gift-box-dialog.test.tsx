@@ -16,4 +16,15 @@ describe("AdminGiftBoxDialog", () => {
     fireEvent.click(screen.getByRole("button", { name: "Send gift box" }));
     await waitFor(() => expect(giftBoxService.grant).toHaveBeenCalledWith("learner-1", "Rare", "For your creative idea", "character-box"));
   });
+
+  it("lets the admin grant a Standard Character Egg separately from a Style Box", async () => {
+    render(<AdminGiftBoxDialog userId="learner-1" learnerName="Mali" />);
+    fireEvent.click(screen.getByRole("button", { name: "Send Gift Box" }));
+    expect(screen.getByRole("button", { name: /Style Box/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Character Egg/ }));
+    expect(screen.getByText(/hatch chances disclosed to the learner/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Message to learner"), { target: { value: "A new friend is waiting" } });
+    fireEvent.click(screen.getByRole("button", { name: /Send Character Egg/ }));
+    await waitFor(() => expect(giftBoxService.grant).toHaveBeenCalledWith("learner-1", "Common", "A new friend is waiting", "character-egg"));
+  });
 });

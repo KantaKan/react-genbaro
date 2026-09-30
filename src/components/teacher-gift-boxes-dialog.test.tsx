@@ -98,6 +98,22 @@ describe("TeacherGiftBoxesDialog", () => {
     expect(cosmeticService.equip).not.toHaveBeenCalled();
   });
 
+  it("shows a Character Egg with hatch odds without opening it as a Style Box", async () => {
+    vi.mocked(giftBoxService.list).mockResolvedValueOnce([{
+      id: "egg-1", user_id: "learner-1", minimum_rarity: "Common", message: "A new friend is waiting", granted_by: "admin-1", status: "unopened", reward_pool: "character-egg", created_at: "2026-09-30T00:00:00Z",
+    }]);
+    vi.mocked(giftBoxService.odds).mockResolvedValueOnce({ eligible_count: 1, odds: { Normal: 0.83, "Meme Rare": 0.15, Legendary: 0.02 }, complete: false });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><TeacherGiftBoxesDialog /></QueryClientProvider>);
+
+    fireEvent.click(screen.getByRole("button", { name: /gift boxes/i }));
+    expect(await screen.findByText(/Standard Character Egg/)).toBeInTheDocument();
+    expect(screen.getByText(/Normal 83% · Meme Rare 15% · Legendary 2%/)).toBeInTheDocument();
+    expect(screen.getByText(/ยังเปิดไม่ได้/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /open this gift/i })).not.toBeInTheDocument();
+    expect(giftBoxService.open).not.toHaveBeenCalled();
+  });
+
   it("keeps a complete-pool box unopened", async () => {
     vi.mocked(giftBoxService.odds).mockResolvedValueOnce({ eligible_count: 0, odds: {}, complete: true });
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
