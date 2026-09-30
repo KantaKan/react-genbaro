@@ -6,7 +6,7 @@ import { useAuth } from "@/application/contexts/AuthContext";
 import { baroCharacterService } from "@/application/services/baroCharacterService";
 import { showcaseLawnService, type ShowcaseEntry } from "@/application/services/showcaseLawnService";
 import { BaroCharacterArt } from "@/components/character/BaroCharacterArt";
-import { LawnCharacter } from "@/components/character/LawnCharacter";
+import { LawnScene } from "@/components/character/LawnScene";
 import { planLawn } from "@/lib/lawn-planner";
 import { GodEventPanel } from "@/components/character/GodEventPanel";
 import { ShowcaseLawnEnvironment } from "@/components/character/ShowcaseLawnEnvironment";
@@ -69,12 +69,12 @@ export default function ShowcaseLawnPage() {
       </section>
 
       <section aria-labelledby="lawn-friends-heading"><div className="mb-4 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">WANDER TOGETHER</p><h2 id="lawn-friends-heading" className="mt-1 font-register-heading text-2xl">เดินดูเพื่อนบนลาน</h2></div><div className="flex flex-wrap gap-2">{userRole === "admin" && <select aria-label="กรองรุ่น" value={cohort} onChange={(event) => { setCohort(Number(event.target.value)); setTeam(""); }} className="min-h-10 rounded-full border border-input bg-background px-3 text-sm font-bold"><option value={0}>ทุกรุ่น</option>{cohorts.map((number) => <option key={number} value={number}>รุ่น {number}</option>)}</select>}<select aria-label="กรองทีม" value={team} onChange={(event) => setTeam(event.target.value)} className="min-h-10 rounded-full border border-input bg-background px-3 text-sm font-bold"><option value="">ทุกทีม</option>{teams.map((name) => <option key={name} value={name}>{name}</option>)}</select></div></div>
-        <ShowcaseLawnEnvironment>
+        <ShowcaseLawnEnvironment lighting={plan.lighting}>
           {view.isLoading && <p role="status" className="rounded-2xl bg-white/85 p-6 text-sm font-bold">กำลังดูว่าเพื่อน ๆ ใครมาปักไว้บ้าง…</p>}
           {view.isError && <div role="alert" className="rounded-2xl bg-white/90 p-6 text-sm"><p className="font-black">ยังเปิดลานไม่ได้</p><p className="mt-1">ลองโหลดใหม่ได้เลย การปักของคุณยังอยู่</p><button type="button" onClick={() => view.refetch()} className="mt-3 inline-flex items-center gap-2 font-black underline"><RotateCw className="h-4 w-4" /> โหลดใหม่</button></div>}
           {!view.isLoading && !view.isError && view.data && plan.placements.length === 0 && <div className="rounded-2xl bg-white/90 p-8 text-center"><Sparkles className="mx-auto h-8 w-8" /><p className="mt-2 font-black">ยังไม่มีใครปักตัวละครตรงนี้</p><p className="mt-1 text-sm">ลองเลือกทุกทีม หรือปักคู่หูของคุณเป็นคนแรกได้เลย</p></div>}
           {plan.placements.length > 0 && <>
-            <ol aria-label="เพื่อนบนลานตอนนี้" className="grid grid-cols-3 gap-x-1 gap-y-4 pt-4 sm:grid-cols-4">{plan.placements.map(({ entry, offsetX, offsetY, facing }) => <li key={entry.owner_id} className="flex justify-center" style={{ transform: `translate(${offsetX}px, ${offsetY}px)` }}><LawnCharacter entry={entry} action={facing === "left" ? "walk" : "idle"} facing={facing} mine={entry.owner_id === userId} {...cardActions(entry)} /></li>)}</ol>
+            <LawnScene plan={plan} userId={userId} cardActions={cardActions} />
             {plan.total > plan.placements.length && <p className="mt-4 text-center text-xs font-bold text-[#292542]/80">ตอนนี้มีเพื่อนเดินเล่น {plan.placements.length} จาก {plan.total} คน · ผลัดกันมาทักทายทุกครึ่งชั่วโมง</p>}
           </>}
         </ShowcaseLawnEnvironment>

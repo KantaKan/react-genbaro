@@ -237,12 +237,13 @@ describe("ShowcaseLawnPage", () => {
     entries.push({ ...entry(me, "Me", 16, "Alpha"), character });
     selection = { ...selection, pinned_id: character.id };
     renderPage();
-    const scene = await screen.findByRole("list", { name: "เพื่อนบนลานตอนนี้" });
-    expect(within(scene).getAllByRole("listitem")).toHaveLength(12);
+    const scene = await screen.findByRole("group", { name: "เพื่อนบนลานตอนนี้" });
+    expect(within(scene).getAllByRole("button", { name: /^ดูการ์ดของ / })).toHaveLength(12);
+    for (const zone of ["โต๊ะปิกนิก", "ม้านั่งอุ่น ๆ", "ลานเล่น"]) expect(within(scene).getByRole("region", { name: zone })).toBeInTheDocument();
     expect(within(scene).getByRole("button", { name: "ดูการ์ดของ Me" })).toBeInTheDocument();
     expect(screen.getByText(/12 จาก 21 คน/)).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("กรองทีม"), { target: { value: "Beta" } });
-    await waitFor(() => expect(within(screen.getByRole("list", { name: "เพื่อนบนลานตอนนี้" })).queryByRole("button", { name: "ดูการ์ดของ Friend 1" })).not.toBeInTheDocument());
-    expect(within(screen.getByRole("list", { name: "เพื่อนบนลานตอนนี้" })).getByRole("button", { name: "ดูการ์ดของ Me" })).toBeInTheDocument();
+    await waitFor(() => expect(within(screen.getByRole("group", { name: "เพื่อนบนลานตอนนี้" })).queryByRole("button", { name: "ดูการ์ดของ Friend 1" })).not.toBeInTheDocument());
+    expect(within(screen.getByRole("group", { name: "เพื่อนบนลานตอนนี้" })).getByRole("button", { name: "ดูการ์ดของ Me" })).toBeInTheDocument();
   });
 });

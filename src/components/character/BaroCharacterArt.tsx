@@ -75,10 +75,14 @@ function CharacterProp({ prop }: { prop?: string }) {
   return null;
 }
 
-export function BaroCharacterArt({ dna, id, growth, prop }: { dna: CharacterDNA; id: string; growth?: CharacterGrowthSnapshot; prop?: string }) {
+export function BaroCharacterArt({ dna, id, growth, prop, armsFront = false }: { dna: CharacterDNA; id: string; growth?: CharacterGrowthSnapshot; prop?: string; armsFront?: boolean }) {
   const color = characterPalette(dna);
   const shape = bodyPaths[dna.body] ?? bodyPaths.pebble;
   const clipId = `baro-body-${id.replace(/[^a-zA-Z0-9]/g, "")}`;
+  const arms = <>
+    <path data-part="arm-left" className="baro-part baro-arm-left" d="M55 155 Q23 173 35 199 Q46 206 59 181" fill={color.body} stroke={ink} strokeWidth="5" />
+    <path data-part="arm-right" className="baro-part baro-arm-right" d="M165 155 Q197 173 185 199 Q174 206 161 181" fill={color.body} stroke={ink} strokeWidth="5" />
+  </>;
   const scale = [0.88, 0.94, 1, 1.05][growth?.form_index ?? 0] ?? 0.88;
   return <svg viewBox="0 0 220 280" role="img" aria-label={`Baro Character ${dna.palette} ${dna.pattern}`} data-character-prop={prop ?? ""} className="h-full w-full overflow-visible">
     <defs><clipPath id={clipId}><path d={shape} /></clipPath></defs>
@@ -88,8 +92,7 @@ export function BaroCharacterArt({ dna, id, growth, prop }: { dna: CharacterDNA;
       <path data-part="leg-right" className="baro-part baro-leg-right" d="M148 213 Q162 245 152 247 Q134 253 129 222" fill={color.shade} stroke={ink} strokeWidth="5" />
       <g data-part="torso" className="baro-part baro-torso">
       <Ears dna={dna} color={color} />
-      <path data-part="arm-left" className="baro-part baro-arm-left" d="M55 155 Q23 173 35 199 Q46 206 59 181" fill={color.body} stroke={ink} strokeWidth="5" />
-      <path data-part="arm-right" className="baro-part baro-arm-right" d="M165 155 Q197 173 185 199 Q174 206 161 181" fill={color.body} stroke={ink} strokeWidth="5" />
+      {!armsFront && arms}
       <path d={shape} fill={color.body} stroke={ink} strokeWidth="5" strokeLinejoin="round" />
       <g clipPath={`url(#${clipId})`}><Pattern dna={dna} color={color} /></g>
       <path d="M57 184 Q70 216 107 219" fill="none" stroke={color.shade} strokeWidth="9" opacity=".35" strokeLinecap="round" />
@@ -97,7 +100,8 @@ export function BaroCharacterArt({ dna, id, growth, prop }: { dna: CharacterDNA;
       <Mark kind={dna.mark} fill={color.accent} />
       <circle cx="58" cy="162" r="8" fill={color.accent} opacity=".6" /><circle cx="162" cy="162" r="8" fill={color.accent} opacity=".6" />
       <Eyes kind={dna.eyes} />
-      <path d="M101 161 Q110 170 119 161" fill="none" stroke={ink} strokeWidth="4" strokeLinecap="round" />
+      {armsFront && arms}
+      <path data-part="mouth" className="baro-part baro-mouth" d="M101 161 Q110 170 119 161" fill="none" stroke={ink} strokeWidth="4" strokeLinecap="round" />
       {dna.pattern === "egg" && <g><path d="M148 96 Q153 72 165 58" fill="none" stroke="#7e6c79" strokeWidth="4" /><path d="M150 49 Q157 39 167 44 Q180 37 186 48 Q192 58 181 64 Q176 75 165 69 Q151 72 149 62 Q142 57 150 49 Z" fill="#fffaf0" stroke={ink} strokeWidth="3" /><circle cx="167" cy="56" r="9" fill="#f5bd4f" /></g>}
       <g data-part="prop"><CharacterProp prop={prop} /></g>
       </g>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ShowcaseEntry } from "@/application/services/showcaseLawnService";
-import { LAWN_WINDOW_MS, planLawn } from "./lawn-planner";
+import { LAWN_ACTIONS, LAWN_WINDOW_MS, LAWN_ZONE_CAPACITY, planLawn } from "./lawn-planner";
 
 const entry = (ownerId: string, team = "Alpha", hidden = false) => ({
   owner_id: ownerId, name: ownerId, cohort: 16, team, hidden, message: "", updated_at: "2026-09-29T00:00:00Z",
@@ -52,12 +52,66 @@ describe("planLawn", () => {
     expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1);
   });
 
-  it("keeps slots unique and offsets small enough to stay inside their cell", () => {
-    const plan = planLawn({ entries: cohort, viewerId: "learner-3", now });
-    expect(plan.placements.map((placement) => placement.slot)).toEqual([...Array(12).keys()]);
-    for (const placement of plan.placements) {
-      expect(Math.abs(placement.offsetX)).toBeLessThanOrEqual(8);
-      expect(Math.abs(placement.offsetY)).toBeLessThanOrEqual(6);
+  it("fits every activity to its zone, participant count, and zone capacity", () => {
+    for (let window = 0; window < 48; window++) {
+      const plan = planLawn({ entries: cohort, viewerId: "learner-3", now: now + window * LAWN_WINDOW_MS });
+      const members = plan.activities.flatMap((activity) => activity.members.map((member) => member.owner_id));
+      expect(new Set(members).size).toBe(members.length);
+      expect(members.sort()).toEqual(ids(plan).sort());
+      for (const activity of plan.activities) {
+        const spec = LAWN_ACTIONS[activity.action];
+        expect(spec.zones).toContain(activity.zone);
+        expect(spec.participants).toContain(activity.members.length);
+        if (spec.variants) expect(spec.variants).toContain(activity.variant);
+      }
+      for (const zone of ["picnic", "bench", "play"]) {
+        expect(plan.placements.filter((placement) => placement.zone === zone).length).toBeLessThanOrEqual(LAWN_ZONE_CAPACITY);
+      }
     }
+  });
+
+  it("mixes solo and paired moments and faces partners toward each other", () => {
+    const actions = new Set<string>();
+    let pairs = 0;
+    for (let window = 0; window < 48; window++) {
+      const plan = planLawn({ entries: cohort.slice(0, 12), viewerId: "learner-0", now: now + window * LAWN_WINDOW_MS });
+      for (const activity of plan.activities) {
+        actions.add(activity.action);
+        if (activity.members.length === 2) {
+          pairs++;
+          const facing = plan.placements.filter((placement) => placement.activityId === activity.id).map((placement) => placement.facing);
+          expect(facing).toEqual(["right", "left"]);
+        }
+      }
+    }
+    expect(pairs).toBeGreaterThan(48);
+    expect([...actions].sort()).toEqual(Object.keys(LAWN_ACTIONS).sort());
+  });
+
+  it("avoids repeating the previous window's pairs when other partners exist", () => {
+    for (const size of [3, 6, 12, 20, 45]) {
+      for (let window = 1; window < 30; window++) {
+        const pairKeys = (offset: number) => new Set(planLawn({ entries: cohort.slice(0, size), viewerId: "learner-0", now: now + (window + offset) * LAWN_WINDOW_MS }).activities
+          .filter((activity) => activity.members.length === 2).map((activity) => activity.members.map((member) => member.owner_id).sort().join("|")));
+        const before = pairKeys(-1);
+        for (const key of pairKeys(0)) expect(before.has(key)).toBe(false);
+      }
+    }
+  });
+
+  it("describes play as noncompetitive with no score, health, winner, or reward", () => {
+    const banned = /health|damage|winner|loser|rank|score|reward|win|lose/i;
+    for (const spec of Object.values(LAWN_ACTIONS)) {
+      expect(Object.keys(spec).sort()).toEqual(expect.arrayContaining(["emoji", "label", "participants", "zones"]));
+      expect(JSON.stringify(spec)).not.toMatch(banned);
+    }
+    const plan = planLawn({ entries: cohort.slice(0, 12), viewerId: "learner-0", now });
+    for (const activity of plan.activities) for (const key of Object.keys(activity)) expect(["action", "id", "members", "variant", "zone"]).toContain(key);
+  });
+
+  it("uses Thailand time for morning and evening lighting", () => {
+    expect(planLawn({ entries: [], now: Date.UTC(2026, 8, 30, 1, 0) }).lighting).toBe("morning");
+    expect(planLawn({ entries: [], now: Date.UTC(2026, 8, 30, 11, 0) }).lighting).toBe("evening");
+    expect(planLawn({ entries: [], now: Date.UTC(2026, 8, 29, 23, 30) }).lighting).toBe("morning");
   });
 });
