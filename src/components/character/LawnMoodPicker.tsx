@@ -26,7 +26,7 @@ export function LawnMoodPicker({ mine, userId }: { mine: ShowcaseEntry; userId?:
       {active && <button type="button" disabled={setMood.isLoading} onClick={() => setMood.mutate("")} className="min-h-10 rounded-full px-3 text-xs font-bold underline disabled:opacity-50">กลับเป็นปกติ</button>}
     </div>
     {active === "quiet" && <p className="mt-2 text-xs text-muted-foreground">คู่หูจะเดิน นั่ง หรืองีบคนเดียว ไม่ถูกจับคู่กับใคร</p>}
-    {active && <p role="status" className="mt-2 text-xs font-bold text-[#347c69]">ใช้ได้ถึง {until}</p>}
-    {setMood.isError && <p role="alert" className="mt-2 text-xs font-bold text-[#a9505e]">ยังบันทึกอารมณ์ไม่ได้ ลองอีกครั้งได้เลย</p>}
+    {active && <p role="status" className="mt-2 text-xs font-bold text-primary">ใช้ได้ถึง {until}</p>}
+    {setMood.isError && <p role="alert" className="mt-2 text-xs font-bold text-destructive">ยังบันทึกอารมณ์ไม่ได้ ลองอีกครั้งได้เลย</p>}
   </fieldset>;
 }

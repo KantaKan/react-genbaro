@@ -49,7 +49,7 @@ export function LawnGodEventLayer({ userId }: { userId: string | null | undefine
     <div aria-hidden="true" data-god-event-layer={active.preset} className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
       {decor.map((symbol, index) => <span key={index} className="absolute text-2xl opacity-80 motion-safe:animate-pulse" style={{ left: `${8 + index * (84 / Math.max(1, decor.length - 1))}%`, top: `${index % 2 ? 18 : 6}%` }}>{symbol}</span>)}
     </div>
-    <p role="note" aria-label={`เหตุการณ์บนลาน: ${title}`} className="relative z-20 mx-auto mb-3 max-w-xl rounded-full border-2 border-[#292542] bg-[#fffaf0]/95 px-4 py-2 text-center text-sm font-black text-[#292542] shadow-sm"><span className="mr-2 text-[10px] uppercase tracking-[.16em] text-[#7957a2]">{title}</span><span className="break-words">{active.caption}</span></p>
+    <p role="note" aria-label={`เหตุการณ์บนลาน: ${title}`} className="relative z-20 mx-auto mb-3 max-w-xl rounded-full border border-border bg-card/95 px-4 py-2 text-center text-sm font-bold text-card-foreground shadow-sm"><span className="mr-2 text-[10px] uppercase tracking-[.16em] text-primary">{title}</span><span className="break-words">{active.caption}</span></p>
   </>;
 }
 

@@ -11,7 +11,11 @@ import { BaroCharacterArt } from "./BaroCharacterArt";
 
 
 const gestureActions = new Set<LawnAction>(["wave", "high-five", "meal", "rps", "play"]);
-const rarityColor: Record<string, string> = { normal: "#ccebdd", meme_rare: "#f8d7b7", legendary: "#dfcdf8" };
+const rarityTone: Record<string, string> = {
+  normal: "bg-[hsl(var(--character-normal))] text-[hsl(var(--character-normal-foreground))]",
+  meme_rare: "bg-[hsl(var(--character-meme))] text-[hsl(var(--character-meme-foreground))]",
+  legendary: "bg-[hsl(var(--character-legendary))] text-[hsl(var(--character-legendary-foreground))]",
+};
 const reactionChoices = ["❤️", "✨", "😂", "🙌"];
 const traitLabels = [["body", "ทรง"], ["ears", "หู"], ["eyes", "ตา"], ["mark", "ลาย"], ["palette", "สี"], ["pattern", "แพทเทิร์น"]] as const;
 
@@ -26,7 +30,7 @@ export function LawnPuppet({ entry, action, variant, mine, facing = "right", onS
     data-motion={reducedMotion || !supportsCssAnimation() ? "reduced" : "full"}
     className={`baro-puppet flex w-24 flex-col items-center sm:w-28 rounded-2xl p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${entry.hidden ? "opacity-50" : ""}`}
   >
-    <span className={`max-w-full truncate rounded-full px-2 py-0.5 text-xs font-black text-[#292542] shadow-sm ${mine ? "bg-primary text-primary-foreground" : "bg-white/90"}`}>{entry.name}</span>
+    <span className={`max-w-full truncate rounded-full border px-2 py-0.5 text-xs font-bold shadow-sm ${mine ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-card-foreground"}`}>{entry.name}</span>
     <span className="baro-art block h-28 w-20 sm:h-32 sm:w-24"><span className={`block h-full w-full ${facing === "left" ? "-scale-x-100" : ""}`} data-facing={facing}><BaroCharacterArt dna={entry.character.dna} id={`lawn-${entry.character.id}`} prop={entry.prop} armsFront={gestureActions.has(action)} /></span></span>
   </button>;
 }
@@ -42,10 +46,10 @@ export interface LawnCardActions {
 export function LawnCharacterCard({ entry, admin, busy, onReact, onModerate, onInspect }: { entry: ShowcaseEntry } & LawnCardActions) {
   const { dna } = entry.character;
   return <div className="text-sm text-foreground">
-    <div className="rounded-2xl p-3" style={{ backgroundColor: rarityColor[dna.rarity] ?? rarityColor.normal }}>
-      <div className="flex items-start justify-between gap-2 text-[#292542]"><p className="font-black">{entry.name}</p>{entry.hidden && <span className="rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-black">ซ่อนอยู่</span>}</div>
+    <div className={`rounded-xl p-3 ${rarityTone[dna.rarity] ?? rarityTone.normal}`}>
+      <div className="flex items-start justify-between gap-2"><p className="font-register-heading text-base font-bold">{entry.name}</p>{entry.hidden && <span className="rounded-full bg-card px-2 py-0.5 text-[10px] font-bold text-card-foreground">ซ่อนอยู่</span>}</div>
       <div className="mx-auto h-36 w-28"><BaroCharacterArt dna={dna} id={`lawn-card-${entry.character.id}`} prop={entry.prop} /></div>
-      <div className="flex items-center justify-between gap-2 font-register-mono text-[10px] font-bold text-[#292542]"><span>{dna.rarity.replace("_", " ")}</span><span>{entry.character.serial}</span></div>
+      <div className="flex items-center justify-between gap-2 font-register-mono text-[10px] font-bold"><span>{dna.rarity.replace("_", " ")}</span><span>{entry.character.serial}</span></div>
     </div>
     <dl className="mt-3 grid grid-cols-3 gap-x-3 gap-y-1 text-xs">
       {traitLabels.map(([key, label]) => <div key={key} className="min-w-0"><dt className="text-muted-foreground">{label}</dt><dd className="truncate font-bold">{dna[key]}</dd></div>)}
