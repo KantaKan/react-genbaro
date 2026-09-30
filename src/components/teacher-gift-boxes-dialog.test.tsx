@@ -224,6 +224,22 @@ describe("TeacherGiftBoxesDialog", () => {
     expect(screen.queryByRole("button", { name: /Teacher/ })).not.toBeInTheDocument();
   });
 
+  it("shows a warm pause message when Egg transfers are rate limited", async () => {
+    vi.mocked(giftBoxService.list).mockResolvedValueOnce([{
+      id: "egg-limit", user_id: "learner-1", minimum_rarity: "Common", message: "Pass this surprise along", granted_by: "admin-1", status: "unopened", reward_pool: "character-egg", created_at: "2026-09-30T00:00:00Z",
+    }]);
+    vi.mocked(giftBoxService.odds).mockResolvedValueOnce({ eligible_count: 1, odds: { Normal: .83, "Meme Rare": .15, Legendary: .02 }, complete: false });
+    vi.mocked(giftBoxService.transfer).mockRejectedValueOnce({ response: { status: 429 } });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><TeacherGiftBoxesDialog /></QueryClientProvider>);
+    fireEvent.click(screen.getByRole("button", { name: /gift boxes/i }));
+    fireEvent.click(await screen.findByRole("button", { name: "ส่งกล่องให้เพื่อน" }));
+    fireEvent.change(screen.getByLabelText("ค้นหาคนรับกล่อง"), { target: { value: "Mali" } });
+    fireEvent.click(await screen.findByRole("button", { name: /Mali/ }));
+    fireEvent.click(screen.getByRole("button", { name: "ส่งให้ Mali" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("พักกล่องใบนี้สักครู่");
+  });
+
   it("shows the journey of a received box", async () => {
     vi.mocked(giftBoxService.list).mockResolvedValueOnce([{
       id: "box-journey", user_id: "learner-1", minimum_rarity: "Rare", message: "Passing this along", granted_by: "teacher-1", status: "unopened", created_at: "2026-09-28T00:00:00Z",

@@ -40,6 +40,7 @@ function TransferPanel({ box, onTransferred }: { box: TeacherGiftBox; onTransfer
   const [searchTerm, setSearchTerm] = useState("");
   const [selected, setSelected] = useState<GiftBoxRecipient>();
   const [sending, setSending] = useState(false);
+  const [transferError, setTransferError] = useState("");
   useEffect(() => {
     const timer = window.setTimeout(() => setSearchTerm(query.trim()), 250);
     return () => window.clearTimeout(timer);
@@ -50,13 +51,17 @@ function TransferPanel({ box, onTransferred }: { box: TeacherGiftBox; onTransfer
   const send = async () => {
     if (!selected) return;
     setSending(true);
+    setTransferError("");
     try {
       await giftBoxService.transfer(box.id, selected.id);
       toast.success(`ส่งกล่องให้ ${selected.display_name} แล้ว`);
       await onTransferred().catch(() => undefined);
-    } catch {
-      await onTransferred().catch(() => undefined);
-      toast.error("ยังส่งกล่องไม่ได้ กล่องอาจถูกเปิดหรือย้ายไปแล้ว ลองโหลดรายการใหม่");
+    } catch (error) {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      if (status !== 429) await onTransferred().catch(() => undefined);
+      const message = status === 429 ? "พักกล่องใบนี้สักครู่นะ แล้วค่อยลองส่งให้เพื่อนอีกครั้ง" : "ยังส่งกล่องไม่ได้ กล่องอาจถูกเปิดหรือย้ายไปแล้ว ลองโหลดรายการใหม่";
+      setTransferError(message);
+      toast.error(message);
     } finally {
       setSending(false);
     }
@@ -74,6 +79,7 @@ function TransferPanel({ box, onTransferred }: { box: TeacherGiftBox; onTransfer
       {learnerRecipients && learnerRecipients.length > 0 && <div className="mt-2 max-h-40 space-y-1 overflow-y-auto" aria-label="ผลการค้นหาคนรับกล่อง">
         {learnerRecipients.map((person) => <button key={person.id} type="button" aria-pressed={selected?.id === person.id} onClick={() => setSelected(person)} className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#7957a2] ${selected?.id === person.id ? "bg-[#eadcf7] font-black" : "bg-white hover:bg-[#fffaf0]"}`}><span>{person.display_name}</span><span className="text-[10px] text-[#79758a]">รุ่น {person.cohort_number}{person.group ? ` · ${person.group}` : ""}</span></button>)}
       </div>}
+      {transferError && <p role="alert" className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">{transferError}</p>}
       <div className="mt-3 flex flex-wrap gap-2"><button type="button" disabled={!selected || sending} onClick={send} className="min-h-10 rounded-full border-2 border-[#292542] bg-[#f4bd80] px-4 text-xs font-black disabled:opacity-50">{sending ? "กำลังส่ง…" : selected ? `ส่งให้ ${selected.display_name}` : "เลือกคนรับก่อน"}</button><button type="button" onClick={() => { setVisible(false); setSelected(undefined); }} className="min-h-10 rounded-full px-3 text-xs font-bold">ยกเลิก</button></div>
     </div>}
   </div>;
