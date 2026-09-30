@@ -98,8 +98,8 @@ export default function ShowcaseLawnPage() {
     {react.isError && <p role="alert" className="absolute bottom-20 left-1/2 z-[970] -translate-x-1/2 rounded-full bg-card px-4 py-2 text-sm font-bold text-destructive shadow-sm">ยังส่งรีแอคไม่ได้ ลองอีกครั้งได้เลย</p>}
     {moderate.isError && <p role="alert" className="absolute bottom-20 left-1/2 z-[970] -translate-x-1/2 rounded-full bg-card px-4 py-2 text-sm font-bold text-destructive shadow-sm">ยังเปลี่ยนสถานะรายการไม่ได้ ลองอีกครั้งได้เลย</p>}
 
-    <Sheet open={panelOpen} onOpenChange={setPanelOpen} modal={false}>
-      <SheetContent side={mobile ? "bottom" : "right"} onInteractOutside={(event) => event.preventDefault()} className={`overflow-y-auto ${mobile ? "max-h-[75vh] rounded-t-3xl" : "w-full sm:max-w-md"}`}>
+    <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
+      <SheetContent side={mobile ? "bottom" : "right"} className={`overflow-y-auto ${mobile ? "max-h-[75vh] rounded-t-3xl" : "w-full sm:max-w-md"}`}>
         <SheetTitle className="sr-only">แผงลานของฉัน</SheetTitle>
         <SheetDescription className="sr-only">ปักคู่หู ตั้งอารมณ์ และดูเหตุการณ์บนลาน</SheetDescription>
         <section aria-labelledby="my-showcase-heading">
