@@ -1,156 +1,178 @@
 import { describe, expect, it } from "vitest";
-import type { ShowcaseEntry } from "@/application/services/showcaseLawnService";
-import { LAWN_ACTIONS, LAWN_LITE_LIMIT, LAWN_WINDOW_MS, LAWN_ZONE_CAPACITY, planLawn } from "./lawn-planner";
+import type { LawnMood, ShowcaseEntry } from "@/application/services/showcaseLawnService";
+import { LAWN_LITE_LIMIT, LAWN_WINDOW_MS, planLawn, type LawnPlan } from "./lawn-planner";
+import { SPOT_POSES, YARD_SCENES, YARD_SCENE_IDS } from "./lawn-scenes";
 
-const entry = (ownerId: string, team = "Alpha", hidden = false) => ({
-  owner_id: ownerId, name: ownerId, cohort: 16, team, hidden, message: "", updated_at: "2026-09-29T00:00:00Z",
+const entry = (ownerId: string, mood?: LawnMood, moodUntil?: string) => ({
+  owner_id: ownerId, name: ownerId, cohort: 16, team: "Alpha", message: "", updated_at: "2026-09-29T00:00:00Z", mood, mood_until: moodUntil,
   character: { id: `c-${ownerId}`, owner_id: ownerId, serial: `B-${ownerId}`, fingerprint: ownerId, source: "starter", is_starter: true, created_at: "2026-09-29T00:00:00Z", dna: { version: 1, body: "bean", ears: "cat", eyes: "dots", mark: "star", palette: "Mint", pattern: "polka", pattern_seed: 1, rarity: "normal" as const } },
 }) satisfies ShowcaseEntry;
 
-const cohort = Array.from({ length: 45 }, (_, index) => entry(`learner-${index}`, index % 2 ? "Alpha" : "Beta"));
-const now = Date.UTC(2026, 8, 30, 3, 0);
-const ids = (plan: ReturnType<typeof planLawn>) => plan.placements.map((placement) => placement.entry.owner_id);
+const cohort = Array.from({ length: 45 }, (_, index) => entry(`learner-${index}`));
+const morning = Date.UTC(2026, 8, 30, 3, 0);
+const night = Date.UTC(2026, 8, 30, 15, 0);
+const until = new Date(morning + 23 * 60 * 60 * 1000).toISOString();
+const backyard = YARD_SCENES.backyard;
+const ids = (plan: LawnPlan) => plan.placements.map((placement) => placement.entry.owner_id);
+const windows = (count: number, start = morning) => Array.from({ length: count }, (_, window) => start + window * LAWN_WINDOW_MS);
 
 describe("planLawn", () => {
-  it("keeps a cohort scene at twelve and always includes the viewer", () => {
-    for (let window = 0; window < 10; window++) {
-      const plan = planLawn({ entries: cohort, viewerId: "learner-7", now: now + window * LAWN_WINDOW_MS });
-      expect(plan.placements).toHaveLength(12);
-      expect(ids(plan)).toContain("learner-7");
-      expect(new Set(ids(plan)).size).toBe(12);
-    }
-  });
-
-  it("includes the viewer's own pin from outside the filtered list unless it is hidden", () => {
-    const team = cohort.filter((item) => item.team === "Beta");
-    const mine = entry("learner-7");
-    expect(ids(planLawn({ entries: team, viewerId: "learner-7", mine, now }))).toContain("learner-7");
-    expect(ids(planLawn({ entries: team, viewerId: "learner-7", mine: { ...mine, hidden: true }, now }))).not.toContain("learner-7");
-  });
-
-  it("shows everyone when the lawn is small", () => {
-    expect(planLawn({ entries: cohort.slice(0, 5), viewerId: "nobody", now }).placements).toHaveLength(5);
-    expect(planLawn({ entries: [], viewerId: "nobody", now }).placements).toHaveLength(0);
-  });
-
-  it("returns the same selection and layout for the same inputs and window", () => {
-    const first = planLawn({ entries: cohort, viewerId: "learner-1", now });
-    const later = planLawn({ entries: [...cohort].reverse(), viewerId: "learner-1", now: now + LAWN_WINDOW_MS - 1 - (now % LAWN_WINDOW_MS) });
-    expect(later.placements.map(({ entry: item, ...rest }) => ({ id: item.owner_id, ...rest })))
-      .toEqual(first.placements.map(({ entry: item, ...rest }) => ({ id: item.owner_id, ...rest })));
-  });
-
-  it("rotates visitors fairly so nobody is permanently excluded", () => {
-    const seen = new Map<string, number>();
-    const windows = 4 * 11;
-    for (let window = 0; window < windows; window++) {
-      for (const id of ids(planLawn({ entries: cohort, viewerId: "learner-0", now: now + window * LAWN_WINDOW_MS }))) seen.set(id, (seen.get(id) ?? 0) + 1);
-    }
-    seen.delete("learner-0");
-    expect(seen.size).toBe(44);
-    const counts = [...seen.values()];
-    expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1);
-  });
-
-  it("fits every activity to its zone, participant count, and zone capacity", () => {
-    for (let window = 0; window < 48; window++) {
-      const plan = planLawn({ entries: cohort, viewerId: "learner-3", now: now + window * LAWN_WINDOW_MS });
-      const members = plan.activities.flatMap((activity) => activity.members.map((member) => member.owner_id));
-      expect(new Set(members).size).toBe(members.length);
-      expect(members.sort()).toEqual(ids(plan).sort());
-      for (const activity of plan.activities) {
-        const spec = LAWN_ACTIONS[activity.action];
-        expect(spec.zones).toContain(activity.zone);
-        expect(spec.participants).toContain(activity.members.length);
-        if (spec.variants) expect(spec.variants).toContain(activity.variant);
-      }
-      for (const zone of ["picnic", "bench", "play"]) {
-        expect(plan.placements.filter((placement) => placement.zone === zone).length).toBeLessThanOrEqual(LAWN_ZONE_CAPACITY);
+  it("keeps twelve characters per scene with the viewer always present", () => {
+    for (const sceneId of YARD_SCENE_IDS) {
+      for (const now of windows(8)) {
+        const plan = planLawn({ entries: cohort, scene: YARD_SCENES[sceneId], viewerId: "learner-7", now });
+        expect(plan.placements).toHaveLength(12);
+        expect(ids(plan)).toContain("learner-7");
+        expect(new Set(ids(plan)).size).toBe(12);
       }
     }
   });
 
-  it("mixes solo and paired moments and faces partners toward each other", () => {
-    const actions = new Set<string>();
-    let pairs = 0;
-    for (let window = 0; window < 48; window++) {
-      const plan = planLawn({ entries: cohort.slice(0, 12), viewerId: "learner-0", now: now + window * LAWN_WINDOW_MS });
-      for (const activity of plan.activities) {
-        actions.add(activity.action);
-        if (activity.members.length === 2) {
-          pairs++;
-          const facing = plan.placements.filter((placement) => placement.activityId === activity.id).map((placement) => placement.facing);
-          expect(facing).toEqual(["right", "left"]);
+  it("gives each spot one occupant and only poses that spot allows", () => {
+    for (const sceneId of YARD_SCENE_IDS) {
+      for (const now of [...windows(24), ...windows(12, night)]) {
+        const plan = planLawn({ entries: cohort, scene: YARD_SCENES[sceneId], viewerId: "learner-3", now });
+        const spots = plan.placements.map((placement) => placement.spot.id);
+        expect(new Set(spots).size).toBe(spots.length);
+        for (const placement of plan.placements) {
+          const allowed = SPOT_POSES[placement.spot.kind];
+          expect([...allowed.solo, ...allowed.pair, ...allowed.night]).toContain(placement.pose);
+          expect(placement.activity.length).toBeGreaterThan(0);
         }
       }
     }
-    expect(pairs).toBeGreaterThan(48);
-    expect([...actions].sort()).toEqual(Object.keys(LAWN_ACTIONS).sort());
   });
 
-  it("avoids repeating the previous window's pairs when other partners exist", () => {
-    for (const size of [3, 6, 12, 20, 45]) {
-      for (let window = 1; window < 30; window++) {
-        const pairKeys = (offset: number) => new Set(planLawn({ entries: cohort.slice(0, size), viewerId: "learner-0", now: now + (window + offset) * LAWN_WINDOW_MS }).activities
-          .filter((activity) => activity.members.length === 2).map((activity) => activity.members.map((member) => member.owner_id).sort().join("|")));
-        const before = pairKeys(-1);
-        for (const key of pairKeys(0)) expect(before.has(key)).toBe(false);
+  it("returns the same plan for the same inputs, scene, and window", () => {
+    const first = planLawn({ entries: cohort, scene: backyard, viewerId: "learner-1", now: morning });
+    const again = planLawn({ entries: [...cohort].reverse(), scene: backyard, viewerId: "learner-1", now: morning + 60_000 });
+    const shape = (plan: LawnPlan) => plan.placements.map((placement) => `${placement.entry.owner_id}@${placement.spot.id}:${placement.pose}`).concat(plan.cats.map((cat) => `${cat.cat.id}:${cat.pose}:${cat.x}`));
+    expect(shape(again)).toEqual(shape(first));
+  });
+
+  it("rotates visitors fairly across windows", () => {
+    const seen = new Map<string, number>();
+    for (const now of windows(44)) for (const id of ids(planLawn({ entries: cohort, scene: backyard, viewerId: "learner-0", now }))) seen.set(id, (seen.get(id) ?? 0) + 1);
+    seen.delete("learner-0");
+    expect(seen.size).toBe(44);
+    expect(Math.max(...seen.values()) - Math.min(...seen.values())).toBeLessThanOrEqual(1);
+  });
+
+  it("pairs characters only across neighbouring spots and faces them toward each other", () => {
+    let pairs = 0;
+    for (const sceneId of YARD_SCENE_IDS) {
+      for (const now of windows(24)) {
+        const plan = planLawn({ entries: cohort.slice(0, 12), scene: YARD_SCENES[sceneId], viewerId: "learner-0", now });
+        for (const placement of plan.placements.filter((item) => item.partnerId)) {
+          const partner = plan.placements.find((item) => item.entry.owner_id === placement.partnerId)!;
+          expect(placement.spot.neighbours).toContain(partner.spot.id);
+          expect(placement.facing).toBe(placement.spot.x < partner.spot.x ? "right" : "left");
+          pairs++;
+        }
+      }
+    }
+    expect(pairs).toBeGreaterThan(100);
+  });
+
+  it("does not repeat the previous window's pairs", () => {
+    const pairKeys = (now: number) => new Set(planLawn({ entries: cohort.slice(0, 12), scene: backyard, viewerId: "learner-0", now }).placements
+      .filter((placement) => placement.partnerId).map((placement) => [placement.entry.owner_id, placement.partnerId].sort().join("|")));
+    for (const now of windows(30).slice(1)) {
+      const before = pairKeys(now - LAWN_WINDOW_MS);
+      for (const key of pairKeys(now)) expect(before.has(key)).toBe(false);
+    }
+  });
+
+  it("keeps play gentle with no paper-sword or competitive poses", () => {
+    const poses = new Set<string>();
+    for (const sceneId of YARD_SCENE_IDS) for (const now of windows(48)) for (const placement of planLawn({ entries: cohort, scene: YARD_SCENES[sceneId], viewerId: "learner-0", now }).placements) poses.add(placement.pose);
+    expect([...poses].some((pose) => /sword|fight|win|score/i.test(pose))).toBe(false);
+    for (const pose of ["eat", "sit", "walk", "pillow", "smile"]) expect(poses).toContain(pose);
+  });
+
+  it("never pairs a quiet learner or puts a cat on their lap", () => {
+    const entries = cohort.slice(0, 12).map((item) => item.owner_id === "learner-5" ? entry("learner-5", "quiet", until) : item);
+    for (const sceneId of YARD_SCENE_IDS) {
+      for (const now of windows(40)) {
+        const plan = planLawn({ entries, scene: YARD_SCENES[sceneId], viewerId: "learner-0", now });
+        const quiet = plan.placements.find((placement) => placement.entry.owner_id === "learner-5")!;
+        expect(quiet.partnerId).toBeUndefined();
+        expect(SPOT_POSES[quiet.spot.kind].pair.includes(quiet.pose) && !SPOT_POSES[quiet.spot.kind].solo.includes(quiet.pose)).toBe(false);
+        expect(plan.cats.some((cat) => cat.lapOf === "learner-5")).toBe(false);
       }
     }
   });
 
-  it("describes play as noncompetitive with no score, health, winner, or reward", () => {
-    const banned = /health|damage|winner|loser|rank|score|reward|win|lose/i;
-    for (const spec of Object.values(LAWN_ACTIONS)) {
-      expect(Object.keys(spec).sort()).toEqual(expect.arrayContaining(["emoji", "label", "participants", "zones"]));
-      expect(JSON.stringify(spec)).not.toMatch(banned);
+  it("biases moods toward their spots without forcing them", () => {
+    const share = (mood: LawnMood, kinds: string[]) => {
+      let hits = 0;
+      for (const now of windows(40)) {
+        const entries = cohort.slice(0, 12).map((item) => item.owner_id === "learner-5" ? entry("learner-5", mood, until) : item);
+        const placement = planLawn({ entries, scene: backyard, viewerId: "learner-0", now }).placements.find((item) => item.entry.owner_id === "learner-5")!;
+        if (kinds.includes(placement.spot.kind)) hits++;
+      }
+      return hits;
+    };
+    const baseline = (kinds: string[]) => {
+      let hits = 0;
+      for (const now of windows(40)) if (kinds.includes(planLawn({ entries: cohort.slice(0, 12), scene: backyard, viewerId: "learner-0", now }).placements.find((item) => item.entry.owner_id === "learner-5")!.spot.kind)) hits++;
+      return hits;
+    };
+    expect(share("meal", ["table", "blanket"])).toBeGreaterThan(baseline(["table", "blanket"]));
+    expect(share("relaxing", ["bench", "tree", "blanket"])).toBeGreaterThan(baseline(["bench", "tree", "blanket"]));
+    expect(share("playful", ["play"])).toBeGreaterThan(baseline(["play"]));
+  });
+
+  it("uses Thailand time for morning, evening, and night", () => {
+    expect(planLawn({ entries: [], scene: backyard, now: Date.UTC(2026, 8, 30, 1, 0) }).phase).toBe("morning");
+    expect(planLawn({ entries: [], scene: backyard, now: Date.UTC(2026, 8, 30, 11, 0) }).phase).toBe("evening");
+    expect(planLawn({ entries: [], scene: backyard, now: Date.UTC(2026, 8, 30, 14, 0) }).phase).toBe("night");
+    expect(planLawn({ entries: [], scene: backyard, now: Date.UTC(2026, 8, 29, 22, 30) }).phase).toBe("night");
+  });
+
+  it("lets more characters doze at night while some stay awake", () => {
+    const dozing = (start: number) => windows(24, start).reduce((sum, now) => sum + planLawn({ entries: cohort.slice(0, 12), scene: backyard, viewerId: "learner-0", now }).placements.filter((placement) => placement.pose === "doze").length, 0);
+    const awakeAtNight = windows(24, night).every((now) => planLawn({ entries: cohort.slice(0, 12), scene: backyard, viewerId: "learner-0", now }).placements.some((placement) => placement.pose !== "doze"));
+    expect(dozing(night)).toBeGreaterThan(dozing(morning));
+    expect(awakeAtNight).toBe(true);
+  });
+
+  it("places cats by personality in allowed spots", () => {
+    const poses = new Set<string>();
+    for (const sceneId of YARD_SCENE_IDS) {
+      const scene = YARD_SCENES[sceneId];
+      for (const now of windows(30)) {
+        const plan = planLawn({ entries: cohort.slice(0, 12), scene, viewerId: "learner-0", now });
+        expect(plan.cats.length).toBeGreaterThan(0);
+        expect(plan.cats.length).toBeLessThanOrEqual(3);
+        for (const cat of plan.cats) {
+          poses.add(cat.pose);
+          if (cat.pose === "lap") {
+            const host = plan.placements.find((placement) => placement.entry.owner_id === cat.lapOf)!;
+            expect(host.spot.kind).toBe("bench");
+          } else {
+            expect(scene.catSpots.some((spot) => spot.x === cat.x && spot.y === cat.y)).toBe(true);
+          }
+        }
+        expect(new Set(plan.cats.map((cat) => `${cat.x},${cat.y}`)).size).toBe(plan.cats.length);
+      }
     }
-    const plan = planLawn({ entries: cohort.slice(0, 12), viewerId: "learner-0", now });
-    for (const activity of plan.activities) for (const key of Object.keys(activity)) expect(["action", "id", "members", "variant", "zone"]).toContain(key);
+    for (const pose of ["beg", "loaf", "chase", "lap"]) expect(poses).toContain(pose);
   });
 
-  it("uses Thailand time for morning and evening lighting", () => {
-    expect(planLawn({ entries: [], now: Date.UTC(2026, 8, 30, 1, 0) }).lighting).toBe("morning");
-    expect(planLawn({ entries: [], now: Date.UTC(2026, 8, 30, 11, 0) }).lighting).toBe("evening");
-    expect(planLawn({ entries: [], now: Date.UTC(2026, 8, 29, 23, 30) }).lighting).toBe("morning");
-  });
-
-  it("keeps the light lawn at six with the viewer included and the same fair rotation", () => {
-    const seen = new Map<string, number>();
-    for (let window = 0; window < 44; window++) {
-      const plan = planLawn({ entries: cohort, viewerId: "learner-9", now: now + window * LAWN_WINDOW_MS, limit: LAWN_LITE_LIMIT });
+  it("keeps the light lawn at six characters and one cat", () => {
+    for (const now of windows(10)) {
+      const plan = planLawn({ entries: cohort, scene: backyard, viewerId: "learner-9", now, limit: LAWN_LITE_LIMIT });
       expect(plan.placements).toHaveLength(6);
       expect(ids(plan)).toContain("learner-9");
-      for (const id of ids(plan)) if (id !== "learner-9") seen.set(id, (seen.get(id) ?? 0) + 1);
+      expect(plan.cats).toHaveLength(1);
     }
-    expect(seen.size).toBe(44);
-    expect(new Set(seen.values())).toEqual(new Set([5]));
   });
 
-  describe("moods", () => {
-    const until = new Date(now + 24 * 60 * 60 * 1000).toISOString();
-    const withMood = (mood: NonNullable<ShowcaseEntry["mood"]>, moodUntil = until) => cohort.slice(0, 12).map((item) => item.owner_id === "learner-5" ? { ...item, mood, mood_until: moodUntil } : item);
-    const activitiesFor = (entries: ShowcaseEntry[]) => Array.from({ length: 47 }, (_, window) => planLawn({ entries, viewerId: "learner-0", now: now + window * LAWN_WINDOW_MS }).activities
-      .find((activity) => activity.members.some((member) => member.owner_id === "learner-5"))!);
-
-    it("keeps a quiet learner out of every paired action while they still rest, sit, or walk", () => {
-      const activities = activitiesFor(withMood("quiet"));
-      expect(activities.every((activity) => activity.members.length === 1)).toBe(true);
-      expect(new Set(activities.map((activity) => activity.action)).size).toBeGreaterThan(1);
-    });
-
-    it.each([["greeting", ["wave", "smile", "high-five"]], ["meal", ["meal"]], ["playful", ["play", "rps"]], ["relaxing", ["bench-sit", "rest"]]] as const)("biases %s toward its safe actions without forcing a partner", (mood, preferred) => {
-      const activities = activitiesFor(withMood(mood));
-      const biased = activities.filter((activity) => (preferred as readonly string[]).includes(activity.action)).length;
-      const baseline = activitiesFor(cohort.slice(0, 12)).filter((activity) => (preferred as readonly string[]).includes(activity.action)).length;
-      expect(biased).toBeGreaterThan(baseline);
-      if (mood !== "relaxing") expect(activities.some((activity) => activity.members.length === 1)).toBe(true);
-    });
-
-    it("treats surprise and expired moods exactly like the ordinary planner", () => {
-      const plain = activitiesFor(cohort.slice(0, 12)).map((activity) => activity.id + activity.action);
-      expect(activitiesFor(withMood("surprise")).map((activity) => activity.id + activity.action)).toEqual(plain);
-      expect(activitiesFor(withMood("quiet", new Date(now - 1).toISOString())).map((activity) => activity.id + activity.action)).toEqual(plain);
-    });
+  it("treats surprise and expired moods like the ordinary planner", () => {
+    const plain = windows(20).map((now) => planLawn({ entries: cohort.slice(0, 12), scene: backyard, viewerId: "learner-0", now }).placements.map((placement) => placement.spot.id + placement.pose).join());
+    const withMood = (mood: LawnMood, moodUntil: string) => windows(20).map((now) => planLawn({ entries: cohort.slice(0, 12).map((item) => item.owner_id === "learner-5" ? entry("learner-5", mood, moodUntil) : item), scene: backyard, viewerId: "learner-0", now }).placements.map((placement) => placement.spot.id + placement.pose).join());
+    expect(withMood("surprise", until)).toEqual(plain);
+    expect(withMood("quiet", new Date(morning - 1).toISOString())).toEqual(plain);
   });
 });

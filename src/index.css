@@ -746,3 +746,53 @@
     animation: none !important;
   }
 }
+
+.yard-seated .baro-leg-left,
+.yard-seated .baro-leg-right {
+  transform: rotate(-72deg) !important;
+  animation: none !important;
+}
+.yard-lie {
+  transform: rotate(-78deg) translate(-8%, 12%);
+  transform-origin: 50% 100%;
+}
+.yard-cat[data-motion="full"] .yard-tail {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  animation: yard-tail 2.6s ease-in-out infinite;
+}
+.yard-fireflies circle { animation: yard-blink 2.8s ease-in-out infinite; }
+.yard-twinkle circle { animation: yard-blink 3.6s ease-in-out infinite; }
+.yard-zz { animation: yard-blink 2.4s ease-in-out infinite; }
+.yard-heart { animation: yard-heart 1.6s ease-out forwards; }
+.yard-settle { animation: yard-settle 0.7s ease-out both; }
+@keyframes yard-blink {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+@keyframes yard-tail {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-14deg); }
+}
+@keyframes yard-heart {
+  0% { opacity: 0; translate: 0 6px; }
+  20% { opacity: 1; translate: 0 0; }
+  100% { opacity: 0; translate: 0 -18px; }
+}
+@keyframes yard-settle {
+  from { opacity: 0; translate: 0 8px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .yard-fireflies circle,
+  .yard-twinkle circle,
+  .yard-tail,
+  .yard-zz,
+  .yard-settle {
+    animation: none !important;
+  }
+  .yard-heart {
+    animation: none !important;
+    opacity: 1;
+  }
+}

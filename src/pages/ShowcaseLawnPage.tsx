@@ -8,12 +8,13 @@ import { baroCharacterService } from "@/application/services/baroCharacterServic
 import { showcaseLawnService, type ShowcaseEntry } from "@/application/services/showcaseLawnService";
 import { BaroCharacterArt } from "@/components/character/BaroCharacterArt";
 import { LawnMoodPicker } from "@/components/character/LawnMoodPicker";
-import { LawnScene } from "@/components/character/LawnScene";
+import { LawnYard, YardScenePicker } from "@/components/character/LawnYard";
+import { useYardScene } from "@/hooks/use-yard-scene";
+import { YARD_SCENES } from "@/lib/lawn-scenes";
 import { LAWN_LITE_LIMIT, LAWN_SCENE_LIMIT, planLawn } from "@/lib/lawn-planner";
 import { useLawnSceneTime } from "@/hooks/use-lawn-scene-time";
 import { isConstrainedDevice } from "@/hooks/use-lawn-device";
 import { GodEventPanel, LawnGodEventLayer } from "@/components/character/GodEventPanel";
-import { ShowcaseLawnEnvironment } from "@/components/character/ShowcaseLawnEnvironment";
 
 const Character3DViewer = lazy(() => import("@/components/character/Character3DViewer").then((module) => ({ default: module.Character3DViewer })));
 
@@ -50,7 +51,9 @@ export default function ShowcaseLawnPage() {
   const reducedMotion = useReducedMotion();
   const sceneTime = useLawnSceneTime(Boolean(reducedMotion));
   const [lite, setLite] = useState(() => isConstrainedDevice());
-  const plan = useMemo(() => planLawn({ entries: view.data ?? [], viewerId: userId, mine, now: sceneTime, limit: lite ? LAWN_LITE_LIMIT : LAWN_SCENE_LIMIT }), [view.data, userId, mine, sceneTime, lite]);
+  const [sceneId, setSceneId] = useYardScene();
+  const scene = YARD_SCENES[sceneId];
+  const plan = useMemo(() => planLawn({ entries: view.data ?? [], scene, viewerId: userId, mine, now: sceneTime, limit: lite ? LAWN_LITE_LIMIT : LAWN_SCENE_LIMIT }), [view.data, scene, userId, mine, sceneTime, lite]);
   const cardActions = (entry: ShowcaseEntry) => ({ admin: includeHidden, busy: react.isLoading || moderate.isLoading, onReact: (emoji: string) => react.mutate({ ownerId: entry.owner_id, emoji }), onModerate: (hidden: boolean) => moderate.mutate({ ownerId: entry.owner_id, hidden }), onInspect: () => setInspectedEntry(entry) });
 
   return <main className="min-h-[calc(100vh-5rem)] bg-background px-4 py-8 font-register-body text-foreground transition-colors sm:px-8 lg:py-12">
@@ -75,17 +78,17 @@ export default function ShowcaseLawnPage() {
         {mine && <LawnMoodPicker mine={mine} userId={userId} />}
       </section>
 
-      <section aria-labelledby="lawn-friends-heading"><div className="mb-4 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">WANDER TOGETHER</p><h2 id="lawn-friends-heading" className="mt-1 font-register-heading text-2xl">เดินดูเพื่อนบนลาน</h2></div><div className="flex flex-wrap gap-2">{userRole === "admin" && <select aria-label="กรองรุ่น" value={cohort} onChange={(event) => { setCohort(Number(event.target.value)); setTeam(""); }} className="min-h-10 rounded-full border border-input bg-background px-3 text-sm font-bold"><option value={0}>ทุกรุ่น</option>{cohorts.map((number) => <option key={number} value={number}>รุ่น {number}</option>)}</select>}<button type="button" aria-pressed={lite} onClick={() => setLite((value) => !value)} className={`min-h-10 rounded-full border px-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${lite ? "border-primary bg-primary/10" : "border-input bg-background"}`}>ลานแบบเบา</button><select aria-label="กรองทีม" value={team} onChange={(event) => setTeam(event.target.value)} className="min-h-10 rounded-full border border-input bg-background px-3 text-sm font-bold"><option value="">ทุกทีม</option>{teams.map((name) => <option key={name} value={name}>{name}</option>)}</select></div></div>
-        <ShowcaseLawnEnvironment lighting={plan.lighting}>
+      <section aria-labelledby="lawn-friends-heading"><div className="mb-4 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">WANDER TOGETHER</p><h2 id="lawn-friends-heading" className="mt-1 font-register-heading text-2xl">เดินดูเพื่อนบนลาน</h2></div><div className="flex flex-wrap items-center gap-2"><YardScenePicker value={sceneId} onChange={setSceneId} />{userRole === "admin" && <select aria-label="กรองรุ่น" value={cohort} onChange={(event) => { setCohort(Number(event.target.value)); setTeam(""); }} className="min-h-10 rounded-full border border-input bg-background px-3 text-sm font-bold"><option value={0}>ทุกรุ่น</option>{cohorts.map((number) => <option key={number} value={number}>รุ่น {number}</option>)}</select>}<button type="button" aria-pressed={lite} onClick={() => setLite((value) => !value)} className={`min-h-10 rounded-full border px-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${lite ? "border-primary bg-primary/10" : "border-input bg-background"}`}>ลานแบบเบา</button><select aria-label="กรองทีม" value={team} onChange={(event) => setTeam(event.target.value)} className="min-h-10 rounded-full border border-input bg-background px-3 text-sm font-bold"><option value="">ทุกทีม</option>{teams.map((name) => <option key={name} value={name}>{name}</option>)}</select></div></div>
+        <div className="relative">
           <LawnGodEventLayer userId={userId} />
           {view.isLoading && <p role="status" className="rounded-xl border border-border bg-card p-6 text-sm font-bold text-card-foreground">กำลังดูว่าเพื่อน ๆ ใครมาปักไว้บ้าง…</p>}
           {view.isError && <div role="alert" className="rounded-xl border border-border bg-card p-6 text-sm text-card-foreground"><p className="font-bold">ยังเปิดลานไม่ได้</p><p className="mt-1">ลองโหลดใหม่ได้เลย การปักของคุณยังอยู่</p><button type="button" onClick={() => view.refetch()} className="mt-3 inline-flex items-center gap-2 font-black underline"><RotateCw className="h-4 w-4" /> โหลดใหม่</button></div>}
           {!view.isLoading && !view.isError && view.data && plan.placements.length === 0 && <div className="rounded-xl border border-border bg-card p-8 text-center text-card-foreground"><Sparkles className="mx-auto h-8 w-8" /><p className="mt-2 font-black">ยังไม่มีใครปักตัวละครตรงนี้</p><p className="mt-1 text-sm">ลองเลือกทุกทีม หรือปักคู่หูของคุณเป็นคนแรกได้เลย</p></div>}
           {plan.placements.length > 0 && <>
-            <LawnScene plan={plan} userId={userId} cardActions={cardActions} />
+            <LawnYard plan={plan} scene={scene} userId={userId} lite={lite} cardActions={cardActions} />
             {plan.total > plan.placements.length && <p className="mt-4 text-center text-xs font-bold text-muted-foreground">ตอนนี้มีเพื่อนเดินเล่น {plan.placements.length} จาก {plan.total} คน · ผลัดกันมาทักทายทุกครึ่งชั่วโมง</p>}
           </>}
-        </ShowcaseLawnEnvironment>
+        </div>
         {includeHidden && view.data && view.data.length > plan.placements.length && <details className="mt-4 rounded-2xl border border-border bg-card p-4 text-sm"><summary className="cursor-pointer font-bold">รายการทั้งหมดสำหรับแอดมิน ({view.data.length})</summary><ul className="mt-3 space-y-2">{view.data.map((entry) => <li key={entry.owner_id} className="flex items-center justify-between gap-3"><span className="truncate">{entry.name}{entry.hidden ? " · ซ่อนอยู่" : ""}</span><button type="button" disabled={moderate.isLoading} onClick={() => moderate.mutate({ ownerId: entry.owner_id, hidden: !entry.hidden })} className="min-h-9 shrink-0 rounded-full border border-border bg-background px-3 text-xs font-bold disabled:opacity-50">{entry.hidden ? "คืนสู่ลาน" : "ซ่อนจากลาน"}</button></li>)}</ul></details>}
         {react.isError && <p role="alert" className="mt-4 text-sm font-bold text-destructive">ยังส่งรีแอคไม่ได้ ลองอีกครั้งได้เลย</p>}
         {moderate.isError && <p role="alert" className="mt-4 text-sm font-bold text-destructive">ยังเปลี่ยนสถานะรายการไม่ได้ ลองอีกครั้งได้เลย</p>}
