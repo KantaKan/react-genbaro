@@ -854,3 +854,32 @@
 @media (prefers-reduced-motion: reduce) {
   .god-star, .god-flash, .god-descend, .god-hover, .god-parade, .god-march { animation: none !important; }
 }
+
+.baro-puppet[data-action="dance"] .baro-arm-left { transform: rotate(120deg); }
+.baro-puppet[data-action="dance"] .baro-arm-right { transform: rotate(-120deg); }
+.baro-puppet[data-action="jump"] .baro-arm-left { transform: rotate(60deg); }
+.baro-puppet[data-action="jump"] .baro-arm-right { transform: rotate(-60deg); }
+.baro-puppet[data-motion="full"][data-action="dance"] .baro-art {
+  animation: baro-dance .9s ease-in-out infinite;
+}
+.baro-puppet[data-motion="full"][data-action="jump"] .baro-art {
+  animation: baro-jump .8s cubic-bezier(.3, .6, .4, 1) infinite;
+}
+@keyframes baro-dance {
+  0%, 100% { transform: rotate(-8deg) translateY(0); }
+  50% { transform: rotate(8deg) translateY(-5px); }
+}
+@keyframes baro-jump {
+  0%, 100% { transform: translateY(0) scale(1.04, .96); }
+  45% { transform: translateY(-22px) scale(.97, 1.03); }
+}
+.yard-emote-float {
+  animation: yard-emote-float 1.8s ease-out infinite;
+}
+@keyframes yard-emote-float {
+  from { translate: 0 0; opacity: 1; }
+  to { translate: 0 -18px; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .yard-emote-float { animation: none; }
+}

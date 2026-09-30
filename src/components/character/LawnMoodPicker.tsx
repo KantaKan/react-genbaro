@@ -1,5 +1,22 @@
 import { useMutation, useQueryClient } from "react-query";
-import { showcaseLawnService, type LawnMood, type ShowcaseEntry } from "@/application/services/showcaseLawnService";
+import { showcaseLawnService, type LawnEmote, type LawnMood, type ShowcaseEntry } from "@/application/services/showcaseLawnService";
+
+const lawnEmotes: Array<{ value: LawnEmote; emoji: string; label: string }> = [
+  { value: "wave", emoji: "👋", label: "โบกมือ" },
+  { value: "dance", emoji: "💃", label: "เต้น" },
+  { value: "jump", emoji: "🦘", label: "กระโดด" },
+  { value: "heart", emoji: "💗", label: "ส่งหัวใจ" },
+  { value: "nap", emoji: "😴", label: "งีบ" },
+  { value: "visit", emoji: "🙌", label: "ไปหาเพื่อน" },
+];
+
+export function LawnEmoteBar({ active, busy, picking, onEmote, onPickStart, onPickCancel }: { active?: LawnEmote; busy: boolean; picking: boolean; onEmote: (emote: LawnEmote | "") => void; onPickStart: () => void; onPickCancel: () => void }) {
+  if (picking) return <div role="status" className="pointer-events-auto flex items-center gap-2 rounded-full border-2 border-[#292542] bg-[#fffaf0] px-4 py-2 text-sm font-black text-[#292542] shadow-[3px_4px_0_#292542]">🙌 แตะเพื่อนที่อยากไปแปะมือด้วย<button type="button" onClick={onPickCancel} className="rounded-full px-2 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">ยกเลิก</button></div>;
+  return <div role="group" aria-label="ท่าของคู่หูบนลาน · อยู่ 30 นาที" className="pointer-events-auto flex gap-1 rounded-full border-2 border-[#292542] bg-[#fffaf0] p-1 shadow-[3px_4px_0_#292542]">
+    {lawnEmotes.map((emote) => <button key={emote.value} type="button" title={emote.label} aria-label={emote.label} aria-pressed={active === emote.value} disabled={busy} onClick={() => active === emote.value ? onEmote("") : emote.value === "visit" ? onPickStart() : onEmote(emote.value)}
+      className={`flex h-10 w-10 items-center justify-center rounded-full text-xl transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 motion-reduce:transition-none ${active === emote.value ? "bg-primary/20 ring-2 ring-primary" : ""}`}>{emote.emoji}</button>)}
+  </div>;
+}
 
 const moods: Array<{ value: LawnMood; label: string }> = [
   { value: "greeting", label: "👋 อยากทักทาย" },

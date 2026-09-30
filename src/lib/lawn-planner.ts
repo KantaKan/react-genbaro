@@ -93,16 +93,24 @@ const byStableHash = (a: ShowcaseEntry, b: ShowcaseEntry) => lawnHash(a.owner_id
 const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
 const rotate = <T,>(list: T[], seed: number) => list.map((_, index) => list[(seed + index) % list.length]);
 
-function selectVisitors(entries: ShowcaseEntry[], viewerId: string | null | undefined, mine: ShowcaseEntry | null | undefined, windowIndex: number, limit: number) {
+export function activeVisit(entry: ShowcaseEntry, now: number) {
+  return entry.emote === "visit" && entry.emote_target && entry.emote_until && Date.parse(entry.emote_until) > now ? entry.emote_target : undefined;
+}
+
+function selectVisitors(entries: ShowcaseEntry[], viewerId: string | null | undefined, mine: ShowcaseEntry | null | undefined, windowIndex: number, limit: number, now: number) {
   const own = entries.find((entry) => entry.owner_id === viewerId) ?? (mine && !mine.hidden ? mine : undefined);
+  const ownVisit = own ? activeVisit(own, now) : undefined;
   const others = entries.filter((entry) => entry.owner_id !== viewerId).sort(byStableHash);
   const capacity = Math.max(0, limit - (own ? 1 : 0));
-  let visitors = others;
-  if (others.length > capacity) {
-    const start = (windowIndex * capacity) % others.length;
-    visitors = Array.from({ length: capacity }, (_, index) => others[(start + index) % others.length]);
+  const pinned = others.filter((entry) => entry.owner_id === ownVisit || (viewerId && activeVisit(entry, now) === viewerId)).slice(0, capacity);
+  const rest = others.filter((entry) => !pinned.includes(entry));
+  const room = capacity - pinned.length;
+  let visitors = rest;
+  if (rest.length > room) {
+    const start = (windowIndex * Math.max(room, 1)) % Math.max(rest.length, 1);
+    visitors = Array.from({ length: room }, (_, index) => rest[(start + index) % rest.length]);
   }
-  return { chosen: own ? [own, ...visitors] : visitors, total: others.length + (own ? 1 : 0) };
+  return { chosen: [...(own ? [own] : []), ...pinned, ...visitors], total: others.length + (own ? 1 : 0) };
 }
 
 function circleMatching(entries: ShowcaseEntry[], round: number): Array<[ShowcaseEntry, ShowcaseEntry]> {
@@ -137,11 +145,11 @@ function activityFor(scene: YardScene, kind: SpotKind, pose: YardPose) {
 export function planLawn({ entries, scene, viewerId, mine, now, limit = LAWN_SCENE_LIMIT }: LawnPlanInput): LawnPlan {
   const windowIndex = lawnWindow(now);
   const phase = lawnPhase(now);
-  const { chosen, total } = selectVisitors(entries, viewerId, mine, windowIndex, Math.min(limit, scene.spots.length));
+  const { chosen, total } = selectVisitors(entries, viewerId, mine, windowIndex, Math.min(limit, scene.spots.length), now);
   const activeMood = (entry: ShowcaseEntry) => (entry.mood && entry.mood_until && Date.parse(entry.mood_until) > now ? entry.mood : undefined);
   const pairable = (entry: ShowcaseEntry) => activeMood(entry) !== "quiet";
   const preferredKinds = (entry: ShowcaseEntry) => moodKinds[activeMood(entry) ?? "surprise"] ?? [];
-  const previous = selectVisitors(entries, viewerId, mine, windowIndex - 1, Math.min(limit, scene.spots.length)).chosen;
+  const previous = selectVisitors(entries, viewerId, mine, windowIndex - 1, Math.min(limit, scene.spots.length), now).chosen;
   const recentPairs = chosen.filter(pairable).length > 2 ? new Set(circleMatching(previous.filter(pairable), windowIndex - 1).map(([a, b]) => pairKey(a.owner_id, b.owner_id))) : new Set<string>();
   const taken = new Set<string>();
   const placements: YardPlacement[] = [];
@@ -152,7 +160,19 @@ export function planLawn({ entries, scene, viewerId, mine, now, limit = LAWN_SCE
 
   const edges = scene.spots.flatMap((a) => a.neighbours.filter((id) => a.id < id).map((id) => [a, scene.spots.find((b) => b.id === id)!] as const))
     .filter(([a, b]) => SPOT_POSES[a.kind].pair.length > 0 && a.kind === b.kind);
-  for (const [a, b] of circleMatching(chosen.filter(pairable), windowIndex)) {
+  const byId = new Map(chosen.map((entry) => [entry.owner_id, entry]));
+  const visiting = new Set<string>();
+  for (const a of chosen) {
+    const b = byId.get(activeVisit(a, now) ?? "");
+    if (!b || b === a || visiting.has(a.owner_id) || visiting.has(b.owner_id)) continue;
+    const edge = rotate(edges, lawnHash(pairKey(a.owner_id, b.owner_id))).find(([spotA, spotB]) => !taken.has(spotA.id) && !taken.has(spotB.id));
+    if (!edge) continue;
+    const [left, right] = edge[0].x <= edge[1].x ? edge : [edge[1], edge[0]];
+    place(a, left, SPOT_POSES[left.kind].pair[0], 0, "right", b.owner_id);
+    place(b, right, SPOT_POSES[left.kind].pair[0], 1, "left", a.owner_id);
+    visiting.add(a.owner_id).add(b.owner_id);
+  }
+  for (const [a, b] of circleMatching(chosen.filter((entry) => pairable(entry) && !visiting.has(entry.owner_id)), windowIndex)) {
     const key = pairKey(a.owner_id, b.owner_id);
     const seed = lawnHash(`${windowIndex}:${key}`);
     if (recentPairs.has(key) || seed % 10 >= 7) continue;

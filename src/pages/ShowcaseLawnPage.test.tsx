@@ -22,6 +22,7 @@ let entries: ShowcaseEntry[] = [entry("peer-alpha", "Mali", 16, "Alpha"), entry(
 let selection = { equipped_id: character.id, pinned_id: "" };
 let failList = false;
 let moodRequests: unknown[] = [];
+let emoteRequests: unknown[] = [];
 let activeReactions = new Set<string>();
 let godEvents: Array<{ id: string; preset: string; caption: string; cohort: number; cast_by: string; character: typeof character; created_at: string; active_until: string; active: boolean }> = [];
 const reactionChoices = ["❤️", "✨", "😂", "🙌"];
@@ -59,6 +60,13 @@ const server = setupServer(
     entries = entries.map((item) => item.owner_id === me ? { ...item, mood: body.mood || undefined, mood_until: body.mood ? until : undefined } : item);
     return HttpResponse.json({ data: { mood: body.mood, until } });
   }),
+  http.put("*/showcase-lawn/me/emote", async ({ request }) => {
+    const body = await request.json() as { emote: ShowcaseEntry["emote"] | ""; target: string };
+    emoteRequests.push(body);
+    const until = "2099-01-01T00:00:00Z";
+    entries = entries.map((item) => item.owner_id === me ? { ...item, emote: body.emote || undefined, emote_target: body.target || undefined, emote_until: body.emote ? until : undefined } : item);
+    return HttpResponse.json({ data: { emote: body.emote, target: body.target, until } });
+  }),
   http.delete("*/showcase-lawn/me", () => {
     entries = entries.filter((item) => item.owner_id !== me);
     selection = { ...selection, pinned_id: "" };
@@ -82,7 +90,7 @@ beforeAll(() => {
   vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
   server.listen({ onUnhandledRequest: "error" });
 });
-afterEach(() => { moodRequests = []; server.resetHandlers(); role = "learner"; failList = false; activeReactions = new Set<string>(); godEvents = []; selection = { equipped_id: character.id, pinned_id: "" }; entries = [entry("peer-alpha", "Mali", 16, "Alpha"), entry("peer-beta", "Pim", 16, "Beta"), entry("peer-other", "Nok", 17, "Alpha")]; });
+afterEach(() => { moodRequests = []; emoteRequests = []; server.resetHandlers(); role = "learner"; failList = false; activeReactions = new Set<string>(); godEvents = []; selection = { equipped_id: character.id, pinned_id: "" }; entries = [entry("peer-alpha", "Mali", 16, "Alpha"), entry("peer-beta", "Pim", 16, "Beta"), entry("peer-other", "Nok", 17, "Alpha")]; });
 afterAll(() => server.close());
 
 function renderPage() {
@@ -385,5 +393,25 @@ describe("ShowcaseLawnPage", { timeout: 20_000 }, () => {
     const scene = await screen.findByRole("group", { name: /^เพื่อนบนลานตอนนี้/ });
     expect(within(scene).getByText("คุณ · Me")).toBeInTheDocument();
     expect(within(scene).getByText("Mali", { selector: "span" }).className).toContain("opacity-0");
+  });
+
+  it("lets a pinned learner play an emote and visit a friend by tapping them", async () => {
+    entries.push({ ...entry(me, "Me", 16, "Alpha"), character });
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "เต้น" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: /^Me · / })).toHaveAttribute("data-action", "dance"));
+    expect(screen.getByRole("button", { name: "เต้น" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "ไปหาเพื่อน" }));
+    expect(screen.getByRole("status")).toHaveTextContent("แตะเพื่อนที่อยากไปแปะมือด้วย");
+    fireEvent.click(screen.getByRole("button", { name: /^Mali · / }));
+    await waitFor(() => expect(emoteRequests).toEqual([{ emote: "dance", target: "" }, { emote: "visit", target: "peer-alpha" }]));
+    expect(screen.queryByRole("dialog", { name: "การ์ดของ Mali" })).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("button", { name: /^Me · / })).toHaveAttribute("data-action", "high-five"));
+  });
+
+  it("does not offer emotes before the learner pins a character", async () => {
+    renderPage();
+    await screen.findByRole("button", { name: /^Mali · / });
+    expect(screen.queryByRole("button", { name: "เต้น" })).not.toBeInTheDocument();
   });
 });
