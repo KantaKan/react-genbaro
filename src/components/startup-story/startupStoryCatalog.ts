@@ -56,14 +56,14 @@ export const rarityStyle: Record<string, string> = {
 
 type RoleLook = { label: string; short: string; color: string; anim: string; lines: string[]; idle: string[] };
 
-const idleLines = ["☕ coffee break", "ทานข้าวยัง?", "reading docs 📚", "lo-fi beats 🎧", "stretching 🙆"];
+const idleLines = ["☕ coffee break", "ทานข้าวยัง?", "reading docs 📚", "lo-fi beats 🎧", "stretching 🙆", "I use Arch btw", "ricing my desktop ✨", "tabs > spaces. fight me", "it works on my machine 🤷", "rewriting it in Rust 🦀", "vim or emacs? 👀", "sudo make me a sandwich", "my dotfiles are art", "Linux on a toaster 🍞"];
 
 const roleLooks: Record<string, RoleLook> = {
-  fe_dev: { label: "Frontend Dev", short: "FE", color: "#4f8df7", anim: "ss-type", lines: ["styling buttons 💅", "fixing CSS 😩", "npm install...", "useEffect again?!"], idle: idleLines },
-  be_dev: { label: "Backend Dev", short: "BE", color: "#6a4fb3", anim: "ss-type", lines: ["writing the API 🔌", "SELECT * FROM...", "migrating the DB", "fixing N+1 queries"], idle: idleLines },
+  fe_dev: { label: "Frontend Dev", short: "FE", color: "#4f8df7", anim: "ss-type", lines: ["styling buttons 💅", "fixing CSS 😩", "npm install...", "useEffect again?!", "new JS framework dropped", "centering a div 🥲"], idle: idleLines },
+  be_dev: { label: "Backend Dev", short: "BE", color: "#6a4fb3", anim: "ss-type", lines: ["writing the API 🔌", "SELECT * FROM...", "migrating the DB", "fixing N+1 queries", "I use Arch btw", ":wq  :wq!!  :q!!!"], idle: idleLines },
   designer: { label: "Designer", short: "UX", color: "#f06fa7", anim: "ss-type", lines: ["moving pixels 🎨", "new mockup!", "more whitespace", "Figma time ✨"], idle: idleLines },
   qa: { label: "QA", short: "QA", color: "#e2a12b", anim: "ss-type", lines: ["found a bug! 🐛", "testing login...", "edge case 🤔", "regression pass ✅"], idle: idleLines },
-  devops: { label: "DevOps", short: "Ops", color: "#3aa37a", anim: "ss-point", lines: ["deploying 🚀", "CI is green ✅", "scaling pods", "reading logs 🔍"], idle: idleLines },
+  devops: { label: "DevOps", short: "Ops", color: "#3aa37a", anim: "ss-point", lines: ["deploying 🚀", "CI is green ✅", "scaling pods", "reading logs 🔍", "sudo rm -rf... jk 😈", "it's always DNS 🙃", "compiling my kernel"], idle: idleLines },
   po: { label: "Product Owner", short: "PO", color: "#e3683e", anim: "ss-note", lines: ["writing user story 📝", "grooming backlog", "talking to users", "MVP first!"], idle: idleLines },
   pm: { label: "Project Manager", short: "PM", color: "#2d9cdb", anim: "ss-point", lines: ["standup time ⏰", "moving tickets →", "timeline OK 👍", "any blockers?"], idle: idleLines },
   sa: { label: "System Analyst", short: "SA", color: "#8d6e63", anim: "ss-draw", lines: ["drawing the ERD", "API contract ✍️", "sequence diagram", "planning for scale"], idle: idleLines },
