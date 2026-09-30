@@ -51,6 +51,7 @@ describe("LawnCharacter", () => {
     expect(puppet).toHaveFocus();
     fireEvent.click(puppet);
     const card = screen.getByRole("dialog", { name: "การ์ดของ Mali" });
+    expect(card).toHaveAttribute("data-lawn-card");
     for (const text of ["legendary", entry.character.serial, "Keep going, friends", "halo", "ramen", "Lilac"]) expect(card).toHaveTextContent(text);
     for (const text of ["Garden Alpha", "16", "peer-alpha", "@"]) expect(card).not.toHaveTextContent(text);
     fireEvent.click(within(card).getByRole("button", { name: "ส่ง ❤️ ให้ Mali" }));
@@ -64,6 +65,7 @@ describe("LawnCharacter", () => {
     fireEvent.click(screen.getByRole("button", { name: "ดูการ์ดของ Mali" }));
     const sheet = screen.getByRole("dialog", { name: "การ์ดของ Mali" });
     expect(sheet.className).toContain("bottom-0");
+    expect(sheet).toHaveAttribute("data-lawn-card");
     expect(sheet).toHaveTextContent("Keep going, friends");
   });
 

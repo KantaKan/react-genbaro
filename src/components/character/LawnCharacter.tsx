@@ -74,7 +74,7 @@ export function LawnCharacter({ entry, action, variant, mine, facing, ...actions
     return <>
       {puppet}
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="bottom" onCloseAutoFocus={returnFocus} className="max-h-[85vh] overflow-y-auto rounded-t-3xl">
+        <SheetContent data-lawn-card side="bottom" onCloseAutoFocus={returnFocus} className="max-h-[85vh] overflow-y-auto rounded-t-3xl">
           <SheetTitle>การ์ดของ {entry.name}</SheetTitle>
           <SheetDescription className="sr-only">ข้อมูลสาธารณะของตัวละครบนลาน</SheetDescription>
           <div className="mt-3">{card}</div>
@@ -84,7 +84,7 @@ export function LawnCharacter({ entry, action, variant, mine, facing, ...actions
   }
   return <Popover open={open} onOpenChange={setOpen}>
     <PopoverAnchor asChild>{puppet}</PopoverAnchor>
-    <PopoverContent role="dialog" aria-label={`การ์ดของ ${entry.name}`} onCloseAutoFocus={returnFocus} className="w-80 rounded-2xl">
+    <PopoverContent data-lawn-card role="dialog" aria-label={`การ์ดของ ${entry.name}`} onCloseAutoFocus={returnFocus} className="w-80 rounded-2xl">
       <button type="button" onClick={() => setOpen(false)} aria-label="ปิดการ์ด" className="float-right -mr-1 -mt-1 rounded-full p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><X className="h-4 w-4" /></button>
       {card}
     </PopoverContent>

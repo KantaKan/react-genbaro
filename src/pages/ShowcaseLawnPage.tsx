@@ -1,4 +1,5 @@
 import { lazy, Suspense, useMemo, useState } from "react";
+import { useReducedMotion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Link } from "react-router-dom";
 import { ArrowLeft, MapPin, RotateCw, Sparkles } from "lucide-react";
@@ -9,6 +10,7 @@ import { BaroCharacterArt } from "@/components/character/BaroCharacterArt";
 import { LawnMoodPicker } from "@/components/character/LawnMoodPicker";
 import { LawnScene } from "@/components/character/LawnScene";
 import { LAWN_LITE_LIMIT, LAWN_SCENE_LIMIT, planLawn } from "@/lib/lawn-planner";
+import { useLawnSceneTime } from "@/hooks/use-lawn-scene-time";
 import { isConstrainedDevice } from "@/hooks/use-lawn-device";
 import { GodEventPanel, LawnGodEventLayer } from "@/components/character/GodEventPanel";
 import { ShowcaseLawnEnvironment } from "@/components/character/ShowcaseLawnEnvironment";
@@ -45,7 +47,8 @@ export default function ShowcaseLawnPage() {
   const react = useMutation(({ ownerId, emoji }: { ownerId: string; emoji: string }) => showcaseLawnService.react(ownerId, emoji), { onSuccess: () => queryClient.invalidateQueries(["showcase-lawn"]) });
   const moderate = useMutation(({ ownerId, hidden }: { ownerId: string; hidden: boolean }) => showcaseLawnService.moderate(ownerId, hidden), { onSuccess: () => { queryClient.invalidateQueries(["showcase-lawn"]); queryClient.invalidateQueries(["showcase-lawn-mine", userId]); } });
   const busy = save.isLoading || remove.isLoading;
-  const [sceneTime] = useState(() => Date.now());
+  const reducedMotion = useReducedMotion();
+  const sceneTime = useLawnSceneTime(Boolean(reducedMotion));
   const [lite, setLite] = useState(() => isConstrainedDevice());
   const plan = useMemo(() => planLawn({ entries: view.data ?? [], viewerId: userId, mine, now: sceneTime, limit: lite ? LAWN_LITE_LIMIT : LAWN_SCENE_LIMIT }), [view.data, userId, mine, sceneTime, lite]);
   const cardActions = (entry: ShowcaseEntry) => ({ admin: includeHidden, busy: react.isLoading || moderate.isLoading, onReact: (emoji: string) => react.mutate({ ownerId: entry.owner_id, emoji }), onModerate: (hidden: boolean) => moderate.mutate({ ownerId: entry.owner_id, hidden }), onInspect: () => setInspectedEntry(entry) });
