@@ -21,6 +21,7 @@ export interface LawnCardActions {
   onReact: (emoji: string) => void;
   onModerate: (hidden: boolean) => void;
   onInspect: () => void;
+  onPick?: () => void;
 }
 
 export function LawnCharacterCard({ entry, admin, busy, onReact, onModerate, onInspect }: { entry: ShowcaseEntry } & LawnCardActions) {
