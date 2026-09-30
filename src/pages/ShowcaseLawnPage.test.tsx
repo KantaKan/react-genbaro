@@ -418,6 +418,7 @@ describe("ShowcaseLawnPage", { timeout: 20_000 }, () => {
     await waitFor(() => expect(emoteRequests).toEqual([{ emote: "dance", target: "" }, { emote: "visit", target: "peer-alpha" }]));
     expect(screen.queryByRole("dialog", { name: "การ์ดของ Mali" })).not.toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole("button", { name: /^Me · / })).toHaveAttribute("data-action", "high-five"));
+    expect(screen.getByRole("button", { name: /^Mali · / })).toHaveAttribute("data-action", "high-five");
   });
 
   it("does not offer emotes before the learner pins a character", async () => {
