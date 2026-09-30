@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
@@ -7,7 +7,6 @@ import StartupStoryPage from "./StartupStoryPage";
 
 const me = "507f1f77bcf86cd799439012";
 vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ userId: me, userRole: "learner" }) }));
-vi.mock("@/application/contexts/UserDataContext", () => ({ useUserData: () => ({ userData: { startup_story_opt_out: false } }) }));
 
 const T = Date.parse("2026-10-01T12:00:00Z");
 const founder = { id: "founder-0", name: "Ploy", title: "Design Nerd", sprite: "designer", frontend: 3, backend: 1, design: 6, debug: 2, salary: 0 };
@@ -28,7 +27,7 @@ let requests: Array<{ path: string; body: unknown }> = [];
 const overview = () => ({
   studio: { _id: "s1", fame: 12, hall_of_fame: [] }, run, ranked_attempts_left: attemptsLeft, week_key: "2026-W40",
   server_time: new Date(T).toISOString(), types: ["Game"], themes: ["Thai Culture", "Fintech"], items,
-  unlocks: [{ fame: 20, kind: "founder", id: "Ex-FAANG Refugee", name: "Ex-FAANG Refugee" }],
+  unlocks: [{ fame: 20, kind: "founder", id: "Ex-FAANG Refugee", name: "Ex-FAANG Refugee" }], opt_out: false,
 });
 const record = (path: string) => async ({ request }: { request: Request }) => {
   const text = await request.text();
@@ -143,5 +142,26 @@ describe("StartupStoryPage", () => {
     expect(await screen.findByRole("button", { name: /Weekly Seed/ })).toBeDisabled();
     expect(screen.getByText(/Next: Ex-FAANG Refugee at 20/)).toBeInTheDocument();
     expect(await screen.findByText("🥈 Ploy (you)")).toBeInTheDocument();
+  });
+
+  it("saves the candidate opt-out from the Lobby toggle", async () => {
+    run = null;
+    server.use(
+      http.get("*/startup-story", () => HttpResponse.json({ data: { ...overview(), opt_out: true } })),
+      http.put("*/startup-story/opt-out", async (info) => {
+        await record("opt-out")(info);
+        return HttpResponse.json({ data: { opt_out: false } });
+      }),
+    );
+    renderPage();
+
+    const toggle = await screen.findByRole("checkbox", { name: /Hide me from/i });
+    expect(toggle).toBeChecked();
+    expect(screen.getByText(/first name can show up/i)).toBeInTheDocument();
+
+    fireEvent.click(toggle);
+
+    await waitFor(() => expect(requests).toEqual([{ path: "opt-out", body: { opt_out: false } }]));
+    expect(await screen.findByRole("checkbox", { name: /Hide me from/i })).not.toBeChecked();
   });
 });

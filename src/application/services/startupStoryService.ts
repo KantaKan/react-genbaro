@@ -116,6 +116,7 @@ export interface StartupOverview {
   themes: string[];
   items: StartupItem[];
   unlocks: StartupUnlock[];
+  opt_out: boolean;
 }
 
 export interface StartupLeaderboardEntry {
@@ -127,6 +128,8 @@ export interface StartupLeaderboardEntry {
 }
 
 const post = async (path: string, body?: unknown) => (await api.post<ApiResponse<StartupRun>>(`/startup-story${path}`, body)).data.data;
+
+export const STARTUP_STORY_QUERY_KEY = "startup-story";
 
 export const startupStoryService = {
   async overview(): Promise<StartupOverview> {

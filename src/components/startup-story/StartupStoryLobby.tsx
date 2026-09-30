@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useMutation, useQuery } from "react-query";
-import { startupStoryService, type StartupMode, type StartupOverview } from "@/application/services/startupStoryService";
+import { useMutation, useQuery, useQueryClient } from "react-query";
+import { STARTUP_STORY_QUERY_KEY, startupStoryService, type StartupMode, type StartupOverview } from "@/application/services/startupStoryService";
 import { ui } from "./startupStoryCatalog";
 
 function Leaderboard({ userId }: { userId: string | null }) {
@@ -27,8 +27,14 @@ function Leaderboard({ userId }: { userId: string | null }) {
 }
 
 function OptOut({ initial }: { initial: boolean }) {
+  const queryClient = useQueryClient();
   const [optOut, setOptOut] = useState(initial);
-  const save = useMutation(startupStoryService.setOptOut, { onSuccess: setOptOut });
+  const save = useMutation(startupStoryService.setOptOut, {
+    onSuccess: (next) => {
+      setOptOut(next);
+      queryClient.setQueryData<StartupOverview | undefined>(STARTUP_STORY_QUERY_KEY, (old) => (old ? { ...old, opt_out: next } : old));
+    },
+  });
   return <label className="flex items-start gap-3 text-sm font-bold">
     <input type="checkbox" className="mt-1 h-4 w-4 accent-[#292542]" checked={optOut} disabled={save.isLoading} onChange={(e) => save.mutate(e.target.checked)} />
     <span>Hide me from other genmates' startups<span className="block text-xs opacity-70">Normally your first name can show up as a hireable dev with random stats.</span></span>
@@ -38,13 +44,12 @@ function OptOut({ initial }: { initial: boolean }) {
 type LobbyProps = {
   overview: StartupOverview;
   userId: string | null;
-  optOut: boolean;
   pending: boolean;
   onStart: (mode: StartupMode) => void;
 };
 
-export function Lobby({ overview, userId, optOut, pending, onStart }: LobbyProps) {
-  const { studio, unlocks, ranked_attempts_left: left } = overview;
+export function Lobby({ overview, userId, pending, onStart }: LobbyProps) {
+  const { studio, unlocks, ranked_attempts_left: left, opt_out } = overview;
   const next = unlocks.find((u) => u.fame > studio.fame);
   const prev = [...unlocks].reverse().find((u) => u.fame <= studio.fame)?.fame ?? 0;
   const progress = next ? Math.min(100, ((studio.fame - prev) / (next.fame - prev)) * 100) : 100;
@@ -79,6 +84,6 @@ export function Lobby({ overview, userId, optOut, pending, onStart }: LobbyProps
 
     <Leaderboard userId={userId} />
 
-    <section className={`${ui.card} p-4`}><OptOut key={String(optOut)} initial={optOut} /></section>
+    <section className={`${ui.card} p-4`}><OptOut key={String(opt_out)} initial={opt_out} /></section>
   </div>;
 }

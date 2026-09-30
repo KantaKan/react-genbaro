@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import { startupStoryService, type StartupOverview, type StartupResult, type StartupRun } from "@/application/services/startupStoryService";
+import { startupStoryService, STARTUP_STORY_QUERY_KEY, type StartupOverview, type StartupResult, type StartupRun } from "@/application/services/startupStoryService";
 import { useAuth } from "@/application/contexts/AuthContext";
-import { useUserData } from "@/application/contexts/UserDataContext";
 import { fireConfetti } from "@/lib/confetti";
 import { bosses, bossThreshold } from "@/components/startup-story/startupStoryCatalog";
 import { DevPhase, FounderPick, Hub, ItemDraft, ReviewDialog, RunEnd, type BossOutcome } from "@/components/startup-story/StartupStoryScreens";
 import { Lobby } from "@/components/startup-story/StartupStoryLobby";
 
-const KEY = "startup-story";
+const KEY = STARTUP_STORY_QUERY_KEY;
 type OverviewData = StartupOverview & { clockOffset: number };
 
 function errorMessage(error: unknown) {
@@ -18,7 +17,6 @@ function errorMessage(error: unknown) {
 export default function StartupStoryPage() {
   const queryClient = useQueryClient();
   const { userId } = useAuth();
-  const { userData } = useUserData();
   const { data, isLoading, error, refetch } = useQuery(KEY, async (): Promise<OverviewData> => {
     const overview = await startupStoryService.overview();
     return { ...overview, clockOffset: Date.parse(overview.server_time) - Date.now() };
@@ -72,7 +70,7 @@ export default function StartupStoryPage() {
     const unlocked = data.unlocks.filter((u) => u.fame > ended.fameBefore && u.fame <= data.studio.fame).map((u) => u.name);
     screen = <RunEnd run={ended.run} fameGain={gain > 0 ? gain : null} newUnlocks={unlocked} onDone={() => setEnded(null)} />;
   } else if (!run) {
-    screen = <Lobby overview={data} userId={userId} optOut={Boolean(userData?.startup_story_opt_out)} pending={pending} onStart={(mode) => action.mutate(() => startupStoryService.startRun(mode))} />;
+    screen = <Lobby overview={data} userId={userId} pending={pending} onStart={(mode) => action.mutate(() => startupStoryService.startRun(mode))} />;
   } else if (run.stage === "founder") {
     screen = <FounderPick offer={run.founder_offer ?? []} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickFounder(i))} />;
   } else if (run.stage === "developing") {
