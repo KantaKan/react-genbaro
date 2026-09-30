@@ -4,7 +4,12 @@ import { startupStoryService, STARTUP_STORY_QUERY_KEY, type StartupOverview, typ
 import { useAuth } from "@/application/contexts/AuthContext";
 import { fireConfetti } from "@/lib/confetti";
 import { bosses, bossThreshold } from "@/components/startup-story/startupStoryCatalog";
-import { DevPhase, FounderPick, Hub, ItemDraft, ReviewDialog, RunEnd, type BossOutcome } from "@/components/startup-story/StartupStoryScreens";
+import { DevPhase } from "@/components/startup-story/DevPhase";
+import { FounderPick } from "@/components/startup-story/FounderPick";
+import { Hub } from "@/components/startup-story/Hub";
+import { ItemDraft } from "@/components/startup-story/ItemDraft";
+import { ReviewDialog, type BossOutcome } from "@/components/startup-story/ReviewDialog";
+import { RunEnd } from "@/components/startup-story/RunEnd";
 import { Lobby } from "@/components/startup-story/StartupStoryLobby";
 
 const KEY = STARTUP_STORY_QUERY_KEY;
@@ -64,6 +69,23 @@ export default function StartupStoryPage() {
     });
   };
 
+  const actions = {
+    hire: (id: string) => action.mutate(() => startupStoryService.hire(id)),
+    dismiss: (id: string) => action.mutate(() => startupStoryService.dismiss(id)),
+    abandon: () => action.mutate(startupStoryService.abandon),
+  };
+
+  const screenFor = (run: StartupRun) => {
+    switch (run.stage) {
+      case "founder": return <FounderPick offer={run.founder_offer ?? []} roles={data.roles} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickFounder(i))} />;
+      case "developing": return <DevPhase key={run.project?.started_at} run={run} items={data.items} skin={skin} clockOffset={data.clockOffset} pending={pending} onShip={ship} />;
+      case "item": return <ItemDraft run={run} items={data.items} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickItem(i))} />;
+      default: return <Hub key={run.project_index} run={run} types={data.types} themes={data.themes} items={data.items} roles={data.roles} discovered={data.studio.discovered_combos ?? []} skin={skin} pending={pending}
+        onStart={(type, theme, staffIds) => action.mutate(() => startupStoryService.startProject(type, theme, staffIds))}
+        onHire={actions.hire} onDismiss={actions.dismiss} onAbandon={actions.abandon} />;
+    }
+  };
+
   let screen;
   if (ended && !review) {
     const gain = data.studio.fame - ended.fameBefore;
@@ -71,18 +93,8 @@ export default function StartupStoryPage() {
     screen = <RunEnd run={ended.run} fameGain={gain > 0 ? gain : null} newUnlocks={unlocked} onDone={() => setEnded(null)} />;
   } else if (!run) {
     screen = <Lobby overview={data} userId={userId} pending={pending} onStart={(mode) => action.mutate(() => startupStoryService.startRun(mode))} />;
-  } else if (run.stage === "founder") {
-    screen = <FounderPick offer={run.founder_offer ?? []} roles={data.roles} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickFounder(i))} />;
-  } else if (run.stage === "developing") {
-    screen = <DevPhase key={run.project?.started_at} run={run} items={data.items} skin={skin} clockOffset={data.clockOffset} pending={pending} onShip={ship} />;
-  } else if (run.stage === "item") {
-    screen = <ItemDraft run={run} items={data.items} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickItem(i))} />;
   } else {
-    screen = <Hub key={run.project_index} run={run} types={data.types} themes={data.themes} items={data.items} roles={data.roles} discovered={data.studio.discovered_combos ?? []} skin={skin} pending={pending}
-      onStart={(type, theme, staffIds) => action.mutate(() => startupStoryService.startProject(type, theme, staffIds))}
-      onHire={(id) => action.mutate(() => startupStoryService.hire(id))}
-      onDismiss={(id) => action.mutate(() => startupStoryService.dismiss(id))}
-      onAbandon={() => action.mutate(startupStoryService.abandon)} />;
+    screen = screenFor(run);
   }
 
   return <main className="mx-auto w-full max-w-3xl space-y-4 p-4">

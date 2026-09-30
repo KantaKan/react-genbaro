@@ -1,7 +1,7 @@
 import { api } from "@/infrastructure/api";
 import type { ApiResponse } from "@/domain/types";
 
-export type StartupStage = "founder" | "hub" | "developing" | "item" | "ended";
+export type StartupStage = "founder" | "hub" | "developing" | "item" | "perk" | "event" | "ipo_choice" | "ended";
 export type StartupMode = "free" | "ranked";
 
 export interface StartupDev {
@@ -18,6 +18,16 @@ export interface StartupDev {
   design: number;
   debug: number;
   salary: number;
+  level?: number;
+  xp?: number;
+  burnout?: number;
+  perks?: string[];
+}
+
+export interface StartupPitch {
+  type: string;
+  theme: string;
+  title: string;
 }
 
 export interface StartupProject {
@@ -70,6 +80,15 @@ export interface StartupRun {
   last_result?: StartupResult;
   score: number;
   version: number;
+  max_act?: number;
+  endless?: boolean;
+  oss?: boolean;
+  pitches?: StartupPitch[];
+  world_event?: string;
+  boss_gimmick?: string;
+  pending_perk?: { dev_id: string; offer: string[] };
+  pending_event?: { id: string; options: string[] };
+  log?: string[];
 }
 
 export interface StartupHallEntry {
