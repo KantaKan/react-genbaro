@@ -21,6 +21,7 @@ const entry = (ownerId: string, name: string, cohort: number, team: string) => (
 let entries: ShowcaseEntry[] = [entry("peer-alpha", "Mali", 16, "Alpha"), entry("peer-beta", "Pim", 16, "Beta"), entry("peer-other", "Nok", 17, "Alpha")];
 let selection = { equipped_id: character.id, pinned_id: "" };
 let failList = false;
+let moodRequests: unknown[] = [];
 let activeReactions = new Set<string>();
 let godEvents: Array<{ id: string; preset: string; caption: string; cohort: number; cast_by: string; character: typeof character; created_at: string; active_until: string; active: boolean }> = [];
 const reactionChoices = ["❤️", "✨", "😂", "🙌"];
@@ -51,6 +52,13 @@ const server = setupServer(
     entries = entries.filter((item) => item.owner_id !== me).concat({ ...entry(me, "Me", 16, "Alpha"), character, message: body.message, hidden: entries.find((item) => item.owner_id === me)?.hidden ?? false });
     return HttpResponse.json({ data: { saved: true } });
   }),
+  http.put("*/showcase-lawn/me/mood", async ({ request }) => {
+    const body = await request.json() as { mood: ShowcaseEntry["mood"] | "" };
+    moodRequests.push(body);
+    const until = "2099-01-01T00:00:00Z";
+    entries = entries.map((item) => item.owner_id === me ? { ...item, mood: body.mood || undefined, mood_until: body.mood ? until : undefined } : item);
+    return HttpResponse.json({ data: { mood: body.mood, until } });
+  }),
   http.delete("*/showcase-lawn/me", () => {
     entries = entries.filter((item) => item.owner_id !== me);
     selection = { ...selection, pinned_id: "" };
@@ -74,7 +82,7 @@ beforeAll(() => {
   vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
   server.listen({ onUnhandledRequest: "error" });
 });
-afterEach(() => { server.resetHandlers(); role = "learner"; failList = false; activeReactions = new Set<string>(); godEvents = []; selection = { equipped_id: character.id, pinned_id: "" }; entries = [entry("peer-alpha", "Mali", 16, "Alpha"), entry("peer-beta", "Pim", 16, "Beta"), entry("peer-other", "Nok", 17, "Alpha")]; });
+afterEach(() => { moodRequests = []; server.resetHandlers(); role = "learner"; failList = false; activeReactions = new Set<string>(); godEvents = []; selection = { equipped_id: character.id, pinned_id: "" }; entries = [entry("peer-alpha", "Mali", 16, "Alpha"), entry("peer-beta", "Pim", 16, "Beta"), entry("peer-other", "Nok", 17, "Alpha")]; });
 afterAll(() => server.close());
 
 function renderPage() {
@@ -245,5 +253,27 @@ describe("ShowcaseLawnPage", () => {
     fireEvent.change(screen.getByLabelText("กรองทีม"), { target: { value: "Beta" } });
     await waitFor(() => expect(within(screen.getByRole("group", { name: "เพื่อนบนลานตอนนี้" })).queryByRole("button", { name: "ดูการ์ดของ Friend 1" })).not.toBeInTheDocument());
     expect(within(screen.getByRole("group", { name: "เพื่อนบนลานตอนนี้" })).getByRole("button", { name: "ดูการ์ดของ Me" })).toBeInTheDocument();
+  });
+
+  it("lets a pinned learner choose, change, and clear a 24-hour mood without naming anyone", async () => {
+    entries.push({ ...entry(me, "Me", 16, "Alpha"), character });
+    selection = { ...selection, pinned_id: character.id };
+    renderPage();
+    const quiet = await screen.findByRole("button", { name: "🤫 ขอเวลาเงียบ ๆ" });
+    expect(screen.getByText(/อยู่ 24 ชั่วโมงแล้วกลับเป็นปกติเอง/)).toBeInTheDocument();
+    fireEvent.click(quiet);
+    await waitFor(() => expect(screen.getByRole("button", { name: "🤫 ขอเวลาเงียบ ๆ" })).toHaveAttribute("aria-pressed", "true"));
+    expect(screen.getByText("คู่หูจะเดิน นั่ง หรืองีบคนเดียว ไม่ถูกจับคู่กับใคร")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "🎈 อยากเล่นสนุก" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "🎈 อยากเล่นสนุก" })).toHaveAttribute("aria-pressed", "true"));
+    fireEvent.click(screen.getByRole("button", { name: "กลับเป็นปกติ" }));
+    await waitFor(() => expect(screen.queryByRole("button", { name: "กลับเป็นปกติ" })).not.toBeInTheDocument());
+    expect(moodRequests).toEqual([{ mood: "quiet" }, { mood: "playful" }, { mood: "" }]);
+  });
+
+  it("does not offer a mood before the learner pins a character", async () => {
+    renderPage();
+    expect(await screen.findByRole("button", { name: "ปักบนลาน" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "🤫 ขอเวลาเงียบ ๆ" })).not.toBeInTheDocument();
   });
 });

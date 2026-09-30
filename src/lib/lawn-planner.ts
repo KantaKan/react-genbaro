@@ -1,4 +1,4 @@
-import type { ShowcaseEntry } from "@/application/services/showcaseLawnService";
+import type { LawnMood, ShowcaseEntry } from "@/application/services/showcaseLawnService";
 import { getThailandHour } from "@/utils/date-utils";
 
 export const LAWN_SCENE_LIMIT = 12;
@@ -30,6 +30,13 @@ export const LAWN_ACTIONS: Record<LawnAction, LawnActionSpec> = {
   meal: { label: "กินข้าวด้วยกัน", emoji: "🍙", participants: [2], zones: ["picnic"] },
   rps: { label: "เป่ายิ้งฉุบกันขำ ๆ", emoji: "✌️", participants: [2], zones: ["picnic", "play"] },
   play: { label: "เล่นกันแบบตลก ๆ", emoji: "🎈", participants: [2], zones: ["play"], variants: ["pillow", "paper-sword", "chase"] },
+};
+
+const moodActions: Partial<Record<LawnMood, LawnAction[]>> = {
+  greeting: ["wave", "smile", "high-five"],
+  relaxing: ["bench-sit", "rest"],
+  meal: ["meal"],
+  playful: ["play", "rps"],
 };
 
 const soloActions = (Object.keys(LAWN_ACTIONS) as LawnAction[]).filter((action) => LAWN_ACTIONS[action].participants.includes(1));
@@ -120,15 +127,19 @@ function circleMatching(entries: ShowcaseEntry[], round: number): Array<[Showcas
 export function planLawn({ entries, viewerId, mine, now, limit = LAWN_SCENE_LIMIT }: LawnPlanInput): LawnPlan {
   const windowIndex = lawnWindow(now);
   const { chosen, total } = selectVisitors(entries, viewerId, mine, windowIndex, limit);
+  const activeMood = (entry: ShowcaseEntry) => (entry.mood && entry.mood_until && Date.parse(entry.mood_until) > now ? entry.mood : undefined);
+  const pairable = (entry: ShowcaseEntry) => activeMood(entry) !== "quiet";
+  const preferredActions = (entry: ShowcaseEntry) => moodActions[activeMood(entry) ?? "surprise"] ?? [];
   const previous = selectVisitors(entries, viewerId, mine, windowIndex - 1, limit).chosen;
-  const recentPairs = chosen.length > 2 ? new Set(circleMatching(previous, windowIndex - 1).map(([a, b]) => pairKey(a.owner_id, b.owner_id))) : new Set<string>();
+  const recentPairs = chosen.filter(pairable).length > 2 ? new Set(circleMatching(previous.filter(pairable), windowIndex - 1).map(([a, b]) => pairKey(a.owner_id, b.owner_id))) : new Set<string>();
   const free: Record<LawnZone, number> = { picnic: LAWN_ZONE_CAPACITY, bench: LAWN_ZONE_CAPACITY, play: LAWN_ZONE_CAPACITY };
   const activities: LawnActivity[] = [];
   const paired = new Set<string>();
 
-  const fit = (candidates: LawnAction[], seed: number, size: 1 | 2) => {
-    for (let step = 0; step < candidates.length; step++) {
-      const action = candidates[(seed + step) % candidates.length];
+  const fit = (candidates: LawnAction[], seed: number, size: 1 | 2, preferred: LawnAction[] = []) => {
+    const rotate = (list: LawnAction[]) => list.map((_, index) => list[(seed + index) % list.length]);
+    const ordered = [...rotate(candidates.filter((action) => preferred.includes(action))), ...rotate(candidates.filter((action) => !preferred.includes(action)))];
+    for (const action of ordered) {
       const zones = LAWN_ACTIONS[action].zones;
       for (let offset = 0; offset < zones.length; offset++) {
         const zone = zones[(seed + offset) % zones.length];
@@ -138,11 +149,11 @@ export function planLawn({ entries, viewerId, mine, now, limit = LAWN_SCENE_LIMI
     return null;
   };
 
-  for (const [a, b] of circleMatching(chosen, windowIndex)) {
+  for (const [a, b] of circleMatching(chosen.filter(pairable), windowIndex)) {
     const key = pairKey(a.owner_id, b.owner_id);
     const seed = lawnHash(`${windowIndex}:${key}`);
     if (recentPairs.has(key) || seed % 10 >= 7) continue;
-    const slot = fit(pairActions, seed >>> 4, 2);
+    const slot = fit(pairActions, seed >>> 4, 2, [...preferredActions(a), ...preferredActions(b)]);
     if (!slot) continue;
     free[slot.zone] -= 2;
     paired.add(a.owner_id).add(b.owner_id);
@@ -153,7 +164,7 @@ export function planLawn({ entries, viewerId, mine, now, limit = LAWN_SCENE_LIMI
   for (const entry of chosen) {
     if (paired.has(entry.owner_id)) continue;
     const seed = lawnHash(`${windowIndex}:${entry.owner_id}`);
-    const slot = fit(soloActions, seed >>> 4, 1) ?? fit(["idle"], seed, 1);
+    const slot = fit(soloActions, seed >>> 4, 1, preferredActions(entry)) ?? fit(["idle"], seed, 1);
     if (!slot) continue;
     free[slot.zone] -= 1;
     activities.push({ id: `solo:${entry.owner_id}`, ...slot, members: [entry] });

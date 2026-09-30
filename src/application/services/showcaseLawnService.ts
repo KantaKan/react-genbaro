@@ -13,7 +13,11 @@ export interface ShowcaseEntry {
   updated_at: string;
   hidden?: boolean;
   reactions?: Array<{ emoji: string; count: number; reacted: boolean }>;
+  mood?: LawnMood;
+  mood_until?: string;
 }
+
+export type LawnMood = "greeting" | "relaxing" | "meal" | "playful" | "quiet" | "surprise";
 
 export const showcaseLawnService = {
   async mine(): Promise<ShowcaseEntry | null> {
@@ -28,6 +32,10 @@ export const showcaseLawnService = {
   },
   async save(characterId: string, message: string): Promise<void> {
     await api.put("/showcase-lawn/me", { character_id: characterId, message });
+  },
+  async setMood(mood: LawnMood | ""): Promise<{ mood: string; until?: string }> {
+    const response = await api.put<ApiResponse<{ mood: string; until?: string }>>("/showcase-lawn/me/mood", { mood });
+    return response.data.data;
   },
   async remove(): Promise<void> {
     await api.delete("/showcase-lawn/me");

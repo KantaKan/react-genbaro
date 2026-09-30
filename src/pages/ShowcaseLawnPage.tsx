@@ -6,6 +6,7 @@ import { useAuth } from "@/application/contexts/AuthContext";
 import { baroCharacterService } from "@/application/services/baroCharacterService";
 import { showcaseLawnService, type ShowcaseEntry } from "@/application/services/showcaseLawnService";
 import { BaroCharacterArt } from "@/components/character/BaroCharacterArt";
+import { LawnMoodPicker } from "@/components/character/LawnMoodPicker";
 import { LawnScene } from "@/components/character/LawnScene";
 import { planLawn } from "@/lib/lawn-planner";
 import { GodEventPanel } from "@/components/character/GodEventPanel";
@@ -66,6 +67,7 @@ export default function ShowcaseLawnPage() {
         </div>}
         {collection.data && collection.data.length > 0 && <div className="mt-4 flex flex-wrap gap-3"><button type="button" disabled={busy || !chosenId || [...message].length > 160} onClick={() => save.mutate()} className="min-h-11 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5 disabled:opacity-50 motion-reduce:transition-none">{save.isLoading ? "กำลังบันทึก…" : mine ? "บันทึกการปัก" : "ปักบนลาน"}</button>{mine && <button type="button" disabled={busy} onClick={() => remove.mutate()} className="min-h-11 rounded-full border border-border bg-background px-5 text-sm font-bold disabled:opacity-50">เอาออกจากลาน</button>}</div>}
         {save.isError && <p role="alert" className="mt-3 text-sm font-bold text-[#a9505e]">ยังปักตัวละครไม่ได้ ตรวจตัวที่เลือกแล้วลองใหม่</p>}{remove.isError && <p role="alert" className="mt-3 text-sm font-bold text-[#a9505e]">ยังเอาออกจากลานไม่ได้ ลองใหม่ได้เลย</p>}{save.isSuccess && <p role="status" className="mt-3 text-sm font-bold text-[#347c69]">บันทึกการปักแล้ว</p>}{remove.isSuccess && <p role="status" className="mt-3 text-sm font-bold text-[#347c69]">เอาออกจากลานแล้ว</p>}
+        {mine && <LawnMoodPicker mine={mine} userId={userId} />}
       </section>
 
       <section aria-labelledby="lawn-friends-heading"><div className="mb-4 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">WANDER TOGETHER</p><h2 id="lawn-friends-heading" className="mt-1 font-register-heading text-2xl">เดินดูเพื่อนบนลาน</h2></div><div className="flex flex-wrap gap-2">{userRole === "admin" && <select aria-label="กรองรุ่น" value={cohort} onChange={(event) => { setCohort(Number(event.target.value)); setTeam(""); }} className="min-h-10 rounded-full border border-input bg-background px-3 text-sm font-bold"><option value={0}>ทุกรุ่น</option>{cohorts.map((number) => <option key={number} value={number}>รุ่น {number}</option>)}</select>}<select aria-label="กรองทีม" value={team} onChange={(event) => setTeam(event.target.value)} className="min-h-10 rounded-full border border-input bg-background px-3 text-sm font-bold"><option value="">ทุกทีม</option>{teams.map((name) => <option key={name} value={name}>{name}</option>)}</select></div></div>

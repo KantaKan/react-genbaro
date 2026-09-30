@@ -114,4 +114,31 @@ describe("planLawn", () => {
     expect(planLawn({ entries: [], now: Date.UTC(2026, 8, 30, 11, 0) }).lighting).toBe("evening");
     expect(planLawn({ entries: [], now: Date.UTC(2026, 8, 29, 23, 30) }).lighting).toBe("morning");
   });
+
+  describe("moods", () => {
+    const until = new Date(now + 24 * 60 * 60 * 1000).toISOString();
+    const withMood = (mood: NonNullable<ShowcaseEntry["mood"]>, moodUntil = until) => cohort.slice(0, 12).map((item) => item.owner_id === "learner-5" ? { ...item, mood, mood_until: moodUntil } : item);
+    const activitiesFor = (entries: ShowcaseEntry[]) => Array.from({ length: 47 }, (_, window) => planLawn({ entries, viewerId: "learner-0", now: now + window * LAWN_WINDOW_MS }).activities
+      .find((activity) => activity.members.some((member) => member.owner_id === "learner-5"))!);
+
+    it("keeps a quiet learner out of every paired action while they still rest, sit, or walk", () => {
+      const activities = activitiesFor(withMood("quiet"));
+      expect(activities.every((activity) => activity.members.length === 1)).toBe(true);
+      expect(new Set(activities.map((activity) => activity.action)).size).toBeGreaterThan(1);
+    });
+
+    it.each([["greeting", ["wave", "smile", "high-five"]], ["meal", ["meal"]], ["playful", ["play", "rps"]], ["relaxing", ["bench-sit", "rest"]]] as const)("biases %s toward its safe actions without forcing a partner", (mood, preferred) => {
+      const activities = activitiesFor(withMood(mood));
+      const biased = activities.filter((activity) => (preferred as readonly string[]).includes(activity.action)).length;
+      const baseline = activitiesFor(cohort.slice(0, 12)).filter((activity) => (preferred as readonly string[]).includes(activity.action)).length;
+      expect(biased).toBeGreaterThan(baseline);
+      if (mood !== "relaxing") expect(activities.some((activity) => activity.members.length === 1)).toBe(true);
+    });
+
+    it("treats surprise and expired moods exactly like the ordinary planner", () => {
+      const plain = activitiesFor(cohort.slice(0, 12)).map((activity) => activity.id + activity.action);
+      expect(activitiesFor(withMood("surprise")).map((activity) => activity.id + activity.action)).toEqual(plain);
+      expect(activitiesFor(withMood("quiet", new Date(now - 1).toISOString())).map((activity) => activity.id + activity.action)).toEqual(plain);
+    });
+  });
 });
