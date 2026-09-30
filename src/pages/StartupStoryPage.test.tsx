@@ -76,6 +76,20 @@ describe("StartupStoryPage", () => {
     expect(screen.getByRole("button", { name: "Ship it" })).toBeDisabled();
   });
 
+  it("enables Ship exactly when the server's ends_at arrives", async () => {
+    const now = vi.spyOn(Date, "now").mockReturnValue(T);
+    run = { ...hubRun, stage: "developing", project: { type: "Game", theme: "Thai Culture", staff_ids: ["founder-0"], started_at: new Date(T).toISOString(), ends_at: new Date(T + 30_000).toISOString() } };
+    renderPage();
+
+    expect(await screen.findByRole("button", { name: "Ship it" })).toBeDisabled();
+    now.mockReturnValue(T + 29_500);
+    expect(await screen.findByText("Building... 1s")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ship it" })).toBeDisabled();
+    now.mockReturnValue(T + 30_000);
+    expect(await screen.findByText("Ready to ship! 🚀")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ship it" })).toBeEnabled();
+  });
+
   it("marks the market and sends only the selected staff", async () => {
     run = { ...hubRun, staff: [founder, { ...genmate, id: "dev-2" }] };
     renderPage();
