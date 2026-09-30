@@ -52,11 +52,11 @@ export function AdminCharacterDialog({ userId, learnerName }: { userId: string; 
     <DialogTrigger asChild><Button variant="outline" className="gap-2"><Sparkles className="h-4 w-4" /> Baro Character</Button></DialogTrigger>
     <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
       <DialogHeader><DialogTitle className="text-xl font-black">สมุดตัวละครของ {learnerName}</DialogTitle></DialogHeader>
-      <p className="text-sm text-muted-foreground">แอดมินสุ่มตัวใหม่ให้ได้โดยไม่ทับตัวเดิม และช่วยเลือกตัวใช้งานหรือตัวปักลานแยกกันได้ ประวัติการเปลี่ยนจะอยู่ใน Admin History</p>
+      <p className="text-sm text-muted-foreground">การให้รางวัลตามปกติควรแจก Character Egg เพื่อให้นักเรียนเปิดเอง ส่วนเครื่องมือนี้ใช้กู้คืนหรือแก้บัญชีกรณีพิเศษ และช่วยเลือกตัวใช้งานหรือตัวปักลานได้</p>
       <div className="rounded-2xl border border-border bg-muted/40 p-4">
-        <p className="text-xs font-black uppercase tracking-widest">ADMIN GRANT · 83 / 15 / 2</p>
+		<p className="text-xs font-black uppercase tracking-widest">ADMIN RECOVERY OVERRIDE · 83 / 15 / 2</p>
         <p className="mt-1 text-sm text-muted-foreground">ตัวปกติ 83% · มีมแรร์ 15% · ตำนาน 2%</p>
-        <Button type="button" disabled={busy} onClick={() => grant.mutate()} className="mt-3 w-full sm:w-auto">{grant.isLoading ? "กำลังสุ่ม…" : `สุ่มตัวละครให้ ${learnerName}`}</Button>
+		<Button type="button" disabled={busy} onClick={() => grant.mutate()} className="mt-3 w-full sm:w-auto">{grant.isLoading ? "กำลังกู้คืน…" : `สร้างตัวละครเพื่อกู้คืนให้ ${learnerName}`}</Button>
       </div>
       {(collection.isError || selection.isError) && <div className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">โหลดสมุดไม่ได้ <button type="button" onClick={() => { collection.refetch(); selection.refetch(); }} className="font-bold underline">ลองใหม่</button></div>}
       {(grant.isError || equip.isError || pin.isError) && <p role="alert" className="text-sm font-bold text-destructive">บันทึกไม่สำเร็จ ลองอีกครั้งได้เลย</p>}

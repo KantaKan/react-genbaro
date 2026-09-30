@@ -18,9 +18,15 @@ const cosmeticRarityOrder = ["Common", "Rare", "Epic", "Legendary"] as const;
 const characterEggRarityOrder = ["Normal", "Meme Rare", "Legendary"] as const;
 
 function oddsText(preview: GiftBoxOdds) {
-  const order = preview.odds.Normal != null ? characterEggRarityOrder : cosmeticRarityOrder;
+  const order = preview.odds.Normal != null || preview.odds["Meme Rare"] != null ? characterEggRarityOrder : cosmeticRarityOrder;
   return order.filter((rarity) => preview.odds[rarity] != null)
     .map((rarity) => `${rarity} ${Math.round((preview.odds[rarity] ?? 0) * 1000) / 10}%`).join(" · ");
+}
+
+function eggTierLabel(minimumRarity: string) {
+  if (minimumRarity === "Rare") return "Rare";
+  if (minimumRarity === "Legendary") return "Legendary";
+  return "Standard";
 }
 
 function GiftBoxJourney({ box }: { box: TeacherGiftBox }) {
@@ -107,9 +113,9 @@ function UnopenedBox({ box, openingId, onOpen, onTransferred }: { box: TeacherGi
   return <article className={`relative overflow-hidden rounded-3xl border-2 p-5 shadow-sm ${character ? "border-[#292542] bg-[#fffaf0] text-[#292542]" : egg ? "border-orange-300 bg-gradient-to-br from-orange-50 via-white to-violet-50 text-[#292542]" : "border-amber-300 bg-white"}`}>
     <div className={`absolute inset-y-0 left-0 w-2 ${character ? "bg-[repeating-linear-gradient(45deg,#cab2f1_0_8px,#fffaf0_8px_16px,#f4bd80_16px_24px)]" : egg ? "bg-gradient-to-b from-orange-300 via-violet-300 to-sky-300" : "bg-[repeating-linear-gradient(45deg,#d97706_0_6px,#fef3c7_6px_12px,#059669_12px_18px,#d1fae5_18px_24px)]"}`} />
     <div className="pl-3">
-      <div className="flex items-center justify-between gap-3"><Badge variant="outline">{egg ? "Standard Egg" : `${box.minimum_rarity} or better`}</Badge><Gift className={`h-5 w-5 ${character || egg ? "text-[#7957a2]" : "text-rose-500"}`} /></div>
+      <div className="flex items-center justify-between gap-3"><Badge variant="outline">{egg ? `${eggTierLabel(box.minimum_rarity)} Egg` : `${box.minimum_rarity} or better`}</Badge><Gift className={`h-5 w-5 ${character || egg ? "text-[#7957a2]" : "text-rose-500"}`} /></div>
       {character && <p className="mt-4 font-['Trebuchet_MS',sans-serif] text-xs font-black uppercase tracking-[.16em]">✦ BARO CHARACTER STYLE BOX</p>}
-      {egg && <p className="mt-4 font-['Trebuchet_MS',sans-serif] text-sm font-black">🥚 Standard Character Egg</p>}
+      {egg && <p className="mt-4 font-['Trebuchet_MS',sans-serif] text-sm font-black">🥚 {eggTierLabel(box.minimum_rarity)} Character Egg</p>}
       <p className={`mt-4 text-xs font-semibold uppercase tracking-[0.16em] ${character ? "text-[#7957a2]" : "text-emerald-700"}`}>
         {box.source === "reflection-milestone" ? "Reflection milestone" : box.source === "achievement" ? "Achievement unlocked" : "From your teacher"}
       </p>

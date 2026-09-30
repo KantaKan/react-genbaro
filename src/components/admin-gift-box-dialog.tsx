@@ -12,6 +12,7 @@ import type { CosmeticRarity } from "@/domain/types";
 export function AdminGiftBoxDialog({ userId, learnerName }: { userId: string; learnerName: string }) {
   const [open, setOpen] = useState(false);
   const [rarity, setRarity] = useState<CosmeticRarity>("Rare");
+  const [eggTier, setEggTier] = useState<"Common" | "Rare" | "Legendary">("Common");
   const [rewardPool, setRewardPool] = useState<"plant" | "style" | "egg">("plant");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -21,7 +22,7 @@ export function AdminGiftBoxDialog({ userId, learnerName }: { userId: string; le
     setSending(true);
     try {
       const pool = rewardPool === "style" ? "character-box" : rewardPool === "egg" ? "character-egg" : undefined;
-      await giftBoxService.grant(userId, rewardPool === "egg" ? "Common" : rarity, message.trim(), pool);
+      await giftBoxService.grant(userId, rewardPool === "egg" ? eggTier : rarity, message.trim(), pool);
       toast.success(`${rewardPool === "egg" ? "Character Egg" : "Gift box"} sent to ${learnerName}`);
       setOpen(false);
       setMessage("");
@@ -45,8 +46,15 @@ export function AdminGiftBoxDialog({ userId, learnerName }: { userId: string; le
               <button type="button" aria-pressed={rewardPool === "style"} onClick={() => setRewardPool("style")} className={`rounded-xl border-2 px-3 py-3 text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${rewardPool === "style" ? "border-[#292542] bg-[#eadcf7] text-[#292542]" : "border-border"}`}>✦ Baro Character Style Box</button>
               <button type="button" aria-pressed={rewardPool === "egg"} onClick={() => setRewardPool("egg")} className={`rounded-xl border-2 px-3 py-3 text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${rewardPool === "egg" ? "border-orange-500 bg-orange-50 text-orange-950" : "border-border"}`}>🥚 Character Egg</button>
             </div>
-            <p className="text-xs text-muted-foreground">{rewardPool === "egg" ? "A Standard Egg with its hatch chances disclosed to the learner. It will stay safe and unopened until hatching is available." : "The learner will receive one unowned item from this collection when they open it."}</p>
+            <p className="text-xs text-muted-foreground">{rewardPool === "egg" ? "The learner opens this Egg personally. Its server-owned hatch chances are shown before opening." : "The learner will receive one unowned item from this collection when they open it."}</p>
           </div>
+          {rewardPool === "egg" && <div className="space-y-2">
+            <Label>Character Egg tier</Label>
+            <Select value={eggTier} onValueChange={(value) => setEggTier(value as typeof eggTier)}>
+              <SelectTrigger aria-label="Character Egg tier"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="Common">Standard · 83% Normal / 15% Meme Rare / 2% Legendary</SelectItem><SelectItem value="Rare">Rare · guaranteed Meme Rare or better</SelectItem><SelectItem value="Legendary">Legendary · guaranteed Legendary</SelectItem></SelectContent>
+            </Select>
+          </div>}
           {rewardPool !== "egg" && <div className="space-y-2">
             <Label>Minimum rarity</Label>
             <Select value={rarity} onValueChange={(value) => setRarity(value as CosmeticRarity)}>

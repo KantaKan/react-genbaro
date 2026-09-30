@@ -22,9 +22,20 @@ describe("AdminGiftBoxDialog", () => {
     fireEvent.click(screen.getByRole("button", { name: "Send Gift Box" }));
     expect(screen.getByRole("button", { name: /Style Box/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Character Egg/ }));
-    expect(screen.getByText(/hatch chances disclosed to the learner/)).toBeInTheDocument();
+    expect(screen.getByText(/server-owned hatch chances/)).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Message to learner"), { target: { value: "A new friend is waiting" } });
     fireEvent.click(screen.getByRole("button", { name: /Send Character Egg/ }));
     await waitFor(() => expect(giftBoxService.grant).toHaveBeenCalledWith("learner-1", "Common", "A new friend is waiting", "character-egg"));
+  });
+
+  it("offers Rare and Legendary Eggs from the same individual workflow", async () => {
+    render(<AdminGiftBoxDialog userId="learner-1" learnerName="Mali" />);
+    fireEvent.click(screen.getByRole("button", { name: "Send Gift Box" }));
+    fireEvent.click(screen.getByRole("button", { name: /Character Egg/ }));
+    fireEvent.click(screen.getByLabelText("Character Egg tier"));
+    fireEvent.click(screen.getByRole("option", { name: /Legendary · guaranteed Legendary/ }));
+    fireEvent.change(screen.getByLabelText("Message to learner"), { target: { value: "For a remarkable week" } });
+    fireEvent.click(screen.getByRole("button", { name: /Send Character Egg/ }));
+    await waitFor(() => expect(giftBoxService.grant).toHaveBeenCalledWith("learner-1", "Legendary", "For a remarkable week", "character-egg"));
   });
 });

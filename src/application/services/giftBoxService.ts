@@ -64,7 +64,7 @@ export const giftBoxService = {
     return response.data.data;
   },
 
-  async grantAudience(cohort: number, team: string, minimumRarity: CosmeticRarity, message: string, idempotencyKey: string, rewardPool: "" | "character-box"): Promise<CohortGiftBoxResult> {
+  async grantAudience(cohort: number, team: string, minimumRarity: CosmeticRarity, message: string, idempotencyKey: string, rewardPool: "" | GiftBoxRewardPool): Promise<CohortGiftBoxResult> {
     const response = await api.post<ApiResponse<CohortGiftBoxResult>>(`/admin/cohorts/${cohort}/gift-boxes`, {
       minimum_rarity: minimumRarity,
       message,

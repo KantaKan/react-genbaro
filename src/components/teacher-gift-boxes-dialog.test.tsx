@@ -132,6 +132,18 @@ describe("TeacherGiftBoxesDialog", () => {
     expect(baroCharacterService.equip).not.toHaveBeenCalled();
   });
 
+  it("shows the selected Rare Egg tier and its server policy", async () => {
+    vi.mocked(giftBoxService.list).mockResolvedValueOnce([{
+      id: "egg-rare", user_id: "learner-1", minimum_rarity: "Rare", message: "A rare mystery friend is waiting", granted_by: "admin-1", status: "unopened", reward_pool: "character-egg", created_at: "2026-09-30T00:00:00Z",
+    }]);
+    vi.mocked(giftBoxService.odds).mockResolvedValueOnce({ eligible_count: 1, odds: { "Meme Rare": 15 / 17, Legendary: 2 / 17 }, complete: false });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><TeacherGiftBoxesDialog /></QueryClientProvider>);
+    fireEvent.click(screen.getByRole("button", { name: /gift boxes/i }));
+    expect(await screen.findByText(/Rare Character Egg/)).toBeInTheDocument();
+    expect(screen.getByText(/Meme Rare 88.2% · Legendary 11.8%/)).toBeInTheDocument();
+  });
+
   it("equips a revealed Egg character only after the learner chooses it", async () => {
     vi.mocked(giftBoxService.list).mockResolvedValueOnce([{
       id: "egg-2", user_id: "learner-1", minimum_rarity: "Common", message: "Meet your friend", granted_by: "admin-1", status: "unopened", reward_pool: "character-egg", created_at: "2026-09-30T00:00:00Z",
