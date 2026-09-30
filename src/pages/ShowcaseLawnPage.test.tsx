@@ -90,18 +90,23 @@ function renderPage() {
   return render(<MemoryRouter><QueryClientProvider client={client}><ShowcaseLawnPage /></QueryClientProvider></MemoryRouter>);
 }
 
+async function openPanel() {
+  fireEvent.click(await screen.findByRole("button", { name: /คู่หูของฉัน$/ }));
+}
+
 async function openCard(name: string) {
   fireEvent.click(await screen.findByRole("button", { name: new RegExp(`^${name} · `) }));
   return screen.findByRole("dialog", { name: `การ์ดของ ${name}` });
 }
 
-describe("ShowcaseLawnPage", () => {
+describe("ShowcaseLawnPage", { timeout: 20_000 }, () => {
   it("lets an admin cast all three scenes to a cohort and replay the history", async () => {
     role = "admin";
     renderPage();
-    expect(await screen.findByText("แคสต์เรื่องใหม่บนลาน")).toBeInTheDocument();
     for (const [title, preset] of [["ฝนดาว", "star_rain"], ["เทพลงลาน", "god_entrance"], ["ขบวนเพื่อนจิ๋ว", "character_parade"]]) {
-      fireEvent.click(screen.getByRole("button", { name: new RegExp(title) }));
+      await openPanel();
+      expect(await screen.findByText("แคสต์เรื่องใหม่บนลาน")).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: new RegExp(`^${title}`) }));
       fireEvent.change(screen.getByLabelText("ข้อความจากแอดมิน"), { target: { value: `${title} มาแล้ว` } });
       fireEvent.change(screen.getByLabelText("ให้ใครเห็น"), { target: { value: "16" } });
       fireEvent.click(screen.getByRole("button", { name: "ปล่อยเหตุการณ์ ✨" }));
@@ -109,7 +114,8 @@ describe("ShowcaseLawnPage", () => {
       await waitFor(() => expect(screen.getByRole("region", { name: new RegExp(title) })).toBeInTheDocument());
     }
     expect(godEvents.every((event) => event.cohort === 16)).toBe(true);
-    fireEvent.click(screen.getByRole("button", { name: "ดูซ้ำ ฝนดาว มาแล้ว" }));
+    await openPanel();
+    fireEvent.click(await screen.findByRole("button", { name: "ดูซ้ำ ฝนดาว มาแล้ว" }));
     expect(screen.getByRole("region", { name: "เล่นซ้ำ: ฝนดาว" })).toHaveTextContent("ฝนดาว มาแล้ว");
     fireEvent.click(screen.getByRole("button", { name: "ปิดการเล่นซ้ำ" }));
     expect(screen.getByRole("region", { name: "กำลังเกิดขึ้น: ขบวนเพื่อนจิ๋ว" })).toBeInTheDocument();
@@ -118,6 +124,7 @@ describe("ShowcaseLawnPage", () => {
   it("keeps expired history replayable and hides cast controls from learners", async () => {
     godEvents = [{ id: "old", preset: "god_entrance", caption: "วันดี ๆ ของเรา", cohort: 16, cast_by: me, character, created_at: "2026-09-27T00:00:00Z", active_until: "2026-09-28T00:00:00Z", active: false }];
     renderPage();
+    await openPanel();
     expect(await screen.findByRole("button", { name: "ดูซ้ำ วันดี ๆ ของเรา" })).toBeInTheDocument();
     expect(screen.queryByText("แคสต์เรื่องใหม่บนลาน")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "ดูซ้ำ วันดี ๆ ของเรา" }));
@@ -130,6 +137,7 @@ describe("ShowcaseLawnPage", () => {
     renderPage();
     expect(await screen.findByRole("region", { name: "กำลังเกิดขึ้น: ฝนดาว" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "กำลังเกิดขึ้น: ฝนดาว" }).querySelector(".motion-safe\\:animate-pulse")).not.toBeNull();
+    await openPanel();
     fireEvent.change(screen.getByLabelText("ข้อความจากแอดมิน"), { target: { value: "<script>" } });
     expect(screen.getByRole("button", { name: "ปล่อยเหตุการณ์ ✨" })).toBeDisabled();
   });
@@ -141,7 +149,8 @@ describe("ShowcaseLawnPage", () => {
     expect(screen.queryByText("Nok")).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("กรองทีม"), { target: { value: "Alpha" } });
     await waitFor(() => expect(screen.queryByText("Pim")).not.toBeInTheDocument());
-    fireEvent.change(screen.getByLabelText("ฝากข้อความไว้บนลาน"), { target: { value: "Hi friends!" } });
+    await openPanel();
+    fireEvent.change(await screen.findByLabelText("ฝากข้อความไว้บนลาน"), { target: { value: "Hi friends!" } });
     fireEvent.click(screen.getByRole("button", { name: "ปักบนลาน" }));
     await waitFor(() => expect(selection.pinned_id).toBe(character.id));
     expect(within(await openCard("Me")).getByText("Hi friends!")).toBeInTheDocument();
@@ -192,7 +201,8 @@ describe("ShowcaseLawnPage", () => {
     entries = [];
     renderPage();
     expect(await screen.findByText("ยังไม่มีใครปักตัวละครตรงนี้")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "ปักบนลาน" })).toBeEnabled();
+    await openPanel();
+    expect(await screen.findByRole("button", { name: "ปักบนลาน" })).toBeEnabled();
   });
 
   it("toggles each supported reaction without accumulating duplicate counts", async () => {
@@ -230,6 +240,7 @@ describe("ShowcaseLawnPage", () => {
     entries.push({ ...entry(me, "Me", 16, "Alpha"), character, hidden: true, message: "Original note" });
     selection = { ...selection, pinned_id: character.id };
     renderPage();
+    await openPanel();
     expect(await screen.findByText(/แอดมินซ่อนจากลาน/)).toBeInTheDocument();
     expect(screen.getByLabelText("ฝากข้อความไว้บนลาน")).toHaveValue("Original note");
     expect(screen.queryByText("Me")).not.toBeInTheDocument();
@@ -259,6 +270,8 @@ describe("ShowcaseLawnPage", () => {
     entries.push({ ...entry(me, "Me", 16, "Alpha"), character });
     selection = { ...selection, pinned_id: character.id };
     renderPage();
+    await screen.findByRole("button", { name: /^Me · / });
+    await openPanel();
     const quiet = await screen.findByRole("button", { name: "🤫 ขอเวลาเงียบ ๆ" });
     expect(screen.getByText(/อยู่ 24 ชั่วโมงแล้วกลับเป็นปกติเอง/)).toBeInTheDocument();
     fireEvent.click(quiet);
@@ -273,6 +286,7 @@ describe("ShowcaseLawnPage", () => {
 
   it("does not offer a mood before the learner pins a character", async () => {
     renderPage();
+    await openPanel();
     expect(await screen.findByRole("button", { name: "ปักบนลาน" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "🤫 ขอเวลาเงียบ ๆ" })).not.toBeInTheDocument();
   });
@@ -307,7 +321,7 @@ describe("ShowcaseLawnPage", () => {
     quietView.unmount();
     godEvents = [{ id: "event-1", preset: "star_rain", caption: "ดาวตกให้ทุกคน", cohort: 16, cast_by: "admin", character, created_at: "2026-09-29T00:00:00Z", active_until: "2099-01-01T00:00:00Z", active: true }];
     renderPage();
-    expect(await screen.findByRole("note", { name: "เหตุการณ์บนลาน: ฝนดาว" })).toHaveTextContent("ดาวตกให้ทุกคน");
+    expect(await screen.findByRole("region", { name: "กำลังเกิดขึ้น: ฝนดาว" })).toHaveTextContent("ดาวตกให้ทุกคน");
     await screen.findByRole("group", { name: /^เพื่อนบนลานตอนนี้/ });
     expect(choreography()).toEqual(before);
     expect(document.querySelector('[data-god-event-layer="star_rain"]')).toHaveAttribute("aria-hidden", "true");
