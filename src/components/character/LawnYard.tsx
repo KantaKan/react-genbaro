@@ -14,6 +14,10 @@ const puppetAction: Record<YardPose, { action: string; variant?: string }> = {
   pillow: { action: "play", variant: "pillow" }, chase: { action: "play", variant: "chase" }, kick: { action: "play", variant: "chase" },
 };
 const gesturePoses = new Set<YardPose>(["eat", "wave", "rps", "pillow", "kick", "handhold"]);
+const emoteAction: Record<string, { action: string; variant?: string; emoji: string }> = {
+  wave: { action: "wave", emoji: "👋" }, dance: { action: "dance", emoji: "💃" }, jump: { action: "jump", emoji: "🦘" },
+  heart: { action: "smile", emoji: "💗" }, nap: { action: "rest", emoji: "😴" }, visit: { action: "high-five", variant: "high-five", emoji: "🙌" },
+};
 const itemPosition: Record<string, string> = {
   ball: "bottom-[-2%] left-[62%] w-[34%]",
   book: "left-[22%] top-[56%] w-[56%]",
@@ -33,7 +37,8 @@ function YardCharacter({ placement, scene, mine, motion, windowIndex, actions, o
   const lying = pose === "doze" && spot.kind !== "bench";
   const seated = !lying && (spot.kind === "table" || spot.kind === "bench" || spot.kind === "blanket" || (spot.kind === "tree" && pose === "read"));
   const drop = seated ? height * 0.12 : 0;
-  const { action, variant } = puppetAction[pose];
+  const emote = entry.emote && entry.emote_until && Date.parse(entry.emote_until) > Date.now() ? emoteAction[entry.emote] : undefined;
+  const { action, variant } = emote ?? puppetAction[pose];
   return <LawnCardSurface
     entry={entry}
     actions={actions}
@@ -41,13 +46,14 @@ function YardCharacter({ placement, scene, mine, motion, windowIndex, actions, o
     anchorStyle={{ left: percent(spot.x, scene.width), top: percent(spot.y + drop, scene.height), width: percent(width, scene.width), zIndex: Math.round(spot.y) }}
     anchorData={{ "data-mine": String(mine), "data-spot": spot.id, "data-window": String(windowIndex) }}
     renderTrigger={(open) => <>
-      <button type="button" aria-label={`${entry.name} · ${activity}`} onClick={open} onFocus={(event) => onFocusScroll(event.currentTarget)} data-action={action} data-variant={variant} data-pose={pose} data-motion={motion ? "full" : "reduced"}
+      <button type="button" aria-label={`${entry.name} · ${activity}`} onClick={actions.onPick ?? open} onFocus={(event) => onFocusScroll(event.currentTarget)} data-action={action} data-variant={variant} data-pose={pose} data-motion={motion ? "full" : "reduced"}
         className="baro-puppet relative block w-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <span className={`baro-art block ${lying ? "yard-lie" : ""} ${seated ? "yard-seated" : ""}`} style={{ aspectRatio: "220 / 280" }}>
-          <span className={`block h-full w-full ${facing === "left" ? "-scale-x-100" : ""}`}><BaroCharacterArt dna={entry.character.dna} id={`yard-${scene.id}-${spot.id}-${entry.character.id}`} prop={entry.prop} armsFront={gesturePoses.has(pose)} /></span>
+          <span className={`block h-full w-full ${facing === "left" ? "-scale-x-100" : ""}`}><BaroCharacterArt dna={entry.character.dna} id={`yard-${scene.id}-${spot.id}-${entry.character.id}`} prop={entry.prop} armsFront={Boolean(emote) || gesturePoses.has(pose)} /></span>
         </span>
         {item && <span className={`pointer-events-none absolute block ${itemPosition[item]} ${facing === "left" && (item === "onigiri" || item === "milk" || item === "pillow") ? "!left-[4%]" : ""}`}><HeldItem item={item} /></span>}
-        {pose === "doze" && <span aria-hidden="true" className="yard-zz pointer-events-none absolute -top-2 right-0 text-sm font-black text-card-foreground">z<sup>z</sup></span>}
+        {emote && <span aria-hidden="true" className={`yard-emote pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-full border-2 border-[#292542] bg-[#fffaf0] px-1.5 text-base leading-7 shadow-[2px_2px_0_#292542] ${entry.emote === "heart" ? "yard-emote-float" : ""}`}>{emote.emoji}</span>}
+        {(pose === "doze" || entry.emote === "nap") && <span aria-hidden="true" className="yard-zz pointer-events-none absolute -top-2 right-0 text-sm font-black text-card-foreground">z<sup>z</sup></span>}
       </button>
       <span aria-hidden="true" className={`pointer-events-none absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-bold shadow-sm transition-opacity ${mine ? "border-primary bg-primary text-primary-foreground opacity-100" : "border-border bg-card text-card-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"}`}>{mine ? `คุณ · ${entry.name}` : entry.name}</span>
     </>}
@@ -95,7 +101,7 @@ export function LawnYard({ plan, scene, userId, lite, cardActions }: { plan: Law
   }, [scene.id, plan.windowIndex]);
   return <div ref={scroller} role="group" aria-label={`เพื่อนบนลานตอนนี้ · ${scene.name}`} data-scene={scene.id} data-phase={plan.phase} className="h-full w-full overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none] md:flex md:items-center md:justify-center [&::-webkit-scrollbar]:hidden">
     <div className="relative h-full overflow-hidden md:h-auto md:w-[min(100%,calc((100dvh-4rem)*var(--yard-ratio)))]" style={{ aspectRatio: `${scene.width} / ${scene.height}`, "--yard-ratio": scene.width / scene.height } as CSSProperties}>
-      <YardBackdrop sceneId={scene.id} phase={plan.phase} width={scene.width} height={scene.height} />
+      <YardBackdrop sceneId={scene.id} phase={plan.phase} width={scene.width} height={scene.height} motion={motion && !lite} />
       <YardFronts sceneId={scene.id} phase={plan.phase} width={scene.width} height={scene.height} />
       {items.map((item) => <span key={item.key}>{item.node}</span>)}
       {plan.phase !== "morning" && !lite && <svg viewBox={`0 0 ${scene.width} ${scene.height}`} className="pointer-events-none absolute inset-0 h-full w-full" style={{ zIndex: 900 }} aria-hidden="true"><Fireflies w={scene.width} h={scene.height} n={plan.phase === "night" ? 18 : 10} /></svg>}

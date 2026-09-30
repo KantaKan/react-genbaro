@@ -5,9 +5,9 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Pencil, RotateCw, Sparkles } from "lucide-react";
 import { useAuth } from "@/application/contexts/AuthContext";
 import { baroCharacterService } from "@/application/services/baroCharacterService";
-import { showcaseLawnService, type ShowcaseEntry } from "@/application/services/showcaseLawnService";
+import { showcaseLawnService, type LawnEmote, type ShowcaseEntry } from "@/application/services/showcaseLawnService";
 import { BaroCharacterArt } from "@/components/character/BaroCharacterArt";
-import { LawnMoodPicker } from "@/components/character/LawnMoodPicker";
+import { LawnEmoteBar, LawnMoodPicker } from "@/components/character/LawnMoodPicker";
 import { LawnYard, YardScenePicker } from "@/components/character/LawnYard";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -34,6 +34,7 @@ export default function ShowcaseLawnPage() {
   const [draftMessage, setDraftMessage] = useState<string | null>(null);
   const [inspectedEntry, setInspectedEntry] = useState<ShowcaseEntry | null>(null);
   const [replayId, setReplayId] = useState<string | null>(null);
+  const [picking, setPicking] = useState(false);
   const includeHidden = userRole === "admin";
   const baseKey = ["showcase-lawn", userId, 0, "", includeHidden];
   const base = useQuery(baseKey, () => showcaseLawnService.list(undefined, undefined, includeHidden), { enabled: Boolean(userId), retry: false });
@@ -53,6 +54,8 @@ export default function ShowcaseLawnPage() {
   const remove = useMutation(showcaseLawnService.remove, { onSuccess: refreshMine });
   const react = useMutation(({ ownerId, emoji }: { ownerId: string; emoji: string }) => showcaseLawnService.react(ownerId, emoji), { onSuccess: () => queryClient.invalidateQueries(["showcase-lawn"]) });
   const moderate = useMutation(({ ownerId, hidden }: { ownerId: string; hidden: boolean }) => showcaseLawnService.moderate(ownerId, hidden), { onSuccess: () => { queryClient.invalidateQueries(["showcase-lawn"]); queryClient.invalidateQueries(["showcase-lawn-mine", userId]); } });
+  const emote = useMutation(({ value, target }: { value: LawnEmote | ""; target?: string }) => showcaseLawnService.setEmote(value, target), { onSuccess: () => { queryClient.invalidateQueries(["showcase-lawn"]); queryClient.invalidateQueries(["showcase-lawn-mine", userId]); } });
+  const activeEmote = mine?.emote && mine.emote_until && Date.parse(mine.emote_until) > Date.now() ? mine.emote : undefined;
   const busy = save.isLoading || remove.isLoading;
   const reducedMotion = useReducedMotion();
   const motion = !reducedMotion && supportsCssAnimation();
@@ -61,12 +64,12 @@ export default function ShowcaseLawnPage() {
   const [sceneId, setSceneId] = useYardScene();
   const scene = YARD_SCENES[sceneId];
   const plan = useMemo(() => planLawn({ entries: view.data ?? [], scene, viewerId: userId, mine, now: sceneTime, limit: lite ? LAWN_LITE_LIMIT : LAWN_SCENE_LIMIT }), [view.data, scene, userId, mine, sceneTime, lite]);
-  const cardActions = (entry: ShowcaseEntry) => ({ admin: includeHidden, busy: react.isLoading || moderate.isLoading, onReact: (emoji: string) => react.mutate({ ownerId: entry.owner_id, emoji }), onModerate: (hidden: boolean) => moderate.mutate({ ownerId: entry.owner_id, hidden }), onInspect: () => setInspectedEntry(entry) });
+  const cardActions = (entry: ShowcaseEntry) => ({ admin: includeHidden, busy: react.isLoading || moderate.isLoading, onReact: (emoji: string) => react.mutate({ ownerId: entry.owner_id, emoji }), onModerate: (hidden: boolean) => moderate.mutate({ ownerId: entry.owner_id, hidden }), onInspect: () => setInspectedEntry(entry), onPick: picking ? () => { if (entry.owner_id !== userId) emote.mutate({ value: "visit", target: entry.owner_id }); setPicking(false); } : undefined });
   const replay = events.data?.find((item) => item.id === replayId);
   const shownEvent = replay ?? events.data?.find((item) => item.active);
   const visitors = base.data?.filter((entry) => !entry.hidden).length ?? 0;
 
-  return <main className="relative -m-4 h-[calc(100dvh-4rem)] min-h-[440px] overflow-hidden bg-[#bfe3ee] font-register-body text-foreground">
+  return <><main className="relative isolate -m-4 h-[calc(100dvh-4rem)] min-h-[440px] overflow-hidden bg-[#bfe3ee] font-register-body text-foreground">
     <LawnGodEvent event={shownEvent} replay={Boolean(replay)} entries={plan.placements.map((placement) => placement.entry)} motion={motion} onCloseReplay={() => setReplayId(null)}>
       {plan.placements.length > 0 && <LawnYard plan={plan} scene={scene} userId={userId} lite={lite} cardActions={cardActions} />}
     </LawnGodEvent>
@@ -90,6 +93,8 @@ export default function ShowcaseLawnPage() {
       <p className={`${chip} min-w-0 truncate px-3 py-1.5 text-xs font-bold`}>{plan.total > plan.placements.length ? `ตอนนี้มีเพื่อนเดินเล่น ${plan.placements.length} จาก ${plan.total} คน · ผลัดกันทุกครึ่งชั่วโมง` : "ลานนี้เป็นภาพที่เพื่อนฝากไว้ ไม่ใช่ห้องออนไลน์สด"}</p>
       <button type="button" onClick={() => setPanelOpen(true)} className="pointer-events-auto inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border-2 border-[#292542] bg-primary px-5 text-sm font-black text-primary-foreground shadow-[3px_4px_0_#292542] transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"><Pencil className="h-4 w-4" /> {mine ? "คู่หูของฉัน" : "ปักคู่หูของฉัน"}</button>
     </div>
+    {mine && !mine.hidden && <div className="pointer-events-none absolute inset-x-0 bottom-20 z-[970] flex justify-center px-3 md:bottom-4"><LawnEmoteBar active={activeEmote} busy={emote.isLoading} picking={picking} onEmote={(value) => emote.mutate({ value })} onPickStart={() => setPicking(true)} onPickCancel={() => setPicking(false)} /></div>}
+    {emote.isError && <p role="alert" className="absolute bottom-36 left-1/2 z-[970] -translate-x-1/2 rounded-full bg-card px-4 py-2 text-sm font-bold text-destructive shadow-sm">ยังส่งท่าไม่ได้ ลองอีกครั้งได้เลย</p>}
     {react.isError && <p role="alert" className="absolute bottom-20 left-1/2 z-[970] -translate-x-1/2 rounded-full bg-card px-4 py-2 text-sm font-bold text-destructive shadow-sm">ยังส่งรีแอคไม่ได้ ลองอีกครั้งได้เลย</p>}
     {moderate.isError && <p role="alert" className="absolute bottom-20 left-1/2 z-[970] -translate-x-1/2 rounded-full bg-card px-4 py-2 text-sm font-bold text-destructive shadow-sm">ยังเปลี่ยนสถานะรายการไม่ได้ ลองอีกครั้งได้เลย</p>}
 
@@ -104,7 +109,7 @@ export default function ShowcaseLawnPage() {
           {collection.isError && <div role="alert" className="mt-5 text-sm text-destructive">ยังโหลดตัวละครไม่ได้ <button type="button" onClick={() => collection.refetch()} className="font-black underline">ลองใหม่</button></div>}
           {collection.data?.length === 0 && <p className="mt-5 text-sm">ยังไม่มีตัวละครในสมุดสะสม <Link to="/character" className="font-black underline">ไปเปิดตัวละครตัวแรก</Link> แล้วกลับมาปักบนลานได้</p>}
           {collection.data && collection.data.length > 0 && <div className="mt-4 grid gap-4">
-            <fieldset><legend className="text-sm font-bold">เลือกตัวที่อยากให้เพื่อนเจอ</legend><div className="mt-2 flex gap-3 overflow-x-auto pb-2">{collection.data.map((character) => <button key={character.id} type="button" aria-label={`เลือก ${character.serial}`} aria-pressed={chosenId === character.id} onClick={() => setDraftCharacterId(character.id)} className={`w-24 shrink-0 rounded-xl border p-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${chosenId === character.id ? "border-primary bg-primary/10" : "border-border bg-background"}`}><div className="mx-auto h-20 w-16"><BaroCharacterArt dna={character.dna} id={`lawn-choice-${character.id}`} /></div><span className="block truncate font-register-mono text-[10px] font-bold">{character.serial.slice(-8)}</span></button>)}</div></fieldset>
+            <fieldset><legend className="text-sm font-bold">เลือกตัวที่อยากให้เพื่อนเจอ</legend><div className="mt-2 flex gap-3 overflow-x-auto pb-2">{collection.data.map((character) => <button key={character.id} type="button" aria-label={`เลือก ${character.serial}`} aria-pressed={chosenId === character.id} onClick={() => setDraftCharacterId(character.id)} className={`w-24 shrink-0 rounded-xl border p-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${chosenId === character.id ? "border-primary bg-primary/10" : "border-border bg-background"}`}><div className="mx-auto h-20 w-16"><BaroCharacterArt dna={character.dna} id={`lawn-choice-${character.id}`} /></div><span className="block truncate font-register-mono text-xs font-bold">{character.serial.slice(-8)}</span></button>)}</div></fieldset>
             <div><label htmlFor="showcase-message" className="text-sm font-bold">ฝากข้อความไว้บนลาน</label><textarea id="showcase-message" maxLength={160} value={message} onChange={(event) => setDraftMessage(event.target.value)} placeholder="วันนี้มีอะไรอยากบอกเพื่อน ๆ ไหม?" rows={3} className="mt-2 w-full resize-none rounded-xl border border-input bg-background p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" /><p className="mt-1 text-right font-register-mono text-xs">{[...message].length}/160</p></div>
           </div>}
           {collection.data && collection.data.length > 0 && <div className="mt-2 flex flex-wrap gap-3"><button type="button" disabled={busy || !chosenId || [...message].length > 160} onClick={() => save.mutate()} className="min-h-11 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground shadow-sm disabled:opacity-50">{save.isLoading ? "กำลังบันทึก…" : mine ? "บันทึกการปัก" : "ปักบนลาน"}</button>{mine && <button type="button" disabled={busy} onClick={() => remove.mutate()} className="min-h-11 rounded-full border border-border bg-background px-5 text-sm font-bold disabled:opacity-50">เอาออกจากลาน</button>}</div>}
@@ -115,6 +120,7 @@ export default function ShowcaseLawnPage() {
         {includeHidden && view.data && view.data.length > plan.placements.length && <details className="mt-6 rounded-2xl border border-border bg-card p-4 text-sm"><summary className="cursor-pointer font-bold">รายการทั้งหมดสำหรับแอดมิน ({view.data.length})</summary><ul className="mt-3 space-y-2">{view.data.map((entry) => <li key={entry.owner_id} className="flex items-center justify-between gap-3"><span className="truncate">{entry.name}{entry.hidden ? " · ซ่อนอยู่" : ""}</span><button type="button" disabled={moderate.isLoading} onClick={() => moderate.mutate({ ownerId: entry.owner_id, hidden: !entry.hidden })} className="min-h-9 shrink-0 rounded-full border border-border bg-background px-3 text-xs font-bold disabled:opacity-50">{entry.hidden ? "คืนสู่ลาน" : "ซ่อนจากลาน"}</button></li>)}</ul></details>}
       </SheetContent>
     </Sheet>
+  </main>
     {inspectedEntry && <Suspense fallback={null}><Character3DViewer entry={inspectedEntry} onClose={() => setInspectedEntry(null)} /></Suspense>}
-  </main>;
+  </>;
 }

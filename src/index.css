@@ -854,3 +854,54 @@
 @media (prefers-reduced-motion: reduce) {
   .god-star, .god-flash, .god-descend, .god-hover, .god-parade, .god-march { animation: none !important; }
 }
+
+.baro-puppet[data-action="dance"] .baro-arm-left { transform: rotate(120deg); }
+.baro-puppet[data-action="dance"] .baro-arm-right { transform: rotate(-120deg); }
+.baro-puppet[data-action="jump"] .baro-arm-left { transform: rotate(60deg); }
+.baro-puppet[data-action="jump"] .baro-arm-right { transform: rotate(-60deg); }
+.baro-puppet[data-motion="full"][data-action="dance"] .baro-art {
+  animation: baro-dance .9s ease-in-out infinite;
+}
+.baro-puppet[data-motion="full"][data-action="jump"] .baro-art {
+  animation: baro-jump .8s cubic-bezier(.3, .6, .4, 1) infinite;
+}
+@keyframes baro-dance {
+  0%, 100% { transform: rotate(-8deg) translateY(0); }
+  50% { transform: rotate(8deg) translateY(-5px); }
+}
+@keyframes baro-jump {
+  0%, 100% { transform: translateY(0) scale(1.04, .96); }
+  45% { transform: translateY(-22px) scale(.97, 1.03); }
+}
+.yard-emote-float {
+  animation: yard-emote-float 1.8s ease-out infinite;
+}
+@keyframes yard-emote-float {
+  from { translate: 0 0; opacity: 1; }
+  to { translate: 0 -18px; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .yard-emote-float { animation: none; }
+.yard-drift { animation: yard-drift 40s ease-in-out infinite alternate; }
+@keyframes yard-drift { from { transform: translateX(-24px); } to { transform: translateX(24px); } }
+.yard-birds { animation: yard-drift 18s ease-in-out infinite alternate; }
+.yard-flutter { transform-box: fill-box; transform-origin: center; animation: yard-flutter 6s ease-in-out infinite; }
+@keyframes yard-flutter {
+  0%, 100% { transform: translate(0, 0) scaleX(1); }
+  25% { transform: translate(14px, -10px) scaleX(.4); }
+  50% { transform: translate(26px, 2px) scaleX(1); }
+  75% { transform: translate(10px, 8px) scaleX(.4); }
+}
+.yard-leaf { transform-box: fill-box; animation: yard-leaf 8s linear infinite; opacity: 0; }
+@keyframes yard-leaf {
+  0% { transform: translate(0, 0) rotate(0); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(-40px, 150px) rotate(300deg); opacity: 0; }
+}
+.yard-chime { transform-box: fill-box; transform-origin: 50% 0; animation: yard-chime 3.2s ease-in-out infinite; }
+@keyframes yard-chime { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+.yard-fall { animation: yard-fall 1.2s linear infinite; }
+@keyframes yard-fall { from { transform: translateY(-20px); } to { transform: translateY(20px); } }
+@media (prefers-reduced-motion: reduce) {
+  .yard-drift, .yard-birds, .yard-flutter, .yard-leaf, .yard-chime, .yard-fall { animation: none; }
+}
