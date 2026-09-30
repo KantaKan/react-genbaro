@@ -83,6 +83,10 @@ export function getThailandTime(): Date {
   return new Date(thailandString);
 }
 
+export function getThailandHour(timestamp: number): number {
+  return Number(new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone: "Asia/Bangkok" }).format(timestamp));
+}
+
 /**
  * Gets today's date in Asia/Bangkok as an ISO string (YYYY-MM-DD)
  */

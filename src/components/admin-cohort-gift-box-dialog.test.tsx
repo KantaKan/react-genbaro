@@ -53,4 +53,17 @@ describe("AdminCohortGiftBoxDialog", () => {
     expect(screen.getByLabelText("2D plant preview")).toBeInTheDocument();
     expect(await screen.findByLabelText("3D plant preview")).toBeInTheDocument();
   });
+
+  it("previews and grants a tiered Egg to the whole cohort", async () => {
+    openDialog();
+    expect(await screen.findByText(/24 active learners in Cohort 16/)).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText("Gift box collection"));
+    fireEvent.click(screen.getByRole("option", { name: "Character Egg" }));
+    fireEvent.click(screen.getByLabelText("Cohort Egg tier"));
+    fireEvent.click(screen.getByRole("option", { name: "Rare" }));
+    expect(screen.getByText(/always Meme Rare or Legendary/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Message to every learner"), { target: { value: "A mystery friend is waiting." } });
+    fireEvent.click(screen.getByRole("button", { name: /send 24 Eggs/i }));
+    await waitFor(() => expect(giftBoxService.grantAudience).toHaveBeenCalledWith(16, "", "Rare", "A mystery friend is waiting.", "batch-16", "character-egg"));
+  });
 });

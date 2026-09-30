@@ -627,3 +627,122 @@
     animation: none;
   }
 }
+
+.baro-puppet .baro-part {
+  transform-box: fill-box;
+}
+.baro-puppet .baro-torso,
+.baro-puppet .baro-mouth {
+  transform-origin: 50% 100%;
+}
+.baro-puppet .baro-leg-left,
+.baro-puppet .baro-leg-right {
+  transform-origin: 50% 0%;
+}
+.baro-puppet .baro-arm-left {
+  transform-origin: 100% 0%;
+}
+.baro-puppet .baro-arm-right {
+  transform-origin: 0% 0%;
+}
+.baro-puppet[data-action="wave"] .baro-arm-right { transform: rotate(-120deg); }
+.baro-puppet[data-action="smile"] .baro-mouth { transform: scale(1.35, 1.6); }
+.baro-puppet[data-action="high-five"][data-variant="high-five"] .baro-arm-right { transform: rotate(-105deg); }
+.baro-puppet[data-action="high-five"][data-variant="handhold"] .baro-arm-right { transform: rotate(-45deg); }
+.baro-puppet[data-action="meal"] .baro-arm-right { transform: rotate(-150deg); }
+.baro-puppet[data-action="rps"] .baro-arm-right { transform: rotate(-60deg); }
+.baro-puppet[data-action="play"] .baro-arm-right { transform: rotate(-150deg); }
+.baro-puppet[data-action="bench-sit"] .baro-art { transform: translateY(10px); }
+.baro-puppet[data-action="bench-sit"] .baro-leg-left,
+.baro-puppet[data-action="bench-sit"] .baro-leg-right { transform: rotate(-70deg); }
+.baro-puppet[data-action="rest"] .baro-torso { transform: rotate(-8deg); }
+.baro-puppet[data-motion="full"] .baro-torso {
+  animation: baro-breathe 3.2s ease-in-out infinite;
+}
+.baro-puppet[data-motion="full"][data-action="rest"] .baro-torso {
+  animation: baro-doze 4.5s ease-in-out infinite;
+}
+.baro-puppet[data-motion="full"][data-action="walk"],
+.baro-puppet[data-motion="full"][data-action="play"][data-variant="chase"] {
+  animation: baro-stroll 9s ease-in-out infinite;
+}
+.baro-puppet[data-motion="full"][data-action="play"][data-variant="chase"] {
+  animation-duration: 3s;
+}
+.baro-puppet[data-motion="full"][data-action="walk"] .baro-torso,
+.baro-puppet[data-motion="full"][data-action="play"][data-variant="chase"] .baro-torso {
+  animation: baro-step-bob 0.7s ease-in-out infinite;
+}
+.baro-puppet[data-motion="full"][data-action="walk"] .baro-leg-left,
+.baro-puppet[data-motion="full"][data-action="walk"] .baro-arm-right,
+.baro-puppet[data-motion="full"][data-action="play"][data-variant="chase"] .baro-leg-left {
+  animation: baro-swing 0.7s ease-in-out infinite;
+}
+.baro-puppet[data-motion="full"][data-action="walk"] .baro-leg-right,
+.baro-puppet[data-motion="full"][data-action="walk"] .baro-arm-left,
+.baro-puppet[data-motion="full"][data-action="play"][data-variant="chase"] .baro-leg-right {
+  animation: baro-swing 0.7s ease-in-out infinite reverse;
+}
+.baro-puppet[data-motion="full"][data-action="wave"] .baro-arm-right {
+  animation: baro-wave 1.1s ease-in-out infinite;
+}
+.baro-puppet[data-motion="full"][data-action="smile"] .baro-art,
+.baro-puppet[data-motion="full"][data-action="high-five"][data-variant="high-five"] .baro-art {
+  animation: baro-hop 2.4s ease-in-out infinite;
+}
+.baro-puppet[data-motion="full"][data-action="meal"] .baro-arm-right {
+  animation: baro-nibble 1.6s ease-in-out infinite;
+}
+.baro-puppet[data-motion="full"][data-action="rps"] .baro-arm-right {
+  animation: baro-pump 0.9s ease-in-out infinite;
+}
+.baro-puppet[data-motion="full"][data-action="play"]:not([data-variant="chase"]) .baro-arm-right {
+  animation: baro-bonk 1.3s ease-in-out infinite;
+}
+@keyframes baro-breathe {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.02, 0.975); }
+}
+@keyframes baro-doze {
+  0%, 100% { transform: rotate(-8deg) scale(1, 1); }
+  50% { transform: rotate(-8deg) scale(1.03, 0.96); }
+}
+@keyframes baro-step-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes baro-swing {
+  0%, 100% { transform: rotate(-12deg); }
+  50% { transform: rotate(12deg); }
+}
+@keyframes baro-stroll {
+  0%, 100% { transform: translateX(-10px); }
+  50% { transform: translateX(10px); }
+}
+@keyframes baro-wave {
+  0%, 100% { transform: rotate(-105deg); }
+  50% { transform: rotate(-135deg); }
+}
+@keyframes baro-hop {
+  0%, 70%, 100% { transform: translateY(0); }
+  80% { transform: translateY(-8px); }
+}
+@keyframes baro-nibble {
+  0%, 100% { transform: rotate(-135deg); }
+  50% { transform: rotate(-160deg); }
+}
+@keyframes baro-pump {
+  0%, 100% { transform: rotate(-30deg); }
+  50% { transform: rotate(-80deg); }
+}
+@keyframes baro-bonk {
+  0%, 100% { transform: rotate(-150deg); }
+  45% { transform: rotate(10deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .baro-puppet,
+  .baro-puppet .baro-art,
+  .baro-puppet .baro-part {
+    animation: none !important;
+  }
+}

@@ -1,6 +1,6 @@
 import { api } from "../../infrastructure/api";
-import type { ApiResponse, CosmeticRarity, RewardDrawResult, TeacherGiftBox } from "../../domain/types";
-import type { GiftBoxOdds, GiftBoxRecipient } from "../../domain/types/gift-box";
+import type { ApiResponse, CosmeticRarity, TeacherGiftBox } from "../../domain/types";
+import type { GiftBoxOdds, GiftBoxOpenResult, GiftBoxRecipient, GiftBoxRewardPool } from "../../domain/types/gift-box";
 
 export interface CohortGiftBoxResult {
   total: number;
@@ -21,7 +21,7 @@ export const giftBoxService = {
     return response.data.data;
   },
 
-  async grant(userId: string, minimumRarity: CosmeticRarity, message: string, rewardPool?: "character-box"): Promise<TeacherGiftBox> {
+  async grant(userId: string, minimumRarity: CosmeticRarity, message: string, rewardPool?: GiftBoxRewardPool): Promise<TeacherGiftBox> {
     const response = await api.post<ApiResponse<TeacherGiftBox>>(`/admin/users/${userId}/gift-boxes`, {
       minimum_rarity: minimumRarity,
       message,
@@ -30,8 +30,8 @@ export const giftBoxService = {
     return response.data.data;
   },
 
-  async open(boxId: string): Promise<RewardDrawResult> {
-    const response = await api.post<ApiResponse<RewardDrawResult>>(`/gift-boxes/${boxId}/open`);
+  async open(boxId: string): Promise<GiftBoxOpenResult> {
+    const response = await api.post<ApiResponse<GiftBoxOpenResult>>(`/gift-boxes/${boxId}/open`);
     return response.data.data;
   },
 
@@ -64,7 +64,7 @@ export const giftBoxService = {
     return response.data.data;
   },
 
-  async grantAudience(cohort: number, team: string, minimumRarity: CosmeticRarity, message: string, idempotencyKey: string, rewardPool: "" | "character-box"): Promise<CohortGiftBoxResult> {
+  async grantAudience(cohort: number, team: string, minimumRarity: CosmeticRarity, message: string, idempotencyKey: string, rewardPool: "" | GiftBoxRewardPool): Promise<CohortGiftBoxResult> {
     const response = await api.post<ApiResponse<CohortGiftBoxResult>>(`/admin/cohorts/${cohort}/gift-boxes`, {
       minimum_rarity: minimumRarity,
       message,

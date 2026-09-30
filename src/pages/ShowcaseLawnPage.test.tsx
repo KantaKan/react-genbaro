@@ -21,6 +21,7 @@ const entry = (ownerId: string, name: string, cohort: number, team: string) => (
 let entries: ShowcaseEntry[] = [entry("peer-alpha", "Mali", 16, "Alpha"), entry("peer-beta", "Pim", 16, "Beta"), entry("peer-other", "Nok", 17, "Alpha")];
 let selection = { equipped_id: character.id, pinned_id: "" };
 let failList = false;
+let moodRequests: unknown[] = [];
 let activeReactions = new Set<string>();
 let godEvents: Array<{ id: string; preset: string; caption: string; cohort: number; cast_by: string; character: typeof character; created_at: string; active_until: string; active: boolean }> = [];
 const reactionChoices = ["❤️", "✨", "😂", "🙌"];
@@ -51,6 +52,13 @@ const server = setupServer(
     entries = entries.filter((item) => item.owner_id !== me).concat({ ...entry(me, "Me", 16, "Alpha"), character, message: body.message, hidden: entries.find((item) => item.owner_id === me)?.hidden ?? false });
     return HttpResponse.json({ data: { saved: true } });
   }),
+  http.put("*/showcase-lawn/me/mood", async ({ request }) => {
+    const body = await request.json() as { mood: ShowcaseEntry["mood"] | "" };
+    moodRequests.push(body);
+    const until = "2099-01-01T00:00:00Z";
+    entries = entries.map((item) => item.owner_id === me ? { ...item, mood: body.mood || undefined, mood_until: body.mood ? until : undefined } : item);
+    return HttpResponse.json({ data: { mood: body.mood, until } });
+  }),
   http.delete("*/showcase-lawn/me", () => {
     entries = entries.filter((item) => item.owner_id !== me);
     selection = { ...selection, pinned_id: "" };
@@ -70,13 +78,21 @@ const server = setupServer(
   }),
 );
 
-beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
-afterEach(() => { server.resetHandlers(); role = "learner"; failList = false; activeReactions = new Set<string>(); godEvents = []; selection = { equipped_id: character.id, pinned_id: "" }; entries = [entry("peer-alpha", "Mali", 16, "Alpha"), entry("peer-beta", "Pim", 16, "Beta"), entry("peer-other", "Nok", 17, "Alpha")]; });
+beforeAll(() => {
+  vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
+  server.listen({ onUnhandledRequest: "error" });
+});
+afterEach(() => { moodRequests = []; server.resetHandlers(); role = "learner"; failList = false; activeReactions = new Set<string>(); godEvents = []; selection = { equipped_id: character.id, pinned_id: "" }; entries = [entry("peer-alpha", "Mali", 16, "Alpha"), entry("peer-beta", "Pim", 16, "Beta"), entry("peer-other", "Nok", 17, "Alpha")]; });
 afterAll(() => server.close());
 
 function renderPage() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   return render(<MemoryRouter><QueryClientProvider client={client}><ShowcaseLawnPage /></QueryClientProvider></MemoryRouter>);
+}
+
+async function openCard(name: string) {
+  fireEvent.click(await screen.findByRole("button", { name: `ดูการ์ดของ ${name}` }));
+  return screen.findByRole("dialog", { name: `การ์ดของ ${name}` });
 }
 
 describe("ShowcaseLawnPage", () => {
@@ -128,13 +144,15 @@ describe("ShowcaseLawnPage", () => {
     fireEvent.change(screen.getByLabelText("ฝากข้อความไว้บนลาน"), { target: { value: "Hi friends!" } });
     fireEvent.click(screen.getByRole("button", { name: "ปักบนลาน" }));
     await waitFor(() => expect(selection.pinned_id).toBe(character.id));
-    await waitFor(() => expect(screen.getAllByText("Hi friends!").length).toBeGreaterThan(1));
+    expect(within(await openCard("Me")).getByText("Hi friends!")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "ปิดการ์ด" }));
     fireEvent.change(screen.getByLabelText("ฝากข้อความไว้บนลาน"), { target: { value: "New note" } });
     fireEvent.click(screen.getByRole("button", { name: "บันทึกการปัก" }));
     await waitFor(() => expect(entries.find((item) => item.owner_id === me)?.message).toBe("New note"));
-    await waitFor(() => expect(screen.getAllByText("New note").length).toBeGreaterThan(1));
+    await waitFor(async () => expect(within(await openCard("Me")).getByText("New note")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "ปิดการ์ด" }));
     fireEvent.click(screen.getByRole("button", { name: "เอาออกจากลาน" }));
-    await waitFor(() => expect(screen.queryByText("New note")).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole("button", { name: "ดูการ์ดของ Me" })).not.toBeInTheDocument());
     expect(selection.pinned_id).toBe("");
   });
 
@@ -151,7 +169,7 @@ describe("ShowcaseLawnPage", () => {
     const context = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
     entries = [{ ...entry("peer-alpha", "Mali", 16, "Alpha"), prop: "egg" }];
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "ดูคู่หู 3D" }));
+    fireEvent.click(within(await openCard("Mali")).getByRole("button", { name: "ดูคู่หู 3D" }));
     const dialog = await screen.findByRole("dialog", { name: "ดูตัวละครของ Mali" });
     expect(within(dialog).getByRole("img", { name: /Baro Character Mint egg/ })).toHaveAttribute("data-character-prop", "egg");
     expect(within(dialog).getByText("เครื่องนี้แสดงภาพ 2D แทนได้ครบ")).toBeInTheDocument();
@@ -179,6 +197,7 @@ describe("ShowcaseLawnPage", () => {
 
   it("toggles each supported reaction without accumulating duplicate counts", async () => {
     renderPage();
+    await openCard("Mali");
     const heart = await screen.findByRole("button", { name: "ส่ง ❤️ ให้ Mali" });
     expect(screen.queryByRole("button", { name: "ซ่อนจากลาน" })).not.toBeInTheDocument();
     fireEvent.click(heart);
@@ -193,7 +212,7 @@ describe("ShowcaseLawnPage", () => {
     role = "admin";
     const adminView = renderPage();
     expect(await screen.findByText("Mali")).toBeInTheDocument();
-    fireEvent.click(within(screen.getByText("Mali").closest("article")!).getByRole("button", { name: "ซ่อนจากลาน" }));
+    fireEvent.click(within(await openCard("Mali")).getByRole("button", { name: "ซ่อนจากลาน" }));
     await waitFor(() => expect(entries.find((item) => item.owner_id === "peer-alpha")?.hidden).toBe(true));
     adminView.unmount();
     role = "learner";
@@ -203,8 +222,7 @@ describe("ShowcaseLawnPage", () => {
     learnerView.unmount();
     role = "admin";
     renderPage();
-    expect(await screen.findByText("Mali")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "คืนสู่ลาน" }));
+    fireEvent.click(within(await openCard("Mali")).getByRole("button", { name: "คืนสู่ลาน" }));
     await waitFor(() => expect(entries.every((item) => !item.hidden)).toBe(true));
   });
 
@@ -220,5 +238,95 @@ describe("ShowcaseLawnPage", () => {
     await waitFor(() => expect(entries.find((item) => item.owner_id === me)?.message).toBe("Edited note"));
     expect(entries.find((item) => item.owner_id === me)?.hidden).toBe(true);
     expect(screen.queryByText("Me")).not.toBeInTheDocument();
+  });
+
+  it("shows at most twelve cohort friends, always including my own pin, and explains the rotation", async () => {
+    entries = Array.from({ length: 20 }, (_, index) => entry(`peer-${index}`, `Friend ${index}`, 16, index % 2 ? "Alpha" : "Beta"));
+    entries.push({ ...entry(me, "Me", 16, "Alpha"), character });
+    selection = { ...selection, pinned_id: character.id };
+    renderPage();
+    const scene = await screen.findByRole("group", { name: "เพื่อนบนลานตอนนี้" });
+    expect(within(scene).getAllByRole("button", { name: /^ดูการ์ดของ / })).toHaveLength(12);
+    for (const zone of ["โต๊ะปิกนิก", "ม้านั่งอุ่น ๆ", "ลานเล่น"]) expect(within(scene).getByRole("region", { name: zone })).toBeInTheDocument();
+    expect(within(scene).getByRole("button", { name: "ดูการ์ดของ Me" })).toBeInTheDocument();
+    expect(screen.getByText(/12 จาก 21 คน/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("กรองทีม"), { target: { value: "Beta" } });
+    await waitFor(() => expect(within(screen.getByRole("group", { name: "เพื่อนบนลานตอนนี้" })).queryByRole("button", { name: "ดูการ์ดของ Friend 1" })).not.toBeInTheDocument());
+    expect(within(screen.getByRole("group", { name: "เพื่อนบนลานตอนนี้" })).getByRole("button", { name: "ดูการ์ดของ Me" })).toBeInTheDocument();
+  });
+
+  it("lets a pinned learner choose, change, and clear a 24-hour mood without naming anyone", async () => {
+    entries.push({ ...entry(me, "Me", 16, "Alpha"), character });
+    selection = { ...selection, pinned_id: character.id };
+    renderPage();
+    const quiet = await screen.findByRole("button", { name: "🤫 ขอเวลาเงียบ ๆ" });
+    expect(screen.getByText(/อยู่ 24 ชั่วโมงแล้วกลับเป็นปกติเอง/)).toBeInTheDocument();
+    fireEvent.click(quiet);
+    await waitFor(() => expect(screen.getByRole("button", { name: "🤫 ขอเวลาเงียบ ๆ" })).toHaveAttribute("aria-pressed", "true"));
+    expect(screen.getByText("คู่หูจะเดิน นั่ง หรืองีบคนเดียว ไม่ถูกจับคู่กับใคร")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "🎈 อยากเล่นสนุก" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "🎈 อยากเล่นสนุก" })).toHaveAttribute("aria-pressed", "true"));
+    fireEvent.click(screen.getByRole("button", { name: "กลับเป็นปกติ" }));
+    await waitFor(() => expect(screen.queryByRole("button", { name: "กลับเป็นปกติ" })).not.toBeInTheDocument());
+    expect(moodRequests).toEqual([{ mood: "quiet" }, { mood: "playful" }, { mood: "" }]);
+  });
+
+  it("does not offer a mood before the learner pins a character", async () => {
+    renderPage();
+    expect(await screen.findByRole("button", { name: "ปักบนลาน" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "🤫 ขอเวลาเงียบ ๆ" })).not.toBeInTheDocument();
+  });
+
+  it("uses a six-character light lawn on constrained devices and lets learners switch it", async () => {
+    const cores = Object.getOwnPropertyDescriptor(Navigator.prototype, "hardwareConcurrency");
+    Object.defineProperty(navigator, "hardwareConcurrency", { configurable: true, value: 2 });
+    try {
+      entries = Array.from({ length: 20 }, (_, index) => entry(`peer-${index}`, `Friend ${index}`, 16, "Alpha"));
+      entries.push({ ...entry(me, "Me", 16, "Alpha"), character });
+      renderPage();
+      const scene = await screen.findByRole("group", { name: "เพื่อนบนลานตอนนี้" });
+      expect(within(scene).getAllByRole("button", { name: /^ดูการ์ดของ / })).toHaveLength(6);
+      expect(within(scene).getByRole("button", { name: "ดูการ์ดของ Me" })).toBeInTheDocument();
+      const lite = screen.getByRole("button", { name: "ลานแบบเบา" });
+      expect(lite).toHaveAttribute("aria-pressed", "true");
+      fireEvent.click(lite);
+      expect(within(scene).getAllByRole("button", { name: /^ดูการ์ดของ / })).toHaveLength(12);
+    } finally {
+      delete (navigator as { hardwareConcurrency?: number }).hardwareConcurrency;
+      if (cores) Object.defineProperty(Navigator.prototype, "hardwareConcurrency", cores);
+    }
+  });
+
+  it("shows an active God Event as a shared lawn layer without changing anyone's choreography", async () => {
+    entries = Array.from({ length: 8 }, (_, index) => entry(`peer-${index}`, `Friend ${index}`, 16, "Alpha"));
+    const quietView = renderPage();
+    const quietScene = await screen.findByRole("group", { name: "เพื่อนบนลานตอนนี้" });
+    const choreography = () => within(screen.getByRole("group", { name: "เพื่อนบนลานตอนนี้" })).getAllByRole("button", { name: /^ดูการ์ดของ / }).map((button) => `${button.getAttribute("aria-label")}:${button.dataset.action}`).sort();
+    expect(quietScene).toBeInTheDocument();
+    const before = choreography();
+    quietView.unmount();
+    godEvents = [{ id: "event-1", preset: "star_rain", caption: "ดาวตกให้ทุกคน", cohort: 16, cast_by: "admin", character, created_at: "2026-09-29T00:00:00Z", active_until: "2099-01-01T00:00:00Z", active: true }];
+    renderPage();
+    expect(await screen.findByRole("note", { name: "เหตุการณ์บนลาน: ฝนดาว" })).toHaveTextContent("ดาวตกให้ทุกคน");
+    await screen.findByRole("group", { name: "เพื่อนบนลานตอนนี้" });
+    expect(choreography()).toEqual(before);
+    expect(document.querySelector('[data-god-event-layer="star_rain"]')).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("never leaks a hidden entry's name or message to learners and never records choreography", async () => {
+    const writes: string[] = [];
+    const record = ({ request }: { request: Request }) => { if (request.method !== "GET") writes.push(`${request.method} ${new URL(request.url).pathname}`); };
+    server.events.on("request:start", record);
+    try {
+      entries = [entry("peer-alpha", "Mali", 16, "Alpha"), { ...entry("peer-hidden", "Secret Sam", 16, "Alpha"), hidden: true, message: "unsafe words" }];
+      renderPage();
+      await screen.findByRole("group", { name: "เพื่อนบนลานตอนนี้" });
+      expect(screen.queryByText("Secret Sam")).not.toBeInTheDocument();
+      expect(screen.queryByText("unsafe words")).not.toBeInTheDocument();
+      expect(await openCard("Mali")).not.toHaveTextContent("unsafe words");
+      expect(writes).toEqual([]);
+    } finally {
+      server.events.removeListener("request:start", record);
+    }
   });
 });

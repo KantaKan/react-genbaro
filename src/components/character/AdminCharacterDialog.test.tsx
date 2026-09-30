@@ -53,7 +53,8 @@ describe("AdminCharacterDialog", () => {
     render(<QueryClientProvider client={client}><AdminCharacterDialog userId={starter.owner_id} learnerName="Mali" /></QueryClientProvider>);
     fireEvent.click(screen.getByRole("button", { name: /Baro Character/ }));
     expect(await screen.findByText(starter.serial)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /สุ่มตัวละครให้ Mali/ }));
+    expect(screen.getByText(/ADMIN RECOVERY OVERRIDE/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /สร้างตัวละครเพื่อกู้คืนให้ Mali/ }));
     expect(await screen.findByText(gifted.serial)).toBeInTheDocument();
     expect(grants).toBe(1);
     fireEvent.click(screen.getByRole("button", { name: `ให้ใช้ ${gifted.serial}` }));
