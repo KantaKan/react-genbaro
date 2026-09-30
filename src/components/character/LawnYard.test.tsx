@@ -107,6 +107,16 @@ describe("LawnYard", () => {
   });
 });
 
+describe("LawnYard layout", () => {
+  it("clips props to the yard and hides the scrollbar so the desktop view never shows one", () => {
+    renderYard();
+    const scroller = screen.getByRole("group", { name: /^เพื่อนบนลานตอนนี้/ });
+    expect(scroller.className).toContain("overflow-y-hidden");
+    expect(scroller.className).toContain("[scrollbar-width:none]");
+    expect((scroller.firstElementChild as HTMLElement).className).toContain("overflow-hidden");
+  });
+});
+
 describe("YardScenePicker", () => {
   it("offers all three yards and marks the chosen one", () => {
     const onChange = vi.fn();
