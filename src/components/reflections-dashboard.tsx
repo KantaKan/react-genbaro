@@ -149,13 +149,13 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [giftBoxesOpen, setGiftBoxesOpen] = useState(false);
   const [collectionOpen, setCollectionOpen] = useState(false);
-  const [milestoneCelebration, setMilestoneCelebration] = useState<{ count: number; comeback?: boolean; warning?: string } | null>(null);
+  const [milestoneCelebration, setMilestoneCelebration] = useState<{ count: number; hasEgg?: boolean; comeback?: boolean; warning?: string } | null>(null);
 
   useEffect(() => {
     let active = true;
     giftBoxService.reconcileMilestones(userId)
       .then((boxes) => {
-        if (active && boxes.length > 0) setMilestoneCelebration({ count: boxes.length });
+        if (active && boxes.length > 0) setMilestoneCelebration({ count: boxes.length, hasEgg: boxes.some((box) => box.reward_pool === "character-egg") });
       })
       .catch(() => undefined);
     return () => { active = false; };
@@ -209,6 +209,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
       if ((createdReflection.reward_boxes?.length ?? 0) > 0 || createdReflection.reward_warning || returningToGarden) {
         setMilestoneCelebration({
           count: createdReflection.reward_boxes?.length ?? 0,
+          hasEgg: createdReflection.reward_boxes?.some((box) => box.reward_pool === "character-egg"),
           comeback: returningToGarden,
           warning: createdReflection.reward_warning,
         });
@@ -874,7 +875,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
       {/* Warning Dialog */}
       <Dialog open={milestoneCelebration !== null} onOpenChange={(open) => { if (!open) setMilestoneCelebration(null); }}>
         <DialogContent className="overflow-hidden border-emerald-200 bg-gradient-to-b from-amber-50 via-white to-emerald-50 text-center sm:max-w-md">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-4xl shadow-inner" aria-hidden="true">🌱</div>
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-4xl shadow-inner" aria-hidden="true">{milestoneCelebration?.hasEgg ? "🥚" : "🌱"}</div>
           <DialogHeader>
             <DialogTitle className="text-center font-serif text-3xl text-emerald-950">
               {milestoneCelebration?.comeback ? "Welcome back to your garden" : "Your care is showing"}
@@ -882,7 +883,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
           </DialogHeader>
           {milestoneCelebration?.count ? (
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Your reflection journey reached a new milestone. {milestoneCelebration.count === 1 ? "A permanent collectible is" : `${milestoneCelebration.count} permanent collectibles are`} waiting in your garden gift box.
+              {milestoneCelebration.hasEgg ? "Your reflection journey reached a major milestone. A Standard Character Egg is waiting for you to hatch, alongside any garden rewards you earned." : <>Your reflection journey reached a new milestone. {milestoneCelebration.count === 1 ? "A permanent collectible is" : `${milestoneCelebration.count} permanent collectibles are`} waiting in your garden gift box.</>}
             </p>
           ) : milestoneCelebration?.warning ? (
             <p className="text-sm leading-relaxed text-muted-foreground">
