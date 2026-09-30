@@ -175,4 +175,22 @@ describe("planLawn", () => {
     expect(withMood("surprise", until)).toEqual(plain);
     expect(withMood("quiet", new Date(morning - 1).toISOString())).toEqual(plain);
   });
+
+  it("keeps a visit pair on the lawn side by side, even past the rotation limit", () => {
+    const visitUntil = new Date(morning + 90 * 60 * 1000).toISOString();
+    const visitor = { ...entry("learner-2"), emote: "visit" as const, emote_target: "learner-40", emote_until: visitUntil };
+    const entries = cohort.map((item) => item.owner_id === "learner-2" ? visitor : item);
+    for (const viewerId of ["learner-2", "learner-40"]) {
+      for (const now of windows(3)) {
+        const plan = planLawn({ entries, scene: backyard, viewerId, now });
+        const a = plan.placements.find((placement) => placement.entry.owner_id === "learner-2");
+        const b = plan.placements.find((placement) => placement.entry.owner_id === "learner-40");
+        expect(a?.partnerId).toBe("learner-40");
+        expect(b?.partnerId).toBe("learner-2");
+        expect(a?.spot.neighbours).toContain(b?.spot.id);
+      }
+    }
+    const expired = planLawn({ entries, scene: backyard, viewerId: "learner-2", now: morning + 91 * 60 * 1000 });
+    expect(expired.placements.find((placement) => placement.entry.owner_id === "learner-2")?.partnerId).not.toBe("learner-40");
+  });
 });

@@ -15,9 +15,13 @@ export interface ShowcaseEntry {
   reactions?: Array<{ emoji: string; count: number; reacted: boolean }>;
   mood?: LawnMood;
   mood_until?: string;
+  emote?: LawnEmote;
+  emote_target?: string;
+  emote_until?: string;
 }
 
 export type LawnMood = "greeting" | "relaxing" | "meal" | "playful" | "quiet" | "surprise";
+export type LawnEmote = "wave" | "dance" | "jump" | "heart" | "nap" | "visit";
 
 export const showcaseLawnService = {
   async mine(): Promise<ShowcaseEntry | null> {
@@ -35,6 +39,10 @@ export const showcaseLawnService = {
   },
   async setMood(mood: LawnMood | ""): Promise<{ mood: string; until?: string }> {
     const response = await api.put<ApiResponse<{ mood: string; until?: string }>>("/showcase-lawn/me/mood", { mood });
+    return response.data.data;
+  },
+  async setEmote(emote: LawnEmote | "", target = ""): Promise<{ emote: string; target?: string; until?: string }> {
+    const response = await api.put<ApiResponse<{ emote: string; target?: string; until?: string }>>("/showcase-lawn/me/emote", { emote, target });
     return response.data.data;
   },
   async remove(): Promise<void> {
