@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ShowcaseEntry } from "@/application/services/showcaseLawnService";
 import { LawnCharacter } from "./LawnCharacter";
@@ -71,5 +71,33 @@ describe("LawnCharacter", () => {
     reducedMotion = true;
     renderCharacter(1280, "walk");
     expect(screen.getByRole("button", { name: "ดูการ์ดของ Mali" })).toHaveAttribute("data-motion", "reduced");
+  });
+
+  it("moves focus into the card and back to the character when closed with Escape", async () => {
+    renderCharacter(1280);
+    const puppet = screen.getByRole("button", { name: "ดูการ์ดของ Mali" });
+    puppet.focus();
+    fireEvent.click(puppet);
+    const card = await screen.findByRole("dialog", { name: "การ์ดของ Mali" });
+    await waitFor(() => expect(card.contains(document.activeElement)).toBe(true));
+    fireEvent.keyDown(document.activeElement!, { key: "Escape" });
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "การ์ดของ Mali" })).not.toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "ดูการ์ดของ Mali" })).toHaveFocus();
+  });
+
+  it("returns focus from the mobile bottom sheet too", async () => {
+    renderCharacter(390);
+    fireEvent.click(screen.getByRole("button", { name: "ดูการ์ดของ Mali" }));
+    const sheet = await screen.findByRole("dialog", { name: "การ์ดของ Mali" });
+    fireEvent.click(within(sheet).getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "ดูการ์ดของ Mali" })).toHaveFocus());
+  });
+
+  it("falls back to still poses when the browser cannot run CSS animation", () => {
+    vi.stubGlobal("CSS", { supports: () => false });
+    renderCharacter(1280, "walk");
+    const puppet = screen.getByRole("button", { name: "ดูการ์ดของ Mali" });
+    expect(puppet).toHaveAttribute("data-motion", "reduced");
+    expect(within(puppet).getByRole("img", { name: "Baro Character Lilac ramen" })).toBeInTheDocument();
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ShowcaseEntry } from "@/application/services/showcaseLawnService";
-import { LAWN_ACTIONS, LAWN_WINDOW_MS, LAWN_ZONE_CAPACITY, planLawn } from "./lawn-planner";
+import { LAWN_ACTIONS, LAWN_LITE_LIMIT, LAWN_WINDOW_MS, LAWN_ZONE_CAPACITY, planLawn } from "./lawn-planner";
 
 const entry = (ownerId: string, team = "Alpha", hidden = false) => ({
   owner_id: ownerId, name: ownerId, cohort: 16, team, hidden, message: "", updated_at: "2026-09-29T00:00:00Z",
@@ -113,6 +113,18 @@ describe("planLawn", () => {
     expect(planLawn({ entries: [], now: Date.UTC(2026, 8, 30, 1, 0) }).lighting).toBe("morning");
     expect(planLawn({ entries: [], now: Date.UTC(2026, 8, 30, 11, 0) }).lighting).toBe("evening");
     expect(planLawn({ entries: [], now: Date.UTC(2026, 8, 29, 23, 30) }).lighting).toBe("morning");
+  });
+
+  it("keeps the light lawn at six with the viewer included and the same fair rotation", () => {
+    const seen = new Map<string, number>();
+    for (let window = 0; window < 44; window++) {
+      const plan = planLawn({ entries: cohort, viewerId: "learner-9", now: now + window * LAWN_WINDOW_MS, limit: LAWN_LITE_LIMIT });
+      expect(plan.placements).toHaveLength(6);
+      expect(ids(plan)).toContain("learner-9");
+      for (const id of ids(plan)) if (id !== "learner-9") seen.set(id, (seen.get(id) ?? 0) + 1);
+    }
+    expect(seen.size).toBe(44);
+    expect(new Set(seen.values())).toEqual(new Set([5]));
   });
 
   describe("moods", () => {

@@ -8,7 +8,8 @@ import { showcaseLawnService, type ShowcaseEntry } from "@/application/services/
 import { BaroCharacterArt } from "@/components/character/BaroCharacterArt";
 import { LawnMoodPicker } from "@/components/character/LawnMoodPicker";
 import { LawnScene } from "@/components/character/LawnScene";
-import { planLawn } from "@/lib/lawn-planner";
+import { LAWN_LITE_LIMIT, LAWN_SCENE_LIMIT, planLawn } from "@/lib/lawn-planner";
+import { isConstrainedDevice } from "@/hooks/use-lawn-device";
 import { GodEventPanel } from "@/components/character/GodEventPanel";
 import { ShowcaseLawnEnvironment } from "@/components/character/ShowcaseLawnEnvironment";
 
@@ -45,7 +46,8 @@ export default function ShowcaseLawnPage() {
   const moderate = useMutation(({ ownerId, hidden }: { ownerId: string; hidden: boolean }) => showcaseLawnService.moderate(ownerId, hidden), { onSuccess: () => { queryClient.invalidateQueries(["showcase-lawn"]); queryClient.invalidateQueries(["showcase-lawn-mine", userId]); } });
   const busy = save.isLoading || remove.isLoading;
   const [sceneTime] = useState(() => Date.now());
-  const plan = useMemo(() => planLawn({ entries: view.data ?? [], viewerId: userId, mine, now: sceneTime }), [view.data, userId, mine, sceneTime]);
+  const [lite, setLite] = useState(() => isConstrainedDevice());
+  const plan = useMemo(() => planLawn({ entries: view.data ?? [], viewerId: userId, mine, now: sceneTime, limit: lite ? LAWN_LITE_LIMIT : LAWN_SCENE_LIMIT }), [view.data, userId, mine, sceneTime, lite]);
   const cardActions = (entry: ShowcaseEntry) => ({ admin: includeHidden, busy: react.isLoading || moderate.isLoading, onReact: (emoji: string) => react.mutate({ ownerId: entry.owner_id, emoji }), onModerate: (hidden: boolean) => moderate.mutate({ ownerId: entry.owner_id, hidden }), onInspect: () => setInspectedEntry(entry) });
 
   return <main className="min-h-[calc(100vh-5rem)] bg-background px-4 py-8 font-register-body text-foreground transition-colors sm:px-8 lg:py-12">
@@ -70,7 +72,7 @@ export default function ShowcaseLawnPage() {
         {mine && <LawnMoodPicker mine={mine} userId={userId} />}
       </section>
 
-      <section aria-labelledby="lawn-friends-heading"><div className="mb-4 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">WANDER TOGETHER</p><h2 id="lawn-friends-heading" className="mt-1 font-register-heading text-2xl">เดินดูเพื่อนบนลาน</h2></div><div className="flex flex-wrap gap-2">{userRole === "admin" && <select aria-label="กรองรุ่น" value={cohort} onChange={(event) => { setCohort(Number(event.target.value)); setTeam(""); }} className="min-h-10 rounded-full border border-input bg-background px-3 text-sm font-bold"><option value={0}>ทุกรุ่น</option>{cohorts.map((number) => <option key={number} value={number}>รุ่น {number}</option>)}</select>}<select aria-label="กรองทีม" value={team} onChange={(event) => setTeam(event.target.value)} className="min-h-10 rounded-full border border-input bg-background px-3 text-sm font-bold"><option value="">ทุกทีม</option>{teams.map((name) => <option key={name} value={name}>{name}</option>)}</select></div></div>
+      <section aria-labelledby="lawn-friends-heading"><div className="mb-4 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">WANDER TOGETHER</p><h2 id="lawn-friends-heading" className="mt-1 font-register-heading text-2xl">เดินดูเพื่อนบนลาน</h2></div><div className="flex flex-wrap gap-2">{userRole === "admin" && <select aria-label="กรองรุ่น" value={cohort} onChange={(event) => { setCohort(Number(event.target.value)); setTeam(""); }} className="min-h-10 rounded-full border border-input bg-background px-3 text-sm font-bold"><option value={0}>ทุกรุ่น</option>{cohorts.map((number) => <option key={number} value={number}>รุ่น {number}</option>)}</select>}<button type="button" aria-pressed={lite} onClick={() => setLite((value) => !value)} className={`min-h-10 rounded-full border px-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${lite ? "border-primary bg-primary/10" : "border-input bg-background"}`}>ลานแบบเบา</button><select aria-label="กรองทีม" value={team} onChange={(event) => setTeam(event.target.value)} className="min-h-10 rounded-full border border-input bg-background px-3 text-sm font-bold"><option value="">ทุกทีม</option>{teams.map((name) => <option key={name} value={name}>{name}</option>)}</select></div></div>
         <ShowcaseLawnEnvironment lighting={plan.lighting}>
           {view.isLoading && <p role="status" className="rounded-2xl bg-white/85 p-6 text-sm font-bold">กำลังดูว่าเพื่อน ๆ ใครมาปักไว้บ้าง…</p>}
           {view.isError && <div role="alert" className="rounded-2xl bg-white/90 p-6 text-sm"><p className="font-black">ยังเปิดลานไม่ได้</p><p className="mt-1">ลองโหลดใหม่ได้เลย การปักของคุณยังอยู่</p><button type="button" onClick={() => view.refetch()} className="mt-3 inline-flex items-center gap-2 font-black underline"><RotateCw className="h-4 w-4" /> โหลดใหม่</button></div>}

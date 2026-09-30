@@ -2,6 +2,7 @@ import type { LawnMood, ShowcaseEntry } from "@/application/services/showcaseLaw
 import { getThailandHour } from "@/utils/date-utils";
 
 export const LAWN_SCENE_LIMIT = 12;
+export const LAWN_LITE_LIMIT = 6;
 export const LAWN_ZONE_CAPACITY = 4;
 export const LAWN_WINDOW_MS = 30 * 60 * 1000;
 

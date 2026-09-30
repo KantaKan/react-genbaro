@@ -276,4 +276,24 @@ describe("ShowcaseLawnPage", () => {
     expect(await screen.findByRole("button", { name: "ปักบนลาน" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "🤫 ขอเวลาเงียบ ๆ" })).not.toBeInTheDocument();
   });
+
+  it("uses a six-character light lawn on constrained devices and lets learners switch it", async () => {
+    const cores = Object.getOwnPropertyDescriptor(Navigator.prototype, "hardwareConcurrency");
+    Object.defineProperty(navigator, "hardwareConcurrency", { configurable: true, value: 2 });
+    try {
+      entries = Array.from({ length: 20 }, (_, index) => entry(`peer-${index}`, `Friend ${index}`, 16, "Alpha"));
+      entries.push({ ...entry(me, "Me", 16, "Alpha"), character });
+      renderPage();
+      const scene = await screen.findByRole("group", { name: "เพื่อนบนลานตอนนี้" });
+      expect(within(scene).getAllByRole("button", { name: /^ดูการ์ดของ / })).toHaveLength(6);
+      expect(within(scene).getByRole("button", { name: "ดูการ์ดของ Me" })).toBeInTheDocument();
+      const lite = screen.getByRole("button", { name: "ลานแบบเบา" });
+      expect(lite).toHaveAttribute("aria-pressed", "true");
+      fireEvent.click(lite);
+      expect(within(scene).getAllByRole("button", { name: /^ดูการ์ดของ / })).toHaveLength(12);
+    } finally {
+      delete (navigator as { hardwareConcurrency?: number }).hardwareConcurrency;
+      if (cores) Object.defineProperty(Navigator.prototype, "hardwareConcurrency", cores);
+    }
+  });
 });
