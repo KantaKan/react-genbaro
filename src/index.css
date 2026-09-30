@@ -882,6 +882,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .yard-emote-float { animation: none; }
+}
 .yard-drift { animation: yard-drift 40s ease-in-out infinite alternate; }
 @keyframes yard-drift { from { transform: translateX(-24px); } to { transform: translateX(24px); } }
 .yard-birds { animation: yard-drift 18s ease-in-out infinite alternate; }

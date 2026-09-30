@@ -102,6 +102,11 @@ async function openPanel() {
   fireEvent.click(await screen.findByRole("button", { name: /คู่หูของฉัน$/ }));
 }
 
+async function closePanel() {
+  fireEvent.click(screen.getByRole("button", { name: "Close" }));
+  await waitFor(() => expect(screen.queryByRole("dialog", { name: "แผงลานของฉัน" })).not.toBeInTheDocument());
+}
+
 async function openCard(name: string) {
   fireEvent.click(await screen.findByRole("button", { name: new RegExp(`^${name} · `) }));
   return screen.findByRole("dialog", { name: `การ์ดของ ${name}` });
@@ -161,14 +166,20 @@ describe("ShowcaseLawnPage", { timeout: 20_000 }, () => {
     fireEvent.change(await screen.findByLabelText("ฝากข้อความไว้บนลาน"), { target: { value: "Hi friends!" } });
     fireEvent.click(screen.getByRole("button", { name: "ปักบนลาน" }));
     await waitFor(() => expect(selection.pinned_id).toBe(character.id));
+    expect(screen.queryByRole("button", { name: /^Mali · / })).not.toBeInTheDocument();
+    await closePanel();
     expect(within(await openCard("Me")).getByText("Hi friends!")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "ปิดการ์ด" }));
-    fireEvent.change(screen.getByLabelText("ฝากข้อความไว้บนลาน"), { target: { value: "New note" } });
+    await openPanel();
+    fireEvent.change(await screen.findByLabelText("ฝากข้อความไว้บนลาน"), { target: { value: "New note" } });
     fireEvent.click(screen.getByRole("button", { name: "บันทึกการปัก" }));
     await waitFor(() => expect(entries.find((item) => item.owner_id === me)?.message).toBe("New note"));
+    await closePanel();
     await waitFor(async () => expect(within(await openCard("Me")).getByText("New note")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "ปิดการ์ด" }));
-    fireEvent.click(screen.getByRole("button", { name: "เอาออกจากลาน" }));
+    await openPanel();
+    fireEvent.click(await screen.findByRole("button", { name: "เอาออกจากลาน" }));
+    await closePanel();
     await waitFor(() => expect(screen.queryByRole("button", { name: /^Me · / })).not.toBeInTheDocument());
     expect(selection.pinned_id).toBe("");
   });
