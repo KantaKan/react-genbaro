@@ -1,14 +1,17 @@
 import { api } from "@/infrastructure/api";
 import type { ApiResponse } from "@/domain/types";
 
-export type StartupStage = "founder" | "hub" | "developing" | "ended";
+export type StartupStage = "founder" | "hub" | "developing" | "item" | "ended";
+export type StartupMode = "free" | "ranked";
 
 export interface StartupDev {
   id: string;
   name: string;
   title: string;
   sprite: string;
+  genmate_id?: string;
   perk?: string;
+  trait?: string;
   frontend: number;
   backend: number;
   design: number;
@@ -19,6 +22,7 @@ export interface StartupDev {
 export interface StartupProject {
   type: string;
   theme: string;
+  boss?: string;
   staff_ids: string[];
   started_at: string;
   ends_at: string;
@@ -43,53 +47,109 @@ export interface StartupResult {
 
 export interface StartupRun {
   _id: string;
-  mode: "free" | "ranked";
+  mode: StartupMode;
+  week_key?: string;
+  founder?: string;
   status: "active" | "ended";
-  outcome?: string;
+  outcome?: "ipo" | "pivot" | string;
   stage: StartupStage;
+  act: number;
+  market: { hot: string[]; cold?: string[] };
+  boss_order?: string[];
+  bosses_passed: number;
   project_index: number;
   money: number;
   fans: number;
   founder_offer?: StartupDev[];
   staff: StartupDev[];
+  candidates?: StartupDev[];
+  items?: string[];
+  item_offer?: string[];
   project?: StartupProject;
   last_result?: StartupResult;
   score: number;
   version: number;
 }
 
+export interface StartupHallEntry {
+  run_id: string;
+  mode: StartupMode;
+  week_key?: string;
+  score: number;
+  outcome: string;
+  founder: string;
+  ended_at: string;
+}
+
 export interface StartupStudio {
   _id: string;
   fame: number;
+  discovered_combos?: string[];
+  unlocked_founders?: string[];
+  unlocked_items?: string[];
+  office_skin?: string;
+  hall_of_fame?: StartupHallEntry[];
+}
+
+export interface StartupItem {
+  id: string;
+  name: string;
+  icon: string;
+  rarity: "common" | "rare" | "legendary" | "cursed";
+  desc: string;
+}
+
+export interface StartupUnlock {
+  fame: number;
+  kind: "founder" | "item" | "skin";
+  id: string;
+  name: string;
 }
 
 export interface StartupOverview {
   studio: StartupStudio;
   run: StartupRun | null;
+  ranked_attempts_left: number;
+  week_key: string;
   server_time: string;
   types: string[];
   themes: string[];
+  items: StartupItem[];
+  unlocks: StartupUnlock[];
 }
+
+export interface StartupLeaderboardEntry {
+  owner_id: string;
+  name: string;
+  score?: number;
+  fame?: number;
+  outcome?: string;
+}
+
+const post = async (path: string, body?: unknown) => (await api.post<ApiResponse<StartupRun>>(`/startup-story${path}`, body)).data.data;
 
 export const startupStoryService = {
   async overview(): Promise<StartupOverview> {
     const response = await api.get<ApiResponse<StartupOverview>>("/startup-story");
     return response.data.data;
   },
-  async startRun(mode: "free" | "ranked"): Promise<StartupRun> {
-    const response = await api.post<ApiResponse<StartupRun>>("/startup-story/runs", { mode });
+  startRun: (mode: StartupMode) => post("/runs", { mode }),
+  pickFounder: (index: number) => post("/runs/active/founder", { index }),
+  hire: (candidateId: string) => post("/runs/active/hire", { candidate_id: candidateId }),
+  async dismiss(staffId: string): Promise<StartupRun> {
+    const response = await api.delete<ApiResponse<StartupRun>>(`/startup-story/runs/active/staff/${encodeURIComponent(staffId)}`);
     return response.data.data;
   },
-  async pickFounder(index: number): Promise<StartupRun> {
-    const response = await api.post<ApiResponse<StartupRun>>("/startup-story/runs/active/founder", { index });
-    return response.data.data;
+  startProject: (type: string, theme: string, staffIds: string[]) => post("/runs/active/projects", { type, theme, staff_ids: staffIds }),
+  ship: () => post("/runs/active/ship"),
+  pickItem: (index: number) => post("/runs/active/item", { index }),
+  abandon: () => post("/runs/active/abandon"),
+  async setOptOut(optOut: boolean): Promise<boolean> {
+    const response = await api.put<ApiResponse<{ opt_out: boolean }>>("/startup-story/opt-out", { opt_out: optOut });
+    return response.data.data.opt_out;
   },
-  async startProject(type: string, theme: string, staffIds: string[]): Promise<StartupRun> {
-    const response = await api.post<ApiResponse<StartupRun>>("/startup-story/runs/active/projects", { type, theme, staff_ids: staffIds });
-    return response.data.data;
-  },
-  async ship(): Promise<StartupRun> {
-    const response = await api.post<ApiResponse<StartupRun>>("/startup-story/runs/active/ship");
+  async leaderboard(tab: "weekly" | "fame"): Promise<StartupLeaderboardEntry[]> {
+    const response = await api.get<ApiResponse<StartupLeaderboardEntry[]>>("/startup-story/leaderboard", { params: { tab } });
     return response.data.data;
   },
 };
