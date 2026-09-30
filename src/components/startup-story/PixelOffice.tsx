@@ -145,21 +145,21 @@ const css = `
 `;
 
 function useSpeech(staff: StartupDev[], busy: boolean, reduced: boolean) {
-  const [lines, setLines] = useState<Record<string, string>>({});
+  const [lines, setLines] = useState<[string, string][]>([]);
   useEffect(() => {
     if (staff.length === 0) return;
     const say = () => {
       const dev = staff[Math.floor(Math.random() * staff.length)];
       const pool = busy ? roleLook(dev.role).lines : roleLook(dev.role).idle;
       const line = pool[Math.floor(Math.random() * pool.length)];
-      setLines((prev) => ({ ...prev, [dev.id]: line }));
-      window.setTimeout(() => setLines((prev) => (prev[dev.id] === line ? { ...prev, [dev.id]: "" } : prev)), reduced ? 4000 : 2200);
+      setLines((prev) => [...prev.filter(([id]) => id !== dev.id), [dev.id, line] as [string, string]].slice(-2));
+      window.setTimeout(() => setLines((prev) => prev.filter(([id, text]) => id !== dev.id || text !== line)), reduced ? 4000 : 2200);
     };
     say();
     const id = window.setInterval(say, busy ? 1100 : 2600);
     return () => window.clearInterval(id);
   }, [staff, busy, reduced]);
-  return lines;
+  return Object.fromEntries(lines);
 }
 
 export function PixelOffice({ staff, busy, skin }: { staff: StartupDev[]; busy: boolean; skin?: string }) {
@@ -193,7 +193,7 @@ export function PixelOffice({ staff, busy, skin }: { staff: StartupDev[]; busy: 
       const left = `${(personX(s) / 320) * 100}%`;
       return <div key={dev.id}>
         <span className="pointer-events-none absolute -translate-x-1/2 whitespace-nowrap rounded-full bg-[#292542]/80 px-1.5 text-xs font-bold text-[#fffaf0]" style={{ left, top: `${((s.y + 4) / 180) * 100}%` }}>{dev.name}</span>
-        {lines[dev.id] && <span className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-xl border-2 border-[#292542] bg-white px-2 py-0.5 text-xs font-bold text-[#292542] shadow-[2px_2px_0_#292542]" style={{ left, top: `${((s.y - (s.kind === "desk" ? 30 : 34)) / 180) * 100}%` }}>{lines[dev.id]}</span>}
+        {lines[dev.id] && <span className="pointer-events-none absolute z-10 max-w-[9rem] -translate-x-1/2 -translate-y-full truncate whitespace-nowrap rounded-xl border-2 border-[#292542] bg-white px-2 py-0.5 text-xs font-bold text-[#292542] shadow-[2px_2px_0_#292542]" style={{ left: `clamp(4.6rem, ${left}, calc(100% - 4.6rem))`, top: `${((s.y - (s.kind === "desk" ? 30 : 34)) / 180) * 100}%` }}>{lines[dev.id]}</span>}
       </div>;
     })}
   </figure>;
