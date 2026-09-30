@@ -3,7 +3,7 @@ import { useReducedMotion } from "framer-motion";
 import type { ShowcaseEntry } from "@/application/services/showcaseLawnService";
 import { supportsCssAnimation } from "@/hooks/use-lawn-device";
 import { sceneScale, YARD_SCENE_IDS, YARD_SCENES, type YardPose, type YardScene, type YardSceneId } from "@/lib/lawn-scenes";
-import type { CatPlacement, LawnPlan, YardPlacement } from "@/lib/lawn-planner";
+import { activeVisit, type CatPlacement, type LawnPlan, type YardPlacement } from "@/lib/lawn-planner";
 import { BaroCharacterArt } from "./BaroCharacterArt";
 import { LawnCardSurface, type LawnCardActions } from "./LawnCharacter";
 import { CatArt, Fireflies, HeldItem, YardBackdrop, YardFronts, YardTint } from "./LawnYardArt";
@@ -30,14 +30,15 @@ function percent(value: number, total: number) {
   return `${(value / total) * 100}%`;
 }
 
-function YardCharacter({ placement, scene, mine, motion, windowIndex, actions, onFocusScroll }: { placement: YardPlacement; scene: YardScene; mine: boolean; motion: boolean; windowIndex: number; actions: LawnCardActions; onFocusScroll: (element: HTMLElement) => void }) {
+function YardCharacter({ placement, scene, mine, greeted, motion, windowIndex, actions, onFocusScroll }: { placement: YardPlacement; greeted: boolean; scene: YardScene; mine: boolean; motion: boolean; windowIndex: number; actions: LawnCardActions; onFocusScroll: (element: HTMLElement) => void }) {
   const { entry, spot, pose, item, facing, activity } = placement;
   const height = 120 * sceneScale(scene, spot.y);
   const width = height * (220 / 280);
-  const lying = pose === "doze" && spot.kind !== "bench";
-  const seated = !lying && (spot.kind === "table" || spot.kind === "bench" || spot.kind === "blanket" || (spot.kind === "tree" && pose === "read"));
+  const emote = (entry.emote && entry.emote_until && Date.parse(entry.emote_until) > Date.now() ? emoteAction[entry.emote] : undefined) ?? (greeted ? emoteAction.visit : undefined);
+  const highFive = emote?.action === "high-five";
+  const lying = !highFive && pose === "doze" && spot.kind !== "bench";
+  const seated = !highFive && !lying && (spot.kind === "table" || spot.kind === "bench" || spot.kind === "blanket" || (spot.kind === "tree" && pose === "read"));
   const drop = seated ? height * 0.12 : 0;
-  const emote = entry.emote && entry.emote_until && Date.parse(entry.emote_until) > Date.now() ? emoteAction[entry.emote] : undefined;
   const { action, variant } = emote ?? puppetAction[pose];
   return <LawnCardSurface
     entry={entry}
@@ -51,8 +52,8 @@ function YardCharacter({ placement, scene, mine, motion, windowIndex, actions, o
         <span className={`baro-art block ${lying ? "yard-lie" : ""} ${seated ? "yard-seated" : ""}`} style={{ aspectRatio: "220 / 280" }}>
           <span className={`block h-full w-full ${facing === "left" ? "-scale-x-100" : ""}`}><BaroCharacterArt dna={entry.character.dna} id={`yard-${scene.id}-${spot.id}-${entry.character.id}`} prop={entry.prop} armsFront={Boolean(emote) || gesturePoses.has(pose)} /></span>
         </span>
-        {item && <span className={`pointer-events-none absolute block ${itemPosition[item]} ${facing === "left" && (item === "onigiri" || item === "milk" || item === "pillow") ? "!left-[4%]" : ""}`}><HeldItem item={item} /></span>}
-        {emote && <span aria-hidden="true" className={`yard-emote pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-full border-2 border-[#292542] bg-[#fffaf0] px-1.5 text-base leading-7 shadow-[2px_2px_0_#292542] ${entry.emote === "heart" ? "yard-emote-float" : ""}`}>{emote.emoji}</span>}
+        {item && !highFive && <span className={`pointer-events-none absolute block ${itemPosition[item]} ${facing === "left" && (item === "onigiri" || item === "milk" || item === "pillow") ? "!left-[4%]" : ""}`}><HeldItem item={item} /></span>}
+        {emote && <span aria-hidden="true" className={`yard-emote pointer-events-none absolute -top-12 left-1/2 -translate-x-1/2 rounded-full border-2 border-[#292542] bg-[#fffaf0] px-1.5 text-base leading-7 shadow-[2px_2px_0_#292542] ${entry.emote === "heart" ? "yard-emote-float" : ""}`}>{emote.emoji}</span>}
         {(pose === "doze" || entry.emote === "nap") && <span aria-hidden="true" className="yard-zz pointer-events-none absolute -top-2 right-0 text-sm font-black text-card-foreground">z<sup>z</sup></span>}
       </button>
       <span aria-hidden="true" className={`pointer-events-none absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-bold shadow-sm transition-opacity ${mine ? "border-primary bg-primary text-primary-foreground opacity-100" : "border-border bg-card text-card-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"}`}>{mine ? `คุณ · ${entry.name}` : entry.name}</span>
@@ -90,8 +91,9 @@ export function LawnYard({ plan, scene, userId, lite, cardActions }: { plan: Law
   const motion = !reducedMotion && supportsCssAnimation();
   const scroller = useRef<HTMLDivElement>(null);
   const focusScroll = (element: HTMLElement) => element.scrollIntoView?.({ block: "nearest", inline: "center", behavior: motion ? "smooth" : "auto" });
+  const greeted = new Set(plan.placements.filter((placement) => placement.partnerId && activeVisit(placement.entry, Date.now()) === placement.partnerId).map((placement) => placement.partnerId!));
   const items = [
-    ...plan.placements.map((placement) => ({ x: placement.spot.x, key: `c:${placement.entry.owner_id}:${placement.spot.id}:${plan.windowIndex}`, node: <YardCharacter placement={placement} scene={scene} mine={placement.entry.owner_id === userId} motion={motion} windowIndex={plan.windowIndex} actions={cardActions(placement.entry)} onFocusScroll={focusScroll} /> })),
+    ...plan.placements.map((placement) => ({ x: placement.spot.x, key: `c:${placement.entry.owner_id}:${placement.spot.id}:${plan.windowIndex}`, node: <YardCharacter placement={placement} scene={scene} greeted={greeted.has(placement.entry.owner_id)} mine={placement.entry.owner_id === userId} motion={motion} windowIndex={plan.windowIndex} actions={cardActions(placement.entry)} onFocusScroll={focusScroll} /> })),
     ...plan.cats.map((placement) => ({ x: placement.x + 1, key: `k:${placement.cat.id}:${placement.pose}:${placement.x}:${plan.windowIndex}`, node: <YardCat placement={placement} scene={scene} motion={motion} onFocusScroll={focusScroll} /> })),
   ].sort((a, b) => a.x - b.x);
   useEffect(() => {

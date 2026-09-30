@@ -165,7 +165,8 @@ export function planLawn({ entries, scene, viewerId, mine, now, limit = LAWN_SCE
   for (const a of chosen) {
     const b = byId.get(activeVisit(a, now) ?? "");
     if (!b || b === a || visiting.has(a.owner_id) || visiting.has(b.owner_id)) continue;
-    const edge = rotate(edges, lawnHash(pairKey(a.owner_id, b.owner_id))).find(([spotA, spotB]) => !taken.has(spotA.id) && !taken.has(spotB.id));
+    const shuffled = rotate(edges, lawnHash(pairKey(a.owner_id, b.owner_id)));
+    const edge = [...shuffled.filter(([spotA]) => spotA.kind === "play"), ...shuffled].find(([spotA, spotB]) => !taken.has(spotA.id) && !taken.has(spotB.id));
     if (!edge) continue;
     const [left, right] = edge[0].x <= edge[1].x ? edge : [edge[1], edge[0]];
     place(a, left, SPOT_POSES[left.kind].pair[0], 0, "right", b.owner_id);
