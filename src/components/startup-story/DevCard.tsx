@@ -1,5 +1,5 @@
 import type { StartupDev, StartupRole } from "@/application/services/startupStoryService";
-import { baht, roleLook, spriteFor, traits } from "./startupStoryCatalog";
+import { baht, isSassy, roleLook, spriteFor, traits } from "./startupStoryCatalog";
 
 function Stat({ label, value }: { label: string; value: number }) {
   return <div className="flex items-center gap-2 text-xs font-bold">
@@ -23,6 +23,7 @@ export function DevCard({ dev, showSalary, roles }: { dev: StartupDev; showSalar
   return <div className="space-y-1">
     <p className="text-lg font-black">{spriteFor(dev)} {dev.name}{dev.genmate_id && <span title="A real genmate from your cohort" aria-label="genmate"> 🎓</span>}</p>
     {dev.role && <RoleBadge role={dev.role} roles={roles} />}
+    {isSassy(dev) && <span className="ml-1 inline-flex rounded-full border-2 border-[#292542] bg-[#f7c6d9] px-2 py-0.5 text-xs font-black" title="ชอบแซะเพื่อนร่วมทีม ศัพท์ Gen Z เต็มปาก">💅 ปากแซ่บ</span>}
     {job && <p className="text-xs font-bold">{job}</p>}
     {(!dev.role || dev.perk) && <p className="text-xs font-bold opacity-70">{dev.role ? dev.perk : [dev.title, dev.perk].filter(Boolean).join(" · ")}</p>}
     {trait && <p className="text-xs font-black" title={trait.desc}>{trait.label} <span className="font-bold opacity-70">· {trait.desc}</span></p>}

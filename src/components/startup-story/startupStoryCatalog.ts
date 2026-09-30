@@ -86,3 +86,38 @@ export function teamHints(team: StartupDev[], boss: string | null): TeamHint[] {
   if (has("devops")) hints.push({ tone: "good", text: "DevOps on board: faster deploys 🚀" });
   return hints;
 }
+
+const shadeLines = [
+  "{name} พูดในสแตนด์อัพนานไปป่ะ 🙄",
+  "{name} push ขึ้น main อีกแล้ว ไม่ไหวจะเคลียร์ 💅",
+  "code {name} no cap คือ bug ล้วน 🧢",
+  "เท่าที่ดู {name} แค่ขยับเมาส์ทั้งวัน 👀",
+  "{name} ok boomer 👴",
+  "{name} commit ว่า 'fix' อีกแล้ว เกินต้าน 😮‍💨",
+  "{name} ตึงเกิน ใจเย็นแม่ 🫷",
+  "ใครเขียน CSS อันนี้... {name} ใช่มั้ย 🫠",
+  "{name} ขิงว่าใช้ Arch อีกแล้ว 🙄",
+  "{name} กินขนมไม่แบ่ง ไม่โอเค 😤",
+  "slay มากนะ {name}... ถ้า test ผ่านอะนะ 💅",
+  "{name} อย่ามาเทงานนะ 🫵",
+  "{name} ตอบแชทช้ากว่า CI อีก 🐢",
+  "{name} ใส่ console.log ไว้ 40 ที่ จึ้งมาก 🫡",
+];
+
+const sassSolo = ["mood วันนี้คือไม่อยากทำงาน 🫠", "งานจึ้งมาก ใครสั่งเนี่ย", "ตัวแม่มาแล้ว 💅", "เบื่อ deadline แล้วค่ะซิส", "เอาจริงเหรอ... 🙂", "real talk: prod พังแน่ 🔥"];
+
+export const comebackLines = ["เอ๊ะ?? 😤", "ใครถาม 🙄", "ไม่ใช่เราน้า 😳", "พูดดีๆ ก็ได้ป่ะ 🥲", "ขอสู้ 1 ยก 🥊"];
+
+export function isSassy(dev: StartupDev) {
+  if (dev.genmate_id) return false;
+  let h = 7;
+  for (const ch of dev.id + dev.name) h = (h * 37 + ch.charCodeAt(0)) | 0;
+  return Math.abs(h) % 3 === 0;
+}
+
+export function sassLine(speaker: StartupDev, team: StartupDev[], rand: () => number = Math.random): { text: string; targetId?: string } {
+  const targets = team.filter((d) => d.id !== speaker.id && !d.genmate_id);
+  if (targets.length === 0 || rand() < 0.3) return { text: sassSolo[Math.floor(rand() * sassSolo.length)] };
+  const target = targets[Math.floor(rand() * targets.length)];
+  return { text: shadeLines[Math.floor(rand() * shadeLines.length)].replace("{name}", target.name), targetId: target.id };
+}

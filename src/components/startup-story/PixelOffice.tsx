@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useReducedMotion } from "framer-motion";
 import type { StartupDev } from "@/application/services/startupStoryService";
-import { roleLook } from "./startupStoryCatalog";
+import { comebackLines, isSassy, roleLook, sassLine } from "./startupStoryCatalog";
 import { assignStations, deskFronts, hangoutSpots, levelUps, ROOM_H, ROOM_W, standupSpots, TABLE, TIRED_AT, type Spot } from "./office/officeLayout";
 import { Desk, MeetingTable, RoomBackdrop, Sofa } from "./office/OfficeRoom";
 import { OfficePerson } from "./office/OfficePerson";
@@ -103,10 +103,18 @@ function useSpeech(staff: StartupDev[], phase: Phase) {
     if (staff.length === 0) return;
     const say = () => {
       const dev = staff[Math.floor(Math.random() * staff.length)];
+      const show = (id: string, line: string, delay = 0) => window.setTimeout(() => {
+        setLines((prev) => [...prev.filter(([who]) => who !== id), [id, line] as [string, string]].slice(-2));
+        window.setTimeout(() => setLines((prev) => prev.filter(([who, text]) => who !== id || text !== line)), 2400);
+      }, delay);
+      if (isSassy(dev) && Math.random() < 0.45) {
+        const sass = sassLine(dev, staff);
+        show(dev.id, sass.text);
+        if (sass.targetId) show(sass.targetId, comebackLines[Math.floor(Math.random() * comebackLines.length)], 1300);
+        return;
+      }
       const pool = phase === "standup" ? standupLines : phase === "work" ? roleLook(dev.role).lines : roleLook(dev.role).idle;
-      const line = pool[Math.floor(Math.random() * pool.length)];
-      setLines((prev) => [...prev.filter(([id]) => id !== dev.id), [dev.id, line] as [string, string]].slice(-2));
-      window.setTimeout(() => setLines((prev) => prev.filter(([id, text]) => id !== dev.id || text !== line)), 2200);
+      show(dev.id, pool[Math.floor(Math.random() * pool.length)]);
     };
     say();
     const id = window.setInterval(say, phase === "idle" ? 2600 : 1100);
