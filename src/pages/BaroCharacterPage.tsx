@@ -31,6 +31,10 @@ const patternNames: Record<string, string> = {
   checker: "ตารางจิ๋ว", sprouts: "ยอดอ่อน", hearts: "หัวใจ", bubbles: "ฟองสบู่", zigzag: "ซิกแซก",
   mosaic: "โมเสก", constellation: "กลุ่มดาว", paint: "สีหก", petals: "กลีบดอก", egg: "ไข่ดาวหลงทาง",
   potato: "มันฝรั่งฮาเฮ", ramen: "บะหมี่วน", error404: "บั๊ก 404",
+  "coffee-beans": "เมล็ดกาแฟ", clover: "ใบโคลเวอร์", raindrops: "หยดฝน", leopard: "ลายเสือดาว", plaid: "ลายสก็อต",
+  confetti: "กระดาษโปรย", leaves: "ใบไม้ร่วง", cookie: "คุกกี้ช็อกชิป", "coffee-stain": "คราบกาแฟ", "this-is-fine": "ไม่เป็นไรหรอก 🔥",
+  "merge-conflict": "คอนฟลิกต์", semicolon: "เซมิโคลอนหาย", "mango-sticky-rice": "ข้าวเหนียวมะม่วง", "loading-spinner": "กำลังโหลด...",
+  galaxy: "กาแล็กซี", aurora: "แสงออโรร่า", "golden-code": "โค้ดทองคำ", "rainbow-shimmer": "รุ้งประกาย",
 };
 
 const formNames = ["ตัวจิ๋ว", "ตัวป่วน", "ตัวมั่นใจ", "ตัวในตำนาน"];

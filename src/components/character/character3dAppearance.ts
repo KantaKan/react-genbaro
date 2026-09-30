@@ -1,6 +1,7 @@
 import type { CharacterDNA } from "@/application/services/baroCharacterService";
 import { characterPalette, characterPatternPoints } from "./characterAppearance";
 
+// ponytail: new bodies/patterns/props from the friend expansion are 2D-only; 3D falls back to pebble scale + generic dots. Add cases here and in BaroCharacter3D.tsx when 3D parity matters.
 const bodyScale: Record<string, [number, number, number]> = {
   pebble: [0.86, 0.87, 0.66], bean: [0.78, 1.02, 0.66], drop: [0.78, 1.03, 0.66],
   tall: [0.69, 1.1, 0.62], pillow: [1.02, 0.83, 0.61], pear: [0.9, 0.93, 0.68],
