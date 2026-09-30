@@ -107,7 +107,7 @@ export function CharacterEggReveal({ character, reducedMotion, busy, onEquip, on
       <p className="mt-2 text-xs font-black uppercase tracking-[.2em]">{character.dna.rarity.replace("_", " ")}</p>
       <h3 className="mt-1 font-mono text-lg font-black">{character.serial}</h3>
       <p className="mt-2 text-sm text-[#5b5870]">คู่หูตัวนี้อยู่ในสมุดสะสมของคุณถาวรแล้ว</p>
-      <div className="mt-5 grid gap-2 sm:grid-cols-2"><Button onClick={onEquip} disabled={busy}>ใช้ตัวละครนี้</Button><Button variant="outline" onClick={onKeep} disabled={busy}>เก็บไว้ในสมุด</Button></div>
+      <div className="mt-5 grid gap-2 sm:grid-cols-2"><Button onClick={onEquip} disabled={busy}>ใช้ตัวละครนี้</Button><Button variant="outline" onClick={onKeep} disabled={busy} className="border-[#292542] bg-white text-[#292542] hover:bg-[#fffaf0] hover:text-[#292542]">เก็บไว้ในสมุด</Button></div>
     </motion.div>}
   </section>;
 }
@@ -119,7 +119,7 @@ function UnopenedBox({ box, openingId, onOpen, onTransferred }: { box: TeacherGi
   return <article className={`relative overflow-hidden rounded-3xl border-2 p-5 shadow-sm ${character ? "border-[#292542] bg-[#fffaf0] text-[#292542]" : egg ? "border-orange-300 bg-gradient-to-br from-orange-50 via-white to-violet-50 text-[#292542]" : "border-amber-300 bg-white"}`}>
     <div className={`absolute inset-y-0 left-0 w-2 ${character ? "bg-[repeating-linear-gradient(45deg,#cab2f1_0_8px,#fffaf0_8px_16px,#f4bd80_16px_24px)]" : egg ? "bg-gradient-to-b from-orange-300 via-violet-300 to-sky-300" : "bg-[repeating-linear-gradient(45deg,#d97706_0_6px,#fef3c7_6px_12px,#059669_12px_18px,#d1fae5_18px_24px)]"}`} />
     <div className="pl-3">
-      <div className="flex items-center justify-between gap-3"><Badge variant="outline">{egg ? `${eggTierLabel(box.minimum_rarity)} Egg` : `${box.minimum_rarity} or better`}</Badge><Gift className={`h-5 w-5 ${character || egg ? "text-[#7957a2]" : "text-rose-500"}`} /></div>
+      <div className="flex items-center justify-between gap-3"><Badge variant="outline" className="border-[#292542]/40 text-[#292542]">{egg ? `${eggTierLabel(box.minimum_rarity)} Egg` : `${box.minimum_rarity} or better`}</Badge><Gift className={`h-5 w-5 ${character || egg ? "text-[#7957a2]" : "text-rose-500"}`} /></div>
       {character && <p className="mt-4 font-['Trebuchet_MS',sans-serif] text-xs font-black uppercase tracking-[.16em]">✦ BARO CHARACTER STYLE BOX</p>}
       {egg && <p className="mt-4 font-['Trebuchet_MS',sans-serif] text-sm font-black">🥚 {eggTierLabel(box.minimum_rarity)} Character Egg</p>}
       <p className={`mt-4 text-xs font-semibold uppercase tracking-[0.16em] ${character ? "text-[#7957a2]" : "text-emerald-700"}`}>

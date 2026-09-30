@@ -245,7 +245,7 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
     [hasSubmittedToday, formData]
   );
 
-  const totalIsLoading = isLoadingReflections || isLoadingUser;
+  const totalIsLoading = isLoadingReflections || (isLoadingUser && !user);
   const totalError = reflectionsError || userError;
 
   if (totalIsLoading) {
