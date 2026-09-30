@@ -121,6 +121,20 @@ describe("TeacherGiftBoxesDialog", () => {
     expect(giftBoxService.open).not.toHaveBeenCalled();
   });
 
+  it("never offers an admin account as a gift recipient", async () => {
+    vi.mocked(giftBoxService.recipients).mockResolvedValueOnce([
+      { id: "friend-1", display_name: "Mali", cohort_number: 17, group: "B", role: "learner" },
+      { id: "admin-1", display_name: "Teacher", cohort_number: 0, group: "", role: "admin" },
+    ]);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><TeacherGiftBoxesDialog /></QueryClientProvider>);
+    fireEvent.click(screen.getByRole("button", { name: /gift boxes/i }));
+    fireEvent.click(await screen.findByRole("button", { name: "ส่งกล่องให้เพื่อน" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "ค้นหาคนรับกล่อง" }), { target: { value: "Teacher" } });
+    expect(await screen.findByRole("button", { name: /Mali/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Teacher/ })).not.toBeInTheDocument();
+  });
+
   it("shows the journey of a received box", async () => {
     vi.mocked(giftBoxService.list).mockResolvedValueOnce([{
       id: "box-journey", user_id: "learner-1", minimum_rarity: "Rare", message: "Passing this along", granted_by: "teacher-1", status: "unopened", created_at: "2026-09-28T00:00:00Z",
