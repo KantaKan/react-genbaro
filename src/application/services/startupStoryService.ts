@@ -10,6 +10,7 @@ export interface StartupDev {
   title: string;
   sprite: string;
   genmate_id?: string;
+  role?: string;
   perk?: string;
   trait?: string;
   frontend: number;
@@ -99,6 +100,13 @@ export interface StartupItem {
   desc: string;
 }
 
+export interface StartupRole {
+  id: string;
+  title: string;
+  job: string;
+  builder: boolean;
+}
+
 export interface StartupUnlock {
   fame: number;
   kind: "founder" | "item" | "skin";
@@ -116,6 +124,7 @@ export interface StartupOverview {
   themes: string[];
   items: StartupItem[];
   unlocks: StartupUnlock[];
+  roles?: StartupRole[];
   opt_out: boolean;
 }
 

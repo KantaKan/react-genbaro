@@ -72,13 +72,13 @@ export default function StartupStoryPage() {
   } else if (!run) {
     screen = <Lobby overview={data} userId={userId} pending={pending} onStart={(mode) => action.mutate(() => startupStoryService.startRun(mode))} />;
   } else if (run.stage === "founder") {
-    screen = <FounderPick offer={run.founder_offer ?? []} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickFounder(i))} />;
+    screen = <FounderPick offer={run.founder_offer ?? []} roles={data.roles} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickFounder(i))} />;
   } else if (run.stage === "developing") {
     screen = <DevPhase key={run.project?.started_at} run={run} items={data.items} skin={skin} clockOffset={data.clockOffset} pending={pending} onShip={ship} />;
   } else if (run.stage === "item") {
     screen = <ItemDraft run={run} items={data.items} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickItem(i))} />;
   } else {
-    screen = <Hub key={run.project_index} run={run} types={data.types} themes={data.themes} items={data.items} discovered={data.studio.discovered_combos ?? []} skin={skin} pending={pending}
+    screen = <Hub key={run.project_index} run={run} types={data.types} themes={data.themes} items={data.items} roles={data.roles} discovered={data.studio.discovered_combos ?? []} skin={skin} pending={pending}
       onStart={(type, theme, staffIds) => action.mutate(() => startupStoryService.startProject(type, theme, staffIds))}
       onHire={(id) => action.mutate(() => startupStoryService.hire(id))}
       onDismiss={(id) => action.mutate(() => startupStoryService.dismiss(id))}

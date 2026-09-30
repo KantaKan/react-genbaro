@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import type { StartupDev, StartupItem, StartupResult, StartupRun } from "@/application/services/startupStoryService";
-import { baht, bosses, bossThreshold, comboKey, rarityStyle, reviewerIcons, spriteFor, teamCap, traits, ui, upcomingBoss } from "./startupStoryCatalog";
+import { motion, useReducedMotion } from "framer-motion";
+import type { StartupDev, StartupItem, StartupResult, StartupRole, StartupRun } from "@/application/services/startupStoryService";
+import { baht, bosses, bossThreshold, comboKey, rarityStyle, reviewerIcons, roleLook, spriteFor, teamCap, teamHints, traits, ui, upcomingBoss } from "./startupStoryCatalog";
+import { PixelOffice } from "./PixelOffice";
 
 function Stat({ label, value }: { label: string; value: number }) {
   return <div className="flex items-center gap-2 text-xs font-bold">
@@ -13,29 +14,26 @@ function Stat({ label, value }: { label: string; value: number }) {
   </div>;
 }
 
-function DevCard({ dev, showSalary }: { dev: StartupDev; showSalary?: boolean }) {
+function RoleBadge({ role, roles }: { role?: string; roles?: StartupRole[] }) {
+  const look = roleLook(role);
+  const job = roles?.find((r) => r.id === role)?.job;
+  return <span className="inline-flex items-center gap-1 rounded-full border-2 border-[#292542] px-2 py-0.5 text-xs font-black text-white" style={{ background: look.color }} title={job}>{look.short} · {look.label}</span>;
+}
+
+function DevCard({ dev, showSalary, roles }: { dev: StartupDev; showSalary?: boolean; roles?: StartupRole[] }) {
   const trait = dev.trait ? traits[dev.trait] : undefined;
+  const job = roles?.find((r) => r.id === dev.role)?.job;
   return <div className="space-y-1">
     <p className="text-lg font-black">{spriteFor(dev)} {dev.name}{dev.genmate_id && <span title="A real genmate from your cohort" aria-label="genmate"> 🎓</span>}</p>
-    <p className="text-xs font-bold opacity-70">{dev.title}{dev.perk ? ` · ${dev.perk}` : ""}</p>
+    {dev.role && <RoleBadge role={dev.role} roles={roles} />}
+    {job && <p className="text-xs font-bold">{job}</p>}
+    {(!dev.role || dev.perk) && <p className="text-xs font-bold opacity-70">{dev.role ? dev.perk : [dev.title, dev.perk].filter(Boolean).join(" · ")}</p>}
     {trait && <p className="text-xs font-black" title={trait.desc}>{trait.label} <span className="font-bold opacity-70">· {trait.desc}</span></p>}
     <Stat label="Front" value={dev.frontend} />
     <Stat label="Back" value={dev.backend} />
     <Stat label="Design" value={dev.design} />
     <Stat label="Debug" value={dev.debug} />
     {showSalary && dev.salary > 0 && <p className="pt-1 text-xs font-black">💰 {baht(dev.salary)} / project</p>}
-  </div>;
-}
-
-export function OfficeScene({ staff, busy, skin }: { staff: StartupDev[]; busy: boolean; skin?: string }) {
-  const floor = skin === "rooftop-bangkok" ? "bg-[#f7c6a3]" : "bg-[#f4e3c3]";
-  return <div className={`${ui.cardBase} ${floor} grid grid-cols-3 gap-3 p-4 sm:grid-cols-6`} aria-label="Office">
-    {staff.map((dev) => <div key={dev.id} className="flex flex-col items-center gap-1">
-      <span className={`text-4xl ${busy ? "motion-safe:animate-bounce" : ""}`}>{spriteFor(dev)}</span>
-      <span className="h-3 w-14 rounded-sm border-2 border-[#292542] bg-[#b98b5e]" />
-      <span className="max-w-full truncate text-xs font-black">{dev.name}</span>
-    </div>)}
-    {skin === "rooftop-bangkok" && <span className="col-span-full text-center text-xs font-black">🌆 Rooftop Bangkok</span>}
   </div>;
 }
 
@@ -54,12 +52,12 @@ export function Hud({ run, items }: { run: StartupRun; items: StartupItem[] }) {
   </div>;
 }
 
-export function FounderPick({ offer, onPick, pending }: { offer: StartupDev[]; onPick: (index: number) => void; pending: boolean }) {
+export function FounderPick({ offer, onPick, pending, roles }: { offer: StartupDev[]; onPick: (index: number) => void; pending: boolean; roles?: StartupRole[] }) {
   return <section className="space-y-4">
     <h2 className="text-2xl font-black text-foreground">Pick your founder</h2>
     <div className="grid gap-4 sm:grid-cols-3">
       {offer.map((dev, i) => <button key={dev.id} className={`${ui.card} p-4 text-left transition hover:-translate-y-1 disabled:opacity-50`} onClick={() => onPick(i)} disabled={pending}>
-        <DevCard dev={dev} />
+        <DevCard dev={dev} roles={roles} />
       </button>)}
     </div>
   </section>;
@@ -70,6 +68,7 @@ type HubProps = {
   types: string[];
   themes: string[];
   items: StartupItem[];
+  roles?: StartupRole[];
   discovered: string[];
   skin?: string;
   pending: boolean;
@@ -79,7 +78,7 @@ type HubProps = {
   onAbandon: () => void;
 };
 
-export function Hub({ run, types, themes, items, discovered, skin, pending, onStart, onHire, onDismiss, onAbandon }: HubProps) {
+export function Hub({ run, types, themes, items, roles, discovered, skin, pending, onStart, onHire, onDismiss, onAbandon }: HubProps) {
   const [tab, setTab] = useState<"project" | "team" | "hire">("project");
   const [type, setType] = useState("");
   const [theme, setTheme] = useState("");
@@ -98,7 +97,7 @@ export function Hub({ run, types, themes, items, discovered, skin, pending, onSt
 
   return <section className="space-y-4">
     <Hud run={run} items={items} />
-    <OfficeScene staff={run.staff} busy={false} skin={skin} />
+    <PixelOffice staff={run.staff} busy={false} skin={skin} />
     <div role="tablist" className="flex gap-2">
       {tabButton("project", boss ? "👹 Boss" : "🛠️ Project")}
       {tabButton("team", `👥 Team ${run.staff.length}/${cap}`)}
@@ -120,8 +119,11 @@ export function Hub({ run, types, themes, items, discovered, skin, pending, onSt
       {type && theme && discovered.includes(comboKey(type, theme)) && <p className="text-xs font-black">📒 You've shipped {type} × {theme} before.</p>}
       <div>
         <p className="mb-2 text-xs font-black uppercase tracking-wider">Team on this project</p>
-        <div className="flex flex-wrap gap-2">{run.staff.map((s) => choice(`${spriteFor(s)} ${s.name}`, !excluded.includes(s.id), () => setExcluded((prev) => prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id])))}</div>
+        <div className="flex flex-wrap gap-2">{run.staff.map((s) => choice(`${s.name} · ${roleLook(s.role).short}`, !excluded.includes(s.id), () => setExcluded((prev) => prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id])))}</div>
       </div>
+      {team.length > 0 && <ul className="space-y-1" aria-label="Team check">
+        {teamHints(team, boss).map((h) => <li key={h.text} className={`rounded-xl border-2 border-[#292542] px-3 py-1 text-xs font-bold ${h.tone === "warn" ? "bg-[#f7c6d9]" : "bg-[#d6f0e4]"}`}>{h.text}</li>)}
+      </ul>}
       <button className={`${ui.button} w-full bg-[#7bc4a8]`} disabled={!type || !theme || team.length === 0 || pending} onClick={() => onStart(type, theme, team.map((s) => s.id))}>
         {boss ? "Face the boss 👹" : "Start building 🛠️"}
       </button>
@@ -129,7 +131,7 @@ export function Hub({ run, types, themes, items, discovered, skin, pending, onSt
 
     {tab === "team" && <div className="grid gap-3 sm:grid-cols-2">
       {run.staff.map((dev) => <div key={dev.id} className={`${ui.card} space-y-3 p-4`}>
-        <DevCard dev={dev} showSalary />
+        <DevCard dev={dev} showSalary roles={roles} />
         {run.staff.length > 1 && <button className={`${ui.button} w-full bg-white py-2`} disabled={pending} onClick={() => onDismiss(dev.id)}>Let go 👋</button>}
       </div>)}
     </div>}
@@ -140,7 +142,7 @@ export function Hub({ run, types, themes, items, discovered, skin, pending, onSt
         const full = run.staff.length >= cap;
         const broke = run.money < dev.salary;
         return <div key={dev.id} className={`${ui.card} space-y-3 p-4`}>
-          <DevCard dev={dev} showSalary />
+          <DevCard dev={dev} showSalary roles={roles} />
           <button className={`${ui.button} w-full bg-[#7bc4a8] py-2`} disabled={pending || full || broke} onClick={() => onHire(dev.id)}>
             {full ? "Team full" : broke ? "Not enough ฿" : "Hire"}
           </button>
@@ -168,45 +170,16 @@ function useSecondsLeft(endsAt: string, clockOffset: number) {
   return Math.max(0, Math.ceil((Date.parse(endsAt) - (now + clockOffset)) / 1000));
 }
 
-const statKeys = [["frontend", "FE"], ["backend", "BE"], ["design", "Design"], ["debug", "Debug"]] as const;
-
-function useBubbles(team: StartupDev[], active: boolean) {
-  const [bubbles, setBubbles] = useState<{ id: number; x: number; text: string }[]>([]);
-  const reduced = useReducedMotion();
-  useEffect(() => {
-    if (!active || reduced || team.length === 0) return;
-    let next = 0;
-    const id = window.setInterval(() => {
-      const dev = team[Math.floor(Math.random() * team.length)];
-      const [key, label] = statKeys[Math.floor(Math.random() * statKeys.length)];
-      const text = Math.random() < 0.15 ? "🐛" : `+${Math.max(1, Math.round(dev[key] / 2))} ${label}`;
-      const bubble = { id: next++, x: 10 + Math.random() * 80, text };
-      setBubbles((prev) => [...prev.slice(-6), bubble]);
-    }, 700);
-    return () => window.clearInterval(id);
-  }, [active, reduced, team]);
-  return bubbles;
-}
-
 export function DevPhase({ run, clockOffset, onShip, pending, items, skin }: { run: StartupRun; clockOffset: number; onShip: () => void; pending: boolean; items: StartupItem[]; skin?: string }) {
   const project = run.project!;
   const left = useSecondsLeft(project.ends_at, clockOffset);
   const total = Math.max(1, (Date.parse(project.ends_at) - Date.parse(project.started_at)) / 1000);
   const percent = Math.min(100, Math.max(0, 100 - (left / total) * 100));
   const [team] = useState(() => run.staff.filter((s) => project.staff_ids.includes(s.id)));
-  const bubbles = useBubbles(team, left > 0);
   const boss = project.boss ? bosses[project.boss] : undefined;
   return <section className="space-y-4">
     <Hud run={run} items={items} />
-    <div className="relative">
-      <OfficeScene staff={team} busy={left > 0} skin={skin} />
-      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-        <AnimatePresence>
-          {bubbles.map((b) => <motion.span key={b.id} className="absolute bottom-6 rounded-full border-2 border-[#292542] bg-white px-2 py-0.5 text-xs font-black text-[#292542]" style={{ left: `${b.x}%` }}
-            initial={{ opacity: 0, y: 0 }} animate={{ opacity: [0, 1, 0], y: -70 }} exit={{ opacity: 0 }} transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}>{b.text}</motion.span>)}
-        </AnimatePresence>
-      </div>
-    </div>
+    <PixelOffice staff={team} busy={left > 0} skin={skin} />
     <div className={`${ui.card} space-y-3 p-4`}>
       {boss && <p className="text-xs font-black uppercase tracking-widest">👹 {boss.name}</p>}
       <h2 className="text-xl font-black">{project.type} · {project.theme}</h2>

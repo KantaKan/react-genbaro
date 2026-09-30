@@ -53,3 +53,36 @@ export const rarityStyle: Record<string, string> = {
   legendary: "bg-[#fbe39a]",
   cursed: "bg-[#cab2f1]",
 };
+
+type RoleLook = { label: string; short: string; color: string; anim: string; lines: string[]; idle: string[] };
+
+const idleLines = ["☕ coffee break", "ทานข้าวยัง?", "reading docs 📚", "lo-fi beats 🎧", "stretching 🙆"];
+
+const roleLooks: Record<string, RoleLook> = {
+  fe_dev: { label: "Frontend Dev", short: "FE", color: "#4f8df7", anim: "ss-type", lines: ["styling buttons 💅", "fixing CSS 😩", "npm install...", "useEffect again?!"], idle: idleLines },
+  be_dev: { label: "Backend Dev", short: "BE", color: "#6a4fb3", anim: "ss-type", lines: ["writing the API 🔌", "SELECT * FROM...", "migrating the DB", "fixing N+1 queries"], idle: idleLines },
+  designer: { label: "Designer", short: "UX", color: "#f06fa7", anim: "ss-type", lines: ["moving pixels 🎨", "new mockup!", "more whitespace", "Figma time ✨"], idle: idleLines },
+  qa: { label: "QA", short: "QA", color: "#e2a12b", anim: "ss-type", lines: ["found a bug! 🐛", "testing login...", "edge case 🤔", "regression pass ✅"], idle: idleLines },
+  devops: { label: "DevOps", short: "Ops", color: "#3aa37a", anim: "ss-point", lines: ["deploying 🚀", "CI is green ✅", "scaling pods", "reading logs 🔍"], idle: idleLines },
+  po: { label: "Product Owner", short: "PO", color: "#e3683e", anim: "ss-note", lines: ["writing user story 📝", "grooming backlog", "talking to users", "MVP first!"], idle: idleLines },
+  pm: { label: "Project Manager", short: "PM", color: "#2d9cdb", anim: "ss-point", lines: ["standup time ⏰", "moving tickets →", "timeline OK 👍", "any blockers?"], idle: idleLines },
+  sa: { label: "System Analyst", short: "SA", color: "#8d6e63", anim: "ss-draw", lines: ["drawing the ERD", "API contract ✍️", "sequence diagram", "planning for scale"], idle: idleLines },
+};
+
+export const roleLook = (role?: string): RoleLook => roleLooks[role ?? ""] ?? { ...roleLooks.fe_dev, label: "Developer", short: "Dev" };
+
+export type TeamHint = { tone: "good" | "warn"; text: string };
+
+export function teamHints(team: StartupDev[], boss: string | null): TeamHint[] {
+  const has = (role: string) => team.some((d) => d.role === role);
+  const hints: TeamHint[] = [];
+  if (!has("qa") && !has("sa")) hints.push({ tone: "warn", text: "No QA or SA: expect extra bugs 🐛" });
+  if (team.length > 2 && !has("pm")) hints.push({ tone: "warn", text: `No PM: ${team.length} people means meeting chaos 🌀` });
+  if (boss === "outage-3am" && !has("devops") && !has("qa")) hints.push({ tone: "warn", text: "3AM outage with no DevOps or QA? Risky 🚨" });
+  if (has("po")) hints.push({ tone: "good", text: "PO on board: Users and Investors will notice ✨" });
+  if (has("pm")) hints.push({ tone: "good", text: "PM on board: faster build, smooth standups ⏰" });
+  if (has("qa")) hints.push({ tone: "good", text: "QA on board: bugs get caught before ship ✅" });
+  if (has("sa")) hints.push({ tone: "good", text: "SA on board: clean design, Tech Lead happy 📐" });
+  if (has("devops")) hints.push({ tone: "good", text: "DevOps on board: faster deploys 🚀" });
+  return hints;
+}
