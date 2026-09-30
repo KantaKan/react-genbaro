@@ -1,16 +1,12 @@
-import { useRef, useState } from "react";
-import { useReducedMotion } from "framer-motion";
+import { useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Box, X } from "lucide-react";
 import type { ShowcaseEntry } from "@/application/services/showcaseLawnService";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { supportsCssAnimation } from "@/hooks/use-lawn-device";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
-import type { LawnAction } from "@/lib/lawn-planner";
 import { BaroCharacterArt } from "./BaroCharacterArt";
 
 
-const gestureActions = new Set<LawnAction>(["wave", "high-five", "meal", "rps", "play"]);
 const rarityTone: Record<string, string> = {
   normal: "bg-[hsl(var(--character-normal))] text-[hsl(var(--character-normal-foreground))]",
   meme_rare: "bg-[hsl(var(--character-meme))] text-[hsl(var(--character-meme-foreground))]",
@@ -18,22 +14,6 @@ const rarityTone: Record<string, string> = {
 };
 const reactionChoices = ["❤️", "✨", "😂", "🙌"];
 const traitLabels = [["body", "ทรง"], ["ears", "หู"], ["eyes", "ตา"], ["mark", "ลาย"], ["palette", "สี"], ["pattern", "แพทเทิร์น"]] as const;
-
-export function LawnPuppet({ entry, action, variant, mine, facing = "right", onSelect }: { entry: ShowcaseEntry; action: LawnAction; variant?: string; mine: boolean; facing?: "left" | "right"; onSelect: () => void }) {
-  const reducedMotion = useReducedMotion();
-  return <button
-    type="button"
-    onClick={onSelect}
-    aria-label={`ดูการ์ดของ ${entry.name}`}
-    data-action={action}
-    data-variant={variant}
-    data-motion={reducedMotion || !supportsCssAnimation() ? "reduced" : "full"}
-    className={`baro-puppet flex w-24 flex-col items-center sm:w-28 rounded-2xl p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${entry.hidden ? "opacity-50" : ""}`}
-  >
-    <span className={`max-w-full truncate rounded-full border px-2 py-0.5 text-xs font-bold shadow-sm ${mine ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-card-foreground"}`}>{entry.name}</span>
-    <span className="baro-art block h-28 w-20 sm:h-32 sm:w-24"><span className={`block h-full w-full ${facing === "left" ? "-scale-x-100" : ""}`} data-facing={facing}><BaroCharacterArt dna={entry.character.dna} id={`lawn-${entry.character.id}`} prop={entry.prop} armsFront={gestureActions.has(action)} /></span></span>
-  </button>;
-}
 
 export interface LawnCardActions {
   admin: boolean;
@@ -67,16 +47,16 @@ export function LawnCharacterCard({ entry, admin, busy, onReact, onModerate, onI
   </div>;
 }
 
-export function LawnCharacter({ entry, action, variant, mine, facing, ...actions }: { entry: ShowcaseEntry; action: LawnAction; variant?: string; mine: boolean; facing?: "left" | "right" } & LawnCardActions) {
+export function LawnCardSurface({ entry, actions, anchorClassName, anchorStyle, anchorData, renderTrigger }: { entry: ShowcaseEntry; actions: LawnCardActions; anchorClassName?: string; anchorStyle?: CSSProperties; anchorData?: Record<string, string>; renderTrigger: (open: () => void) => ReactNode }) {
   const [open, setOpen] = useState(false);
   const mobile = useIsMobile();
   const anchor = useRef<HTMLSpanElement>(null);
   const returnFocus = (event: Event) => { event.preventDefault(); anchor.current?.querySelector("button")?.focus(); };
-  const puppet = <span ref={anchor} className="inline-flex"><LawnPuppet entry={entry} action={action} variant={variant} mine={mine} facing={facing} onSelect={() => setOpen(true)} /></span>;
+  const trigger = <span ref={anchor} className={anchorClassName} style={anchorStyle} {...anchorData}>{renderTrigger(() => setOpen(true))}</span>;
   const card = <LawnCharacterCard entry={entry} {...actions} onInspect={() => { setOpen(false); actions.onInspect(); }} />;
   if (mobile) {
     return <>
-      {puppet}
+      {trigger}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent data-lawn-card side="bottom" onCloseAutoFocus={returnFocus} className="max-h-[85vh] overflow-y-auto rounded-t-3xl">
           <SheetTitle>การ์ดของ {entry.name}</SheetTitle>
@@ -87,7 +67,7 @@ export function LawnCharacter({ entry, action, variant, mine, facing, ...actions
     </>;
   }
   return <Popover open={open} onOpenChange={setOpen}>
-    <PopoverAnchor asChild>{puppet}</PopoverAnchor>
+    <PopoverAnchor asChild>{trigger}</PopoverAnchor>
     <PopoverContent data-lawn-card role="dialog" aria-label={`การ์ดของ ${entry.name}`} onCloseAutoFocus={returnFocus} className="w-80 rounded-2xl">
       <button type="button" onClick={() => setOpen(false)} aria-label="ปิดการ์ด" className="float-right -mr-1 -mt-1 rounded-full p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><X className="h-4 w-4" /></button>
       {card}

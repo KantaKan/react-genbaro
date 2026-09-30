@@ -91,7 +91,7 @@ function renderPage() {
 }
 
 async function openCard(name: string) {
-  fireEvent.click(await screen.findByRole("button", { name: `ดูการ์ดของ ${name}` }));
+  fireEvent.click(await screen.findByRole("button", { name: new RegExp(`^${name} · `) }));
   return screen.findByRole("dialog", { name: `การ์ดของ ${name}` });
 }
 
@@ -152,7 +152,7 @@ describe("ShowcaseLawnPage", () => {
     await waitFor(async () => expect(within(await openCard("Me")).getByText("New note")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "ปิดการ์ด" }));
     fireEvent.click(screen.getByRole("button", { name: "เอาออกจากลาน" }));
-    await waitFor(() => expect(screen.queryByRole("button", { name: "ดูการ์ดของ Me" })).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole("button", { name: /^Me · / })).not.toBeInTheDocument());
     expect(selection.pinned_id).toBe("");
   });
 
@@ -245,14 +245,14 @@ describe("ShowcaseLawnPage", () => {
     entries.push({ ...entry(me, "Me", 16, "Alpha"), character });
     selection = { ...selection, pinned_id: character.id };
     renderPage();
-    const scene = await screen.findByRole("group", { name: "เพื่อนบนลานตอนนี้" });
-    expect(within(scene).getAllByRole("button", { name: /^ดูการ์ดของ / })).toHaveLength(12);
-    for (const zone of ["โต๊ะปิกนิก", "ม้านั่งอุ่น ๆ", "ลานเล่น"]) expect(within(scene).getByRole("region", { name: zone })).toBeInTheDocument();
-    expect(within(scene).getByRole("button", { name: "ดูการ์ดของ Me" })).toBeInTheDocument();
+    const scene = await screen.findByRole("group", { name: /^เพื่อนบนลานตอนนี้/ });
+    expect(within(scene).getAllByRole("button", { name: / · / })).toHaveLength(12);
+    expect(scene).toHaveAttribute("data-scene", "backyard");
+    expect(within(scene).getByRole("button", { name: /^Me · / })).toBeInTheDocument();
     expect(screen.getByText(/12 จาก 21 คน/)).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("กรองทีม"), { target: { value: "Beta" } });
-    await waitFor(() => expect(within(screen.getByRole("group", { name: "เพื่อนบนลานตอนนี้" })).queryByRole("button", { name: "ดูการ์ดของ Friend 1" })).not.toBeInTheDocument());
-    expect(within(screen.getByRole("group", { name: "เพื่อนบนลานตอนนี้" })).getByRole("button", { name: "ดูการ์ดของ Me" })).toBeInTheDocument();
+    await waitFor(() => expect(within(screen.getByRole("group", { name: /^เพื่อนบนลานตอนนี้/ })).queryByRole("button", { name: /^Friend 1 · / })).not.toBeInTheDocument());
+    expect(within(screen.getByRole("group", { name: /^เพื่อนบนลานตอนนี้/ })).getByRole("button", { name: /^Me · / })).toBeInTheDocument();
   });
 
   it("lets a pinned learner choose, change, and clear a 24-hour mood without naming anyone", async () => {
@@ -284,13 +284,13 @@ describe("ShowcaseLawnPage", () => {
       entries = Array.from({ length: 20 }, (_, index) => entry(`peer-${index}`, `Friend ${index}`, 16, "Alpha"));
       entries.push({ ...entry(me, "Me", 16, "Alpha"), character });
       renderPage();
-      const scene = await screen.findByRole("group", { name: "เพื่อนบนลานตอนนี้" });
-      expect(within(scene).getAllByRole("button", { name: /^ดูการ์ดของ / })).toHaveLength(6);
-      expect(within(scene).getByRole("button", { name: "ดูการ์ดของ Me" })).toBeInTheDocument();
+      const scene = await screen.findByRole("group", { name: /^เพื่อนบนลานตอนนี้/ });
+      expect(within(scene).getAllByRole("button", { name: / · / })).toHaveLength(6);
+      expect(within(scene).getByRole("button", { name: /^Me · / })).toBeInTheDocument();
       const lite = screen.getByRole("button", { name: "ลานแบบเบา" });
       expect(lite).toHaveAttribute("aria-pressed", "true");
       fireEvent.click(lite);
-      expect(within(scene).getAllByRole("button", { name: /^ดูการ์ดของ / })).toHaveLength(12);
+      expect(within(scene).getAllByRole("button", { name: / · / })).toHaveLength(12);
     } finally {
       delete (navigator as { hardwareConcurrency?: number }).hardwareConcurrency;
       if (cores) Object.defineProperty(Navigator.prototype, "hardwareConcurrency", cores);
@@ -300,15 +300,15 @@ describe("ShowcaseLawnPage", () => {
   it("shows an active God Event as a shared lawn layer without changing anyone's choreography", async () => {
     entries = Array.from({ length: 8 }, (_, index) => entry(`peer-${index}`, `Friend ${index}`, 16, "Alpha"));
     const quietView = renderPage();
-    const quietScene = await screen.findByRole("group", { name: "เพื่อนบนลานตอนนี้" });
-    const choreography = () => within(screen.getByRole("group", { name: "เพื่อนบนลานตอนนี้" })).getAllByRole("button", { name: /^ดูการ์ดของ / }).map((button) => `${button.getAttribute("aria-label")}:${button.dataset.action}`).sort();
+    const quietScene = await screen.findByRole("group", { name: /^เพื่อนบนลานตอนนี้/ });
+    const choreography = () => within(screen.getByRole("group", { name: /^เพื่อนบนลานตอนนี้/ })).getAllByRole("button", { name: / · / }).map((button) => `${button.getAttribute("aria-label")}:${button.dataset.pose}`).sort();
     expect(quietScene).toBeInTheDocument();
     const before = choreography();
     quietView.unmount();
     godEvents = [{ id: "event-1", preset: "star_rain", caption: "ดาวตกให้ทุกคน", cohort: 16, cast_by: "admin", character, created_at: "2026-09-29T00:00:00Z", active_until: "2099-01-01T00:00:00Z", active: true }];
     renderPage();
     expect(await screen.findByRole("note", { name: "เหตุการณ์บนลาน: ฝนดาว" })).toHaveTextContent("ดาวตกให้ทุกคน");
-    await screen.findByRole("group", { name: "เพื่อนบนลานตอนนี้" });
+    await screen.findByRole("group", { name: /^เพื่อนบนลานตอนนี้/ });
     expect(choreography()).toEqual(before);
     expect(document.querySelector('[data-god-event-layer="star_rain"]')).toHaveAttribute("aria-hidden", "true");
   });
@@ -320,7 +320,7 @@ describe("ShowcaseLawnPage", () => {
     try {
       entries = [entry("peer-alpha", "Mali", 16, "Alpha"), { ...entry("peer-hidden", "Secret Sam", 16, "Alpha"), hidden: true, message: "unsafe words" }];
       renderPage();
-      await screen.findByRole("group", { name: "เพื่อนบนลานตอนนี้" });
+      await screen.findByRole("group", { name: /^เพื่อนบนลานตอนนี้/ });
       expect(screen.queryByText("Secret Sam")).not.toBeInTheDocument();
       expect(screen.queryByText("unsafe words")).not.toBeInTheDocument();
       expect(await openCard("Mali")).not.toHaveTextContent("unsafe words");
@@ -328,5 +328,48 @@ describe("ShowcaseLawnPage", () => {
     } finally {
       server.events.removeListener("request:start", record);
     }
+  });
+
+  it("lets a learner choose a yard scene and remembers it on the next visit", async () => {
+    window.localStorage.removeItem("baro.lawn.yard-scene");
+    const first = renderPage();
+    expect(await screen.findByRole("group", { name: /^เพื่อนบนลานตอนนี้ · สวนหลังบ้าน/ })).toHaveAttribute("data-scene", "backyard");
+    expect(screen.getByRole("button", { name: "สวนหลังบ้าน" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "เกาะลอยฟ้า" }));
+    expect(await screen.findByRole("group", { name: /^เพื่อนบนลานตอนนี้ · เกาะลอยฟ้า/ })).toHaveAttribute("data-scene", "island");
+    expect(within(screen.getByRole("group", { name: /^เพื่อนบนลานตอนนี้/ })).getByRole("button", { name: /^Mali · / })).toBeInTheDocument();
+    first.unmount();
+    renderPage();
+    expect(await screen.findByRole("group", { name: /^เพื่อนบนลานตอนนี้ · เกาะลอยฟ้า/ })).toBeInTheDocument();
+    window.localStorage.removeItem("baro.lawn.yard-scene");
+  });
+
+  it("falls back to the backyard when the saved yard is unknown or storage is blocked", async () => {
+    window.localStorage.setItem("baro.lawn.yard-scene", "moon-base");
+    const view = renderPage();
+    expect(await screen.findByRole("group", { name: /^เพื่อนบนลานตอนนี้ · สวนหลังบ้าน/ })).toBeInTheDocument();
+    view.unmount();
+    const realGet = Storage.prototype.getItem;
+    const realSet = Storage.prototype.setItem;
+    const getItem = vi.spyOn(Storage.prototype, "getItem").mockImplementation(function (this: Storage, key: string) { if (key === "baro.lawn.yard-scene") throw new Error("blocked"); return realGet.call(this, key); });
+    const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(function (this: Storage, key: string, value: string) { if (key === "baro.lawn.yard-scene") throw new Error("blocked"); realSet.call(this, key, value); });
+    try {
+      renderPage();
+      expect(await screen.findByRole("group", { name: /^เพื่อนบนลานตอนนี้ · สวนหลังบ้าน/ })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "ระเบียงบ้าน" }));
+      expect(await screen.findByRole("group", { name: /^เพื่อนบนลานตอนนี้ · ระเบียงบ้าน/ })).toBeInTheDocument();
+    } finally {
+      getItem.mockRestore();
+      setItem.mockRestore();
+      window.localStorage.removeItem("baro.lawn.yard-scene");
+    }
+  });
+
+  it("hides classmates' names until focus while keeping my own tag visible", async () => {
+    entries.push({ ...entry(me, "Me", 16, "Alpha"), character });
+    renderPage();
+    const scene = await screen.findByRole("group", { name: /^เพื่อนบนลานตอนนี้/ });
+    expect(within(scene).getByText("คุณ · Me")).toBeInTheDocument();
+    expect(within(scene).getByText("Mali", { selector: "span" }).className).toContain("opacity-0");
   });
 });
