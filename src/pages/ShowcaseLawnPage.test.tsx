@@ -296,4 +296,37 @@ describe("ShowcaseLawnPage", () => {
       if (cores) Object.defineProperty(Navigator.prototype, "hardwareConcurrency", cores);
     }
   });
+
+  it("shows an active God Event as a shared lawn layer without changing anyone's choreography", async () => {
+    entries = Array.from({ length: 8 }, (_, index) => entry(`peer-${index}`, `Friend ${index}`, 16, "Alpha"));
+    const quietView = renderPage();
+    const quietScene = await screen.findByRole("group", { name: "เพื่อนบนลานตอนนี้" });
+    const choreography = () => within(screen.getByRole("group", { name: "เพื่อนบนลานตอนนี้" })).getAllByRole("button", { name: /^ดูการ์ดของ / }).map((button) => `${button.getAttribute("aria-label")}:${button.dataset.action}`).sort();
+    expect(quietScene).toBeInTheDocument();
+    const before = choreography();
+    quietView.unmount();
+    godEvents = [{ id: "event-1", preset: "star_rain", caption: "ดาวตกให้ทุกคน", cohort: 16, cast_by: "admin", character, created_at: "2026-09-29T00:00:00Z", active_until: "2099-01-01T00:00:00Z", active: true }];
+    renderPage();
+    expect(await screen.findByRole("note", { name: "เหตุการณ์บนลาน: ฝนดาว" })).toHaveTextContent("ดาวตกให้ทุกคน");
+    await screen.findByRole("group", { name: "เพื่อนบนลานตอนนี้" });
+    expect(choreography()).toEqual(before);
+    expect(document.querySelector('[data-god-event-layer="star_rain"]')).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("never leaks a hidden entry's name or message to learners and never records choreography", async () => {
+    const writes: string[] = [];
+    const record = ({ request }: { request: Request }) => { if (request.method !== "GET") writes.push(`${request.method} ${new URL(request.url).pathname}`); };
+    server.events.on("request:start", record);
+    try {
+      entries = [entry("peer-alpha", "Mali", 16, "Alpha"), { ...entry("peer-hidden", "Secret Sam", 16, "Alpha"), hidden: true, message: "unsafe words" }];
+      renderPage();
+      await screen.findByRole("group", { name: "เพื่อนบนลานตอนนี้" });
+      expect(screen.queryByText("Secret Sam")).not.toBeInTheDocument();
+      expect(screen.queryByText("unsafe words")).not.toBeInTheDocument();
+      expect(await openCard("Mali")).not.toHaveTextContent("unsafe words");
+      expect(writes).toEqual([]);
+    } finally {
+      server.events.removeListener("request:start", record);
+    }
+  });
 });
