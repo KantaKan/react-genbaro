@@ -231,4 +231,18 @@ describe("ShowcaseLawnPage", () => {
     expect(entries.find((item) => item.owner_id === me)?.hidden).toBe(true);
     expect(screen.queryByText("Me")).not.toBeInTheDocument();
   });
+
+  it("shows at most twelve cohort friends, always including my own pin, and explains the rotation", async () => {
+    entries = Array.from({ length: 20 }, (_, index) => entry(`peer-${index}`, `Friend ${index}`, 16, index % 2 ? "Alpha" : "Beta"));
+    entries.push({ ...entry(me, "Me", 16, "Alpha"), character });
+    selection = { ...selection, pinned_id: character.id };
+    renderPage();
+    const scene = await screen.findByRole("list", { name: "เพื่อนบนลานตอนนี้" });
+    expect(within(scene).getAllByRole("listitem")).toHaveLength(12);
+    expect(within(scene).getByRole("button", { name: "ดูการ์ดของ Me" })).toBeInTheDocument();
+    expect(screen.getByText(/12 จาก 21 คน/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("กรองทีม"), { target: { value: "Beta" } });
+    await waitFor(() => expect(within(screen.getByRole("list", { name: "เพื่อนบนลานตอนนี้" })).queryByRole("button", { name: "ดูการ์ดของ Friend 1" })).not.toBeInTheDocument());
+    expect(within(screen.getByRole("list", { name: "เพื่อนบนลานตอนนี้" })).getByRole("button", { name: "ดูการ์ดของ Me" })).toBeInTheDocument();
+  });
 });

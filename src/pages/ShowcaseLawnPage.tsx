@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Link } from "react-router-dom";
 import { ArrowLeft, MapPin, RotateCw, Sparkles } from "lucide-react";
@@ -7,6 +7,7 @@ import { baroCharacterService } from "@/application/services/baroCharacterServic
 import { showcaseLawnService, type ShowcaseEntry } from "@/application/services/showcaseLawnService";
 import { BaroCharacterArt } from "@/components/character/BaroCharacterArt";
 import { LawnCharacter } from "@/components/character/LawnCharacter";
+import { planLawn } from "@/lib/lawn-planner";
 import { GodEventPanel } from "@/components/character/GodEventPanel";
 import { ShowcaseLawnEnvironment } from "@/components/character/ShowcaseLawnEnvironment";
 
@@ -42,6 +43,9 @@ export default function ShowcaseLawnPage() {
   const react = useMutation(({ ownerId, emoji }: { ownerId: string; emoji: string }) => showcaseLawnService.react(ownerId, emoji), { onSuccess: () => queryClient.invalidateQueries(["showcase-lawn"]) });
   const moderate = useMutation(({ ownerId, hidden }: { ownerId: string; hidden: boolean }) => showcaseLawnService.moderate(ownerId, hidden), { onSuccess: () => { queryClient.invalidateQueries(["showcase-lawn"]); queryClient.invalidateQueries(["showcase-lawn-mine", userId]); } });
   const busy = save.isLoading || remove.isLoading;
+  const [sceneTime] = useState(() => Date.now());
+  const plan = useMemo(() => planLawn({ entries: view.data ?? [], viewerId: userId, mine, now: sceneTime }), [view.data, userId, mine, sceneTime]);
+  const cardActions = (entry: ShowcaseEntry) => ({ admin: includeHidden, busy: react.isLoading || moderate.isLoading, onReact: (emoji: string) => react.mutate({ ownerId: entry.owner_id, emoji }), onModerate: (hidden: boolean) => moderate.mutate({ ownerId: entry.owner_id, hidden }), onInspect: () => setInspectedEntry(entry) });
 
   return <main className="min-h-[calc(100vh-5rem)] bg-background px-4 py-8 font-register-body text-foreground transition-colors sm:px-8 lg:py-12">
     <div className="mx-auto max-w-6xl">
@@ -68,9 +72,13 @@ export default function ShowcaseLawnPage() {
         <ShowcaseLawnEnvironment>
           {view.isLoading && <p role="status" className="rounded-2xl bg-white/85 p-6 text-sm font-bold">กำลังดูว่าเพื่อน ๆ ใครมาปักไว้บ้าง…</p>}
           {view.isError && <div role="alert" className="rounded-2xl bg-white/90 p-6 text-sm"><p className="font-black">ยังเปิดลานไม่ได้</p><p className="mt-1">ลองโหลดใหม่ได้เลย การปักของคุณยังอยู่</p><button type="button" onClick={() => view.refetch()} className="mt-3 inline-flex items-center gap-2 font-black underline"><RotateCw className="h-4 w-4" /> โหลดใหม่</button></div>}
-          {!view.isLoading && !view.isError && view.data?.length === 0 && <div className="rounded-2xl bg-white/90 p-8 text-center"><Sparkles className="mx-auto h-8 w-8" /><p className="mt-2 font-black">ยังไม่มีใครปักตัวละครตรงนี้</p><p className="mt-1 text-sm">ลองเลือกทุกทีม หรือปักคู่หูของคุณเป็นคนแรกได้เลย</p></div>}
-          {view.data && view.data.length > 0 && <div className="flex min-h-64 flex-wrap items-end justify-center gap-x-4 gap-y-6 pt-6">{view.data.map((entry, index) => <LawnCharacter key={entry.owner_id} entry={entry} action={index % 3 === 1 ? "walk" : "idle"} mine={entry.owner_id === userId} admin={includeHidden} busy={react.isLoading || moderate.isLoading} onReact={(emoji) => react.mutate({ ownerId: entry.owner_id, emoji })} onModerate={(hidden) => moderate.mutate({ ownerId: entry.owner_id, hidden })} onInspect={() => setInspectedEntry(entry)} />)}</div>}
+          {!view.isLoading && !view.isError && view.data && plan.placements.length === 0 && <div className="rounded-2xl bg-white/90 p-8 text-center"><Sparkles className="mx-auto h-8 w-8" /><p className="mt-2 font-black">ยังไม่มีใครปักตัวละครตรงนี้</p><p className="mt-1 text-sm">ลองเลือกทุกทีม หรือปักคู่หูของคุณเป็นคนแรกได้เลย</p></div>}
+          {plan.placements.length > 0 && <>
+            <ol aria-label="เพื่อนบนลานตอนนี้" className="grid grid-cols-3 gap-x-1 gap-y-4 pt-4 sm:grid-cols-4">{plan.placements.map(({ entry, offsetX, offsetY, facing }) => <li key={entry.owner_id} className="flex justify-center" style={{ transform: `translate(${offsetX}px, ${offsetY}px)` }}><LawnCharacter entry={entry} action={facing === "left" ? "walk" : "idle"} facing={facing} mine={entry.owner_id === userId} {...cardActions(entry)} /></li>)}</ol>
+            {plan.total > plan.placements.length && <p className="mt-4 text-center text-xs font-bold text-[#292542]/80">ตอนนี้มีเพื่อนเดินเล่น {plan.placements.length} จาก {plan.total} คน · ผลัดกันมาทักทายทุกครึ่งชั่วโมง</p>}
+          </>}
         </ShowcaseLawnEnvironment>
+        {includeHidden && view.data && view.data.length > plan.placements.length && <details className="mt-4 rounded-2xl border border-border bg-card p-4 text-sm"><summary className="cursor-pointer font-bold">รายการทั้งหมดสำหรับแอดมิน ({view.data.length})</summary><ul className="mt-3 space-y-2">{view.data.map((entry) => <li key={entry.owner_id} className="flex items-center justify-between gap-3"><span className="truncate">{entry.name}{entry.hidden ? " · ซ่อนอยู่" : ""}</span><button type="button" disabled={moderate.isLoading} onClick={() => moderate.mutate({ ownerId: entry.owner_id, hidden: !entry.hidden })} className="min-h-9 shrink-0 rounded-full border border-border bg-background px-3 text-xs font-bold disabled:opacity-50">{entry.hidden ? "คืนสู่ลาน" : "ซ่อนจากลาน"}</button></li>)}</ul></details>}
         {react.isError && <p role="alert" className="mt-4 text-sm font-bold text-[#a9505e]">ยังส่งรีแอคไม่ได้ ลองอีกครั้งได้เลย</p>}
         {moderate.isError && <p role="alert" className="mt-4 text-sm font-bold text-[#a9505e]">ยังเปลี่ยนสถานะรายการไม่ได้ ลองอีกครั้งได้เลย</p>}
       </section>

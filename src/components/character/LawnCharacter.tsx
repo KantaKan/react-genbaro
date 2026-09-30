@@ -13,7 +13,7 @@ const rarityColor: Record<string, string> = { normal: "#ccebdd", meme_rare: "#f8
 const reactionChoices = ["❤️", "✨", "😂", "🙌"];
 const traitLabels = [["body", "ทรง"], ["ears", "หู"], ["eyes", "ตา"], ["mark", "ลาย"], ["palette", "สี"], ["pattern", "แพทเทิร์น"]] as const;
 
-export function LawnPuppet({ entry, action, mine, onSelect }: { entry: ShowcaseEntry; action: PuppetAction; mine: boolean; onSelect: () => void }) {
+export function LawnPuppet({ entry, action, mine, facing = "right", onSelect }: { entry: ShowcaseEntry; action: PuppetAction; mine: boolean; facing?: "left" | "right"; onSelect: () => void }) {
   const reducedMotion = useReducedMotion();
   return <button
     type="button"
@@ -21,10 +21,10 @@ export function LawnPuppet({ entry, action, mine, onSelect }: { entry: ShowcaseE
     aria-label={`ดูการ์ดของ ${entry.name}`}
     data-action={action}
     data-motion={reducedMotion ? "reduced" : "full"}
-    className={`baro-puppet flex w-28 flex-col items-center rounded-2xl p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${entry.hidden ? "opacity-50" : ""}`}
+    className={`baro-puppet flex w-24 flex-col items-center sm:w-28 rounded-2xl p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${entry.hidden ? "opacity-50" : ""}`}
   >
     <span className={`max-w-full truncate rounded-full px-2 py-0.5 text-xs font-black text-[#292542] shadow-sm ${mine ? "bg-primary text-primary-foreground" : "bg-white/90"}`}>{entry.name}</span>
-    <span className="block h-32 w-24"><BaroCharacterArt dna={entry.character.dna} id={`lawn-${entry.character.id}`} prop={entry.prop} /></span>
+    <span className={`block h-28 w-20 sm:h-32 sm:w-24 ${facing === "left" ? "-scale-x-100" : ""}`} data-facing={facing}><BaroCharacterArt dna={entry.character.dna} id={`lawn-${entry.character.id}`} prop={entry.prop} /></span>
   </button>;
 }
 
@@ -60,10 +60,10 @@ export function LawnCharacterCard({ entry, admin, busy, onReact, onModerate, onI
   </div>;
 }
 
-export function LawnCharacter({ entry, action, mine, ...actions }: { entry: ShowcaseEntry; action: PuppetAction; mine: boolean } & LawnCardActions) {
+export function LawnCharacter({ entry, action, mine, facing, ...actions }: { entry: ShowcaseEntry; action: PuppetAction; mine: boolean; facing?: "left" | "right" } & LawnCardActions) {
   const [open, setOpen] = useState(false);
   const mobile = useIsMobile();
-  const puppet = <LawnPuppet entry={entry} action={action} mine={mine} onSelect={() => setOpen(true)} />;
+  const puppet = <LawnPuppet entry={entry} action={action} mine={mine} facing={facing} onSelect={() => setOpen(true)} />;
   const card = <LawnCharacterCard entry={entry} {...actions} onInspect={() => { setOpen(false); actions.onInspect(); }} />;
   if (mobile) {
     return <>
