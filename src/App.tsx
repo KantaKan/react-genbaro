@@ -50,6 +50,7 @@ const AdminHistoryPage = lazy(() => import("./pages/admin-history-page"));
 const PlantVisualQaPage = lazy(() => import("./pages/PlantVisualQaPage"));
 const BaroCharacterPage = lazy(() => import("./pages/BaroCharacterPage"));
 const ShowcaseLawnPage = lazy(() => import("./pages/ShowcaseLawnPage"));
+const StartupStoryPage = lazy(() => import("./pages/StartupStoryPage"));
 
 function AppContent() {
   const { isAuthenticated, error } = useAuth();
@@ -151,6 +152,7 @@ function AppContent() {
             <Route path="/stamp-board" element={<StampBoardPage />} />
             <Route path="/character" element={<BaroCharacterPage />} />
             <Route path="/showcase-lawn" element={<ShowcaseLawnPage />} />
+            <Route path="/startup-story" element={<StartupStoryPage />} />
           </Route>
 
           <Route

@@ -14,6 +14,7 @@ import {
   Radio,
   Bell,
   Sprout,
+  Rocket,
   Stamp,
   History,
   Sparkles,
@@ -87,6 +88,11 @@ const navigationConfig: Record<UserRole, NavItem[]> = {
           title: "Showcase Lawn",
           url: "/showcase-lawn",
           icon: Sprout,
+        },
+        {
+          title: "Startup Story",
+          url: "/startup-story",
+          icon: Rocket,
         },
         {
           title: "Learner Directory",
@@ -213,6 +219,11 @@ const navigationConfig: Record<UserRole, NavItem[]> = {
           title: "Showcase Lawn",
           url: "/showcase-lawn",
           icon: Sprout,
+        },
+        {
+          title: "Startup Story",
+          url: "/startup-story",
+          icon: Rocket,
         },
       ],
     },
