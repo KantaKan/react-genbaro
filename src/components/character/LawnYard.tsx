@@ -93,8 +93,8 @@ export function LawnYard({ plan, scene, userId, lite, cardActions }: { plan: Law
     const mine = box?.querySelector<HTMLElement>("[data-mine='true']");
     if (box && mine && box.scrollWidth > box.clientWidth) box.scrollLeft = Math.max(0, mine.offsetLeft - box.clientWidth / 2);
   }, [scene.id, plan.windowIndex]);
-  return <div ref={scroller} role="group" aria-label={`เพื่อนบนลานตอนนี้ · ${scene.name}`} data-scene={scene.id} data-phase={plan.phase} className="overflow-x-auto overscroll-x-contain rounded-2xl border border-border shadow-sm">
-    <div className="relative" style={{ aspectRatio: `${scene.width} / ${scene.height}`, minWidth: `${scene.panoramaWidth}px` }}>
+  return <div ref={scroller} role="group" aria-label={`เพื่อนบนลานตอนนี้ · ${scene.name}`} data-scene={scene.id} data-phase={plan.phase} className="overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-2xl border border-border shadow-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="relative overflow-hidden" style={{ aspectRatio: `${scene.width} / ${scene.height}`, minWidth: `${scene.panoramaWidth}px` }}>
       <YardBackdrop sceneId={scene.id} phase={plan.phase} width={scene.width} height={scene.height} />
       <YardFronts sceneId={scene.id} phase={plan.phase} width={scene.width} height={scene.height} />
       {items.map((item) => <span key={item.key}>{item.node}</span>)}
