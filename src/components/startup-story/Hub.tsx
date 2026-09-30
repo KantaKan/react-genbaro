@@ -1,9 +1,7 @@
 import { useState } from "react";
 import type { StartupItem, StartupRole, StartupRun } from "@/application/services/startupStoryService";
 import { bosses, bossThreshold, comboKey, roleLook, teamCap, teamHints, ui, upcomingBoss } from "./startupStoryCatalog";
-import { PixelOffice } from "./PixelOffice";
 import { DevCard } from "./DevCard";
-import { Hud } from "./Hud";
 
 type HubProps = {
   run: StartupRun;
@@ -20,7 +18,7 @@ type HubProps = {
   onAbandon: () => void;
 };
 
-export function Hub({ run, types, themes, items, roles, discovered, skin, pending, onStart, onHire, onDismiss, onAbandon }: HubProps) {
+export function Hub({ run, types, themes, roles, discovered, pending, onStart, onHire, onDismiss, onAbandon }: HubProps) {
   const [tab, setTab] = useState<"project" | "team" | "hire">("project");
   const [type, setType] = useState("");
   const [theme, setTheme] = useState("");
@@ -38,8 +36,6 @@ export function Hub({ run, types, themes, items, roles, discovered, skin, pendin
     <button role="tab" aria-selected={tab === id} className={`${ui.chipBase} flex-1 ${tab === id ? "bg-[#292542] text-[#fffaf0]" : "bg-white text-[#292542]"}`} onClick={() => setTab(id)}>{label}</button>;
 
   return <section className="space-y-4">
-    <Hud run={run} items={items} />
-    <PixelOffice staff={run.staff} busy={false} skin={skin} />
     <div role="tablist" className="flex gap-2">
       {tabButton("project", boss ? "👹 Boss" : "🛠️ Project")}
       {tabButton("team", `👥 Team ${run.staff.length}/${cap}`)}

@@ -1,11 +1,9 @@
 import type { StartupItem, StartupRun } from "@/application/services/startupStoryService";
 import { rarityStyle, ui } from "./startupStoryCatalog";
-import { Hud } from "./Hud";
 
 export function ItemDraft({ run, items, onPick, pending }: { run: StartupRun; items: StartupItem[]; onPick: (index: number) => void; pending: boolean }) {
   const offer = (run.item_offer ?? []).map((id) => items.find((it) => it.id === id));
   return <section className="space-y-4">
-    <Hud run={run} items={items} />
     <h2 className="text-2xl font-black text-foreground">Pick an item 🎁</h2>
     <p className="text-sm font-bold text-foreground opacity-80">Items stack for the rest of this run. ☠️ Cursed ones hit hard both ways.</p>
     <div className="grid gap-4 sm:grid-cols-3">

@@ -10,6 +10,8 @@ import { Hub } from "@/components/startup-story/Hub";
 import { ItemDraft } from "@/components/startup-story/ItemDraft";
 import { ReviewDialog, type BossOutcome } from "@/components/startup-story/ReviewDialog";
 import { RunEnd } from "@/components/startup-story/RunEnd";
+import { Hud } from "@/components/startup-story/Hud";
+import { PixelOffice, type OfficeReaction } from "@/components/startup-story/PixelOffice";
 import { Lobby } from "@/components/startup-story/StartupStoryLobby";
 
 const KEY = STARTUP_STORY_QUERY_KEY;
@@ -29,6 +31,7 @@ export default function StartupStoryPage() {
   const [review, setReview] = useState<{ result: StartupResult; boss?: BossOutcome } | null>(null);
   const [ended, setEnded] = useState<{ run: StartupRun; fameBefore: number } | null>(null);
   const [actionError, setActionError] = useState("");
+  const [reaction, setReaction] = useState<OfficeReaction>();
 
   const action = useMutation((call: () => Promise<StartupRun>) => call(), {
     onMutate: () => setActionError(""),
@@ -64,6 +67,8 @@ export default function StartupStoryPage() {
         if (!next.last_result) return;
         const boss = bossId ? { name: bosses[bossId]?.name ?? bossId, passed: next.bosses_passed > before, threshold: bossThreshold(act) } : undefined;
         setReview({ result: next.last_result, boss });
+        const bad = (boss && !boss.passed) || next.last_result.total < 16 || next.last_result.bugs >= 6;
+        setReaction({ kind: bad ? "panic" : "party", key: Date.now() });
         if (next.last_result.total >= 32 || next.outcome === "ipo") fireConfetti();
       },
     });
@@ -97,9 +102,20 @@ export default function StartupStoryPage() {
     screen = screenFor(run);
   }
 
-  return <main className="mx-auto w-full max-w-3xl space-y-4 p-4">
+  const inRun = run && !(ended && !review) && run.staff.length > 0;
+  const officeStaff = run?.stage === "developing" && run.project ? run.staff.filter((s) => run.project!.staff_ids.includes(s.id)) : run?.staff ?? [];
+
+  return <main className={`mx-auto w-full space-y-4 p-4 ${inRun ? "max-w-6xl" : "max-w-3xl"}`}>
     {actionError && <p role="alert" className="rounded-2xl border-2 border-[#292542] bg-[#f7c6d9] p-3 text-sm font-bold text-[#292542]">{actionError}</p>}
-    {screen}
+    {inRun && run
+      ? <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start">
+          <div className="space-y-3 lg:sticky lg:top-4">
+            <Hud run={run} items={data.items} />
+            <PixelOffice staff={officeStaff} busy={run.stage === "developing"} skin={skin} reaction={reaction} />
+          </div>
+          <div className="min-w-0">{screen}</div>
+        </div>
+      : screen}
     {review && <ReviewDialog result={review.result} boss={review.boss} onClose={() => setReview(null)} />}
   </main>;
 }

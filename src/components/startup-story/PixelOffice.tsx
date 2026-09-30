@@ -1,200 +1,186 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useReducedMotion } from "framer-motion";
 import type { StartupDev } from "@/application/services/startupStoryService";
 import { roleLook } from "./startupStoryCatalog";
+import { assignStations, deskFronts, hangoutSpots, levelUps, ROOM_H, ROOM_W, standupSpots, TABLE, TIRED_AT, type Spot } from "./office/officeLayout";
+import { Desk, MeetingTable, RoomBackdrop, Sofa } from "./office/OfficeRoom";
+import { OfficePerson } from "./office/OfficePerson";
 
-type Station = { id: string; kind: "desk" | "sticky" | "kanban" | "whiteboard" | "rack"; x: number; y: number };
-
-const stations: Station[] = [
-  { id: "sticky", kind: "sticky", x: 34, y: 96 },
-  { id: "kanban", kind: "kanban", x: 112, y: 96 },
-  { id: "whiteboard", kind: "whiteboard", x: 190, y: 96 },
-  { id: "rack", kind: "rack", x: 272, y: 96 },
-  { id: "desk-1", kind: "desk", x: 40, y: 150 },
-  { id: "desk-2", kind: "desk", x: 118, y: 150 },
-  { id: "desk-3", kind: "desk", x: 196, y: 150 },
-  { id: "desk-4", kind: "desk", x: 274, y: 150 },
-];
-
-const preferred: Record<string, Station["kind"]> = { po: "sticky", pm: "kanban", sa: "whiteboard", devops: "rack" };
-
-function assignStations(staff: StartupDev[]) {
-  const free = [...stations];
-  const take = (pred: (s: Station) => boolean) => {
-    const i = free.findIndex(pred);
-    return i < 0 ? undefined : free.splice(i, 1)[0];
-  };
-  const placed = new Map<string, Station>();
-  for (const dev of staff) {
-    const want = preferred[dev.role ?? ""];
-    const station = (want && take((s) => s.kind === want)) || take((s) => s.kind === "desk") || take(() => true);
-    if (station) placed.set(dev.id, station);
-  }
-  return placed;
-}
-
-const skins = ["#f5d0b0", "#e8b48a", "#c98b5e", "#8d5a3b"];
-const hairs = ["#2b2233", "#5a3825", "#c9772e", "#1d3557", "#7b2d5b", "#e0c068"];
-
-const personX = (s: Station) => (s.kind === "desk" ? s.x : s.x + 16);
-
-function hash(text: string) {
-  let h = 0;
-  for (const ch of text) h = (h * 31 + ch.charCodeAt(0)) | 0;
-  return Math.abs(h);
-}
-
-function Person({ dev, station, busy }: { dev: StartupDev; station: Station; busy: boolean }) {
-  const look = roleLook(dev.role);
-  const h = hash(dev.name + dev.id);
-  const skin = skins[h % skins.length];
-  const hair = hairs[(h >> 3) % hairs.length];
-  const seated = station.kind === "desk";
-  const anim = busy ? look.anim : "ss-idle";
-  const x = personX(station);
-  const y = station.y;
-  return <g transform={`translate(${x - 7} ${y - (seated ? 26 : 30)})`}>
-    <g className={busy ? "ss-bob" : "ss-breathe"}>
-      {!seated && <><rect x="3" y="22" width="3" height="8" fill="#2b2542" /><rect x="8" y="22" width="3" height="8" fill="#2b2542" /></>}
-      <rect x="2" y="12" width="10" height="11" fill={look.color} />
-      <rect x="0" y="0" width="14" height="12" fill={skin} />
-      <rect x="0" y="0" width="14" height="4" fill={hair} />
-      <rect x="0" y="0" width="2" height="7" fill={hair} />
-      <rect x="4" y="6" width="2" height="2" fill="#292542" />
-      <rect x="9" y="6" width="2" height="2" fill="#292542" />
-      <rect x="-1" y="13" width="3" height="7" fill={look.color} className={anim} style={{ transformOrigin: "50% 0", transformBox: "fill-box" }} />
-      <rect x="12" y="13" width="3" height="7" fill={look.color} className={anim === "ss-type" ? "ss-type-alt" : ""} style={{ transformOrigin: "50% 0", transformBox: "fill-box" }} />
-      {dev.genmate_id && <text x="7" y="-2" fontSize="6" textAnchor="middle">🎓</text>}
-    </g>
-  </g>;
-}
-
-function Furniture({ station, busy }: { station: Station; busy: boolean }) {
-  const { x, y, kind } = station;
-  switch (kind) {
-    case "desk":
-      return <g>
-        <rect x={x + 7} y={y - 24} width="14" height="10" fill="#292542" />
-        <rect x={x + 8} y={y - 23} width="12" height="8" fill={busy ? "#7bc4a8" : "#3b3a55"} className={busy ? "ss-screen" : ""} />
-        <rect x={x + 13} y={y - 14} width="2" height="3" fill="#292542" />
-        <rect x={x - 22} y={y - 11} width="44" height="4" fill="#b98b5e" />
-        <rect x={x - 20} y={y - 7} width="3" height="10" fill="#8a6440" />
-        <rect x={x + 17} y={y - 7} width="3" height="10" fill="#8a6440" />
-      </g>;
-    case "sticky":
-      return <g>
-        <rect x={x - 22} y={y - 62} width="30" height="34" fill="#e9d6b3" stroke="#292542" strokeWidth="1" />
-        {[["#fbe39a", 0, 0], ["#f7c6d9", 10, 2], ["#bfe3f7", 20, 0], ["#7bc4a8", 4, 12], ["#fbe39a", 15, 13], ["#cab2f1", 8, 23]].map(([c, dx, dy], i) =>
-          <rect key={i} x={x - 20 + Number(dx)} y={y - 60 + Number(dy)} width="7" height="7" fill={String(c)} className={busy && i === 5 ? "ss-pop" : ""} style={{ transformBox: "fill-box", transformOrigin: "center" }} />)}
-      </g>;
-    case "kanban":
-      return <g>
-        <rect x={x - 26} y={y - 64} width="40" height="36" fill="#fffaf0" stroke="#292542" strokeWidth="1" />
-        {[0, 13, 26].map((dx) => <rect key={dx} x={x - 25 + dx} y={y - 63} width="12" height="3" fill="#292542" opacity="0.2" />)}
-        <rect x={x - 24} y={y - 58} width="9" height="5" fill="#f7c6d9" />
-        <rect x={x - 24} y={y - 51} width="9" height="5" fill="#fbe39a" />
-        <rect x={x - 11} y={y - 58} width="9" height="5" fill="#bfe3f7" className={busy ? "ss-slide" : ""} />
-        <rect x={x + 2} y={y - 58} width="9" height="5" fill="#7bc4a8" />
-      </g>;
-    case "whiteboard":
-      return <g>
-        <rect x={x - 26} y={y - 64} width="40" height="30" fill="#ffffff" stroke="#292542" strokeWidth="1" />
-        <rect x={x - 22} y={y - 59} width="9" height="6" fill="none" stroke="#2d9cdb" strokeWidth="1" />
-        <rect x={x - 3} y={y - 59} width="9" height="6" fill="none" stroke="#2d9cdb" strokeWidth="1" />
-        <rect x={x - 12} y={y - 46} width="9" height="6" fill="none" stroke="#e3683e" strokeWidth="1" />
-        <path d={`M${x - 13} ${y - 56} H${x - 3} M${x - 8} ${y - 53} V${y - 46}`} stroke="#292542" strokeWidth="0.8" className={busy ? "ss-draw-line" : ""} />
-        <rect x={x - 24} y={y - 34} width="36" height="2" fill="#8a8aa0" />
-      </g>;
-    case "rack":
-      return <g>
-        <rect x={x - 22} y={y - 66} width="18" height="40" fill="#3b3a55" stroke="#292542" strokeWidth="1" />
-        {[0, 9, 18, 27].map((dy, i) => <g key={dy}>
-          <rect x={x - 20} y={y - 63 + dy} width="14" height="6" fill="#292542" />
-          <rect x={x - 9} y={y - 61 + dy} width="2" height="2" fill={i % 2 ? "#7bc4a8" : "#fbe39a"} className={busy ? `ss-led ss-led-${i}` : ""} />
-        </g>)}
-      </g>;
-  }
-}
+export type OfficeReaction = { kind: "party" | "panic"; key: number };
 
 const css = `
 .ss-bob { animation: ss-bob 1.1s ease-in-out infinite; }
 .ss-breathe { animation: ss-bob 3.2s ease-in-out infinite; }
+.ss-walk-bob { animation: ss-bob .35s ease-in-out infinite; }
+.ss-jump { animation: ss-jump .5s ease-out 3; }
+.ss-leg-a { animation: ss-leg .35s ease-in-out infinite; }
+.ss-leg-b { animation: ss-leg .35s ease-in-out infinite reverse; }
 .ss-type { animation: ss-type .28s steps(2) infinite; }
 .ss-type-alt { animation: ss-type .28s steps(2) infinite .14s; }
 .ss-point { animation: ss-point 1.4s ease-in-out infinite; }
-.ss-draw { animation: ss-draw 1.8s ease-in-out infinite; }
 .ss-note { animation: ss-point 2s ease-in-out infinite; }
-.ss-test { animation: ss-draw 1s ease-in-out infinite; }
-.ss-idle { }
+.ss-draw { animation: ss-draw 1.8s ease-in-out infinite; }
 .ss-screen { animation: ss-screen 1.2s steps(3) infinite; }
 .ss-pop { animation: ss-pop 2s ease-out infinite; }
 .ss-slide { animation: ss-slide 3s ease-in-out infinite; }
-.ss-draw-line { stroke-dasharray: 30; animation: ss-dash 2.4s linear infinite; }
+.ss-draw-line { stroke-dasharray: 34; animation: ss-dash 2.4s linear infinite; }
 .ss-led { animation: ss-led 1s steps(2) infinite; }
 .ss-led-1 { animation-delay: .25s; } .ss-led-2 { animation-delay: .5s; } .ss-led-3 { animation-delay: .75s; }
 @keyframes ss-bob { 50% { transform: translateY(-1px); } }
-@keyframes ss-type { 50% { transform: translateY(1.5px); } }
-@keyframes ss-point { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(110deg); } }
-@keyframes ss-draw { 0%,100% { transform: rotate(60deg); } 50% { transform: rotate(130deg); } }
+@keyframes ss-jump { 40% { transform: translateY(-7px); } }
+@keyframes ss-leg { 0%,100% { transform: rotate(18deg); } 50% { transform: rotate(-18deg); } }
+@keyframes ss-type { 50% { transform: translateY(2px); } }
+@keyframes ss-point { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(-120deg); } }
+@keyframes ss-draw { 0%,100% { transform: rotate(-70deg); } 50% { transform: rotate(-140deg); } }
 @keyframes ss-screen { 0% { fill: #7bc4a8; } 50% { fill: #bfe3f7; } 100% { fill: #fbe39a; } }
 @keyframes ss-pop { 0%,60% { transform: scale(0); } 75% { transform: scale(1.2); } 100% { transform: scale(1); } }
-@keyframes ss-slide { 0%,20% { transform: translateX(0); } 60%,100% { transform: translateX(13px); } }
-@keyframes ss-dash { from { stroke-dashoffset: 30; } to { stroke-dashoffset: 0; } }
+@keyframes ss-slide { 0%,20% { transform: translateX(0); } 60%,100% { transform: translateX(18px); } }
+@keyframes ss-dash { from { stroke-dashoffset: 34; } to { stroke-dashoffset: 0; } }
 @keyframes ss-led { 50% { opacity: .2; } }
-@media (prefers-reduced-motion: reduce) { .ss-office * { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .ss-office * { animation: none !important; transition: none !important; } }
 `;
 
-function useSpeech(staff: StartupDev[], busy: boolean, reduced: boolean) {
+const standupLines = ["no blockers 👍", "still fixing that bug 😅", "yesterday: meetings", "today: ship it 🚀", "can we keep it short?", "ขอกาแฟก่อน ☕"];
+const partyEmoji = ["🎉", "🥳", "🍾", "🙌"];
+const panicEmoji = ["😱", "🔥", "🫠", "💀"];
+
+type Phase = "idle" | "standup" | "work";
+
+function usePhase(busy: boolean, reduced: boolean): Phase {
+  const [standupDone, setStandupDone] = useState(false);
+  useEffect(() => {
+    setStandupDone(false);
+    if (!busy || reduced) return;
+    const id = window.setTimeout(() => setStandupDone(true), 3200);
+    return () => window.clearTimeout(id);
+  }, [busy, reduced]);
+  if (!busy) return "idle";
+  return reduced || standupDone ? "work" : "standup";
+}
+
+function useWander(staff: StartupDev[], active: boolean) {
+  const [away, setAway] = useState<Record<string, Spot>>({});
+  useEffect(() => {
+    setAway({});
+    if (!active || staff.length === 0) return;
+    const id = window.setInterval(() => {
+      setAway((prev) => {
+        const dev = staff[Math.floor(Math.random() * staff.length)];
+        if (prev[dev.id]) {
+          const next = { ...prev };
+          delete next[dev.id];
+          return next;
+        }
+        const taken = new Set(Object.values(prev));
+        const free = hangoutSpots.filter((s) => !taken.has(s));
+        return free.length ? { ...prev, [dev.id]: free[Math.floor(Math.random() * free.length)] } : prev;
+      });
+    }, 3600);
+    return () => window.clearInterval(id);
+  }, [staff, active]);
+  return away;
+}
+
+function useMoving(targets: Record<string, Spot>) {
+  const last = useRef<Record<string, Spot>>({});
+  const [moving, setMoving] = useState<Set<string>>(new Set());
+  const key = Object.entries(targets).map(([id, s]) => `${id}:${s.x},${s.y}`).join("|");
+  useEffect(() => {
+    const changed = Object.keys(targets).filter((id) => last.current[id] && (last.current[id].x !== targets[id].x || last.current[id].y !== targets[id].y));
+    last.current = targets;
+    if (changed.length === 0) return;
+    setMoving(new Set(changed));
+    const id = window.setTimeout(() => setMoving(new Set()), 1400);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  return moving;
+}
+
+function useSpeech(staff: StartupDev[], phase: Phase) {
   const [lines, setLines] = useState<[string, string][]>([]);
   useEffect(() => {
     if (staff.length === 0) return;
     const say = () => {
       const dev = staff[Math.floor(Math.random() * staff.length)];
-      const pool = busy ? roleLook(dev.role).lines : roleLook(dev.role).idle;
+      const pool = phase === "standup" ? standupLines : phase === "work" ? roleLook(dev.role).lines : roleLook(dev.role).idle;
       const line = pool[Math.floor(Math.random() * pool.length)];
       setLines((prev) => [...prev.filter(([id]) => id !== dev.id), [dev.id, line] as [string, string]].slice(-2));
-      window.setTimeout(() => setLines((prev) => prev.filter(([id, text]) => id !== dev.id || text !== line)), reduced ? 4000 : 2200);
+      window.setTimeout(() => setLines((prev) => prev.filter(([id, text]) => id !== dev.id || text !== line)), 2200);
     };
     say();
-    const id = window.setInterval(say, busy ? 1100 : 2600);
+    const id = window.setInterval(say, phase === "idle" ? 2600 : 1100);
     return () => window.clearInterval(id);
-  }, [staff, busy, reduced]);
+  }, [staff, phase]);
   return Object.fromEntries(lines);
 }
 
-export function PixelOffice({ staff, busy, skin }: { staff: StartupDev[]; busy: boolean; skin?: string }) {
+function useReactions(staff: StartupDev[], reaction?: OfficeReaction) {
+  const [shown, setShown] = useState<Record<string, string>>({});
+  const levels = useRef(new Map<string, number>());
+  useEffect(() => {
+    if (!reaction) return;
+    const pool = reaction.kind === "party" ? partyEmoji : panicEmoji;
+    setShown(Object.fromEntries(staff.map((d, i) => [d.id, pool[i % pool.length]])));
+    const id = window.setTimeout(() => setShown({}), 2600);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reaction?.key]);
+  useEffect(() => {
+    const ups = levelUps(levels.current, staff);
+    levels.current = new Map(staff.map((d) => [d.id, d.level ?? 1]));
+    if (ups.length === 0) return;
+    setShown((prev) => ({ ...prev, ...Object.fromEntries(ups.map((id) => [id, "🆙"])) }));
+    const id = window.setTimeout(() => setShown({}), 3000);
+    return () => window.clearTimeout(id);
+  }, [staff]);
+  return shown;
+}
+
+export function PixelOffice({ staff, busy, skin, reaction }: { staff: StartupDev[]; busy: boolean; skin?: string; reaction?: OfficeReaction }) {
   const reduced = Boolean(useReducedMotion());
   const placed = useMemo(() => assignStations(staff), [staff]);
-  const lines = useSpeech(staff, busy, reduced);
-  const rooftop = skin === "rooftop-bangkok";
-  const wall = rooftop ? "#f7c6a3" : "#f4e3c3";
+  const phase = usePhase(busy, reduced);
+  const away = useWander(staff, phase === "idle" && !reduced);
+  const standup = useMemo(() => standupSpots(staff.length), [staff.length]);
+  const targets: Record<string, Spot> = {};
+  staff.forEach((dev, i) => {
+    const home = placed.get(dev.id)?.spot ?? { x: TABLE.x, y: TABLE.y + 20, seated: false };
+    targets[dev.id] = phase === "standup" ? standup[i] : phase === "idle" && away[dev.id] ? away[dev.id] : home;
+  });
+  const moving = useMoving(targets);
+  const lines = useSpeech(staff, phase);
+  const reactions = useReactions(staff, reaction);
+  const busyKinds = new Set(phase === "work" ? staff.map((d) => placed.get(d.id)?.kind).filter((k): k is NonNullable<typeof k> => Boolean(k)) : []);
+  const occupiedDesks = new Set(staff.map((d) => placed.get(d.id)).filter((s) => s?.kind === "desk").map((s) => `${s!.spot.x},${s!.spot.y + 4}`));
+
+  const drawables: { y: number; node: ReactNode }[] = [
+    ...deskFronts.map((d) => ({ y: d.y, node: <Desk key={`desk-${d.x}-${d.y}`} x={d.x} y={d.y} busy={phase === "work" && occupiedDesks.has(`${d.x},${d.y}`)} /> })),
+    { y: TABLE.y + 6, node: <MeetingTable key="table" /> },
+    { y: 226, node: <Sofa key="sofa" /> },
+    ...staff.map((dev) => {
+      const t = targets[dev.id];
+      const atHome = phase === "work" && !moving.has(dev.id);
+      return {
+        y: t.y - (t.seated ? 1 : 0),
+        node: <OfficePerson key={dev.id} dev={dev} x={t.x} y={t.y} seated={t.seated && !moving.has(dev.id)} moving={moving.has(dev.id)} working={atHome}
+          reaction={reactions[dev.id]} tired={(dev.burnout ?? 0) >= TIRED_AT} animate={!reduced} />,
+      };
+    }),
+  ].sort((a, b) => a.y - b.y);
 
   return <figure className="relative overflow-hidden rounded-[22px] border-[4px] border-[#292542] shadow-[6px_7px_0_#292542]" aria-label={busy ? "Your team is working" : "Your office"}>
-    <svg viewBox="0 0 320 180" className="ss-office block h-auto w-full" shapeRendering="crispEdges" role="img" aria-hidden="true">
+    <svg viewBox={`0 0 ${ROOM_W} ${ROOM_H}`} className="ss-office block h-auto w-full" shapeRendering="crispEdges" role="img" aria-hidden="true">
       <style>{css}</style>
-      <rect width="320" height="118" fill={wall} />
-      <rect y="112" width="320" height="6" fill="#b98b5e" />
-      <rect y="118" width="320" height="62" fill="#d9b48a" />
-      {[0, 40, 80, 120, 160, 200, 240, 280].map((x) => <rect key={x} x={x} y="118" width="1" height="62" fill="#b98b5e" />)}
-      <rect x="210" y="10" width="36" height="24" fill={rooftop ? "#f08a5d" : "#9fd3f0"} stroke="#292542" strokeWidth="1" />
-      {[[213, 22, 6, 12], [220, 17, 5, 17], [226, 24, 7, 10], [234, 15, 4, 19], [239, 21, 6, 13]].map(([x, y, w, hgt]) => <rect key={x} x={x} y={y} width={w} height={hgt} fill="#6b6f8e" />)}
-      <rect x="296" y="84" width="14" height="28" fill="#3b3a55" />
-      <rect x="299" y="88" width="8" height="6" fill="#e3683e" />
-      <text x="303" y="106" fontSize="7" textAnchor="middle">☕</text>
-      <rect x="6" y="100" width="10" height="12" fill="#b98b5e" />
-      <text x="11" y="100" fontSize="12" textAnchor="middle">🪴</text>
-      {stations.filter((s) => s.kind !== "desk").map((s) => <Furniture key={s.id} station={s} busy={busy && [...placed.values()].includes(s)} />)}
-      {staff.map((dev) => placed.get(dev.id) && <Person key={dev.id} dev={dev} station={placed.get(dev.id)!} busy={busy} />)}
-      {stations.filter((s) => s.kind === "desk").map((s) => <Furniture key={s.id} station={s} busy={busy && [...placed.values()].includes(s)} />)}
+      <RoomBackdrop busyKinds={busyKinds} skin={skin} />
+      {drawables.map((d) => d.node)}
     </svg>
     {staff.map((dev) => {
-      const s = placed.get(dev.id);
-      if (!s) return null;
-      const left = `${(personX(s) / 320) * 100}%`;
-      return <div key={dev.id}>
-        <span className="pointer-events-none absolute -translate-x-1/2 whitespace-nowrap rounded-full bg-[#292542]/80 px-1.5 text-xs font-bold text-[#fffaf0]" style={{ left, top: `${((s.y + 4) / 180) * 100}%` }}>{dev.name}</span>
-        {lines[dev.id] && <span className="pointer-events-none absolute z-10 max-w-[9rem] -translate-x-1/2 -translate-y-full truncate whitespace-nowrap rounded-xl border-2 border-[#292542] bg-white px-2 py-0.5 text-xs font-bold text-[#292542] shadow-[2px_2px_0_#292542]" style={{ left: `clamp(4.6rem, ${left}, calc(100% - 4.6rem))`, top: `${((s.y - (s.kind === "desk" ? 30 : 34)) / 180) * 100}%` }}>{lines[dev.id]}</span>}
-      </div>;
+      const t = targets[dev.id];
+      if (!lines[dev.id] || !t) return null;
+      const left = `${(t.x / ROOM_W) * 100}%`;
+      return <span key={dev.id} className="pointer-events-none absolute z-10 max-w-[9rem] -translate-x-1/2 -translate-y-full truncate whitespace-nowrap rounded-xl border-2 border-[#292542] bg-white px-2 py-0.5 text-xs font-bold text-[#292542] shadow-[2px_2px_0_#292542]"
+        style={{ left: `clamp(4.6rem, ${left}, calc(100% - 4.6rem))`, top: `${((t.y - 50) / ROOM_H) * 100}%` }}>{lines[dev.id]}</span>;
     })}
   </figure>;
 }
