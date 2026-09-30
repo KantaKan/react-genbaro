@@ -1,4 +1,5 @@
 import type { CosmeticCatalogItem, CosmeticRarity } from "./cosmetic";
+import type { BaroCharacter } from "./baro-character";
 
 export type GiftBoxRewardPool = "character-box" | "character-egg";
 
@@ -10,6 +11,7 @@ export interface TeacherGiftBox {
   granted_by: string;
   status: "unopened" | "opened";
   reward?: CosmeticCatalogItem;
+  character?: BaroCharacter;
   created_at: string;
   opened_at?: string;
   source?: "reflection-milestone" | string;
@@ -47,3 +49,8 @@ export interface RewardDrawResult {
   item: CosmeticCatalogItem;
   created_at: string;
 }
+
+export type GiftBoxOpenResult = ({ kind: "cosmetic" } & RewardDrawResult) | {
+  kind: "character";
+  character: BaroCharacter;
+};

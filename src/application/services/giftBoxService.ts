@@ -1,6 +1,6 @@
 import { api } from "../../infrastructure/api";
-import type { ApiResponse, CosmeticRarity, RewardDrawResult, TeacherGiftBox } from "../../domain/types";
-import type { GiftBoxOdds, GiftBoxRecipient, GiftBoxRewardPool } from "../../domain/types/gift-box";
+import type { ApiResponse, CosmeticRarity, TeacherGiftBox } from "../../domain/types";
+import type { GiftBoxOdds, GiftBoxOpenResult, GiftBoxRecipient, GiftBoxRewardPool } from "../../domain/types/gift-box";
 
 export interface CohortGiftBoxResult {
   total: number;
@@ -30,8 +30,8 @@ export const giftBoxService = {
     return response.data.data;
   },
 
-  async open(boxId: string): Promise<RewardDrawResult> {
-    const response = await api.post<ApiResponse<RewardDrawResult>>(`/gift-boxes/${boxId}/open`);
+  async open(boxId: string): Promise<GiftBoxOpenResult> {
+    const response = await api.post<ApiResponse<GiftBoxOpenResult>>(`/gift-boxes/${boxId}/open`);
     return response.data.data;
   },
 

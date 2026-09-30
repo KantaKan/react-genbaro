@@ -6,10 +6,12 @@ import { toast } from "sonner";
 import { giftBoxService } from "@/application/services/giftBoxService";
 import { cosmeticService } from "@/application/services/cosmeticService";
 import { characterCosmeticService } from "@/application/services/characterCosmeticService";
+import { baroCharacterService } from "@/application/services/baroCharacterService";
+import { BaroCharacterArt } from "@/components/character/BaroCharacterArt";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import type { RewardDrawResult, TeacherGiftBox } from "@/domain/types";
+import type { BaroCharacter, GiftBoxOpenResult, TeacherGiftBox } from "@/domain/types";
 import type { GiftBoxOdds, GiftBoxRecipient } from "@/domain/types/gift-box";
 
 const cosmeticRarityOrder = ["Common", "Rare", "Epic", "Legendary"] as const;
@@ -71,6 +73,33 @@ function TransferPanel({ box, onTransferred }: { box: TeacherGiftBox; onTransfer
   </div>;
 }
 
+const hatchStages = ["ไข่กำลังสั่น", "เปลือกเริ่มร้าว", "เห็นเงาคู่หู", "เจอกันแล้ว!"];
+
+export function CharacterEggReveal({ character, reducedMotion, busy, onEquip, onKeep }: { character: BaroCharacter; reducedMotion: boolean; busy: boolean; onEquip: () => void; onKeep: () => void }) {
+  const [stage, setStage] = useState(reducedMotion ? 3 : 0);
+  useEffect(() => {
+    if (reducedMotion || stage >= 3) return;
+    const timer = window.setTimeout(() => setStage((current) => current + 1), 350);
+    return () => window.clearTimeout(timer);
+  }, [reducedMotion, stage]);
+
+  return <section aria-label="การฟัก Character Egg" className="overflow-hidden rounded-[2rem] border-2 border-[#292542] bg-gradient-to-b from-[#fff7df] via-[#fffaf0] to-[#eadcf7] p-6 text-center text-[#292542] shadow-[8px_10px_0_#292542]">
+    <ol className="grid grid-cols-4 gap-1 text-[10px] font-black" aria-label="ขั้นตอนการฟัก">
+      {hatchStages.map((label, index) => <li key={label} className={`rounded-full px-2 py-1 ${index <= stage ? "bg-[#292542] text-white" : "bg-white/70 text-[#79758a]"}`}>{label}</li>)}
+    </ol>
+    {stage < 3 ? <div className="flex min-h-72 items-center justify-center" aria-live="polite">
+      {stage < 2 ? <motion.div animate={stage === 0 ? { rotate: [-4, 4, -3, 3, 0] } : { scale: [1, 1.08, 1] }} transition={{ duration: 0.55 }} className="relative text-[9rem] leading-none">🥚{stage === 1 && <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl">⚡</span>}</motion.div> : <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.32 }} className="h-64 w-48 grayscale"><BaroCharacterArt dna={character.dna} id={`${character.id}-silhouette`} /></motion.div>}
+      <span className="sr-only">{hatchStages[stage]}</span>
+    </div> : <motion.div initial={reducedMotion ? false : { opacity: 0, scale: 0.86 }} animate={{ opacity: 1, scale: 1 }} className="pt-5">
+      <div className="mx-auto h-64 w-52"><BaroCharacterArt dna={character.dna} id={`${character.id}-egg-reveal`} /></div>
+      <p className="mt-2 text-xs font-black uppercase tracking-[.2em]">{character.dna.rarity.replace("_", " ")}</p>
+      <h3 className="mt-1 font-mono text-lg font-black">{character.serial}</h3>
+      <p className="mt-2 text-sm text-[#5b5870]">คู่หูตัวนี้อยู่ในสมุดสะสมของคุณถาวรแล้ว</p>
+      <div className="mt-5 grid gap-2 sm:grid-cols-2"><Button onClick={onEquip} disabled={busy}>ใช้ตัวละครนี้</Button><Button variant="outline" onClick={onKeep} disabled={busy}>เก็บไว้ในสมุด</Button></div>
+    </motion.div>}
+  </section>;
+}
+
 function UnopenedBox({ box, openingId, onOpen, onTransferred }: { box: TeacherGiftBox; openingId?: string; onOpen: (id: string) => void; onTransferred: () => Promise<void> }) {
   const character = box.reward_pool === "character-box";
   const egg = box.reward_pool === "character-egg";
@@ -90,7 +119,7 @@ function UnopenedBox({ box, openingId, onOpen, onTransferred }: { box: TeacherGi
       {preview.data && !preview.data.complete && <p className="mt-3 font-mono text-xs leading-relaxed text-muted-foreground">{egg ? "Hatch chances" : "Your current chances"} · {oddsText(preview.data)}{!egg && ` · ${preview.data.eligible_count} unowned items`}</p>}
       {preview.data?.complete && <p className="mt-3 text-sm font-bold text-[#7957a2]">You already have every eligible item. This box stays unopened and safe to keep.</p>}
       <GiftBoxJourney box={box} />
-      {egg ? <p className="mt-5 rounded-2xl bg-white/80 px-4 py-3 text-center text-sm font-bold text-[#7957a2]">เก็บไข่ไว้ได้อย่างปลอดภัย — ยังเปิดไม่ได้จนกว่าระบบฟักตัวละครจะพร้อม</p> : <Button className={`mt-5 w-full gap-2 ${character ? "border-2 border-[#292542] bg-[#f4bd80] font-black text-[#292542] hover:bg-[#f1ac67]" : ""}`} onClick={() => onOpen(box.id)} disabled={!!openingId || !preview.data || preview.data.complete}>
+      {egg ? <Button className="mt-5 w-full gap-2 border-2 border-[#292542] bg-[#f4bd80] font-black text-[#292542] hover:bg-[#f1ac67]" onClick={() => onOpen(box.id)} disabled={!!openingId || !preview.data}>{openingId === box.id ? "กำลังฟัก…" : "ฟัก Character Egg"}</Button> : <Button className={`mt-5 w-full gap-2 ${character ? "border-2 border-[#292542] bg-[#f4bd80] font-black text-[#292542] hover:bg-[#f1ac67]" : ""}`} onClick={() => onOpen(box.id)} disabled={!!openingId || !preview.data || preview.data.complete}>
         <PackageOpen className="h-4 w-4" /> {openingId === box.id ? "Opening…" : "Open this gift"}
       </Button>}
       <TransferPanel box={box} onTransferred={onTransferred} />
@@ -111,7 +140,7 @@ export function TeacherGiftBoxesDialog({ onReward, open: controlledOpen, onOpenC
   const [internalOpen, setInternalOpen] = useState(false);
   const [openingId, setOpeningId] = useState<string>();
   const [equipping, setEquipping] = useState(false);
-  const [reveal, setReveal] = useState<RewardDrawResult>();
+  const [reveal, setReveal] = useState<GiftBoxOpenResult>();
   const open = controlledOpen ?? internalOpen;
   const setOpen = (next: boolean) => {
     setInternalOpen(next);
@@ -124,7 +153,8 @@ export function TeacherGiftBoxesDialog({ onReward, open: controlledOpen, onOpenC
   const reducedMotion = useReducedMotion();
   const boxes = useQuery(["teacherGiftBoxes"], giftBoxService.list, { enabled: open });
   const unopened = boxes.data?.filter((box) => box.status === "unopened") ?? [];
-  const openedWithJourney = boxes.data?.filter((box) => box.status === "opened" && box.transfer_history?.length) ?? [];
+  const openedWithJourney = boxes.data?.filter((box) => box.status === "opened" && box.reward_pool !== "character-egg" && box.transfer_history?.length) ?? [];
+  const openedEggs = boxes.data?.filter((box) => box.status === "opened" && box.reward_pool === "character-egg" && box.character) ?? [];
 
   const openBox = async (boxId: string) => {
     setOpeningId(boxId);
@@ -134,6 +164,7 @@ export function TeacherGiftBoxesDialog({ onReward, open: controlledOpen, onOpenC
       await boxes.refetch();
       queryClient.invalidateQueries(["gift-box-odds"]);
       queryClient.invalidateQueries(["character-cosmetic-collection"]);
+      queryClient.invalidateQueries(["baro-character-collection"]);
       await onReward?.();
     } catch {
       await queryClient.invalidateQueries(["gift-box-odds", boxId]);
@@ -149,7 +180,7 @@ export function TeacherGiftBoxesDialog({ onReward, open: controlledOpen, onOpenC
   };
 
   const equipReward = async () => {
-    if (!reveal) return;
+    if (!reveal || reveal.kind !== "cosmetic") return;
     setEquipping(true);
     try {
       if (reveal.item.slot === "card_background" || reveal.item.slot === "character_prop") {
@@ -169,10 +200,27 @@ export function TeacherGiftBoxesDialog({ onReward, open: controlledOpen, onOpenC
   };
 
   const viewCollection = () => {
+    if (!reveal || reveal.kind !== "cosmetic") return;
     const character = reveal?.item.slot === "card_background" || reveal?.item.slot === "character_prop";
     closeDialog();
     if (character) onViewCharacterCollection?.();
     else onViewCollection?.();
+  };
+
+  const equipCharacter = async () => {
+    if (!reveal || reveal.kind !== "character") return;
+    setEquipping(true);
+    try {
+      await baroCharacterService.equip(reveal.character.id);
+      queryClient.invalidateQueries(["baro-character-selection"]);
+      queryClient.invalidateQueries(["baro-character-collection"]);
+      toast.success("ใช้คู่หูตัวใหม่แล้ว");
+      closeDialog();
+    } catch {
+      toast.error("ยังเปลี่ยนคู่หูไม่ได้ ตัวละครยังปลอดภัยอยู่ในสมุดสะสม");
+    } finally {
+      setEquipping(false);
+    }
   };
 
   return (
@@ -184,7 +232,7 @@ export function TeacherGiftBoxesDialog({ onReward, open: controlledOpen, onOpenC
       </DialogTrigger>
       <DialogContent className="max-h-[92vh] overflow-y-auto border-amber-200 bg-[#fffaf0] sm:max-w-xl">
         <DialogHeader><DialogTitle className="font-serif text-2xl text-emerald-950">A little gift for you</DialogTitle></DialogHeader>
-        {reveal ? (
+        {reveal?.kind === "character" ? <CharacterEggReveal character={reveal.character} reducedMotion={Boolean(reducedMotion)} busy={equipping} onEquip={equipCharacter} onKeep={closeDialog} /> : reveal ? (
           <motion.div
             initial={reducedMotion ? false : { opacity: 0, scale: 0.82, rotate: -2 }}
             animate={{ opacity: 1, scale: 1, rotate: 0 }}
@@ -204,7 +252,7 @@ export function TeacherGiftBoxesDialog({ onReward, open: controlledOpen, onOpenC
         ) : (
           <div className="space-y-3">
             {boxes.isLoading && <p className="py-12 text-center text-sm text-muted-foreground">Looking under the garden shelf…</p>}
-            {!boxes.isLoading && unopened.length === 0 && openedWithJourney.length === 0 && (
+            {!boxes.isLoading && unopened.length === 0 && openedWithJourney.length === 0 && openedEggs.length === 0 && (
               <div className="rounded-3xl border border-dashed border-emerald-300 bg-white/70 px-6 py-12 text-center">
                 <PackageOpen className="mx-auto h-9 w-9 text-emerald-600" />
                 <p className="mt-3 font-medium text-emerald-950">Your gift shelf is clear</p>
@@ -212,6 +260,7 @@ export function TeacherGiftBoxesDialog({ onReward, open: controlledOpen, onOpenC
               </div>
             )}
             {unopened.map((box) => <UnopenedBox key={box.id} box={box} openingId={openingId} onOpen={openBox} onTransferred={onTransferred} />)}
+            {openedEggs.map((box) => <article key={box.id} className="rounded-2xl border border-orange-200 bg-white/75 p-4"><p className="text-sm font-black text-[#292542]">🥚 Character Egg ที่ฟักแล้ว</p><p className="mt-1 font-mono text-xs text-[#5b5870]">{box.character?.serial}</p><GiftBoxJourney box={box} /><Button variant="outline" size="sm" className="mt-3" onClick={() => box.character && setReveal({ kind: "character", character: box.character })}>ดูตัวละครอีกครั้ง</Button></article>)}
             {openedWithJourney.length > 0 && <section aria-label="ประวัติกล่องที่เปิดแล้ว" className="border-t border-[#292542]/20 pt-4"><h3 className="font-['Trebuchet_MS',sans-serif] text-sm font-black text-[#292542]">สมุดเดินทางของกล่องที่เปิดแล้ว</h3><div className="mt-3 space-y-3">{openedWithJourney.map((box) => <article key={box.id} className="rounded-2xl border border-[#292542]/20 bg-white/70 p-4"><p className="text-sm font-bold text-[#292542]">{box.reward?.name ?? "กล่องรางวัลที่เปิดแล้ว"}</p><GiftBoxJourney box={box} /></article>)}</div></section>}
           </div>
         )}
