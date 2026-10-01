@@ -43,6 +43,10 @@ const server = setupServer(
       data: { ...hubRun, stage: "developing", version: 3, project: { type: "Game", theme: "Thai Culture", staff_ids: ["founder-0"], started_at: new Date(T + 20_000).toISOString(), ends_at: new Date(T + 50_000).toISOString() } },
     });
   }),
+  http.post("*/startup-story/runs/active/ipo-choice", async (info) => {
+    await record("ipo-choice")(info);
+    return HttpResponse.json({ data: { ...hubRun, act: 4, max_act: 4, endless: true, project_index: 9, next_boss: "outage-3am", next_pass_mark: 28, version: 9 } });
+  }),
   http.post("*/startup-story/runs/active/item", async (info) => {
     await record("item")(info);
     return HttpResponse.json({ data: { ...hubRun, items: ["legacy"], version: 5 } });
@@ -119,7 +123,7 @@ describe("StartupStoryPage", () => {
     renderPage();
 
     expect(await screen.findByText("3AM Production Outage 🚨")).toBeInTheDocument();
-    expect(screen.getByText(/Reach 20\/40 to pass/)).toBeInTheDocument();
+    expect(screen.getByText(/Reach 18\/40 to pass/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Face the boss/ })).toBeInTheDocument();
   });
 
@@ -163,5 +167,23 @@ describe("StartupStoryPage", () => {
 
     await waitFor(() => expect(requests).toEqual([{ path: "opt-out", body: { opt_out: false } }]));
     expect(await screen.findByRole("checkbox", { name: /Hide me from/i })).not.toBeChecked();
+  });
+
+  it("offers cash out or keep going after the IPO, then shows the endless act", async () => {
+    run = { ...hubRun, act: 3, stage: "ipo_choice", project_index: 9 };
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: /Keep going/ }));
+
+    expect(await screen.findByText(/🚀 Endless/)).toBeInTheDocument();
+    expect(screen.getByText(/Series B · Act 4 · Project 1\/3/)).toBeInTheDocument();
+    expect(requests).toEqual([{ path: "ipo-choice", body: { keep_going: true } }]);
+  });
+
+  it("shows the server's boss pass mark, not a stale hardcoded one", async () => {
+    run = { ...hubRun, act: 5, endless: true, project_index: 14, next_boss: "outage-3am", next_pass_mark: 30 };
+    renderPage();
+
+    expect(await screen.findByText(/Reach 30\/40 to pass/)).toBeInTheDocument();
   });
 });

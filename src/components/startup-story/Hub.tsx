@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { StartupItem, StartupRole, StartupRun } from "@/application/services/startupStoryService";
-import { bosses, bossThreshold, comboKey, roleLook, teamCap, teamHints, ui, upcomingBoss } from "./startupStoryCatalog";
+import { bosses, comboKey, passMarkFor, roleLook, teamCap, teamHints, ui, upcomingBoss } from "./startupStoryCatalog";
 import { DevCard } from "./DevCard";
 
 type HubProps = {
@@ -46,7 +46,7 @@ export function Hub({ run, types, themes, roles, discovered, pending, onStart, o
       {boss && bosses[boss] && <div className="rounded-2xl border-2 border-[#292542] bg-[#f7c6d9] p-3">
         <p className="text-xs font-black uppercase tracking-widest">Boss fight</p>
         <p className="text-lg font-black">{bosses[boss].name}</p>
-        <p className="text-sm font-bold">{bosses[boss].twist} Reach {bossThreshold(run.act)}/40 to pass.</p>
+        <p className="text-sm font-bold">{bosses[boss].twist} Reach {passMarkFor(run)}/{boss === "ipo-pitch" ? 50 : 40} to pass.</p>
       </div>}
       <h2 className="text-xl font-black">{boss ? "Build for the boss" : "New project"}</h2>
       <div><p className="mb-2 text-xs font-black uppercase tracking-wider">Product</p><div className="flex flex-wrap gap-2">{types.map((t) => choice(t, type === t, () => setType(t)))}</div></div>

@@ -82,6 +82,8 @@ export interface StartupRun {
   version: number;
   max_act?: number;
   endless?: boolean;
+  next_boss?: string;
+  next_pass_mark?: number;
   oss?: boolean;
   pitches?: StartupPitch[];
   world_event?: string;
@@ -147,11 +149,14 @@ export interface StartupOverview {
   opt_out: boolean;
 }
 
+export type StartupBoardTab = "deepest" | "weekly" | "fame";
+
 export interface StartupLeaderboardEntry {
   owner_id: string;
   name: string;
   score?: number;
   fame?: number;
+  max_act?: number;
   outcome?: string;
 }
 
@@ -179,7 +184,8 @@ export const startupStoryService = {
     const response = await api.put<ApiResponse<{ opt_out: boolean }>>("/startup-story/opt-out", { opt_out: optOut });
     return response.data.data.opt_out;
   },
-  async leaderboard(tab: "weekly" | "fame"): Promise<StartupLeaderboardEntry[]> {
+  ipoChoice: (keepGoing: boolean) => post("/runs/active/ipo-choice", { keep_going: keepGoing }),
+  async leaderboard(tab: StartupBoardTab): Promise<StartupLeaderboardEntry[]> {
     const response = await api.get<ApiResponse<StartupLeaderboardEntry[]>>("/startup-story/leaderboard", { params: { tab } });
     return response.data.data;
   },

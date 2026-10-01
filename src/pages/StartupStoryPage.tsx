@@ -3,7 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "react-query";
 import { startupStoryService, STARTUP_STORY_QUERY_KEY, type StartupOverview, type StartupResult, type StartupRun } from "@/application/services/startupStoryService";
 import { useAuth } from "@/application/contexts/AuthContext";
 import { fireConfetti } from "@/lib/confetti";
-import { bosses, bossThreshold } from "@/components/startup-story/startupStoryCatalog";
+import { bosses, passMarkFor } from "@/components/startup-story/startupStoryCatalog";
+import { IpoChoice } from "@/components/startup-story/IpoChoice";
 import { DevPhase } from "@/components/startup-story/DevPhase";
 import { FounderPick } from "@/components/startup-story/FounderPick";
 import { Hub } from "@/components/startup-story/Hub";
@@ -60,12 +61,12 @@ export default function StartupStoryPage() {
     if (!run) return;
     const bossId = run.project?.boss;
     const before = run.bosses_passed;
-    const act = run.act;
+    const passMark = passMarkFor(run);
     action.mutate(startupStoryService.ship, {
       onSuccess: (next) => {
         if (next.status === "active") void queryClient.invalidateQueries(KEY);
         if (!next.last_result) return;
-        const boss = bossId ? { name: bosses[bossId]?.name ?? bossId, passed: next.bosses_passed > before, threshold: bossThreshold(act) } : undefined;
+        const boss = bossId ? { name: bosses[bossId]?.name ?? bossId, passed: next.bosses_passed > before, threshold: passMark } : undefined;
         setReview({ result: next.last_result, boss });
         const bad = (boss && !boss.passed) || next.last_result.total < 16 || next.last_result.bugs >= 6;
         setReaction({ kind: bad ? "panic" : "party", key: Date.now() });
@@ -84,6 +85,7 @@ export default function StartupStoryPage() {
     switch (run.stage) {
       case "founder": return <FounderPick offer={run.founder_offer ?? []} roles={data.roles} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickFounder(i))} />;
       case "developing": return <DevPhase key={run.project?.started_at} run={run} items={data.items} skin={skin} clockOffset={data.clockOffset} pending={pending} onShip={ship} />;
+      case "ipo_choice": return <IpoChoice run={run} pending={pending} onChoose={(keepGoing) => action.mutate(() => startupStoryService.ipoChoice(keepGoing))} />;
       case "item": return <ItemDraft run={run} items={data.items} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickItem(i))} />;
       default: return <Hub key={run.project_index} run={run} types={data.types} themes={data.themes} items={data.items} roles={data.roles} discovered={data.studio.discovered_combos ?? []} skin={skin} pending={pending}
         onStart={(type, theme, staffIds) => action.mutate(() => startupStoryService.startProject(type, theme, staffIds))}

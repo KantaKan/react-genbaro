@@ -25,15 +25,25 @@ export const bosses: Record<string, { name: string; twist: string }> = {
 
 export const reviewerIcons: Record<string, string> = { "Tech Lead": "🧔", Users: "🙋", Investor: "💼", "Dev Community": "🌐" };
 
-export const bossThreshold = (act: number) => (act >= 3 ? 32 : act === 2 ? 26 : 20);
+export const passMarkFor = (run: StartupRun) => run.next_pass_mark ?? (run.act >= 3 ? 36 : run.act === 2 ? 26 : 18);
+
+const actNames = ["Garage", "Seed", "Series A", "Series B", "Series C", "Unicorn 🦄", "Decacorn", "Metaverse Pivot", "Galactic Conglomerate"];
+const roman = ["", "", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+
+export function actName(act: number) {
+  if (act <= actNames.length) return actNames[Math.max(0, act - 1)];
+  const n = act - actNames.length + 1;
+  return `Galactic Conglomerate ${roman[n] ?? n}`;
+}
 
 export function upcomingBoss(run: StartupRun): string | null {
   if (run.project_index % 3 !== 2) return null;
+  if (run.next_boss) return run.next_boss;
   if (run.act >= 3) return "ipo-pitch";
   return run.boss_order?.[run.act - 1] ?? "demo-day";
 }
 
-export const teamCap = (act: number) => (act >= 3 ? 6 : act === 2 ? 4 : 2);
+export const teamCap = (act: number) => (act > 3 ? Math.min(8, 6 + (act - 3)) : act === 3 ? 6 : act === 2 ? 4 : 2);
 
 export const baht = (n: number) => `฿${n.toLocaleString()}`;
 

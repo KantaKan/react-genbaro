@@ -1,26 +1,32 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import { STARTUP_STORY_QUERY_KEY, startupStoryService, type StartupMode, type StartupOverview } from "@/application/services/startupStoryService";
-import { ui } from "./startupStoryCatalog";
+import { STARTUP_STORY_QUERY_KEY, startupStoryService, type StartupBoardTab, type StartupMode, type StartupOverview } from "@/application/services/startupStoryService";
+import { actName, ui } from "./startupStoryCatalog";
+
+const boardTabs: { id: StartupBoardTab; label: string; empty: string }[] = [
+  { id: "deepest", label: "🏔️ Deepest", empty: "No ranked runs yet this week. Be the first!" },
+  { id: "weekly", label: "💰 Score", empty: "No ranked runs yet this week. Be the first!" },
+  { id: "fame", label: "⭐ Fame", empty: "No fame yet. Finish a run to get on the board." },
+];
 
 function Leaderboard({ userId }: { userId: string | null }) {
-  const [tab, setTab] = useState<"weekly" | "fame">("weekly");
+  const [tab, setTab] = useState<StartupBoardTab>("deepest");
   const { data, isLoading, error } = useQuery(["startup-story-board", tab], () => startupStoryService.leaderboard(tab));
   return <section className={`${ui.card} space-y-3 p-4`}>
-    <div className="flex items-center justify-between gap-2">
+    <div className="flex flex-wrap items-center justify-between gap-2">
       <h2 className="text-xl font-black">🏆 Cohort board</h2>
       <div role="tablist" className="flex gap-1">
-        {(["weekly", "fame"] as const).map((id) => <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
-          className={`${ui.chipBase} ${tab === id ? "bg-[#292542] text-[#fffaf0]" : "bg-white text-[#292542]"}`}>{id === "weekly" ? "This week" : "Fame"}</button>)}
+        {boardTabs.map(({ id, label }) => <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
+          className={`${ui.chipBase} ${tab === id ? "bg-[#292542] text-[#fffaf0]" : "bg-white text-[#292542]"}`}>{label}</button>)}
       </div>
     </div>
     {isLoading && <p className="text-sm font-bold">Loading...</p>}
     {error ? <p className="text-sm font-bold">Couldn't load the board right now.</p> : null}
-    {data && data.length === 0 && <p className="text-sm font-bold">{tab === "weekly" ? "No ranked runs yet this week. Be the first!" : "No fame yet. Finish a run to get on the board."}</p>}
+    {data && data.length === 0 && <p className="text-sm font-bold">{boardTabs.find((b) => b.id === tab)?.empty}</p>}
     {data && data.length > 0 && <ol className="space-y-1">
       {data.map((row, i) => <li key={row.owner_id} className={`flex items-center justify-between rounded-xl border-2 px-3 py-2 text-sm font-bold ${row.owner_id === userId ? "border-[#292542] bg-[#fbe39a]" : "border-transparent"}`}>
         <span>{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`} {row.name}{row.owner_id === userId ? " (you)" : ""}</span>
-        <span>{tab === "weekly" ? `${(row.score ?? 0).toLocaleString()}${row.outcome === "ipo" ? " 🔔" : ""}` : `⭐ ${row.fame ?? 0}`}</span>
+        <span>{tab === "deepest" ? `Act ${row.max_act ?? 1} · ${actName(row.max_act ?? 1)}` : tab === "weekly" ? `${(row.score ?? 0).toLocaleString()}${row.outcome === "ipo" ? " 🔔" : ""}` : `⭐ ${row.fame ?? 0}`}</span>
       </li>)}
     </ol>}
   </section>;
