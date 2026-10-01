@@ -155,6 +155,7 @@ export interface StartupOverview {
   roles?: StartupRole[];
   perks?: StartupPerk[];
   oss_unlocked?: boolean;
+  combo_ratings?: Record<string, string>;
   opt_out: boolean;
 }
 
@@ -186,6 +187,7 @@ export const startupStoryService = {
     return response.data.data;
   },
   startProject: (type: string, theme: string, staffIds: string[]) => post("/runs/active/projects", { type, theme, staff_ids: staffIds }),
+  startProjectPitch: (pitchIndex: number, staffIds: string[]) => post("/runs/active/projects", { pitch_index: pitchIndex, staff_ids: staffIds }),
   ship: () => post("/runs/active/ship"),
   pickItem: (index: number) => post("/runs/active/item", { index }),
   abandon: () => post("/runs/active/abandon"),

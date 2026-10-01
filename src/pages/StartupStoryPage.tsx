@@ -94,8 +94,9 @@ export default function StartupStoryPage() {
       case "perk": return <PerkPick run={run} perks={data.perks ?? []} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickPerk(i))} />;
       case "ipo_choice": return <IpoChoice run={run} pending={pending} onChoose={(keepGoing) => action.mutate(() => startupStoryService.ipoChoice(keepGoing))} />;
       case "item": return <ItemDraft run={run} items={data.items} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickItem(i))} />;
-      default: return <Hub key={run.project_index} run={run} types={data.types} themes={data.themes} items={data.items} roles={data.roles} perks={data.perks} discovered={data.studio.discovered_combos ?? []} skin={skin} pending={pending}
+      default: return <Hub key={run.project_index} run={run} types={data.types} themes={data.themes} items={data.items} roles={data.roles} perks={data.perks} ratings={data.combo_ratings} discovered={data.studio.discovered_combos ?? []} skin={skin} pending={pending}
         onStart={(type, theme, staffIds) => action.mutate(() => startupStoryService.startProject(type, theme, staffIds))}
+        onStartPitch={(pitchIndex, staffIds) => action.mutate(() => startupStoryService.startProjectPitch(pitchIndex, staffIds))}
         onHire={actions.hire} onDismiss={actions.dismiss} onAbandon={actions.abandon} />;
     }
   };
