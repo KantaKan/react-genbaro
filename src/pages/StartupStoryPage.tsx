@@ -18,6 +18,10 @@ import { Lobby } from "@/components/startup-story/StartupStoryLobby";
 const KEY = STARTUP_STORY_QUERY_KEY;
 type OverviewData = StartupOverview & { clockOffset: number };
 
+function newLogLines(log: string[], lastSeen?: string) {
+  return lastSeen === undefined ? log : log.slice(log.lastIndexOf(lastSeen) + 1);
+}
+
 function errorMessage(error: unknown) {
   return (error as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Something went wrong, please try again.";
 }
@@ -29,7 +33,7 @@ export default function StartupStoryPage() {
     const overview = await startupStoryService.overview();
     return { ...overview, clockOffset: Date.parse(overview.server_time) - Date.now() };
   });
-  const [review, setReview] = useState<{ result: StartupResult; boss?: BossOutcome } | null>(null);
+  const [review, setReview] = useState<{ result: StartupResult; boss?: BossOutcome; news: string[] } | null>(null);
   const [ended, setEnded] = useState<{ run: StartupRun; fameBefore: number } | null>(null);
   const [actionError, setActionError] = useState("");
   const [reaction, setReaction] = useState<OfficeReaction>();
@@ -62,12 +66,13 @@ export default function StartupStoryPage() {
     const bossId = run.project?.boss;
     const before = run.bosses_passed;
     const passMark = passMarkFor(run);
+    const lastLine = run.log?.[run.log.length - 1];
     action.mutate(startupStoryService.ship, {
       onSuccess: (next) => {
         if (next.status === "active") void queryClient.invalidateQueries(KEY);
         if (!next.last_result) return;
         const boss = bossId ? { name: bosses[bossId]?.name ?? bossId, passed: next.bosses_passed > before, threshold: passMark } : undefined;
-        setReview({ result: next.last_result, boss });
+        setReview({ result: next.last_result, boss, news: newLogLines(next.log ?? [], lastLine) });
         const bad = (boss && !boss.passed) || next.last_result.total < 16 || next.last_result.bugs >= 6;
         setReaction({ kind: bad ? "panic" : "party", key: Date.now() });
         if (next.last_result.total >= 32 || next.outcome === "ipo") fireConfetti();
@@ -118,6 +123,6 @@ export default function StartupStoryPage() {
           <div className="min-w-0">{screen}</div>
         </div>
       : screen}
-    {review && <ReviewDialog result={review.result} boss={review.boss} onClose={() => setReview(null)} />}
+    {review && <ReviewDialog result={review.result} boss={review.boss} news={review.news} onClose={() => setReview(null)} />}
   </main>;
 }

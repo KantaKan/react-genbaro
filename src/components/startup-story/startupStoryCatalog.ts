@@ -86,6 +86,7 @@ export type TeamHint = { tone: "good" | "warn"; text: string };
 export function teamHints(team: StartupDev[], boss: string | null): TeamHint[] {
   const has = (role: string) => team.some((d) => d.role === role);
   const hints: TeamHint[] = [];
+  for (const d of team.filter((p) => (p.burnout ?? 0) >= 70)) hints.push({ tone: "warn", text: `${d.name} is at ${d.burnout}% burnout 🔥 one more crunch and they might quit. Sit them out?` });
   if (!has("qa") && !has("sa")) hints.push({ tone: "warn", text: "No QA or SA: expect extra bugs 🐛" });
   if (team.length > 2 && !has("pm")) hints.push({ tone: "warn", text: `No PM: ${team.length} people means meeting chaos 🌀` });
   if (boss === "outage-3am" && !has("devops") && !has("qa")) hints.push({ tone: "warn", text: "3AM outage with no DevOps or QA? Risky 🚨" });

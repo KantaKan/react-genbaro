@@ -186,4 +186,14 @@ describe("StartupStoryPage", () => {
 
     expect(await screen.findByText(/Reach 30\/40 to pass/)).toBeInTheDocument();
   });
+
+  it("warns about burned-out teammates and offers a team retreat instead of an item", async () => {
+    run = { ...hubRun, stage: "item", item_offer: ["rubber-duck"], staff: [founder, { ...genmate, id: "dev-2", name: "Bank", genmate_id: undefined, burnout: 85 }] };
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: /team retreat to Hua Hin/ }));
+
+    await screen.findByRole("list", { name: "Your items" });
+    expect(requests).toEqual([{ path: "item", body: { index: -1 } }]);
+  });
 });

@@ -1,5 +1,6 @@
 import type { StartupDev, StartupRole } from "@/application/services/startupStoryService";
 import { baht, isSassy, roleLook, spriteFor, traits } from "./startupStoryCatalog";
+import { BurnoutBar } from "./BurnoutBar";
 
 function Stat({ label, value }: { label: string; value: number }) {
   return <div className="flex items-center gap-2 text-xs font-bold">
@@ -31,6 +32,7 @@ export function DevCard({ dev, showSalary, roles }: { dev: StartupDev; showSalar
     <Stat label="Back" value={dev.backend} />
     <Stat label="Design" value={dev.design} />
     <Stat label="Debug" value={dev.debug} />
+    {(dev.burnout ?? 0) > 0 && <BurnoutBar value={dev.burnout ?? 0} />}
     {showSalary && dev.salary > 0 && <p className="pt-1 text-xs font-black">💰 {baht(dev.salary)} / project</p>}
   </div>;
 }

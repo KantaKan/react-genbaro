@@ -50,3 +50,11 @@ describe("sassy teammates", () => {
     }
   });
 });
+
+describe("burnout hints", () => {
+  it("warns when someone on the project is close to quitting", () => {
+    const tired = { ...dev("t", "fe_dev"), name: "Bank", burnout: 85 };
+    expect(teamHints([tired], null).some((h) => h.tone === "warn" && h.text.includes("Bank is at 85% burnout"))).toBe(true);
+    expect(teamHints([dev("ok", "fe_dev")], null).some((h) => h.text.includes("burnout"))).toBe(false);
+  });
+});
