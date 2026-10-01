@@ -154,6 +154,7 @@ export interface StartupOverview {
   unlocks: StartupUnlock[];
   roles?: StartupRole[];
   perks?: StartupPerk[];
+  oss_unlocked?: boolean;
   opt_out: boolean;
 }
 

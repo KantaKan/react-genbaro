@@ -1,7 +1,7 @@
 import type { StartupDev, StartupRun } from "@/application/services/startupStoryService";
 
 const sprites: Record<string, string> = {
-  hustler: "🧑‍💻", designer: "🧑‍🎨", wizard: "🧙", grad: "🎓", faang: "🕶️", legend: "🦸",
+  hustler: "🧑‍💻", designer: "🧑‍🎨", wizard: "🧙", grad: "🎓", faang: "🕶️", legend: "🦸", octo: "🐙",
   "Frontend Dev": "👩‍💻", "Backend Dev": "👨‍💻", Designer: "🧑‍🎨", Debugger: "🕵️", "Fullstack Dev": "🧑‍🔧", Intern: "🧒",
 };
 
@@ -23,7 +23,18 @@ export const bosses: Record<string, { name: string; twist: string }> = {
   "ipo-pitch": { name: "IPO Pitch 🔔", twist: "The final boss. Investors count double." },
 };
 
-export const reviewerIcons: Record<string, string> = { "Tech Lead": "🧔", Users: "🙋", Investor: "💼", "Dev Community": "🌐" };
+const ossBosses: Record<string, { name: string; twist: string }> = {
+  "demo-day": { name: "Front Page of Hacker News 🟧", twist: "The whole internet is reading your README. No pressure." },
+  "changing-requirements": { name: "Big Tech Forks Your Repo 🍴", twist: "They forked it and changed the theme. Keep up!" },
+  "outage-3am": { name: "Maintainer Burnout 🫠", twist: "400 open issues at 3AM. Debug skill matters most." },
+  "ipo-pitch": { name: "v1.0 Launch 🚀", twist: "The final boss. Big Tech counts double." },
+};
+
+export const bossInfo = (id: string, oss?: boolean) => (oss ? ossBosses[id] : undefined) ?? bosses[id];
+
+export const fansLabel = (oss?: boolean) => (oss ? "⭐ stars" : "❤️ fans");
+
+export const reviewerIcons: Record<string, string> = { Maintainers: "🧙", Contributors: "🧑‍🤝‍🧑", "Hacker News": "🟧", "Big Tech": "🏢", "Tech Lead": "🧔", Users: "🙋", Investor: "💼", "Dev Community": "🌐" };
 
 export const passMarkFor = (run: StartupRun) => run.next_pass_mark ?? (run.act >= 3 ? 36 : run.act === 2 ? 26 : 18);
 

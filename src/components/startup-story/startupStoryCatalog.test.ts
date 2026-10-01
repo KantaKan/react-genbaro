@@ -58,3 +58,13 @@ describe("burnout hints", () => {
     expect(teamHints([dev("ok", "fe_dev")], null).some((h) => h.text.includes("burnout"))).toBe(false);
   });
 });
+
+describe("open-source path copy", () => {
+  it("renames bosses and fans for OSS runs only", async () => {
+    const { bossInfo, fansLabel } = await import("./startupStoryCatalog");
+    expect(bossInfo("ipo-pitch", true).name).toContain("v1.0 Launch");
+    expect(bossInfo("ipo-pitch", false).name).toContain("IPO Pitch");
+    expect(fansLabel(true)).toContain("stars");
+    expect(fansLabel(false)).toContain("fans");
+  });
+});

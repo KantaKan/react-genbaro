@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "react-query";
 import { startupStoryService, STARTUP_STORY_QUERY_KEY, type StartupOverview, type StartupResult, type StartupRun } from "@/application/services/startupStoryService";
 import { useAuth } from "@/application/contexts/AuthContext";
 import { fireConfetti } from "@/lib/confetti";
-import { bosses, passMarkFor } from "@/components/startup-story/startupStoryCatalog";
+import { bossInfo, passMarkFor } from "@/components/startup-story/startupStoryCatalog";
 import { IpoChoice } from "@/components/startup-story/IpoChoice";
 import { PerkPick } from "@/components/startup-story/PerkPick";
 import { DevPhase } from "@/components/startup-story/DevPhase";
@@ -72,7 +72,7 @@ export default function StartupStoryPage() {
       onSuccess: (next) => {
         if (next.status === "active") void queryClient.invalidateQueries(KEY);
         if (!next.last_result) return;
-        const boss = bossId ? { name: bosses[bossId]?.name ?? bossId, passed: next.bosses_passed > before, threshold: passMark } : undefined;
+        const boss = bossId ? { name: bossInfo(bossId, run.oss)?.name ?? bossId, passed: next.bosses_passed > before, threshold: passMark } : undefined;
         setReview({ result: next.last_result, boss, news: newLogLines(next.log ?? [], lastLine) });
         const bad = (boss && !boss.passed) || next.last_result.total < 16 || next.last_result.bugs >= 6;
         setReaction({ kind: bad ? "panic" : "party", key: Date.now() });
@@ -125,6 +125,6 @@ export default function StartupStoryPage() {
           <div className="min-w-0">{screen}</div>
         </div>
       : screen}
-    {review && <ReviewDialog result={review.result} boss={review.boss} news={review.news} onClose={() => setReview(null)} />}
+    {review && <ReviewDialog result={review.result} boss={review.boss} news={review.news} oss={run?.oss} onClose={() => setReview(null)} />}
   </main>;
 }

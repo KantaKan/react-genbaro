@@ -73,6 +73,7 @@ export function Lobby({ overview, userId, pending, onStart }: LobbyProps) {
         <button className={`${ui.button} bg-[#7bc4a8]`} disabled={pending} onClick={() => onStart("free")}>🎲 Free Play</button>
       </div>
       <p className="text-xs font-bold opacity-70">Weekly Seed: everyone in your cohort gets the same random run this week ({overview.week_key}).</p>
+      <p className="text-xs font-black">{overview.oss_unlocked ? "🐙 Secret founder unlocked: Open Source Maintainer. Look for them in your founder picks." : "🔒 ??? Rumor says a founder only shows up for people who ship tools for other devs…"}</p>
     </section>
 
     <section className={`${ui.card} space-y-2 p-4`}>

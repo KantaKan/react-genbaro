@@ -212,4 +212,14 @@ describe("StartupStoryPage", () => {
     expect(await screen.findByRole("heading", { name: /Pick an item/ })).toBeInTheDocument();
     expect(requests).toEqual([{ path: "perk", body: { index: 1 } }]);
   });
+
+  it("shows stars, the OSS badge and OSS boss names in an open-source run", async () => {
+    run = { ...hubRun, oss: true, act: 3, project_index: 8, next_boss: "ipo-pitch", next_pass_mark: 45, fans: 1200 };
+    renderPage();
+
+    expect(await screen.findByText("🐙 Open Source")).toBeInTheDocument();
+    expect(screen.getByText(/1,200 ⭐ stars/)).toBeInTheDocument();
+    expect(screen.getByText("v1.0 Launch 🚀")).toBeInTheDocument();
+    expect(screen.getByText(/Reach 45\/50 to pass/)).toBeInTheDocument();
+  });
 });

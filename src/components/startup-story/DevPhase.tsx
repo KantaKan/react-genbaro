@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { StartupItem, StartupRun } from "@/application/services/startupStoryService";
-import { bosses, ui } from "./startupStoryCatalog";
+import { bossInfo, ui } from "./startupStoryCatalog";
 
 function useSecondsLeft(endsAt: string, clockOffset: number) {
   const [now, setNow] = useState(() => Date.now());
@@ -16,7 +16,7 @@ export function DevPhase({ run, clockOffset, onShip, pending }: { run: StartupRu
   const left = useSecondsLeft(project.ends_at, clockOffset);
   const total = Math.max(1, (Date.parse(project.ends_at) - Date.parse(project.started_at)) / 1000);
   const percent = Math.min(100, Math.max(0, 100 - (left / total) * 100));
-  const boss = project.boss ? bosses[project.boss] : undefined;
+  const boss = project.boss ? bossInfo(project.boss, run.oss) : undefined;
   return <section className="space-y-4">
     <div className={`${ui.card} space-y-3 p-4`}>
       {boss && <p className="text-xs font-black uppercase tracking-widest">👹 {boss.name}</p>}

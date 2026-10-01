@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { StartupItem, StartupPerk, StartupRole, StartupRun } from "@/application/services/startupStoryService";
-import { bosses, comboKey, passMarkFor, roleLook, teamCap, teamHints, ui, upcomingBoss } from "./startupStoryCatalog";
+import { bossInfo, comboKey, passMarkFor, roleLook, teamCap, teamHints, ui, upcomingBoss } from "./startupStoryCatalog";
 import { DevCard } from "./DevCard";
 
 type HubProps = {
@@ -44,10 +44,10 @@ export function Hub({ run, types, themes, roles, perks, discovered, pending, onS
     </div>
 
     {tab === "project" && <div className={`${ui.card} space-y-4 p-4`}>
-      {boss && bosses[boss] && <div className="rounded-2xl border-2 border-[#292542] bg-[#f7c6d9] p-3">
+      {boss && bossInfo(boss, run.oss) && <div className="rounded-2xl border-2 border-[#292542] bg-[#f7c6d9] p-3">
         <p className="text-xs font-black uppercase tracking-widest">Boss fight</p>
-        <p className="text-lg font-black">{bosses[boss].name}</p>
-        <p className="text-sm font-bold">{bosses[boss].twist} Reach {passMarkFor(run)}/{boss === "ipo-pitch" ? 50 : 40} to pass.</p>
+        <p className="text-lg font-black">{bossInfo(boss, run.oss).name}</p>
+        <p className="text-sm font-bold">{bossInfo(boss, run.oss).twist} Reach {passMarkFor(run)}/{boss === "ipo-pitch" ? 50 : 40} to pass.</p>
       </div>}
       <h2 className="text-xl font-black">{boss ? "Build for the boss" : "New project"}</h2>
       <div><p className="mb-2 text-xs font-black uppercase tracking-wider">Product</p><div className="flex flex-wrap gap-2">{types.map((t) => choice(t, type === t, () => setType(t)))}</div></div>
