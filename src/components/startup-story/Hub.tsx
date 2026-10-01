@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { StartupItem, StartupRole, StartupRun } from "@/application/services/startupStoryService";
+import type { StartupItem, StartupPerk, StartupRole, StartupRun } from "@/application/services/startupStoryService";
 import { bosses, comboKey, passMarkFor, roleLook, teamCap, teamHints, ui, upcomingBoss } from "./startupStoryCatalog";
 import { DevCard } from "./DevCard";
 
@@ -9,6 +9,7 @@ type HubProps = {
   themes: string[];
   items: StartupItem[];
   roles?: StartupRole[];
+  perks?: StartupPerk[];
   discovered: string[];
   skin?: string;
   pending: boolean;
@@ -18,7 +19,7 @@ type HubProps = {
   onAbandon: () => void;
 };
 
-export function Hub({ run, types, themes, roles, discovered, pending, onStart, onHire, onDismiss, onAbandon }: HubProps) {
+export function Hub({ run, types, themes, roles, perks, discovered, pending, onStart, onHire, onDismiss, onAbandon }: HubProps) {
   const [tab, setTab] = useState<"project" | "team" | "hire">("project");
   const [type, setType] = useState("");
   const [theme, setTheme] = useState("");
@@ -69,7 +70,7 @@ export function Hub({ run, types, themes, roles, discovered, pending, onStart, o
 
     {tab === "team" && <div className="grid gap-3 sm:grid-cols-2">
       {run.staff.map((dev) => <div key={dev.id} className={`${ui.card} space-y-3 p-4`}>
-        <DevCard dev={dev} showSalary roles={roles} />
+        <DevCard dev={dev} showSalary roles={roles} perks={perks} />
         {run.staff.length > 1 && <button className={`${ui.button} w-full bg-white py-2`} disabled={pending} onClick={() => onDismiss(dev.id)}>Let go 👋</button>}
       </div>)}
     </div>}

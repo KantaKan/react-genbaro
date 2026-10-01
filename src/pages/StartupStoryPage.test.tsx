@@ -28,6 +28,7 @@ const overview = () => ({
   studio: { _id: "s1", fame: 12, hall_of_fame: [] }, run, ranked_attempts_left: attemptsLeft, week_key: "2026-W40",
   server_time: new Date(T).toISOString(), types: ["Game"], themes: ["Thai Culture", "Fintech"], items,
   unlocks: [{ fame: 20, kind: "founder", id: "Ex-FAANG Refugee", name: "Ex-FAANG Refugee" }], opt_out: false,
+  perks: [{ id: "arch-btw", name: "I Use Arch btw 🐧", desc: "+1 Dev Community" }, { id: "ship-it", name: "Ship-It Energy 🚀", desc: "Builds faster" }, { id: "clean-code", name: "Clean-code Zealot", desc: "−1 bug" }],
 });
 const record = (path: string) => async ({ request }: { request: Request }) => {
   const text = await request.text();
@@ -46,6 +47,10 @@ const server = setupServer(
   http.post("*/startup-story/runs/active/ipo-choice", async (info) => {
     await record("ipo-choice")(info);
     return HttpResponse.json({ data: { ...hubRun, act: 4, max_act: 4, endless: true, project_index: 9, next_boss: "outage-3am", next_pass_mark: 28, version: 9 } });
+  }),
+  http.post("*/startup-story/runs/active/perk", async (info) => {
+    await record("perk")(info);
+    return HttpResponse.json({ data: { ...hubRun, stage: "item", item_offer: ["rubber-duck"], staff: [{ ...founder, level: 3, xp: 5, xp_next: 210, perks: ["arch-btw"] }], version: 7 } });
   }),
   http.post("*/startup-story/runs/active/item", async (info) => {
     await record("item")(info);
@@ -195,5 +200,16 @@ describe("StartupStoryPage", () => {
 
     await screen.findByRole("list", { name: "Your items" });
     expect(requests).toEqual([{ path: "item", body: { index: -1 } }]);
+  });
+
+  it("pauses for a perk pick on level-up and shows the perk on the dev card", async () => {
+    run = { ...hubRun, stage: "perk", staff: [{ ...founder, level: 3, xp: 5, xp_next: 210 }], pending_perk: { dev_id: "founder-0", offer: ["ship-it", "arch-btw", "clean-code"] } };
+    renderPage();
+
+    expect(await screen.findByText(/Ploy reached Lv 3!/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /I Use Arch btw/ }));
+
+    expect(await screen.findByRole("heading", { name: /Pick an item/ })).toBeInTheDocument();
+    expect(requests).toEqual([{ path: "perk", body: { index: 1 } }]);
   });
 });

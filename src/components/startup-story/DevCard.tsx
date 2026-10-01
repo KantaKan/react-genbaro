@@ -1,4 +1,4 @@
-import type { StartupDev, StartupRole } from "@/application/services/startupStoryService";
+import type { StartupDev, StartupPerk, StartupRole } from "@/application/services/startupStoryService";
 import { baht, isSassy, roleLook, spriteFor, traits } from "./startupStoryCatalog";
 import { BurnoutBar } from "./BurnoutBar";
 
@@ -18,7 +18,26 @@ export function RoleBadge({ role, roles }: { role?: string; roles?: StartupRole[
   return <span className="inline-flex items-center gap-1 rounded-full border-2 border-[#292542] px-2 py-0.5 text-xs font-black text-white" style={{ background: look.color }} title={job}>{look.short} · {look.label}</span>;
 }
 
-export function DevCard({ dev, showSalary, roles }: { dev: StartupDev; showSalary?: boolean; roles?: StartupRole[] }) {
+function LevelLine({ dev, perks }: { dev: StartupDev; perks?: StartupPerk[] }) {
+  const level = Math.max(1, dev.level ?? 1);
+  const next = dev.xp_next ?? 0;
+  return <div className="space-y-1">
+    <div className="flex items-center gap-2 text-xs font-bold">
+      <span className="w-14 rounded-full border-2 border-[#292542] bg-[#fbe39a] px-1 text-center font-black">Lv {level}</span>
+      {next > 0 && <span className="h-2 flex-1 overflow-hidden rounded-full border border-[#292542] bg-white" role="progressbar" aria-label="XP to next level" aria-valuemin={0} aria-valuemax={next} aria-valuenow={dev.xp ?? 0}>
+        <span className="block h-full bg-[#cab2f1]" style={{ width: `${Math.min(100, ((dev.xp ?? 0) / next) * 100)}%` }} />
+      </span>}
+    </div>
+    {(dev.perks ?? []).length > 0 && <ul className="flex flex-wrap gap-1" aria-label="Perks">
+      {(dev.perks ?? []).map((id) => {
+        const perk = perks?.find((p) => p.id === id);
+        return <li key={id} title={perk?.desc} className="rounded-full border-2 border-[#292542] bg-[#cab2f1] px-2 py-0.5 text-xs font-black">✨ {perk?.name ?? id}</li>;
+      })}
+    </ul>}
+  </div>;
+}
+
+export function DevCard({ dev, showSalary, roles, perks }: { dev: StartupDev; showSalary?: boolean; roles?: StartupRole[]; perks?: StartupPerk[] }) {
   const trait = dev.trait ? traits[dev.trait] : undefined;
   const job = roles?.find((r) => r.id === dev.role)?.job;
   return <div className="space-y-1">
@@ -28,6 +47,7 @@ export function DevCard({ dev, showSalary, roles }: { dev: StartupDev; showSalar
     {job && <p className="text-xs font-bold">{job}</p>}
     {(!dev.role || dev.perk) && <p className="text-xs font-bold opacity-70">{dev.role ? dev.perk : [dev.title, dev.perk].filter(Boolean).join(" · ")}</p>}
     {trait && <p className="text-xs font-black" title={trait.desc}>{trait.label} <span className="font-bold opacity-70">· {trait.desc}</span></p>}
+    {(dev.level || dev.xp || dev.perks?.length) ? <LevelLine dev={dev} perks={perks} /> : null}
     <Stat label="Front" value={dev.frontend} />
     <Stat label="Back" value={dev.backend} />
     <Stat label="Design" value={dev.design} />

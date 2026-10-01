@@ -20,6 +20,7 @@ export interface StartupDev {
   salary: number;
   level?: number;
   xp?: number;
+  xp_next?: number;
   burnout?: number;
   perks?: string[];
 }
@@ -121,6 +122,12 @@ export interface StartupItem {
   desc: string;
 }
 
+export interface StartupPerk {
+  id: string;
+  name: string;
+  desc: string;
+}
+
 export interface StartupRole {
   id: string;
   title: string;
@@ -146,6 +153,7 @@ export interface StartupOverview {
   items: StartupItem[];
   unlocks: StartupUnlock[];
   roles?: StartupRole[];
+  perks?: StartupPerk[];
   opt_out: boolean;
 }
 
@@ -184,6 +192,7 @@ export const startupStoryService = {
     const response = await api.put<ApiResponse<{ opt_out: boolean }>>("/startup-story/opt-out", { opt_out: optOut });
     return response.data.data.opt_out;
   },
+  pickPerk: (index: number) => post("/runs/active/perk", { index }),
   ipoChoice: (keepGoing: boolean) => post("/runs/active/ipo-choice", { keep_going: keepGoing }),
   async leaderboard(tab: StartupBoardTab): Promise<StartupLeaderboardEntry[]> {
     const response = await api.get<ApiResponse<StartupLeaderboardEntry[]>>("/startup-story/leaderboard", { params: { tab } });
