@@ -108,6 +108,39 @@ describe("StartupStoryPage", () => {
     expect(requests).toEqual([{ path: "projects", body: { type: "Game", theme: "Thai Culture", staff_ids: ["founder-0"] } }]);
   });
 
+  it("starts a project from a pitch card with one tap", async () => {
+    run = { ...hubRun, pitches: [
+      { type: "LINE Bot", theme: "Street Food", title: "🍜 Street-food LINE bot" },
+      { type: "Mobile App", theme: "Pets", title: "🐶 Tinder for dogs" },
+      { type: "VR Game", theme: "K-pop/Idols", title: "🎤 Front-row idol concert in VR" },
+    ] };
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: /Tinder for dogs/ }));
+
+    await screen.findByText(/Building/);
+    expect(requests).toEqual([{ path: "projects", body: { pitch_index: 1 } }]);
+  });
+
+  it("falls back to the custom picker from a pitch card", async () => {
+    run = { ...hubRun, pitches: [
+      { type: "LINE Bot", theme: "Street Food", title: "🍜 Street-food LINE bot" },
+      { type: "Mobile App", theme: "Pets", title: "🐶 Tinder for dogs" },
+      { type: "VR Game", theme: "K-pop/Idols", title: "🎤 Front-row idol concert in VR" },
+    ] };
+    renderPage();
+
+    expect(await screen.findByRole("button", { name: /Tinder for dogs/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Custom project/ }));
+
+    fireEvent.click(await screen.findByRole("button", { name: "Game" }));
+    fireEvent.click(screen.getByRole("button", { name: /Thai Culture/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Start building/ }));
+
+    await screen.findByText(/Building/);
+    expect(requests).toEqual([{ path: "projects", body: { type: "Game", theme: "Thai Culture", staff_ids: ["founder-0"] } }]);
+  });
+
   it("shows genmate candidates and blocks hiring past the team cap", async () => {
     run = { ...hubRun, staff: [founder, { ...founder, id: "dev-9", name: "Bank" }] };
     renderPage();

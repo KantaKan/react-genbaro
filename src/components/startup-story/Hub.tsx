@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { StartupItem, StartupRole, StartupRun } from "@/application/services/startupStoryService";
 import { bosses, comboKey, passMarkFor, roleLook, teamCap, teamHints, ui, upcomingBoss } from "./startupStoryCatalog";
 import { DevCard } from "./DevCard";
+import { PitchCards } from "./PitchCards";
 
 type HubProps = {
   run: StartupRun;
@@ -13,22 +14,26 @@ type HubProps = {
   skin?: string;
   pending: boolean;
   onStart: (type: string, theme: string, staffIds: string[]) => void;
+  onStartPitch: (pitchIndex: number) => void;
   onHire: (candidateId: string) => void;
   onDismiss: (staffId: string) => void;
   onAbandon: () => void;
 };
 
-export function Hub({ run, types, themes, roles, discovered, pending, onStart, onHire, onDismiss, onAbandon }: HubProps) {
+export function Hub({ run, types, themes, roles, discovered, pending, onStart, onStartPitch, onHire, onDismiss, onAbandon }: HubProps) {
   const [tab, setTab] = useState<"project" | "team" | "hire">("project");
   const [type, setType] = useState("");
   const [theme, setTheme] = useState("");
   const [excluded, setExcluded] = useState<string[]>([]);
   const [confirmPivot, setConfirmPivot] = useState(false);
+  const [customProject, setCustomProject] = useState(false);
   const team = run.staff.filter((s) => !excluded.includes(s.id));
   const boss = upcomingBoss(run);
   const cap = teamCap(run.act);
   const hot = run.market?.hot ?? [];
   const cold = run.market?.cold ?? [];
+  const pitches = run.pitches ?? [];
+  const showPicker = customProject || pitches.length === 0;
 
   const choice = (value: string, selected: boolean, onClick: () => void, extra?: string) =>
     <button key={value} className={`${ui.chipBase} ${selected ? "bg-[#292542] text-[#fffaf0]" : "bg-white text-[#292542]"}`} aria-pressed={selected} onClick={onClick}>{value}{extra}</button>;
@@ -49,22 +54,29 @@ export function Hub({ run, types, themes, roles, discovered, pending, onStart, o
         <p className="text-sm font-bold">{bosses[boss].twist} Reach {passMarkFor(run)}/{boss === "ipo-pitch" ? 50 : 40} to pass.</p>
       </div>}
       <h2 className="text-xl font-black">{boss ? "Build for the boss" : "New project"}</h2>
-      <div><p className="mb-2 text-xs font-black uppercase tracking-wider">Product</p><div className="flex flex-wrap gap-2">{types.map((t) => choice(t, type === t, () => setType(t)))}</div></div>
-      <div>
-        <p className="mb-2 text-xs font-black uppercase tracking-wider">Theme <span className="normal-case tracking-normal opacity-70">· 🔥 hot · 🧊 cold this run</span></p>
-        <div className="flex flex-wrap gap-2">{themes.map((t) => choice(t, theme === t, () => setTheme(t), hot.includes(t) ? " 🔥" : cold.includes(t) ? " 🧊" : ""))}</div>
-      </div>
-      {type && theme && discovered.includes(comboKey(type, theme)) && <p className="text-xs font-black">📒 You've shipped {type} × {theme} before.</p>}
-      <div>
-        <p className="mb-2 text-xs font-black uppercase tracking-wider">Team on this project</p>
-        <div className="flex flex-wrap gap-2">{run.staff.map((s) => choice(`${s.name} · ${roleLook(s.role).short}`, !excluded.includes(s.id), () => setExcluded((prev) => prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id])))}</div>
-      </div>
-      {team.length > 0 && <ul className="space-y-1" aria-label="Team check">
-        {teamHints(team, boss).map((h) => <li key={h.text} className={`rounded-xl border-2 border-[#292542] px-3 py-1 text-xs font-bold ${h.tone === "warn" ? "bg-[#f7c6d9]" : "bg-[#d6f0e4]"}`}>{h.text}</li>)}
-      </ul>}
-      <button className={`${ui.button} w-full bg-[#7bc4a8]`} disabled={!type || !theme || team.length === 0 || pending} onClick={() => onStart(type, theme, team.map((s) => s.id))}>
-        {boss ? "Face the boss 👹" : "Start building 🛠️"}
-      </button>
+      {!showPicker && <>
+        <PitchCards pitches={pitches} hot={hot} discovered={discovered} pending={pending} onStartPitch={onStartPitch} />
+        <button className="text-sm font-bold underline underline-offset-4" onClick={() => setCustomProject(true)}>✏️ Custom project</button>
+      </>}
+      {showPicker && <>
+        {pitches.length > 0 && <button className="text-sm font-bold underline underline-offset-4" onClick={() => setCustomProject(false)}>← Today's pitches</button>}
+        <div><p className="mb-2 text-xs font-black uppercase tracking-wider">Product</p><div className="flex flex-wrap gap-2">{types.map((t) => choice(t, type === t, () => setType(t)))}</div></div>
+        <div>
+          <p className="mb-2 text-xs font-black uppercase tracking-wider">Theme <span className="normal-case tracking-normal opacity-70">· 🔥 hot · 🧊 cold this run</span></p>
+          <div className="flex flex-wrap gap-2">{themes.map((t) => choice(t, theme === t, () => setTheme(t), hot.includes(t) ? " 🔥" : cold.includes(t) ? " 🧊" : ""))}</div>
+        </div>
+        {type && theme && discovered.includes(comboKey(type, theme)) && <p className="text-xs font-black">📒 You've shipped {type} × {theme} before.</p>}
+        <div>
+          <p className="mb-2 text-xs font-black uppercase tracking-wider">Team on this project</p>
+          <div className="flex flex-wrap gap-2">{run.staff.map((s) => choice(`${s.name} · ${roleLook(s.role).short}`, !excluded.includes(s.id), () => setExcluded((prev) => prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id])))}</div>
+        </div>
+        {team.length > 0 && <ul className="space-y-1" aria-label="Team check">
+          {teamHints(team, boss).map((h) => <li key={h.text} className={`rounded-xl border-2 border-[#292542] px-3 py-1 text-xs font-bold ${h.tone === "warn" ? "bg-[#f7c6d9]" : "bg-[#d6f0e4]"}`}>{h.text}</li>)}
+        </ul>}
+        <button className={`${ui.button} w-full bg-[#7bc4a8]`} disabled={!type || !theme || team.length === 0 || pending} onClick={() => onStart(type, theme, team.map((s) => s.id))}>
+          {boss ? "Face the boss 👹" : "Start building 🛠️"}
+        </button>
+      </>}
     </div>}
 
     {tab === "team" && <div className="grid gap-3 sm:grid-cols-2">

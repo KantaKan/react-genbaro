@@ -177,6 +177,7 @@ export const startupStoryService = {
     return response.data.data;
   },
   startProject: (type: string, theme: string, staffIds: string[]) => post("/runs/active/projects", { type, theme, staff_ids: staffIds }),
+  startProjectPitch: (pitchIndex: number) => post("/runs/active/projects", { pitch_index: pitchIndex }),
   ship: () => post("/runs/active/ship"),
   pickItem: (index: number) => post("/runs/active/item", { index }),
   abandon: () => post("/runs/active/abandon"),
