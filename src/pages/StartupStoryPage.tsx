@@ -6,6 +6,7 @@ import { fireConfetti } from "@/lib/confetti";
 import { bossInfo, passMarkFor } from "@/components/startup-story/startupStoryCatalog";
 import { IpoChoice } from "@/components/startup-story/IpoChoice";
 import { PerkPick } from "@/components/startup-story/PerkPick";
+import { EventCard } from "@/components/startup-story/EventCard";
 import { DevPhase } from "@/components/startup-story/DevPhase";
 import { FounderPick } from "@/components/startup-story/FounderPick";
 import { Hub } from "@/components/startup-story/Hub";
@@ -92,6 +93,7 @@ export default function StartupStoryPage() {
       case "founder": return <FounderPick offer={run.founder_offer ?? []} roles={data.roles} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickFounder(i))} />;
       case "developing": return <DevPhase key={run.project?.started_at} run={run} items={data.items} skin={skin} clockOffset={data.clockOffset} pending={pending} onShip={ship} />;
       case "perk": return <PerkPick run={run} perks={data.perks ?? []} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickPerk(i))} />;
+      case "event": return <EventCard run={run} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickEvent(i))} />;
       case "ipo_choice": return <IpoChoice run={run} pending={pending} onChoose={(keepGoing) => action.mutate(() => startupStoryService.ipoChoice(keepGoing))} />;
       case "item": return <ItemDraft run={run} items={data.items} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickItem(i))} />;
       default: return <Hub key={run.project_index} run={run} types={data.types} themes={data.themes} items={data.items} roles={data.roles} perks={data.perks} ratings={data.combo_ratings} discovered={data.studio.discovered_combos ?? []} skin={skin} pending={pending}

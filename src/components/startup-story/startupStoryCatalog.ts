@@ -32,6 +32,43 @@ const ossBosses: Record<string, { name: string; twist: string }> = {
 
 export const bossInfo = (id: string, oss?: boolean) => (oss ? ossBosses[id] : undefined) ?? bosses[id];
 
+export const worldEvents: Record<string, { name: string; desc: string }> = {
+  "ai-hype": { name: "AI Hype Wave 🤖", desc: "Everything AI doubles. Investors clapping at autocomplete." },
+  "crypto-winter": { name: "Crypto Winter 🥶", desc: "Crypto projects earn 40% less. Winter is coming." },
+  "layoff-season": { name: "Layoff Season 🧑‍💻", desc: "Hiring is cheap this act: −40% salary." },
+  hackathon: { name: "Hackathon Week 🏃", desc: "Ships 25% faster, sloppier: +2 bugs." },
+  songkran: { name: "Songkran Holiday 💦", desc: "Half the team is at the water fight: −25% power." },
+  "rainy-season": { name: "Rainy Season Traffic 🌧️", desc: "Bangkok traffic: +30% build time." },
+  "viral-tiktok": { name: "A TikTok Went Viral 🎵", desc: "+50% fans this act. The algorithm loves you." },
+  "sponsor-week": { name: "Tech Sponsor Week 🎪", desc: "+25% money this act. Swag budget unlocked." },
+};
+
+export const bossGimmicks: Record<string, { name: string; desc: string }> = {
+  "readme-only": { name: "Investor Only Reads the README 📄", desc: "+1.5 Dev Community, −1 Investor. Skimmed it between meetings." },
+  "hates-js": { name: "Tech Lead Hates JavaScript Today 🧟", desc: "Frontend counts half. It's a phase." },
+  "wifi-down": { name: "Demo Day WiFi Is Down 📶", desc: "Backend doesn't count. Radio silence on port 8080." },
+  "nephew-joins": { name: "The CEO's Nephew Joins the Demo 👦", desc: "+1.5 Users, −1 Dev Community. He pressed one button." },
+  "flaky-ci": { name: "CI Is Flaky Today 🔀", desc: "+2 bugs. It was green in staging, we promise." },
+  "coffee-budget": { name: "Emergency Coffee Budget Approved ☕", desc: "+12% build power. Blood type: espresso." },
+  "office-dog": { name: "The Office Dog Stole the Demo 🐕", desc: "−7% power, +1 Users. Worth it." },
+  "jira-avalanche": { name: "Jira Avalanche 🎫", desc: "+1 bug, −0.5 Tech Lead. Twelve new tickets, all urgent." },
+  "sponsored-deck": { name: "Investor Forwarded Your Deck 📤", desc: "+25% money. Someone said yes to a meeting." },
+  "standup-marathon": { name: "All-Hands Standup Marathon 📅", desc: "−5% power, +0.5 Investor. Status: also a meeting." },
+};
+
+export const choiceEvents: Record<string, { title: string }> = {
+  blockchain: { title: "Client Wants It On Blockchain" },
+  "friday-deploy": { title: "Push to Prod on Friday?" },
+  "code-review": { title: "Senior Dev Offers a Code Review" },
+  "intern-db": { title: "The Intern Deleted the Prod DB 😱" },
+  youtuber: { title: "A YouTuber Wants to Review Your App" },
+  "team-lunch": { title: "Team Lunch at the Mall" },
+  grant: { title: "Government Digital Grant" },
+  ads: { title: "Ad Budget Request" },
+  "oss-pr": { title: "A Stranger Sent a Big PR" },
+  "office-dog": { title: "Office Dog Adoption Day 🐶" },
+};
+
 export const fansLabel = (oss?: boolean) => (oss ? "⭐ stars" : "❤️ fans");
 
 export const reviewerIcons: Record<string, string> = { Maintainers: "🧙", Contributors: "🧑‍🤝‍🧑", "Hacker News": "🟧", "Big Tech": "🏢", "Tech Lead": "🧔", Users: "🙋", Investor: "💼", "Dev Community": "🌐" };
