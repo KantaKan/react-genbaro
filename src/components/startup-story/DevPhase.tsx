@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { StartupItem, StartupRun } from "@/application/services/startupStoryService";
-import { bossInfo, ui } from "./startupStoryCatalog";
+import { bossGimmicks, bossInfo, ui } from "./startupStoryCatalog";
 
 function useSecondsLeft(endsAt: string, clockOffset: number) {
   const [now, setNow] = useState(() => Date.now());
@@ -20,6 +20,7 @@ export function DevPhase({ run, clockOffset, onShip, pending }: { run: StartupRu
   return <section className="space-y-4">
     <div className={`${ui.card} space-y-3 p-4`}>
       {boss && <p className="text-xs font-black uppercase tracking-widest">👹 {boss.name}</p>}
+      {run.boss_gimmick && bossGimmicks[run.boss_gimmick] && <p className="rounded-xl border-2 border-[#292542] bg-[#cab2f1] px-3 py-2 text-xs font-black">🎲 {bossGimmicks[run.boss_gimmick].name} — {bossGimmicks[run.boss_gimmick].desc}</p>}
       <h2 className="text-xl font-black">{project.type} · {project.theme}</h2>
       <div className="h-4 overflow-hidden rounded-full border-2 border-[#292542] bg-white" role="progressbar" aria-label="Build progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(percent)}>
         <div className="h-full bg-[#7bc4a8] transition-[width]" style={{ width: `${percent}%` }} />

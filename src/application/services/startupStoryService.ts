@@ -196,6 +196,7 @@ export const startupStoryService = {
     return response.data.data.opt_out;
   },
   pickPerk: (index: number) => post("/runs/active/perk", { index }),
+  pickEvent: (index: number) => post("/runs/active/event", { index }),
   ipoChoice: (keepGoing: boolean) => post("/runs/active/ipo-choice", { keep_going: keepGoing }),
   async leaderboard(tab: StartupBoardTab): Promise<StartupLeaderboardEntry[]> {
     const response = await api.get<ApiResponse<StartupLeaderboardEntry[]>>("/startup-story/leaderboard", { params: { tab } });

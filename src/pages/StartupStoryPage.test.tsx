@@ -52,6 +52,10 @@ const server = setupServer(
     await record("perk")(info);
     return HttpResponse.json({ data: { ...hubRun, stage: "item", item_offer: ["rubber-duck"], staff: [{ ...founder, level: 3, xp: 5, xp_next: 210, perks: ["arch-btw"] }], version: 7 } });
   }),
+  http.post("*/startup-story/runs/active/event", async (info) => {
+    await record("event")(info);
+    return HttpResponse.json({ data: { ...hubRun, stage: "item", item_offer: ["rubber-duck"], version: 8 } });
+  }),
   http.post("*/startup-story/runs/active/item", async (info) => {
     await record("item")(info);
     return HttpResponse.json({ data: { ...hubRun, items: ["legacy"], version: 5 } });
@@ -244,6 +248,17 @@ describe("StartupStoryPage", () => {
 
     expect(await screen.findByRole("heading", { name: /Pick an item/ })).toBeInTheDocument();
     expect(requests).toEqual([{ path: "perk", body: { index: 1 } }]);
+  });
+
+  it("pauses for a choice event and posts the picked option", async () => {
+    run = { ...hubRun, stage: "event", project_index: 1, pending_event: { id: "friday-deploy", options: ["Do it. YOLO 😈", "Wait for Monday"] } };
+    renderPage();
+
+    expect(await screen.findByText(/Push to Prod on Friday/)).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Wait for Monday"));
+
+    expect(await screen.findByRole("heading", { name: /Pick an item/ })).toBeInTheDocument();
+    expect(requests).toEqual([{ path: "event", body: { index: 1 } }]);
   });
 
   it("shows stars, the OSS badge and OSS boss names in an open-source run", async () => {
