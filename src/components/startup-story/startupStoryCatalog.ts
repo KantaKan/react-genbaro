@@ -36,7 +36,7 @@ export const fansLabel = (oss?: boolean) => (oss ? "⭐ stars" : "❤️ fans");
 
 export const reviewerIcons: Record<string, string> = { Maintainers: "🧙", Contributors: "🧑‍🤝‍🧑", "Hacker News": "🟧", "Big Tech": "🏢", "Tech Lead": "🧔", Users: "🙋", Investor: "💼", "Dev Community": "🌐" };
 
-export const passMarkFor = (run: StartupRun) => run.next_pass_mark ?? (run.act >= 3 ? 36 : run.act === 2 ? 26 : 18);
+export const passMarkFor = (run: StartupRun) => run.next_pass_mark ?? (run.act >= 3 ? 38 : run.act === 2 ? 26 : 18);
 
 const actNames = ["Garage", "Seed", "Series A", "Series B", "Series C", "Unicorn 🦄", "Decacorn", "Metaverse Pivot", "Galactic Conglomerate"];
 const roman = ["", "", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
