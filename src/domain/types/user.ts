@@ -12,6 +12,7 @@ export interface User {
   cohort_number: number;
   jsd_number?: string;
   role: UserRole;
+  startup_story_opt_out?: boolean;
   project_group?: string;
   genmate_group?: string;
   zoom_name?: string;
