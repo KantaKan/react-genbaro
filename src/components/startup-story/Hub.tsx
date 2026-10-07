@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { StartupDeskPrices, StartupInfraCatalog, StartupItem, StartupPerk, StartupRole, StartupRun } from "@/application/services/startupStoryService";
-import { bossInfo, comboKey, passMarkFor, roleLook, teamHints, ui, upcomingBoss } from "./startupStoryCatalog";
+import type { StartupDeskPrices, StartupInfraCatalog, StartupOffice, StartupItem, StartupPerk, StartupRole, StartupRun } from "@/application/services/startupStoryService";
+import { baht, bossInfo, comboKey, deskUpgrade, nextDeskPrice, passMarkFor, roleLook, teamHints, ui, upcomingBoss } from "./startupStoryCatalog";
 import { DevCard } from "./DevCard";
 import { Desk } from "./office/OfficeRoom";
 import { InfraPanel } from "./InfraPanel";
@@ -24,13 +24,15 @@ type HubProps = {
   deskPrices?: StartupDeskPrices;
   onBuyDesk: () => void;
   onUpgradeDesk: (index: number) => void;
+  offices?: StartupOffice[];
+  onMoveOffice: (id: string) => void;
   infraCatalog?: StartupInfraCatalog;
   onInfra: (action: string, index?: number, id?: string) => void;
   onDismiss: (staffId: string) => void;
   onAbandon: () => void;
 };
 
-export function Hub({ run, types, themes, roles, perks, discovered, ratings, pending, onStart, onStartPitch, onHire, onDismiss, onAbandon, deskPrices, onBuyDesk, onUpgradeDesk, infraCatalog, onInfra }: HubProps) {
+export function Hub({ run, types, themes, roles, perks, discovered, ratings, pending, onStart, onStartPitch, onHire, onDismiss, onAbandon, deskPrices, onBuyDesk, onUpgradeDesk, offices = [], onMoveOffice, infraCatalog, onInfra }: HubProps) {
   const [tab, setTab] = useState<"project" | "team" | "hire" | "office" | "infra" | null>("project");
   const [type, setType] = useState("");
   const [theme, setTheme] = useState("");
@@ -42,8 +44,10 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
   const desks = run.desks ?? [1, 1];
   const cap = desks.length;
   const deskLimit = run.desk_limit ?? cap;
-  const nextDesk = deskPrices ? deskPrices.base + deskPrices.step * Math.max(0, desks.length - 2) : 0;
-  const upgradesOpen = !deskPrices || run.act >= deskPrices.upgrade_act;
+  const nextDesk = deskPrices ? nextDeskPrice(deskPrices, desks.length) : 0;
+  const officeAt = Math.max(0, offices.findIndex((o) => o.id === run.office));
+  const currentOffice = offices[officeAt];
+  const nextOffice = offices[officeAt + 1];
   const hot = run.market?.hot ?? [];
   const cold = run.market?.cold ?? [];
   const pitches = run.pitches ?? [];
@@ -123,20 +127,30 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
     </div>}
 
     {tab === "office" && <div className="space-y-3">
+      {currentOffice && <div className={`${ui.card} flex flex-wrap items-center justify-between gap-3 p-4`}>
+        <div>
+          <p className="text-xs font-black uppercase tracking-widest">Your office</p>
+          <p className="text-lg font-black">{currentOffice.name} · {currentOffice.desks} desks</p>
+        </div>
+        {nextOffice
+          ? <button className={`${ui.button} bg-[#cab2f1] py-2`} disabled={pending || (run.debt ?? 0) > 0 || run.act < nextOffice.act || run.money < nextOffice.price} onClick={() => onMoveOffice(nextOffice.id)}>
+              {(run.debt ?? 0) > 0 ? "Pay off the loan first" : run.act < nextOffice.act ? `${nextOffice.name} unlocks in Act ${nextOffice.act}` : `Move to ${nextOffice.name} (${nextOffice.desks} desks) ${baht(nextOffice.price)}`}
+            </button>
+          : <p className="text-sm font-bold">Top floor. Nowhere higher to go.</p>}
+      </div>}
       <p className={`${ui.card} p-4 text-sm font-bold`}>
         Every person needs a desk. Better desks give +1 per tier to the best skill of whoever sits there, and the best desks go to your earliest hires.
-        {!upgradesOpen && deskPrices && ` Upgrades open in Act ${deskPrices.upgrade_act}.`}
+        {" "}You can also tap a desk in the office.
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         {desks.map((tier, i) => {
-          const maxed = tier >= (deskPrices?.max_tier ?? 3);
-          const price = deskPrices?.upgrade[tier - 1] ?? 0;
+          const up = deskUpgrade(tier, run.act, run.money, deskPrices, run.debt);
           return <div key={i} className={`${ui.card} flex items-center gap-3 p-3`}>
             <svg viewBox="0 0 64 40" className="h-auto w-20 shrink-0" shapeRendering="crispEdges" aria-hidden="true"><Desk x={32} y={40} tier={tier} busy={false} /></svg>
             <div className="min-w-0 flex-1 space-y-2">
               <p className="text-sm font-black">Desk {i + 1} · Tier {tier}{tier > 1 && <span className="font-bold opacity-70"> · +{tier - 1} skill</span>}</p>
-              <button className={`${ui.button} w-full bg-[#fbe39a] py-2`} disabled={pending || maxed || !upgradesOpen || run.money < price} onClick={() => onUpgradeDesk(i)}>
-                {maxed ? "Top tier" : `Upgrade ฿${price.toLocaleString()}`}
+              <button className={`${ui.button} w-full bg-[#fbe39a] py-2`} disabled={pending || Boolean(up.blocked)} onClick={() => onUpgradeDesk(i)}>
+                {up.blocked ?? `Upgrade ${baht(up.price)}`}
               </button>
             </div>
           </div>;
@@ -144,7 +158,7 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
       </div>
       {desks.length < deskLimit
         ? <button className={`${ui.button} w-full bg-[#7bc4a8]`} disabled={pending || run.money < nextDesk} onClick={onBuyDesk}>Buy a desk ฿{nextDesk.toLocaleString()}</button>
-        : <p className="text-center text-sm font-bold text-foreground">The office is full for this act. More floor space opens next act.</p>}
+        : <p className="text-center text-sm font-bold text-foreground">This office is full. Move to a bigger office to add desks.</p>}
     </div>}
 
     {tab === "infra" && <InfraPanel run={run} catalog={infraCatalog} pending={pending} onAction={onInfra} />}

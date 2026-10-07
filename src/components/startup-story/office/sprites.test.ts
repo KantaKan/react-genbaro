@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { baristaCart, bossLayers, breakArt, clawMachine, decor, desk, hairStyles, handheld, homelab, icons, lbBox, oval, wildLayers, wildSprites, PAL, person, rack, roleGear, tint, toPaths, type Grid } from "./sprites";
+import { officeFeatures, baristaCart, bossLayers, breakArt, clawMachine, decor, desk, hairStyles, handheld, homelab, icons, lbBox, oval, wildLayers, wildSprites, PAL, person, rack, roleGear, tint, toPaths, type Grid } from "./sprites";
 
 describe("toPaths", () => {
   it("merges runs into one path per color and skips transparent pixels", () => {
@@ -26,7 +26,7 @@ describe("hand-drawn grids", () => {
   };
 
   it("are rectangular and only use palette characters", () => {
-    Object.entries({ ...person, ...desk, ...decor, ...icons, ...roleGear, ...handheld, ...wildLayers, ...wildSprites, ...breakArt, ...bossLayers, claw: clawMachine(), cart: baristaCart(), homelab: homelab(), rack: rack(3), lbBox, table: oval(30, 10, "c") }).forEach(([k, g]) => rect(k, g));
+    Object.entries({ ...person, ...desk, ...decor, ...icons, ...roleGear, ...handheld, ...wildLayers, ...wildSprites, ...breakArt, ...bossLayers, ...officeFeatures, claw: clawMachine(), cart: baristaCart(), homelab: homelab(), rack: rack(3), lbBox, table: oval(30, 10, "c") }).forEach(([k, g]) => rect(k, g));
     Object.entries(hairStyles).forEach(([k, h]) => Object.entries(h).forEach(([part, g]) => rect(`${k}.${part}`, g)));
   });
 

@@ -1,4 +1,4 @@
-import type { StartupDev, StartupRun } from "@/application/services/startupStoryService";
+import type { StartupDeskPrices, StartupDev, StartupRun } from "@/application/services/startupStoryService";
 
 
 export const traits: Record<string, { label: string; desc: string }> = {
@@ -86,6 +86,20 @@ export function upcomingBoss(run: StartupRun): string | null {
 
 
 export const baht = (n: number) => `฿${n.toLocaleString()}`;
+
+export type DeskUpgrade = { price: number; blocked?: string };
+
+export function deskUpgrade(tier: number, act: number, money: number, prices?: StartupDeskPrices, debt = 0): DeskUpgrade {
+  if (!prices || tier >= prices.max_tier) return { price: 0, blocked: "Top tier" };
+  if (debt > 0) return { price: 0, blocked: "Pay off the loan first" };
+  const price = prices.upgrade[tier - 1] ?? 0;
+  const unlock = prices.tier_act[tier] ?? 1;
+  if (act < unlock) return { price, blocked: `Tier ${tier + 1} unlocks in Act ${unlock}` };
+  if (money < price) return { price, blocked: `Not enough ฿ (${baht(price)})` };
+  return { price };
+}
+
+export const nextDeskPrice = (prices: StartupDeskPrices, owned: number) => prices.base + prices.step * Math.max(0, owned - 2);
 
 export const comboKey = (type: string, theme: string) => `${type}|${theme}`;
 

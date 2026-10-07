@@ -67,6 +67,12 @@ export function rack(servers: number): Grid {
   return rows;
 }
 
+export const officeFeatures = {
+  door: [R("k", 18), ...Array.from({ length: 15 }, (_, i) => "k" + R(i % 2 ? "g" : "G", 16) + "k"), R("k", 18)],
+  gate: [R("k", 18), ...Array.from({ length: 15 }, () => "k" + "g.".repeat(8) + "k"), R("k", 18)],
+  glass: [R("k", 23), ...Array.from({ length: 15 }, (_, y) => "k" + Array.from({ length: 21 }, (_, x) => (x % 7 === 6 ? "k" : y > 15 - [6, 10, 4, 12, 8, 5, 9][x % 7] ? (y % 3 === 0 && x % 2 ? "y" : "n") : "s")).join("") + "k"), R("k", 23)],
+} satisfies Record<string, Grid>;
+
 export const lbBox: Grid = ["kkkkkkkkkkkkkkkkkkkk", "kvvvvvvvvvvvvvvvvvvk", "kvlvVVVVVVVVVVVVVvlk", "kvvvvvvvvvvvvvvvvvvk", "kVVVVVVVVVVVVVVVVVVk", "kkkkkkkkkkkkkkkkkkkk"];
 
 const server: Grid = [R("k", 14), "k" + R("g", 12) + "k", "kglgygGGGGGGgk", "k" + R("g", 12) + "k", R("k", 14)];
@@ -174,6 +180,12 @@ export const desk = {
     ".kkk" + R(".", 24) + "kkk.",
   ],
   monitor: ["kkkkkkkkk", "kGGGGGGGk", "kGGGGGGGk", "kGGGGGGGk", "kGGGGGGGk", "kGGGGGGlk", "kkkkkkkkk", "...kgk...", "...kgk...", "..kkkkk.."],
+  foldingBase: ["kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "kGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGk", "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "...g........................g...", "....g......................g....", ".....g....................g.....", "....g......................g....", "...g........................g...", "..gg........................gg..", "..kk........................kk.."],
+  standingBase: ["kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "kWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWk", "kGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGk", "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "......kgk..............kgk......", "......kgk..............kgk......", "......kgk..............kgk......", "......kgk..............kgk......", "......kgk..............kgk......", "....kkkkkk............kkkkkk...."],
+  rgbBase: ["kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "kKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKk", "krrYYmmSSVVPPrrYYmmSSVVPPrrYYmmk", "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", ".kKk........................kKk.", ".kKk........................kKk.", ".kKk........................kKk.", ".kKk........................kKk.", ".kKk........................kKk.", ".kkk........................kkk."],
+  ultrawide: ["kkkkkkkkkkkkkkkkkkkkkkkk", "kGGGGGGGGGGGGGGGGGGGGGGk", "kGGGGGGGGGGGGGGGGGGGGGGk", "kGGGGGGGGGGGGGGGGGGGGGGk", "kGGGGGGGGGGGGGGGGGGGGlGk", "kkkkkkkkkkkkkkkkkkkkkkkk", "..........kgk...........", "..........kgk...........", "........kkkkkkk........."],
+  monitorBlack: ["kkkkkkkkk", "kKKKKKKKk", "kKKKKKKKk", "kKKKKKKKk", "kKKKKKKKk", "kKKKKKKlk", "kkkkkkkkk", "...kKk...", "...kKk...", "..kkkkk.."],
+  pcTower: ["kkkkkkk", "kKKKKKk", "kKSSSKk", "kKSlSKk", "kKSSSKk", "kKKKKKk", "kKPPPKk", "kKPlPKk", "kKPPPKk", "kKKKKKk", "kKKKKKk", "kkkkkkk"],
   blackLaptop: [".kkkkkkkkkk.", ".kKKKKKKKKk.", ".kKKKKKKKKk.", ".kKKKKKKKrk.", ".kKKKKKKKlk.", "kggggggggggk", "kkkkkkkkkkkk"],
   laptop: [".kkkkkkkkkk.", ".kGGGGGGGGk.", ".kGGGpGGGGk.", ".kGGGGGGGGk.", ".kGGGGGGGlk.", "kggggggggggk", "kkkkkkkkkkkk"],
 } satisfies Record<string, Grid>;

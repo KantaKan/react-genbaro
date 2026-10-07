@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useReducedMotion } from "framer-motion";
-import type { StartupDev, StartupInfra, StartupItem } from "@/application/services/startupStoryService";
-import { comebackLines, isSassy, roleLook, sassLine, ui } from "./startupStoryCatalog";
+import type { StartupDeskPrices, StartupDev, StartupInfra, StartupItem } from "@/application/services/startupStoryService";
+import { baht, comebackLines, deskUpgrade, isSassy, nextDeskPrice, roleLook, sassLine, ui } from "./startupStoryCatalog";
 import { assignStations, deskSlots, hangoutSpots, levelUps, ROOM_H, ROOM_W, standupSpots, TABLE, TIRED_AT, DISTRACTED_AT, type Spot } from "./office/officeLayout";
 import { Desk, MeetingTable, RoomBackdrop, Sofa } from "./office/OfficeRoom";
 import { NameTag, OfficePerson } from "./office/OfficePerson";
@@ -142,7 +142,9 @@ function useReactions(staff: StartupDev[], reaction?: OfficeReaction) {
 
 const START_DESKS = [1, 1];
 
-type OfficeProps = { staff: StartupDev[]; infra?: StartupInfra; items?: StartupItem[]; bossVisiting?: boolean; bossVisits?: number; desks?: number[]; deskLimit?: number; busy: boolean; skin?: string; reaction?: OfficeReaction };
+export type DeskActions = { debt?: number; money: number; act: number; prices: StartupDeskPrices; pending: boolean; onUpgrade: (index: number) => void; onBuy: () => void };
+
+type OfficeProps = { office?: string; deskActions?: DeskActions; staff: StartupDev[]; infra?: StartupInfra; items?: StartupItem[]; bossVisiting?: boolean; bossVisits?: number; desks?: number[]; deskLimit?: number; busy: boolean; skin?: string; reaction?: OfficeReaction };
 
 function useNewestItem(count: number) {
   const last = useRef(count);
@@ -160,11 +162,12 @@ function useNewestItem(count: number) {
 
 const SHELF = { x: 138, y: 56, slots: 2 };
 
-export function PixelOffice({ staff, infra, items = [], bossVisiting = false, bossVisits = 0, desks = START_DESKS, deskLimit = 0, busy, skin, reaction }: OfficeProps) {
+export function PixelOffice({ office, deskActions, staff, infra, items = [], bossVisiting = false, bossVisits = 0, desks = START_DESKS, deskLimit = 0, busy, skin, reaction }: OfficeProps) {
   const reduced = Boolean(useReducedMotion());
   const [room, setRoom] = useState<"office" | "break">(busy ? "office" : "break");
   useEffect(() => setRoom(busy ? "office" : "break"), [busy]);
   const freshItem = useNewestItem(items.length);
+  const [openDesk, setOpenDesk] = useState<number | null>(null);
   useEffect(() => {
     if (freshItem >= 0) setRoom("office");
   }, [freshItem]);
@@ -190,7 +193,19 @@ export function PixelOffice({ staff, infra, items = [], bossVisiting = false, bo
     return d ? { item, i, x: d.x + 20, y: d.y - 31 } : { item, i, x: SHELF.x + (i - ownedDesks.length) * 16, y: SHELF.y - 12 };
   });
   const drawables: { y: number; node: ReactNode }[] = [
-    ...deskSlots(desks, deskLimit).map((d) => ({ y: d.y, node: <Desk key={`desk-${d.x}-${d.y}`} x={d.x} y={d.y} tier={d.tier} busy={phase === "work" && occupiedDesks.has(`${d.x},${d.y}`)} blackLaptop={nubDesks.has(`${d.x},${d.y}`)} /> })),
+    ...deskSlots(desks, deskLimit).map((d, i) => {
+      const desk = <Desk x={d.x} y={d.y} tier={d.tier} busy={phase === "work" && occupiedDesks.has(`${d.x},${d.y}`)} blackLaptop={nubDesks.has(`${d.x},${d.y}`)} />;
+      const label = d.tier ? `Desk ${i + 1}, tier ${d.tier}` : "Empty desk spot";
+      return {
+        y: d.y,
+        node: deskActions
+          ? <g key={`desk-${d.x}-${d.y}`} role="button" tabIndex={0} aria-label={label} aria-expanded={openDesk === i} className="cursor-pointer outline-none focus-visible:opacity-80"
+              onClick={() => setOpenDesk(openDesk === i ? null : i)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenDesk(openDesk === i ? null : i); } }}>
+              <rect x={d.x - 32} y={d.y - 44} width="64" height="44" fill="transparent" />{desk}</g>
+          : <g key={`desk-${d.x}-${d.y}`}>{desk}</g>,
+      };
+    }),
     ...itemSpots.map(({ item, x, y, i }) => ({ y: y + 13, node: <Sprite key={`item-${i}`} grid={icons[item.icon as IconName] ?? icons.gift} x={x} y={y} scale={1} className={i === freshItem && !reduced ? "ss-pop" : undefined} /> })),
     { y: TABLE.y + 6, node: <MeetingTable key="table" /> },
     { y: 226, node: <Sofa key="sofa" /> },
@@ -198,27 +213,58 @@ export function PixelOffice({ staff, infra, items = [], bossVisiting = false, bo
       const t = targets[dev.id];
       const atHome = phase === "work" && !moving.has(dev.id);
       return {
-        y: t.y - (t.seated ? 1 : 0),
+        y: (placed.get(dev.id)?.spot.y ?? t.y) - (t.seated ? 1 : 0),
         node: <OfficePerson key={dev.id} dev={dev} x={t.x} y={t.y} seated={t.seated && !moving.has(dev.id)} moving={moving.has(dev.id)} working={atHome}
           reaction={reactions[dev.id]} tired={(dev.burnout ?? 0) >= TIRED_AT} distracted={!atHome && (dev.burnout ?? 0) >= DISTRACTED_AT} animate={!reduced} />,
       };
     }),
   ].sort((a, b) => a.y - b.y);
 
+  const slots = deskSlots(desks, deskLimit);
+  const sitters = new Map<number, string>();
+  staff.forEach((dev) => {
+    const station = placed.get(dev.id);
+    if (station?.kind === "desk") sitters.set(Number(station.id.slice(5)) - 1, dev.name);
+  });
+  const popSlot = deskActions && openDesk !== null && room === "office" ? slots[openDesk] : undefined;
+  const popover = popSlot && deskActions && (() => {
+    const owned = popSlot.tier > 0;
+    const up = owned ? deskUpgrade(popSlot.tier, deskActions.act, deskActions.money, deskActions.prices, deskActions.debt) : undefined;
+    const buyPrice = nextDeskPrice(deskActions.prices, desks.length);
+    const act = () => {
+      if (owned) deskActions.onUpgrade(openDesk!);
+      else deskActions.onBuy();
+      setOpenDesk(null);
+    };
+    return <div role="dialog" aria-label={owned ? `Desk ${openDesk! + 1}` : "Buy a desk"} className={`absolute z-30 w-48 -translate-x-1/2 -translate-y-full space-y-2 p-2 text-xs ${ui.card}`}
+      style={{ left: `clamp(6.5rem, ${(popSlot.x / ROOM_W) * 100}%, calc(100% - 6.5rem))`, top: `${((popSlot.y - 30) / ROOM_H) * 100}%` }}>
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-black">{owned ? `Desk ${openDesk! + 1} · Tier ${popSlot.tier}` : "Empty spot"}</p>
+        <button type="button" aria-label="Close" className="font-black" onClick={() => setOpenDesk(null)}>x</button>
+      </div>
+      {owned && <p className="font-bold">{sitters.get(openDesk!) ?? "Nobody sitting here"}{popSlot.tier > 1 ? ` · +${popSlot.tier - 1} skill` : ""}</p>}
+      <button type="button" className={`${ui.button} w-full bg-[#fbe39a] px-2 py-2 text-xs`}
+        disabled={deskActions.pending || (owned ? Boolean(up?.blocked) : deskActions.money < buyPrice)} onClick={act}>
+        {owned ? up?.blocked ?? `Upgrade ${baht(up!.price)}` : deskActions.money < buyPrice ? `Not enough ฿ (${baht(buyPrice)})` : `Buy desk ${baht(buyPrice)}`}
+      </button>
+    </div>;
+  })();
+
   const roomButton = (id: "office" | "break", label: string) =>
     <button type="button" aria-pressed={room === id} onClick={() => setRoom(id)}
       className={`${ui.chipBase} px-2 py-1 ${room === id ? "bg-[#fbe39a] text-[#292542]" : "bg-[#292542] text-[#fffaf0]"}`}>{label}</button>;
 
-  return <figure className={`relative overflow-hidden ${ui.cardBase}`} aria-label={room === "break" ? "Break room" : busy ? "Your team is working" : "Your office"}>
-    <div className="absolute bottom-2 left-2 z-20 flex gap-2">{roomButton("office", "Office")}{roomButton("break", "Break Room")}</div>
+  return <figure className={`overflow-hidden ${ui.cardBase}`} aria-label={room === "break" ? "Break room" : busy ? "Your team is working" : "Your office"}>
+    <div className="flex gap-2 bg-[#292542] p-1.5">{roomButton("office", "Office")}{roomButton("break", "Break Room")}</div>
+    <div className="relative">
     {room === "break" && <>
       <style>{css}</style>
       <BreakRoom staff={busy ? [] : staff} bossVisiting={bossVisiting} bossVisits={bossVisits} reduced={reduced} />
     </>}
     {room === "office" && <>
-    <svg viewBox={`0 0 ${ROOM_W} ${ROOM_H}`} className="ss-office block h-auto w-full" shapeRendering="crispEdges" role="img" aria-hidden="true">
+    <svg viewBox={`0 0 ${ROOM_W} ${ROOM_H}`} className="ss-office block h-auto w-full" shapeRendering="crispEdges">
       <style>{css}</style>
-      <RoomBackdrop busyKinds={busyKinds} skin={skin} servers={infra?.servers.length ?? 4} balanced={(infra?.parts ?? []).includes("lb")} />
+      <g onClick={() => setOpenDesk(null)}><RoomBackdrop busyKinds={busyKinds} skin={skin} servers={infra?.servers.length ?? 4} balanced={(infra?.parts ?? []).includes("lb")} office={office} /></g>
       {items.length > ownedDesks.length && <Sprite grid={block(17, 2, "B")} x={SHELF.x - 2} y={SHELF.y} />}
       {drawables.map((d) => d.node)}
       {staff.map((dev) => <NameTag key={dev.id} name={dev.name} x={targets[dev.id].x} y={targets[dev.id].y} animate={!reduced} />)}
@@ -230,6 +276,8 @@ export function PixelOffice({ staff, infra, items = [], bossVisiting = false, bo
       return <span key={dev.id} className="pointer-events-none absolute z-10 max-w-[9rem] -translate-x-1/2 -translate-y-full truncate whitespace-nowrap rounded-xl border-2 border-[#292542] bg-white px-2 py-0.5 text-xs font-bold text-[#292542] shadow-[2px_2px_0_#292542]"
         style={{ left: `clamp(4.6rem, ${left}, calc(100% - 4.6rem))`, top: `${((t.y - 50) / ROOM_H) * 100}%` }}>{lines[dev.id]}</span>;
     })}
+    {popover}
     </>}
+    </div>
   </figure>;
 }

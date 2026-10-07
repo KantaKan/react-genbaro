@@ -92,6 +92,7 @@ export default function StartupStoryPage() {
   const actions = {
     hire: (id: string) => action.mutate(() => startupStoryService.hire(id)),
     buyDesk: () => action.mutate(startupStoryService.buyDesk),
+    moveOffice: (id: string) => action.mutate(() => startupStoryService.moveOffice(id)),
     upgradeDesk: (index: number) => action.mutate(() => startupStoryService.upgradeDesk(index)),
     infra: (kind: string, index?: number, id?: string) => action.mutate(() => startupStoryService.infra(kind, index, id)),
     dismiss: (id: string) => action.mutate(() => startupStoryService.dismiss(id)),
@@ -113,7 +114,7 @@ export default function StartupStoryPage() {
         onStart={(type, theme, staffIds) => action.mutate(() => startupStoryService.startProject(type, theme, staffIds))}
         onStartPitch={(pitchIndex, staffIds) => action.mutate(() => startupStoryService.startProjectPitch(pitchIndex, staffIds))}
         onHire={actions.hire} onDismiss={actions.dismiss} onAbandon={actions.abandon}
-        deskPrices={data.desk_prices} onBuyDesk={actions.buyDesk} onUpgradeDesk={actions.upgradeDesk}
+        deskPrices={data.desk_prices} onBuyDesk={actions.buyDesk} onUpgradeDesk={actions.upgradeDesk} offices={data.offices} onMoveOffice={actions.moveOffice}
         infraCatalog={data.infra} onInfra={actions.infra} />;
     }
   };
@@ -138,8 +139,9 @@ export default function StartupStoryPage() {
       ? <div className="space-y-4">
           <div className="space-y-3">
             <Hud run={run} items={data.items} />
-            <PixelOffice staff={officeStaff} infra={run.infra} items={(run.items ?? []).map((id) => data.items.find((it) => it.id === id)).filter((it): it is StartupItem => Boolean(it))}
-              bossVisiting={run.boss_visiting} bossVisits={run.boss_visits} desks={run.desks} deskLimit={run.stage === "hub" ? run.desk_limit : 0} busy={run.stage === "developing"} skin={skin} reaction={reaction} />
+            <PixelOffice office={run.office} staff={officeStaff} infra={run.infra} items={(run.items ?? []).map((id) => data.items.find((it) => it.id === id)).filter((it): it is StartupItem => Boolean(it))}
+              bossVisiting={run.boss_visiting} bossVisits={run.boss_visits} desks={run.desks}
+              deskActions={run.stage === "hub" && data.desk_prices ? { debt: run.debt, money: run.money, act: run.act, prices: data.desk_prices, pending, onUpgrade: actions.upgradeDesk, onBuy: actions.buyDesk } : undefined} deskLimit={run.stage === "hub" ? run.desk_limit : 0} busy={run.stage === "developing"} skin={skin} reaction={reaction} />
           </div>
           <div className="min-w-0">{screen}</div>
         </div>
