@@ -64,6 +64,7 @@ export interface StartupInfra {
   servers: { cpu: number; ram: number }[];
   db: string;
   parts?: string[];
+  replicas?: number;
 }
 
 export interface StartupLoad {
@@ -71,6 +72,8 @@ export interface StartupLoad {
   app_cap: number;
   db: number;
   db_cap: number;
+  next_server: number;
+  next_replica: number;
 }
 
 export interface StartupInfraItem {

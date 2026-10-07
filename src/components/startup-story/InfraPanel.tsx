@@ -18,6 +18,7 @@ const fixTags: Record<string, { label: string; tone: string }> = {
 const branches = [
   { id: "servers", title: "Servers" },
   { id: "database", title: "Database" },
+  { id: "speed", title: "Speed" },
   { id: "reliability", title: "Reliability" },
 ];
 
@@ -66,7 +67,8 @@ export function InfraPanel({ run, catalog, pending, onAction }: Props) {
   const owns = (id: string) => (infra.parts ?? []).includes(id);
   const monitored = owns("monitoring");
   const upgradePrice = (tier: number) => catalog.upgrade[tier - 1];
-  const nextServer = Math.round((2000 * 1.5 ** Math.max(0, infra.servers.length - 1)) / 100) * 100;
+  const nextServer = load.next_server;
+  const replicas = infra.replicas ?? 0;
   const buy = (price: number) => pending || run.money < price;
 
   const partButton = (id: string) => {
@@ -97,6 +99,7 @@ export function InfraPanel({ run, catalog, pending, onAction }: Props) {
           <button className={`${ui.button} w-full bg-[#fbe39a] py-2`} disabled={buy(nextServer)} onClick={() => onAction("server")}>Add a server {baht(nextServer)}</button>
         </Card>}
         {lb && <Card item={lb} owned={owns("lb")}>{partButton("lb")}</Card>}
+        {catalog.items.filter((it) => it.branch === "servers" && it.id !== "server" && it.id !== "lb").map((it) => <Card key={it.id} item={it} owned={owns(it.id)}>{partButton(it.id)}</Card>)}
       </>;
     }
     if (branch === "database") {
@@ -104,9 +107,18 @@ export function InfraPanel({ run, catalog, pending, onAction }: Props) {
       const current = dbs.find((it) => it.id === `db:${infra.db}`);
       const others = dbs.filter((it) => it !== current);
       const index = item("index");
+      const replica = item("replica");
       return <>
         {current && <Card item={current} owned />}
         {index && <Card item={index} owned={owns("index")}>{partButton("index")}</Card>}
+        {replica && <Card item={replica} owned={replicas > 0}>
+          {replicas > 0 && <p className="text-xs font-black">You have {replicas} {replicas === 1 ? "replica" : "replicas"}.</p>}
+          {run.act < replica.act
+            ? <p className="text-xs font-black opacity-70">Unlocks in Act {replica.act}</p>
+            : infra.db === "sqlite"
+              ? <p className="text-xs font-black opacity-70">Move to a bigger database first.</p>
+              : <button className={`${ui.button} w-full bg-[#fbe39a] py-2`} disabled={buy(load.next_replica)} onClick={() => onAction("replica")}>Add a replica {baht(load.next_replica)}</button>}
+        </Card>}
         <details className={`${ui.card} p-3`}>
           <summary className="cursor-pointer font-black">Switch database ({others.length} options)</summary>
           <div className="mt-3 space-y-3">
@@ -128,7 +140,7 @@ export function InfraPanel({ run, catalog, pending, onAction }: Props) {
         {monitored ? "Load next ship, from your fans. Keep both bars out of the red." : "Buy Monitoring to see these before you ship. Without it you find out from angry users."}
       </p>
     </div>
-    <div className="grid gap-3 lg:grid-cols-3">
+    <div className="grid gap-3 sm:grid-cols-2">
       {branches.map((b) => <section key={b.id} className="space-y-3" aria-label={b.title}>
         <h3 className="text-xs font-black uppercase tracking-widest text-foreground">{b.title}</h3>
         {column(b.id)}
