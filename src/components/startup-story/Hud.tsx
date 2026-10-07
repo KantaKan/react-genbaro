@@ -40,6 +40,7 @@ export function Hud({ run, items }: { run: StartupRun; items: StartupItem[] }) {
         <PixelIcon name="coin" size={1.5} />{baht(shown)}
         {delta && <span aria-hidden="true" className={`ss-float pointer-events-none absolute -top-1 right-1 text-xs font-semibold ${delta.amount > 0 ? "text-[#2b7d5d]" : "text-[#c4302b]"}`}>{delta.amount > 0 ? "+" : "−"}{baht(Math.abs(delta.amount))}</span>}
       </span>
+      {(run.debt ?? 0) > 0 && <span className={`${ui.chip} bg-[#f7c6d9]`} title="25% of every project's earnings pays it back. No office moves or desk upgrades until it's paid.">Bank loan {baht(run.debt ?? 0)}</span>}
       {run.oss && <span className={`${ui.chip} bg-[#292542] !text-[#fffaf0]`}>Open Source</span>}
       <span className={`${ui.chip} inline-flex items-center gap-1 bg-[#f7c6d9]`}><PixelIcon name={run.oss ? "star" : "heart"} size={1.5} />{run.fans.toLocaleString()} {fansLabel(run.oss)}</span>
       {run.endless && <span className={`${ui.chip} bg-[#cab2f1]`}>Endless</span>}

@@ -133,8 +133,8 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
           <p className="text-lg font-black">{currentOffice.name} · {currentOffice.desks} desks</p>
         </div>
         {nextOffice
-          ? <button className={`${ui.button} bg-[#cab2f1] py-2`} disabled={pending || run.act < nextOffice.act || run.money < nextOffice.price} onClick={() => onMoveOffice(nextOffice.id)}>
-              {run.act < nextOffice.act ? `${nextOffice.name} unlocks in Act ${nextOffice.act}` : `Move to ${nextOffice.name} (${nextOffice.desks} desks) ${baht(nextOffice.price)}`}
+          ? <button className={`${ui.button} bg-[#cab2f1] py-2`} disabled={pending || (run.debt ?? 0) > 0 || run.act < nextOffice.act || run.money < nextOffice.price} onClick={() => onMoveOffice(nextOffice.id)}>
+              {(run.debt ?? 0) > 0 ? "Pay off the loan first" : run.act < nextOffice.act ? `${nextOffice.name} unlocks in Act ${nextOffice.act}` : `Move to ${nextOffice.name} (${nextOffice.desks} desks) ${baht(nextOffice.price)}`}
             </button>
           : <p className="text-sm font-bold">Top floor. Nowhere higher to go.</p>}
       </div>}
@@ -144,7 +144,7 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         {desks.map((tier, i) => {
-          const up = deskUpgrade(tier, run.act, run.money, deskPrices);
+          const up = deskUpgrade(tier, run.act, run.money, deskPrices, run.debt);
           return <div key={i} className={`${ui.card} flex items-center gap-3 p-3`}>
             <svg viewBox="0 0 64 40" className="h-auto w-20 shrink-0" shapeRendering="crispEdges" aria-hidden="true"><Desk x={32} y={40} tier={tier} busy={false} /></svg>
             <div className="min-w-0 flex-1 space-y-2">

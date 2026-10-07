@@ -116,6 +116,7 @@ export interface StartupRun {
   staff: StartupDev[];
   desks?: number[];
   office?: string;
+  debt?: number;
   desk_limit?: number;
   candidates?: StartupDev[];
   items?: string[];
@@ -228,7 +229,7 @@ export interface StartupDeskPrices {
   tier_act: number[];
 }
 
-export type StartupBoardTab = "deepest" | "weekly" | "fame";
+export type StartupBoardTab = "value" | "deepest" | "weekly" | "fame";
 
 export interface StartupLeaderboardEntry {
   owner_id: string;

@@ -141,7 +141,7 @@ export default function StartupStoryPage() {
             <Hud run={run} items={data.items} />
             <PixelOffice office={run.office} staff={officeStaff} infra={run.infra} items={(run.items ?? []).map((id) => data.items.find((it) => it.id === id)).filter((it): it is StartupItem => Boolean(it))}
               bossVisiting={run.boss_visiting} bossVisits={run.boss_visits} desks={run.desks}
-              deskActions={run.stage === "hub" && data.desk_prices ? { money: run.money, act: run.act, prices: data.desk_prices, pending, onUpgrade: actions.upgradeDesk, onBuy: actions.buyDesk } : undefined} deskLimit={run.stage === "hub" ? run.desk_limit : 0} busy={run.stage === "developing"} skin={skin} reaction={reaction} />
+              deskActions={run.stage === "hub" && data.desk_prices ? { debt: run.debt, money: run.money, act: run.act, prices: data.desk_prices, pending, onUpgrade: actions.upgradeDesk, onBuy: actions.buyDesk } : undefined} deskLimit={run.stage === "hub" ? run.desk_limit : 0} busy={run.stage === "developing"} skin={skin} reaction={reaction} />
           </div>
           <div className="min-w-0">{screen}</div>
         </div>

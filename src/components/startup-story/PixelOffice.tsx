@@ -142,7 +142,7 @@ function useReactions(staff: StartupDev[], reaction?: OfficeReaction) {
 
 const START_DESKS = [1, 1];
 
-export type DeskActions = { money: number; act: number; prices: StartupDeskPrices; pending: boolean; onUpgrade: (index: number) => void; onBuy: () => void };
+export type DeskActions = { debt?: number; money: number; act: number; prices: StartupDeskPrices; pending: boolean; onUpgrade: (index: number) => void; onBuy: () => void };
 
 type OfficeProps = { office?: string; deskActions?: DeskActions; staff: StartupDev[]; infra?: StartupInfra; items?: StartupItem[]; bossVisiting?: boolean; bossVisits?: number; desks?: number[]; deskLimit?: number; busy: boolean; skin?: string; reaction?: OfficeReaction };
 
@@ -229,7 +229,7 @@ export function PixelOffice({ office, deskActions, staff, infra, items = [], bos
   const popSlot = deskActions && openDesk !== null && room === "office" ? slots[openDesk] : undefined;
   const popover = popSlot && deskActions && (() => {
     const owned = popSlot.tier > 0;
-    const up = owned ? deskUpgrade(popSlot.tier, deskActions.act, deskActions.money, deskActions.prices) : undefined;
+    const up = owned ? deskUpgrade(popSlot.tier, deskActions.act, deskActions.money, deskActions.prices, deskActions.debt) : undefined;
     const buyPrice = nextDeskPrice(deskActions.prices, desks.length);
     const act = () => {
       if (owned) deskActions.onUpgrade(openDesk!);
