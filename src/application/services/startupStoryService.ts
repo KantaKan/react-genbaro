@@ -23,6 +23,8 @@ export interface StartupDev {
   xp_next?: number;
   burnout?: number;
   perks?: string[];
+  wildcard?: string;
+  wildcard_desc?: string;
 }
 
 export interface StartupPitch {
@@ -55,6 +57,44 @@ export interface StartupResult {
   bugs: number;
   money_delta: number;
   fans_delta: number;
+  cloud_bill?: number;
+  overload?: number;
+  postmortem?: string;
+}
+
+export interface StartupInfra {
+  servers: { cpu: number; ram: number }[];
+  db: string;
+  parts?: string[];
+  replicas?: number;
+}
+
+export interface StartupLoad {
+  app: number;
+  app_cap: number;
+  db: number;
+  db_cap: number;
+  next_server: number;
+  next_replica: number;
+}
+
+export interface StartupInfraItem {
+  id: string;
+  branch: string;
+  fixes: string;
+  name: string;
+  act: number;
+  price: number;
+  bill: number;
+  what: string;
+  need: string;
+  effect: string;
+  thai: string;
+}
+
+export interface StartupInfraCatalog {
+  upgrade: number[];
+  items: StartupInfraItem[];
 }
 
 export interface StartupRun {
@@ -74,6 +114,8 @@ export interface StartupRun {
   fans: number;
   founder_offer?: StartupDev[];
   staff: StartupDev[];
+  desks?: number[];
+  desk_limit?: number;
   candidates?: StartupDev[];
   items?: string[];
   item_offer?: string[];
@@ -90,7 +132,12 @@ export interface StartupRun {
   world_event?: string;
   boss_gimmick?: string;
   pending_perk?: { dev_id: string; offer: string[] };
-  pending_event?: { id: string; options: string[] };
+  pending_event?: { id: string; title?: string; options: string[] };
+  next_bugs?: number;
+  next_power?: number;
+  next_traffic?: number;
+  infra?: StartupInfra;
+  load?: StartupLoad;
   log?: string[];
 }
 
@@ -137,7 +184,7 @@ export interface StartupRole {
 
 export interface StartupUnlock {
   fame: number;
-  kind: "founder" | "item" | "skin";
+  kind: "founder" | "item" | "skin" | "wildcard";
   id: string;
   name: string;
 }
@@ -156,7 +203,17 @@ export interface StartupOverview {
   perks?: StartupPerk[];
   oss_unlocked?: boolean;
   combo_ratings?: Record<string, string>;
+  desk_prices?: StartupDeskPrices;
+  infra?: StartupInfraCatalog;
   opt_out: boolean;
+}
+
+export interface StartupDeskPrices {
+  base: number;
+  step: number;
+  upgrade: number[];
+  max_tier: number;
+  upgrade_act: number;
 }
 
 export type StartupBoardTab = "deepest" | "weekly" | "fame";
@@ -182,6 +239,9 @@ export const startupStoryService = {
   startRun: (mode: StartupMode) => post("/runs", { mode }),
   pickFounder: (index: number) => post("/runs/active/founder", { index }),
   hire: (candidateId: string) => post("/runs/active/hire", { candidate_id: candidateId }),
+  buyDesk: () => post("/runs/active/desks"),
+  upgradeDesk: (index: number) => post("/runs/active/desks/upgrade", { index }),
+  infra: (action: string, index = 0, id = "") => post("/runs/active/infra", { action, index, id }),
   async dismiss(staffId: string): Promise<StartupRun> {
     const response = await api.delete<ApiResponse<StartupRun>>(`/startup-story/runs/active/staff/${encodeURIComponent(staffId)}`);
     return response.data.data;

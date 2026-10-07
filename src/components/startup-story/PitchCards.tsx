@@ -1,7 +1,8 @@
+import { PixelIcon } from "./office/PixelIcon";
 import type { StartupPitch } from "@/application/services/startupStoryService";
 import { comboKey, ui } from "./startupStoryCatalog";
 
-const ratingLabel: Record<string, string> = { great: "⭐⭐⭐ Great combo (shipped before)", good: "⭐⭐ Good combo (shipped before)", meh: "⭐ Meh combo (shipped before)" };
+const ratingLabel: Record<string, string> = { great: "Great combo (shipped before)", good: "Good combo (shipped before)", meh: "Meh combo (shipped before)" };
 
 type PitchCardsProps = {
   pitches: StartupPitch[];
@@ -22,12 +23,12 @@ export function PitchCards({ pitches, hot, ratings, pending, onStartPitch }: Pit
         return <li key={key} className={`${ui.card} flex flex-col space-y-3 p-4`}>
           <div className="flex items-start justify-between gap-2">
             <p className="text-lg font-black leading-snug">{pitch.title}</p>
-            {isHot && <span role="img" aria-label="Hot theme">🔥</span>}
+            {isHot && <PixelIcon name="flame" size={1.5} label="Hot theme" />}
           </div>
           <p className="text-xs font-bold uppercase tracking-widest opacity-70">{pitch.type} × {pitch.theme}</p>
           {rating && <p className="text-xs font-black">{ratingLabel[rating] ?? rating}</p>}
           <button className={`${ui.button} mt-auto w-full bg-[#7bc4a8]`} disabled={pending} aria-label={`Start ${pitch.title}`} onClick={() => onStartPitch(index)}>
-            Build this 🛠️
+            Build this 
           </button>
         </li>;
       })}

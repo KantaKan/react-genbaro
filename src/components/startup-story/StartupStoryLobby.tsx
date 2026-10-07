@@ -1,12 +1,13 @@
+import { PixelIcon } from "./office/PixelIcon";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { STARTUP_STORY_QUERY_KEY, startupStoryService, type StartupBoardTab, type StartupMode, type StartupOverview } from "@/application/services/startupStoryService";
 import { actName, ui } from "./startupStoryCatalog";
 
 const boardTabs: { id: StartupBoardTab; label: string; empty: string }[] = [
-  { id: "deepest", label: "🏔️ Deepest", empty: "No ranked runs yet this week. Be the first!" },
-  { id: "weekly", label: "💰 Score", empty: "No ranked runs yet this week. Be the first!" },
-  { id: "fame", label: "⭐ Fame", empty: "No fame yet. Finish a run to get on the board." },
+  { id: "deepest", label: "Deepest", empty: "No ranked runs yet this week. Be the first!" },
+  { id: "weekly", label: "Score", empty: "No ranked runs yet this week. Be the first!" },
+  { id: "fame", label: "Fame", empty: "No fame yet. Finish a run to get on the board." },
 ];
 
 function Leaderboard({ userId }: { userId: string | null }) {
@@ -14,7 +15,7 @@ function Leaderboard({ userId }: { userId: string | null }) {
   const { data, isLoading, error } = useQuery(["startup-story-board", tab], () => startupStoryService.leaderboard(tab));
   return <section className={`${ui.card} space-y-3 p-4`}>
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <h2 className="text-xl font-black">🏆 Cohort board</h2>
+      <h2 className="text-xl font-black">Cohort board</h2>
       <div role="tablist" className="flex gap-1">
         {boardTabs.map(({ id, label }) => <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
           className={`${ui.chipBase} ${tab === id ? "bg-[#292542] text-[#fffaf0]" : "bg-white text-[#292542]"}`}>{label}</button>)}
@@ -25,8 +26,8 @@ function Leaderboard({ userId }: { userId: string | null }) {
     {data && data.length === 0 && <p className="text-sm font-bold">{boardTabs.find((b) => b.id === tab)?.empty}</p>}
     {data && data.length > 0 && <ol className="space-y-1">
       {data.map((row, i) => <li key={row.owner_id} className={`flex items-center justify-between rounded-xl border-2 px-3 py-2 text-sm font-bold ${row.owner_id === userId ? "border-[#292542] bg-[#fbe39a]" : "border-transparent"}`}>
-        <span>{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`} {row.name}{row.owner_id === userId ? " (you)" : ""}</span>
-        <span>{tab === "deepest" ? `Act ${row.max_act ?? 1} · ${actName(row.max_act ?? 1)}` : tab === "weekly" ? `${(row.score ?? 0).toLocaleString()}${row.outcome === "ipo" ? " 🔔" : ""}` : `⭐ ${row.fame ?? 0}`}</span>
+        <span className="inline-flex items-center gap-1">{i === 0 ? <PixelIcon name="trophy" size={1.5} label="1st" /> : `${i + 1}.`} {row.name}{row.owner_id === userId ? " (you)" : ""}</span>
+        <span>{tab === "deepest" ? `Act ${row.max_act ?? 1} · ${actName(row.max_act ?? 1)}` : tab === "weekly" ? `${(row.score ?? 0).toLocaleString()}${row.outcome === "ipo" ? " · IPO" : ""}` : `${row.fame ?? 0}`}</span>
       </li>)}
     </ol>}
   </section>;
@@ -63,28 +64,28 @@ export function Lobby({ overview, userId, pending, onStart }: LobbyProps) {
 
   return <div className="space-y-4">
     <section className={`${ui.card} space-y-4 p-6 text-center`}>
-      <p className="text-5xl">🚀</p>
+      <PixelIcon name="rocket" size={5} />
       <h1 className="text-3xl font-black tracking-tight">Baro Startup Story</h1>
       <p className="text-sm font-bold opacity-80">Found a startup, hire genmates, beat the bosses, ring the IPO bell. ทุกรอบไม่เหมือนกัน!</p>
       <div className="flex flex-wrap justify-center gap-3">
         <button className={`${ui.button} bg-[#fbe39a]`} disabled={pending || left <= 0} onClick={() => onStart("ranked")}>
-          🏆 Weekly Seed <span className="opacity-70">({left}/3 left)</span>
+          Weekly Seed <span className="opacity-70">({left}/3 left)</span>
         </button>
-        <button className={`${ui.button} bg-[#7bc4a8]`} disabled={pending} onClick={() => onStart("free")}>🎲 Free Play</button>
+        <button className={`${ui.button} bg-[#7bc4a8]`} disabled={pending} onClick={() => onStart("free")}>Free Play</button>
       </div>
       <p className="text-xs font-bold opacity-70">Weekly Seed: everyone in your cohort gets the same random run this week ({overview.week_key}).</p>
-      <p className="text-xs font-black">{overview.oss_unlocked ? "🐙 Secret founder unlocked: Open Source Maintainer. Look for them in your founder picks." : "🔒 ??? Rumor says a founder only shows up for people who ship tools for other devs…"}</p>
+      <p className="text-xs font-black">{overview.oss_unlocked ? "Secret founder unlocked: Open Source Maintainer. Look for them in your founder picks." : "??? Rumor says a founder only shows up for people who ship tools for other devs…"}</p>
     </section>
 
     <section className={`${ui.card} space-y-2 p-4`}>
-      <div className="flex items-center justify-between text-sm font-black"><span>⭐ Fame {studio.fame}</span>{next && <span>Next: {next.name} at {next.fame}</span>}</div>
+      <div className="flex items-center justify-between text-sm font-black"><span>Fame {studio.fame}</span>{next && <span>Next: {next.name} at {next.fame}</span>}</div>
       <div className="h-3 overflow-hidden rounded-full border-2 border-[#292542] bg-white" role="progressbar" aria-label="Fame to next unlock" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
         <div className="h-full bg-[#cab2f1]" style={{ width: `${progress}%` }} />
       </div>
       {hall.length > 0 && <div className="pt-2">
         <p className="text-xs font-black uppercase tracking-widest">Hall of fame</p>
         <ul className="mt-1 space-y-1 text-sm font-bold">
-          {hall.map((h) => <li key={h.run_id} className="flex justify-between gap-2"><span>{h.outcome === "ipo" ? "🔔" : "🐱"} {h.founder}{h.mode === "ranked" ? " · 🏆" : ""}</span><span>{h.score.toLocaleString()}</span></li>)}
+          {hall.map((h) => <li key={h.run_id} className="flex justify-between gap-2"><span>{h.outcome === "ipo" ? "IPO · " : ""}{h.founder}{h.mode === "ranked" ? " ·" : ""}</span><span>{h.score.toLocaleString()}</span></li>)}
         </ul>
       </div>}
     </section>

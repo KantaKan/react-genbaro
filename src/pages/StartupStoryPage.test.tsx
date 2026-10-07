@@ -16,9 +16,9 @@ const hubRun = {
   bosses_passed: 0, project_index: 0, money: 10000, fans: 0, staff: [founder], candidates: [genmate], score: 0, version: 2,
 };
 const items = [
-  { id: "rubber-duck", name: "Rubber Duck", icon: "🦆", rarity: "common", desc: "−2 bugs per ship" },
-  { id: "legacy", name: "Legacy Codebase", icon: "☠️", rarity: "cursed", desc: "×1.3 power, +6 bugs" },
-  { id: "keyboard", name: "Mechanical Keyboard", icon: "⌨️", rarity: "common", desc: "+2 team Frontend" },
+  { id: "rubber-duck", name: "Rubber Duck", icon: "", rarity: "common", desc: "−2 bugs per ship" },
+  { id: "legacy", name: "Legacy Codebase", icon: "", rarity: "cursed", desc: "×1.3 power, +6 bugs" },
+  { id: "keyboard", name: "Mechanical Keyboard", icon: "", rarity: "common", desc: "+2 team Frontend" },
 ];
 let run: Record<string, unknown> | null = hubRun;
 let attemptsLeft = 3;
@@ -28,7 +28,7 @@ const overview = () => ({
   studio: { _id: "s1", fame: 12, hall_of_fame: [] }, run, ranked_attempts_left: attemptsLeft, week_key: "2026-W40",
   server_time: new Date(T).toISOString(), types: ["Game"], themes: ["Thai Culture", "Fintech"], items,
   unlocks: [{ fame: 20, kind: "founder", id: "Ex-FAANG Refugee", name: "Ex-FAANG Refugee" }], opt_out: false,
-  perks: [{ id: "arch-btw", name: "I Use Arch btw 🐧", desc: "+1 Dev Community" }, { id: "ship-it", name: "Ship-It Energy 🚀", desc: "Builds faster" }, { id: "clean-code", name: "Clean-code Zealot", desc: "−1 bug" }],
+  perks: [{ id: "arch-btw", name: "I Use Arch btw", desc: "+1 Dev Community" }, { id: "ship-it", name: "Ship-It Energy", desc: "Builds faster" }, { id: "clean-code", name: "Clean-code Zealot", desc: "−1 bug" }],
 });
 const record = (path: string) => async ({ request }: { request: Request }) => {
   const text = await request.text();
@@ -98,7 +98,7 @@ describe("StartupStoryPage", () => {
     expect(await screen.findByText("Building... 1s")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Ship it" })).toBeDisabled();
     now.mockReturnValue(T + 30_000);
-    expect(await screen.findByText("Ready to ship! 🚀")).toBeInTheDocument();
+    expect(await screen.findByText("Ready to ship!")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Ship it" })).toBeEnabled();
   });
 
@@ -106,10 +106,10 @@ describe("StartupStoryPage", () => {
     run = { ...hubRun, staff: [founder, { ...genmate, id: "dev-2" }] };
     renderPage();
 
-    expect(await screen.findByRole("button", { name: "Thai Culture 🔥" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Fintech 🧊" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Thai Culture · hot" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Fintech · cold" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Game" }));
-    fireEvent.click(screen.getByRole("button", { name: "Thai Culture 🔥" }));
+    fireEvent.click(screen.getByRole("button", { name: "Thai Culture · hot" }));
     fireEvent.click(screen.getByRole("button", { name: /Mint/ }));
     fireEvent.click(screen.getByRole("button", { name: /Start building/ }));
 
@@ -119,9 +119,9 @@ describe("StartupStoryPage", () => {
 
   it("starts a project from a pitch card with one tap", async () => {
     run = { ...hubRun, pitches: [
-      { type: "LINE Bot", theme: "Street Food", title: "🍜 Street-food LINE bot" },
-      { type: "Mobile App", theme: "Pets", title: "🐶 Tinder for dogs" },
-      { type: "VR Game", theme: "K-pop/Idols", title: "🎤 Front-row idol concert in VR" },
+      { type: "LINE Bot", theme: "Street Food", title: "Street-food LINE bot" },
+      { type: "Mobile App", theme: "Pets", title: "Tinder for dogs" },
+      { type: "VR Game", theme: "K-pop/Idols", title: "Front-row idol concert in VR" },
     ] };
     renderPage();
 
@@ -133,9 +133,9 @@ describe("StartupStoryPage", () => {
 
   it("falls back to the custom picker from a pitch card", async () => {
     run = { ...hubRun, pitches: [
-      { type: "LINE Bot", theme: "Street Food", title: "🍜 Street-food LINE bot" },
-      { type: "Mobile App", theme: "Pets", title: "🐶 Tinder for dogs" },
-      { type: "VR Game", theme: "K-pop/Idols", title: "🎤 Front-row idol concert in VR" },
+      { type: "LINE Bot", theme: "Street Food", title: "Street-food LINE bot" },
+      { type: "Mobile App", theme: "Pets", title: "Tinder for dogs" },
+      { type: "VR Game", theme: "K-pop/Idols", title: "Front-row idol concert in VR" },
     ] };
     renderPage();
 
@@ -155,16 +155,16 @@ describe("StartupStoryPage", () => {
     renderPage();
 
     fireEvent.click(await screen.findByRole("tab", { name: /Hire/ }));
-    expect(screen.getByLabelText("genmate")).toBeInTheDocument();
+    expect(screen.getByText("Genmate")).toBeInTheDocument();
     expect(screen.getByText(/Night Owl/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Team full" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "No free desk" })).toBeDisabled();
   });
 
   it("introduces the boss before its project", async () => {
     run = { ...hubRun, project_index: 2 };
     renderPage();
 
-    expect(await screen.findByText("3AM Production Outage 🚨")).toBeInTheDocument();
+    expect(await screen.findByText("3AM Production Outage")).toBeInTheDocument();
     expect(screen.getByText(/Reach 18\/40 to pass/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Face the boss/ })).toBeInTheDocument();
   });
@@ -187,7 +187,7 @@ describe("StartupStoryPage", () => {
 
     expect(await screen.findByRole("button", { name: /Weekly Seed/ })).toBeDisabled();
     expect(screen.getByText(/Next: Ex-FAANG Refugee at 20/)).toBeInTheDocument();
-    expect(await screen.findByText("🥈 Ploy (you)")).toBeInTheDocument();
+    expect(await screen.findByText("2. Ploy (you)")).toBeInTheDocument();
   });
 
   it("saves the candidate opt-out from the Lobby toggle", async () => {
@@ -217,7 +217,7 @@ describe("StartupStoryPage", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: /Keep going/ }));
 
-    expect(await screen.findByText(/🚀 Endless/)).toBeInTheDocument();
+    expect(await screen.findByText(/Endless/)).toBeInTheDocument();
     expect(screen.getByText(/Series B · Act 4 · Project 1\/3/)).toBeInTheDocument();
     expect(requests).toEqual([{ path: "ipo-choice", body: { keep_going: true } }]);
   });
@@ -251,7 +251,7 @@ describe("StartupStoryPage", () => {
   });
 
   it("pauses for a choice event and posts the picked option", async () => {
-    run = { ...hubRun, stage: "event", project_index: 1, pending_event: { id: "friday-deploy", options: ["Do it. YOLO 😈", "Wait for Monday"] } };
+    run = { ...hubRun, stage: "event", project_index: 1, pending_event: { id: "friday-deploy", options: ["Do it. YOLO", "Wait for Monday"] } };
     renderPage();
 
     expect(await screen.findByText(/Push to Prod on Friday/)).toBeInTheDocument();
@@ -265,9 +265,9 @@ describe("StartupStoryPage", () => {
     run = { ...hubRun, oss: true, act: 3, project_index: 8, next_boss: "ipo-pitch", next_pass_mark: 45, fans: 1200 };
     renderPage();
 
-    expect(await screen.findByText("🐙 Open Source")).toBeInTheDocument();
-    expect(screen.getByText(/1,200 ⭐ stars/)).toBeInTheDocument();
-    expect(screen.getByText("v1.0 Launch 🚀")).toBeInTheDocument();
+    expect(await screen.findByText("Open Source")).toBeInTheDocument();
+    expect(screen.getByText(/1,200 stars/)).toBeInTheDocument();
+    expect(screen.getByText("v1.0 Launch")).toBeInTheDocument();
     expect(screen.getByText(/Reach 45\/50 to pass/)).toBeInTheDocument();
   });
 });
