@@ -74,6 +74,8 @@ export interface StartupRun {
   fans: number;
   founder_offer?: StartupDev[];
   staff: StartupDev[];
+  desks?: number[];
+  desk_limit?: number;
   candidates?: StartupDev[];
   items?: string[];
   item_offer?: string[];
@@ -156,7 +158,16 @@ export interface StartupOverview {
   perks?: StartupPerk[];
   oss_unlocked?: boolean;
   combo_ratings?: Record<string, string>;
+  desk_prices?: StartupDeskPrices;
   opt_out: boolean;
+}
+
+export interface StartupDeskPrices {
+  base: number;
+  step: number;
+  upgrade: number[];
+  max_tier: number;
+  upgrade_act: number;
 }
 
 export type StartupBoardTab = "deepest" | "weekly" | "fame";
@@ -182,6 +193,8 @@ export const startupStoryService = {
   startRun: (mode: StartupMode) => post("/runs", { mode }),
   pickFounder: (index: number) => post("/runs/active/founder", { index }),
   hire: (candidateId: string) => post("/runs/active/hire", { candidate_id: candidateId }),
+  buyDesk: () => post("/runs/active/desks"),
+  upgradeDesk: (index: number) => post("/runs/active/desks/upgrade", { index }),
   async dismiss(staffId: string): Promise<StartupRun> {
     const response = await api.delete<ApiResponse<StartupRun>>(`/startup-story/runs/active/staff/${encodeURIComponent(staffId)}`);
     return response.data.data;

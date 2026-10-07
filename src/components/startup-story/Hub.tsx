@@ -1,7 +1,8 @@
 import { useState } from "react";
-import type { StartupItem, StartupPerk, StartupRole, StartupRun } from "@/application/services/startupStoryService";
-import { bossInfo, comboKey, passMarkFor, roleLook, teamCap, teamHints, ui, upcomingBoss } from "./startupStoryCatalog";
+import type { StartupDeskPrices, StartupItem, StartupPerk, StartupRole, StartupRun } from "@/application/services/startupStoryService";
+import { bossInfo, comboKey, passMarkFor, roleLook, teamHints, ui, upcomingBoss } from "./startupStoryCatalog";
 import { DevCard } from "./DevCard";
+import { Desk } from "./office/OfficeRoom";
 import { PitchCards } from "./PitchCards";
 
 type HubProps = {
@@ -18,12 +19,15 @@ type HubProps = {
   onStartPitch: (pitchIndex: number, staffIds: string[]) => void;
   ratings?: Record<string, string>;
   onHire: (candidateId: string) => void;
+  deskPrices?: StartupDeskPrices;
+  onBuyDesk: () => void;
+  onUpgradeDesk: (index: number) => void;
   onDismiss: (staffId: string) => void;
   onAbandon: () => void;
 };
 
-export function Hub({ run, types, themes, roles, perks, discovered, ratings, pending, onStart, onStartPitch, onHire, onDismiss, onAbandon }: HubProps) {
-  const [tab, setTab] = useState<"project" | "team" | "hire">("project");
+export function Hub({ run, types, themes, roles, perks, discovered, ratings, pending, onStart, onStartPitch, onHire, onDismiss, onAbandon, deskPrices, onBuyDesk, onUpgradeDesk }: HubProps) {
+  const [tab, setTab] = useState<"project" | "team" | "hire" | "office">("project");
   const [type, setType] = useState("");
   const [theme, setTheme] = useState("");
   const [excluded, setExcluded] = useState<string[]>([]);
@@ -31,7 +35,11 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
   const [customProject, setCustomProject] = useState(false);
   const team = run.staff.filter((s) => !excluded.includes(s.id));
   const boss = upcomingBoss(run);
-  const cap = teamCap(run.act);
+  const desks = run.desks ?? [1, 1];
+  const cap = desks.length;
+  const deskLimit = run.desk_limit ?? cap;
+  const nextDesk = deskPrices ? deskPrices.base + deskPrices.step * Math.max(0, desks.length - 2) : 0;
+  const upgradesOpen = !deskPrices || run.act >= deskPrices.upgrade_act;
   const hot = run.market?.hot ?? [];
   const cold = run.market?.cold ?? [];
   const pitches = run.pitches ?? [];
@@ -47,6 +55,7 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
       {tabButton("project", boss ? "👹 Boss" : "🛠️ Project")}
       {tabButton("team", `👥 Team ${run.staff.length}/${cap}`)}
       {tabButton("hire", `🤝 Hire (${run.candidates?.length ?? 0})`)}
+      {tabButton("office", "🏢 Office")}
     </div>
 
     {tab === "project" && <div className={`${ui.card} space-y-4 p-4`}>
@@ -96,10 +105,35 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
         return <div key={dev.id} className={`${ui.card} space-y-3 p-4`}>
           <DevCard dev={dev} showSalary roles={roles} />
           <button className={`${ui.button} w-full bg-[#7bc4a8] py-2`} disabled={pending || full || broke} onClick={() => onHire(dev.id)}>
-            {full ? "Team full" : broke ? "Not enough ฿" : "Hire"}
+            {full ? "No free desk" : broke ? "Not enough ฿" : "Hire"}
           </button>
         </div>;
       })}
+    </div>}
+
+    {tab === "office" && <div className="space-y-3">
+      <p className={`${ui.card} p-4 text-sm font-bold`}>
+        Every person needs a desk. Better desks give +1 per tier to the best skill of whoever sits there, and the best desks go to your earliest hires.
+        {!upgradesOpen && deskPrices && ` Upgrades open in Act ${deskPrices.upgrade_act}.`}
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {desks.map((tier, i) => {
+          const maxed = tier >= (deskPrices?.max_tier ?? 3);
+          const price = deskPrices?.upgrade[tier - 1] ?? 0;
+          return <div key={i} className={`${ui.card} flex items-center gap-3 p-3`}>
+            <svg viewBox="0 0 64 40" className="h-auto w-20 shrink-0" shapeRendering="crispEdges" aria-hidden="true"><Desk x={32} y={40} tier={tier} busy={false} /></svg>
+            <div className="min-w-0 flex-1 space-y-2">
+              <p className="text-sm font-black">Desk {i + 1} · Tier {tier}{tier > 1 && <span className="font-bold opacity-70"> · +{tier - 1} skill</span>}</p>
+              <button className={`${ui.button} w-full bg-[#fbe39a] py-2`} disabled={pending || maxed || !upgradesOpen || run.money < price} onClick={() => onUpgradeDesk(i)}>
+                {maxed ? "Top tier" : `Upgrade ฿${price.toLocaleString()}`}
+              </button>
+            </div>
+          </div>;
+        })}
+      </div>
+      {desks.length < deskLimit
+        ? <button className={`${ui.button} w-full bg-[#7bc4a8]`} disabled={pending || run.money < nextDesk} onClick={onBuyDesk}>Buy a desk ฿{nextDesk.toLocaleString()}</button>
+        : <p className="text-center text-sm font-bold text-foreground">The office is full for this act. More floor space opens next act.</p>}
     </div>}
 
     <div className="text-right">

@@ -91,7 +91,6 @@ export function upcomingBoss(run: StartupRun): string | null {
   return run.boss_order?.[run.act - 1] ?? "demo-day";
 }
 
-export const teamCap = (act: number) => (act > 3 ? Math.min(8, 6 + (act - 3)) : act === 3 ? 6 : act === 2 ? 4 : 2);
 
 export const baht = (n: number) => `฿${n.toLocaleString()}`;
 

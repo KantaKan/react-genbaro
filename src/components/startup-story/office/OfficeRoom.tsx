@@ -1,11 +1,12 @@
 import { ROOM_H, ROOM_W, TABLE } from "./officeLayout";
-import { block, box, decor, desk, icons, oval, rack } from "./sprites";
+import { block, box, dashed, decor, desk, icons, oval, rack } from "./sprites";
 import { Sprite } from "./Sprite";
 
 const notes: [string, number, number][] = [["y", 0, 0], ["p", 6, 1], ["s", 12, 0], ["m", 2, 7], ["y", 9, 8], ["v", 4, 13]];
 const tableTop = oval(30, 10, "c");
 const tableInner = oval(20, 6, "C");
 const serverRack = rack(4);
+const openSlot = dashed(32, 14);
 
 export function RoomBackdrop({ busyKinds, skin }: { busyKinds: Set<string>; skin?: string }) {
   const rooftop = skin === "rooftop-bangkok";
@@ -57,9 +58,19 @@ export function RoomBackdrop({ busyKinds, skin }: { busyKinds: Set<string>; skin
   </g>;
 }
 
-export function Desk({ x, y, busy }: { x: number; y: number; busy: boolean }) {
+export function Desk({ x, y, tier, busy }: { x: number; y: number; tier: number; busy: boolean }) {
+  if (tier === 0) return <g opacity="0.4"><Sprite grid={openSlot} x={x - 32} y={y - 28} /></g>;
   return <g>
-    <Sprite grid={desk.laptop} x={x - 12} y={y - 32} blink={busy} />
+    {tier === 1 && <Sprite grid={desk.laptop} x={x - 12} y={y - 32} blink={busy} />}
+    {tier === 2 && <>
+      <Sprite grid={desk.monitor} x={x - 26} y={y - 38} blink={busy} />
+      <Sprite grid={desk.laptop} x={x - 4} y={y - 32} />
+    </>}
+    {tier >= 3 && <>
+      <Sprite grid={desk.monitor} x={x - 26} y={y - 38} blink={busy} />
+      <Sprite grid={desk.monitor} x={x - 6} y={y - 38} />
+      <Sprite grid={decor.plant} x={x + 16} y={y - 38} />
+    </>}
     <Sprite grid={desk.base} x={x - 32} y={y - 20} />
   </g>;
 }

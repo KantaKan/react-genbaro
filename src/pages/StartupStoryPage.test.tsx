@@ -157,7 +157,7 @@ describe("StartupStoryPage", () => {
     fireEvent.click(await screen.findByRole("tab", { name: /Hire/ }));
     expect(screen.getByLabelText("genmate")).toBeInTheDocument();
     expect(screen.getByText(/Night Owl/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Team full" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "No free desk" })).toBeDisabled();
   });
 
   it("introduces the boss before its project", async () => {

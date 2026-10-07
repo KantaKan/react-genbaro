@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useReducedMotion } from "framer-motion";
 import type { StartupDev } from "@/application/services/startupStoryService";
 import { comebackLines, isSassy, roleLook, sassLine } from "./startupStoryCatalog";
-import { assignStations, deskFronts, hangoutSpots, levelUps, ROOM_H, ROOM_W, standupSpots, TABLE, TIRED_AT, type Spot } from "./office/officeLayout";
+import { assignStations, deskSlots, hangoutSpots, levelUps, ROOM_H, ROOM_W, standupSpots, TABLE, TIRED_AT, type Spot } from "./office/officeLayout";
 import { Desk, MeetingTable, RoomBackdrop, Sofa } from "./office/OfficeRoom";
 import { NameTag, OfficePerson } from "./office/OfficePerson";
 import type { ReactionIcon } from "./office/sprites";
@@ -131,9 +131,13 @@ function useReactions(staff: StartupDev[], reaction?: OfficeReaction) {
   return shown;
 }
 
-export function PixelOffice({ staff, busy, skin, reaction }: { staff: StartupDev[]; busy: boolean; skin?: string; reaction?: OfficeReaction }) {
+const START_DESKS = [1, 1];
+
+type OfficeProps = { staff: StartupDev[]; desks?: number[]; deskLimit?: number; busy: boolean; skin?: string; reaction?: OfficeReaction };
+
+export function PixelOffice({ staff, desks = START_DESKS, deskLimit = 0, busy, skin, reaction }: OfficeProps) {
   const reduced = Boolean(useReducedMotion());
-  const placed = useMemo(() => assignStations(staff), [staff]);
+  const placed = useMemo(() => assignStations(staff, desks), [staff, desks]);
   const phase = usePhase(busy, reduced);
   const away = useWander(staff, phase === "idle" && !reduced);
   const standup = useMemo(() => standupSpots(staff.length), [staff.length]);
@@ -149,7 +153,7 @@ export function PixelOffice({ staff, busy, skin, reaction }: { staff: StartupDev
   const occupiedDesks = new Set(staff.map((d) => placed.get(d.id)).filter((s) => s?.kind === "desk").map((s) => `${s!.spot.x},${s!.spot.y + 4}`));
 
   const drawables: { y: number; node: ReactNode }[] = [
-    ...deskFronts.map((d) => ({ y: d.y, node: <Desk key={`desk-${d.x}-${d.y}`} x={d.x} y={d.y} busy={phase === "work" && occupiedDesks.has(`${d.x},${d.y}`)} /> })),
+    ...deskSlots(desks, deskLimit).map((d) => ({ y: d.y, node: <Desk key={`desk-${d.x}-${d.y}`} x={d.x} y={d.y} tier={d.tier} busy={phase === "work" && occupiedDesks.has(`${d.x},${d.y}`)} /> })),
     { y: TABLE.y + 6, node: <MeetingTable key="table" /> },
     { y: 226, node: <Sofa key="sofa" /> },
     ...staff.map((dev) => {

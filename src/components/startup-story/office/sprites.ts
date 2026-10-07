@@ -53,6 +53,9 @@ export function oval(w: number, h: number, fill: string): Grid {
   }).join(""));
 }
 
+export const dashed = (w: number, h: number): Grid => Array.from({ length: h }, (_, y) =>
+  Array.from({ length: w }, (_, x) => ((y === 0 || y === h - 1 || x === 0 || x === w - 1) && ((x + y) >> 1) % 2 === 0 ? "k" : ".")).join(""));
+
 export function rack(servers: number): Grid {
   const rows = [R("k", 18), ...Array.from({ length: 4 * servers + 3 }, () => "kK" + R("K", 14) + "Kk"), R("k", 18), ".kk" + R(".", 12) + "kk.", ".kk" + R(".", 12) + "kk."];
   for (let i = 0; i < servers; i++) {
@@ -131,6 +134,7 @@ export const desk = {
     ...Array.from({ length: 4 }, () => ".kBk" + R(".", 24) + "kBk."),
     ".kkk" + R(".", 24) + "kkk.",
   ],
+  monitor: ["kkkkkkkkk", "kGGGGGGGk", "kGGGGGGGk", "kGGGGGGGk", "kGGGGGGGk", "kGGGGGGlk", "kkkkkkkkk", "...kgk...", "...kgk...", "..kkkkk.."],
   laptop: [".kkkkkkkkkk.", ".kGGGGGGGGk.", ".kGGGpGGGGk.", ".kGGGGGGGGk.", ".kGGGGGGGlk.", "kggggggggggk", "kkkkkkkkkkkk"],
 } satisfies Record<string, Grid>;
 
