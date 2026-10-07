@@ -906,3 +906,16 @@
 @media (prefers-reduced-motion: reduce) {
   .yard-drift, .yard-birds, .yard-flutter, .yard-leaf, .yard-chime, .yard-fall { animation: none; }
 }
+
+.ss-game h1, .ss-game h2, .ss-game h3, .ss-pixel {
+  font-family: 'Pixelify Sans', 'JetBrains Mono', monospace;
+  letter-spacing: 0.01em;
+}
+
+.ss-sheet { animation: ss-sheet-up 0.22s steps(4) both; }
+@keyframes ss-sheet-up { from { transform: translateY(-12px); opacity: 0; } }
+.ss-float { animation: ss-float 1.2s steps(8) forwards; }
+@keyframes ss-float { to { transform: translateY(-28px); opacity: 0; } }
+.ss-bump { animation: ss-bump 0.3s steps(3); }
+@keyframes ss-bump { 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .ss-sheet, .ss-float, .ss-bump { animation: none; } .ss-float { display: none; } }

@@ -84,6 +84,9 @@ export default function StartupStoryPage() {
 
   const actions = {
     hire: (id: string) => action.mutate(() => startupStoryService.hire(id)),
+    buyDesk: () => action.mutate(startupStoryService.buyDesk),
+    upgradeDesk: (index: number) => action.mutate(() => startupStoryService.upgradeDesk(index)),
+    infra: (kind: string, index?: number, id?: string) => action.mutate(() => startupStoryService.infra(kind, index, id)),
     dismiss: (id: string) => action.mutate(() => startupStoryService.dismiss(id)),
     abandon: () => action.mutate(startupStoryService.abandon),
   };
@@ -99,7 +102,9 @@ export default function StartupStoryPage() {
       default: return <Hub key={run.project_index} run={run} types={data.types} themes={data.themes} items={data.items} roles={data.roles} perks={data.perks} ratings={data.combo_ratings} discovered={data.studio.discovered_combos ?? []} skin={skin} pending={pending}
         onStart={(type, theme, staffIds) => action.mutate(() => startupStoryService.startProject(type, theme, staffIds))}
         onStartPitch={(pitchIndex, staffIds) => action.mutate(() => startupStoryService.startProjectPitch(pitchIndex, staffIds))}
-        onHire={actions.hire} onDismiss={actions.dismiss} onAbandon={actions.abandon} />;
+        onHire={actions.hire} onDismiss={actions.dismiss} onAbandon={actions.abandon}
+        deskPrices={data.desk_prices} onBuyDesk={actions.buyDesk} onUpgradeDesk={actions.upgradeDesk}
+        infraCatalog={data.infra} onInfra={actions.infra} />;
     }
   };
 
@@ -117,13 +122,13 @@ export default function StartupStoryPage() {
   const inRun = run && !(ended && !review) && run.staff.length > 0;
   const officeStaff = run?.stage === "developing" && run.project ? run.staff.filter((s) => run.project!.staff_ids.includes(s.id)) : run?.staff ?? [];
 
-  return <main className={`mx-auto w-full space-y-4 p-4 ${inRun ? "max-w-6xl" : "max-w-3xl"}`}>
+  return <main className={`ss-game mx-auto w-full space-y-4 p-4 ${inRun ? "max-w-4xl" : "max-w-3xl"}`}>
     {actionError && <p role="alert" className="rounded-2xl border-2 border-[#292542] bg-[#f7c6d9] p-3 text-sm font-bold text-[#292542]">{actionError}</p>}
     {inRun && run
-      ? <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start">
-          <div className="space-y-3 lg:sticky lg:top-4">
+      ? <div className="space-y-4">
+          <div className="space-y-3">
             <Hud run={run} items={data.items} />
-            <PixelOffice staff={officeStaff} busy={run.stage === "developing"} skin={skin} reaction={reaction} />
+            <PixelOffice staff={officeStaff} infra={run.infra} desks={run.desks} deskLimit={run.stage === "hub" ? run.desk_limit : 0} busy={run.stage === "developing"} skin={skin} reaction={reaction} />
           </div>
           <div className="min-w-0">{screen}</div>
         </div>

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useReducedMotion } from "framer-motion";
-import type { StartupDev } from "@/application/services/startupStoryService";
-import { comebackLines, isSassy, roleLook, sassLine } from "./startupStoryCatalog";
-import { assignStations, deskFronts, hangoutSpots, levelUps, ROOM_H, ROOM_W, standupSpots, TABLE, TIRED_AT, type Spot } from "./office/officeLayout";
+import type { StartupDev, StartupInfra } from "@/application/services/startupStoryService";
+import { comebackLines, isSassy, roleLook, sassLine, ui } from "./startupStoryCatalog";
+import { assignStations, deskSlots, hangoutSpots, levelUps, ROOM_H, ROOM_W, standupSpots, TABLE, TIRED_AT, DISTRACTED_AT, type Spot } from "./office/officeLayout";
 import { Desk, MeetingTable, RoomBackdrop, Sofa } from "./office/OfficeRoom";
-import { OfficePerson } from "./office/OfficePerson";
+import { NameTag, OfficePerson } from "./office/OfficePerson";
+import type { ReactionIcon } from "./office/sprites";
 
 export type OfficeReaction = { kind: "party" | "panic"; key: number };
 
@@ -13,36 +14,22 @@ const css = `
 .ss-breathe { animation: ss-bob 3.2s ease-in-out infinite; }
 .ss-walk-bob { animation: ss-bob .35s ease-in-out infinite; }
 .ss-jump { animation: ss-jump .5s ease-out 3; }
-.ss-leg-a { animation: ss-leg .35s ease-in-out infinite; }
-.ss-leg-b { animation: ss-leg .35s ease-in-out infinite reverse; }
-.ss-type { animation: ss-type .28s steps(2) infinite; }
-.ss-type-alt { animation: ss-type .28s steps(2) infinite .14s; }
-.ss-point { animation: ss-point 1.4s ease-in-out infinite; }
-.ss-note { animation: ss-point 2s ease-in-out infinite; }
-.ss-draw { animation: ss-draw 1.8s ease-in-out infinite; }
-.ss-screen { animation: ss-screen 1.2s steps(3) infinite; }
-.ss-pop { animation: ss-pop 2s ease-out infinite; }
+.ss-step-a { animation: ss-step .36s steps(1) infinite; }
+.ss-step-b { animation: ss-step .36s steps(1) infinite -.18s; }
+.ss-pop { animation: ss-pop 2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
 .ss-slide { animation: ss-slide 3s ease-in-out infinite; }
-.ss-draw-line { stroke-dasharray: 34; animation: ss-dash 2.4s linear infinite; }
 .ss-led { animation: ss-led 1s steps(2) infinite; }
-.ss-led-1 { animation-delay: .25s; } .ss-led-2 { animation-delay: .5s; } .ss-led-3 { animation-delay: .75s; }
 @keyframes ss-bob { 50% { transform: translateY(-1px); } }
 @keyframes ss-jump { 40% { transform: translateY(-7px); } }
-@keyframes ss-leg { 0%,100% { transform: rotate(18deg); } 50% { transform: rotate(-18deg); } }
-@keyframes ss-type { 50% { transform: translateY(2px); } }
-@keyframes ss-point { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(-120deg); } }
-@keyframes ss-draw { 0%,100% { transform: rotate(-70deg); } 50% { transform: rotate(-140deg); } }
-@keyframes ss-screen { 0% { fill: #7bc4a8; } 50% { fill: #bfe3f7; } 100% { fill: #fbe39a; } }
+@keyframes ss-step { 50% { opacity: 0; } }
 @keyframes ss-pop { 0%,60% { transform: scale(0); } 75% { transform: scale(1.2); } 100% { transform: scale(1); } }
 @keyframes ss-slide { 0%,20% { transform: translateX(0); } 60%,100% { transform: translateX(18px); } }
-@keyframes ss-dash { from { stroke-dashoffset: 34; } to { stroke-dashoffset: 0; } }
 @keyframes ss-led { 50% { opacity: .2; } }
 @media (prefers-reduced-motion: reduce) { .ss-office * { animation: none !important; transition: none !important; } }
 `;
 
-const standupLines = ["no blockers 👍", "still fixing that bug 😅", "yesterday: meetings", "today: ship it 🚀", "can we keep it short?", "ขอกาแฟก่อน ☕"];
-const partyEmoji = ["🎉", "🥳", "🍾", "🙌"];
-const panicEmoji = ["😱", "🔥", "🫠", "💀"];
+const phoneLines = ["just one more reel", "doomscrolling...", "reading tech drama", "5 min break (40 min ago)", "replying to the group chat", "staring at the screen"];
+const standupLines = ["no blockers", "still fixing that bug", "yesterday: meetings", "today: ship it", "can we keep it short?", "ขอกาแฟก่อน"];
 
 type Phase = "idle" | "standup" | "work";
 
@@ -113,7 +100,8 @@ function useSpeech(staff: StartupDev[], phase: Phase) {
         if (sass.targetId) show(sass.targetId, comebackLines[Math.floor(Math.random() * comebackLines.length)], 1300);
         return;
       }
-      const pool = phase === "standup" ? standupLines : phase === "work" ? roleLook(dev.role).lines : roleLook(dev.role).idle;
+      const distracted = phase !== "work" && (dev.burnout ?? 0) >= DISTRACTED_AT;
+      const pool = phase === "standup" ? standupLines : phase === "work" ? roleLook(dev.role).lines : distracted ? phoneLines : roleLook(dev.role).idle;
       show(dev.id, pool[Math.floor(Math.random() * pool.length)]);
     };
     say();
@@ -124,12 +112,12 @@ function useSpeech(staff: StartupDev[], phase: Phase) {
 }
 
 function useReactions(staff: StartupDev[], reaction?: OfficeReaction) {
-  const [shown, setShown] = useState<Record<string, string>>({});
+  const [shown, setShown] = useState<Record<string, ReactionIcon>>({});
   const levels = useRef(new Map<string, number>());
   useEffect(() => {
     if (!reaction) return;
-    const pool = reaction.kind === "party" ? partyEmoji : panicEmoji;
-    setShown(Object.fromEntries(staff.map((d, i) => [d.id, pool[i % pool.length]])));
+    const icon: ReactionIcon = reaction.kind === "party" ? "party" : "sweat";
+    setShown(Object.fromEntries(staff.map((d) => [d.id, icon])));
     const id = window.setTimeout(() => setShown({}), 2600);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -138,16 +126,20 @@ function useReactions(staff: StartupDev[], reaction?: OfficeReaction) {
     const ups = levelUps(levels.current, staff);
     levels.current = new Map(staff.map((d) => [d.id, d.level ?? 1]));
     if (ups.length === 0) return;
-    setShown((prev) => ({ ...prev, ...Object.fromEntries(ups.map((id) => [id, "🆙"])) }));
+    setShown((prev) => ({ ...prev, ...Object.fromEntries(ups.map((id) => [id, "up" as const])) }));
     const id = window.setTimeout(() => setShown({}), 3000);
     return () => window.clearTimeout(id);
   }, [staff]);
   return shown;
 }
 
-export function PixelOffice({ staff, busy, skin, reaction }: { staff: StartupDev[]; busy: boolean; skin?: string; reaction?: OfficeReaction }) {
+const START_DESKS = [1, 1];
+
+type OfficeProps = { staff: StartupDev[]; infra?: StartupInfra; desks?: number[]; deskLimit?: number; busy: boolean; skin?: string; reaction?: OfficeReaction };
+
+export function PixelOffice({ staff, infra, desks = START_DESKS, deskLimit = 0, busy, skin, reaction }: OfficeProps) {
   const reduced = Boolean(useReducedMotion());
-  const placed = useMemo(() => assignStations(staff), [staff]);
+  const placed = useMemo(() => assignStations(staff, desks), [staff, desks]);
   const phase = usePhase(busy, reduced);
   const away = useWander(staff, phase === "idle" && !reduced);
   const standup = useMemo(() => standupSpots(staff.length), [staff.length]);
@@ -163,7 +155,7 @@ export function PixelOffice({ staff, busy, skin, reaction }: { staff: StartupDev
   const occupiedDesks = new Set(staff.map((d) => placed.get(d.id)).filter((s) => s?.kind === "desk").map((s) => `${s!.spot.x},${s!.spot.y + 4}`));
 
   const drawables: { y: number; node: ReactNode }[] = [
-    ...deskFronts.map((d) => ({ y: d.y, node: <Desk key={`desk-${d.x}-${d.y}`} x={d.x} y={d.y} busy={phase === "work" && occupiedDesks.has(`${d.x},${d.y}`)} /> })),
+    ...deskSlots(desks, deskLimit).map((d) => ({ y: d.y, node: <Desk key={`desk-${d.x}-${d.y}`} x={d.x} y={d.y} tier={d.tier} busy={phase === "work" && occupiedDesks.has(`${d.x},${d.y}`)} /> })),
     { y: TABLE.y + 6, node: <MeetingTable key="table" /> },
     { y: 226, node: <Sofa key="sofa" /> },
     ...staff.map((dev) => {
@@ -172,16 +164,17 @@ export function PixelOffice({ staff, busy, skin, reaction }: { staff: StartupDev
       return {
         y: t.y - (t.seated ? 1 : 0),
         node: <OfficePerson key={dev.id} dev={dev} x={t.x} y={t.y} seated={t.seated && !moving.has(dev.id)} moving={moving.has(dev.id)} working={atHome}
-          reaction={reactions[dev.id]} tired={(dev.burnout ?? 0) >= TIRED_AT} animate={!reduced} />,
+          reaction={reactions[dev.id]} tired={(dev.burnout ?? 0) >= TIRED_AT} distracted={!atHome && (dev.burnout ?? 0) >= DISTRACTED_AT} animate={!reduced} />,
       };
     }),
   ].sort((a, b) => a.y - b.y);
 
-  return <figure className="relative overflow-hidden rounded-[22px] border-[4px] border-[#292542] shadow-[6px_7px_0_#292542]" aria-label={busy ? "Your team is working" : "Your office"}>
+  return <figure className={`relative overflow-hidden ${ui.cardBase}`} aria-label={busy ? "Your team is working" : "Your office"}>
     <svg viewBox={`0 0 ${ROOM_W} ${ROOM_H}`} className="ss-office block h-auto w-full" shapeRendering="crispEdges" role="img" aria-hidden="true">
       <style>{css}</style>
-      <RoomBackdrop busyKinds={busyKinds} skin={skin} />
+      <RoomBackdrop busyKinds={busyKinds} skin={skin} servers={infra?.servers.length ?? 4} balanced={(infra?.parts ?? []).includes("lb")} />
       {drawables.map((d) => d.node)}
+      {staff.map((dev) => <NameTag key={dev.id} name={dev.name} x={targets[dev.id].x} y={targets[dev.id].y} animate={!reduced} />)}
     </svg>
     {staff.map((dev) => {
       const t = targets[dev.id];
