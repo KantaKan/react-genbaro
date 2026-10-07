@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { PixelIcon } from "@/components/startup-story/office/PixelIcon";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import { startupStoryService, STARTUP_STORY_QUERY_KEY, type StartupOverview, type StartupResult, type StartupRun } from "@/application/services/startupStoryService";
+import { startupStoryService, STARTUP_STORY_QUERY_KEY, type StartupItem, type StartupOverview, type StartupResult, type StartupRun } from "@/application/services/startupStoryService";
 import { useAuth } from "@/application/contexts/AuthContext";
 import { fireConfetti } from "@/lib/confetti";
-import { bossInfo, passMarkFor } from "@/components/startup-story/startupStoryCatalog";
+import { bossInfo, passMarkFor, ui } from "@/components/startup-story/startupStoryCatalog";
 import { IpoChoice } from "@/components/startup-story/IpoChoice";
 import { PerkPick } from "@/components/startup-story/PerkPick";
 import { EventCard } from "@/components/startup-story/EventCard";
@@ -35,6 +36,12 @@ export default function StartupStoryPage() {
     const overview = await startupStoryService.overview();
     return { ...overview, clockOffset: Date.parse(overview.server_time) - Date.now() };
   });
+  const [gotItem, setGotItem] = useState<{ item: StartupItem; key: number } | null>(null);
+  useEffect(() => {
+    if (!gotItem) return;
+    const id = window.setTimeout(() => setGotItem(null), 3500);
+    return () => window.clearTimeout(id);
+  }, [gotItem]);
   const [review, setReview] = useState<{ result: StartupResult; boss?: BossOutcome; news: string[] } | null>(null);
   const [ended, setEnded] = useState<{ run: StartupRun; fameBefore: number } | null>(null);
   const [actionError, setActionError] = useState("");
@@ -85,6 +92,7 @@ export default function StartupStoryPage() {
   const actions = {
     hire: (id: string) => action.mutate(() => startupStoryService.hire(id)),
     buyDesk: () => action.mutate(startupStoryService.buyDesk),
+    moveOffice: (id: string) => action.mutate(() => startupStoryService.moveOffice(id)),
     upgradeDesk: (index: number) => action.mutate(() => startupStoryService.upgradeDesk(index)),
     infra: (kind: string, index?: number, id?: string) => action.mutate(() => startupStoryService.infra(kind, index, id)),
     dismiss: (id: string) => action.mutate(() => startupStoryService.dismiss(id)),
@@ -98,12 +106,15 @@ export default function StartupStoryPage() {
       case "perk": return <PerkPick run={run} perks={data.perks ?? []} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickPerk(i))} />;
       case "event": return <EventCard run={run} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickEvent(i))} />;
       case "ipo_choice": return <IpoChoice run={run} pending={pending} onChoose={(keepGoing) => action.mutate(() => startupStoryService.ipoChoice(keepGoing))} />;
-      case "item": return <ItemDraft run={run} items={data.items} pending={pending} onPick={(i) => action.mutate(() => startupStoryService.pickItem(i))} />;
+      case "item": return <ItemDraft run={run} items={data.items} pending={pending} onPick={(i) => {
+        const picked = data.items.find((it) => it.id === run.item_offer?.[i]);
+        action.mutate(() => startupStoryService.pickItem(i), { onSuccess: () => { if (picked) setGotItem({ item: picked, key: Date.now() }); } });
+      }} />;
       default: return <Hub key={run.project_index} run={run} types={data.types} themes={data.themes} items={data.items} roles={data.roles} perks={data.perks} ratings={data.combo_ratings} discovered={data.studio.discovered_combos ?? []} skin={skin} pending={pending}
         onStart={(type, theme, staffIds) => action.mutate(() => startupStoryService.startProject(type, theme, staffIds))}
         onStartPitch={(pitchIndex, staffIds) => action.mutate(() => startupStoryService.startProjectPitch(pitchIndex, staffIds))}
         onHire={actions.hire} onDismiss={actions.dismiss} onAbandon={actions.abandon}
-        deskPrices={data.desk_prices} onBuyDesk={actions.buyDesk} onUpgradeDesk={actions.upgradeDesk}
+        deskPrices={data.desk_prices} onBuyDesk={actions.buyDesk} onUpgradeDesk={actions.upgradeDesk} offices={data.offices} onMoveOffice={actions.moveOffice}
         infraCatalog={data.infra} onInfra={actions.infra} />;
     }
   };
@@ -128,11 +139,21 @@ export default function StartupStoryPage() {
       ? <div className="space-y-4">
           <div className="space-y-3">
             <Hud run={run} items={data.items} />
-            <PixelOffice staff={officeStaff} infra={run.infra} desks={run.desks} deskLimit={run.stage === "hub" ? run.desk_limit : 0} busy={run.stage === "developing"} skin={skin} reaction={reaction} />
+            <PixelOffice office={run.office} staff={officeStaff} infra={run.infra} items={(run.items ?? []).map((id) => data.items.find((it) => it.id === id)).filter((it): it is StartupItem => Boolean(it))}
+              bossVisiting={run.boss_visiting} bossVisits={run.boss_visits} desks={run.desks}
+              deskActions={run.stage === "hub" && data.desk_prices ? { debt: run.debt, money: run.money, act: run.act, prices: data.desk_prices, pending, onUpgrade: actions.upgradeDesk, onBuy: actions.buyDesk } : undefined} deskLimit={run.stage === "hub" ? run.desk_limit : 0} busy={run.stage === "developing"} skin={skin} reaction={reaction} />
           </div>
           <div className="min-w-0">{screen}</div>
         </div>
       : screen}
+    {gotItem && <div key={gotItem.key} role="status" className={`ss-sheet fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-sm items-center gap-3 p-3 ${ui.card}`}>
+      <PixelIcon name={gotItem.item.icon} size={3} />
+      <div className="min-w-0">
+        <p className="ss-pixel text-xs uppercase tracking-widest">Got it! It's on a desk now</p>
+        <p className="font-black">{gotItem.item.name}</p>
+        <p className="text-xs font-bold">{gotItem.item.desc}</p>
+      </div>
+    </div>}
     {review && <ReviewDialog result={review.result} boss={review.boss} news={review.news} oss={run?.oss} onClose={() => setReview(null)} />}
   </main>;
 }

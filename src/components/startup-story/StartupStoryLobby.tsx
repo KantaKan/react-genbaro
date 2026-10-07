@@ -2,10 +2,11 @@ import { PixelIcon } from "./office/PixelIcon";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { STARTUP_STORY_QUERY_KEY, startupStoryService, type StartupBoardTab, type StartupMode, type StartupOverview } from "@/application/services/startupStoryService";
-import { actName, ui } from "./startupStoryCatalog";
+import { actName, baht, ui } from "./startupStoryCatalog";
 
 const boardTabs: { id: StartupBoardTab; label: string; empty: string }[] = [
-  { id: "deepest", label: "Deepest", empty: "No ranked runs yet this week. Be the first!" },
+  { id: "value", label: "Company value", empty: "No companies yet. Start one!" },
+  { id: "deepest", label: "Highest stage", empty: "No Weekly Seed runs yet this week. Be the first!" },
   { id: "weekly", label: "Score", empty: "No ranked runs yet this week. Be the first!" },
   { id: "fame", label: "Fame", empty: "No fame yet. Finish a run to get on the board." },
 ];
@@ -27,7 +28,7 @@ function Leaderboard({ userId }: { userId: string | null }) {
     {data && data.length > 0 && <ol className="space-y-1">
       {data.map((row, i) => <li key={row.owner_id} className={`flex items-center justify-between rounded-xl border-2 px-3 py-2 text-sm font-bold ${row.owner_id === userId ? "border-[#292542] bg-[#fbe39a]" : "border-transparent"}`}>
         <span className="inline-flex items-center gap-1">{i === 0 ? <PixelIcon name="trophy" size={1.5} label="1st" /> : `${i + 1}.`} {row.name}{row.owner_id === userId ? " (you)" : ""}</span>
-        <span>{tab === "deepest" ? `Act ${row.max_act ?? 1} · ${actName(row.max_act ?? 1)}` : tab === "weekly" ? `${(row.score ?? 0).toLocaleString()}${row.outcome === "ipo" ? " · IPO" : ""}` : `${row.fame ?? 0}`}</span>
+        <span>{tab === "value" ? `${baht(row.score ?? 0)} · ${actName(row.max_act ?? 1)}` : tab === "deepest" ? `Act ${row.max_act ?? 1} · ${actName(row.max_act ?? 1)}` : tab === "weekly" ? `${(row.score ?? 0).toLocaleString()}${row.outcome === "ipo" ? " · IPO" : ""}` : `${row.fame ?? 0}`}</span>
       </li>)}
     </ol>}
   </section>;
@@ -71,7 +72,7 @@ export function Lobby({ overview, userId, pending, onStart }: LobbyProps) {
         <button className={`${ui.button} bg-[#fbe39a]`} disabled={pending || left <= 0} onClick={() => onStart("ranked")}>
           Weekly Seed <span className="opacity-70">({left}/3 left)</span>
         </button>
-        <button className={`${ui.button} bg-[#7bc4a8]`} disabled={pending} onClick={() => onStart("free")}>Free Play</button>
+        <button className={`${ui.button} bg-[#7bc4a8]`} disabled={pending} onClick={() => onStart("free")}>Start your company</button>
       </div>
       <p className="text-xs font-bold opacity-70">Weekly Seed: everyone in your cohort gets the same random run this week ({overview.week_key}).</p>
       <p className="text-xs font-black">{overview.oss_unlocked ? "Secret founder unlocked: Open Source Maintainer. Look for them in your founder picks." : "??? Rumor says a founder only shows up for people who ship tools for other devs…"}</p>

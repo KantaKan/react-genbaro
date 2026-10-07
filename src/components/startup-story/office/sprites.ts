@@ -67,6 +67,12 @@ export function rack(servers: number): Grid {
   return rows;
 }
 
+export const officeFeatures = {
+  door: [R("k", 18), ...Array.from({ length: 15 }, (_, i) => "k" + R(i % 2 ? "g" : "G", 16) + "k"), R("k", 18)],
+  gate: [R("k", 18), ...Array.from({ length: 15 }, () => "k" + "g.".repeat(8) + "k"), R("k", 18)],
+  glass: [R("k", 23), ...Array.from({ length: 15 }, (_, y) => "k" + Array.from({ length: 21 }, (_, x) => (x % 7 === 6 ? "k" : y > 15 - [6, 10, 4, 12, 8, 5, 9][x % 7] ? (y % 3 === 0 && x % 2 ? "y" : "n") : "s")).join("") + "k"), R("k", 23)],
+} satisfies Record<string, Grid>;
+
 export const lbBox: Grid = ["kkkkkkkkkkkkkkkkkkkk", "kvvvvvvvvvvvvvvvvvvk", "kvlvVVVVVVVVVVVVVvlk", "kvvvvvvvvvvvvvvvvvvk", "kVVVVVVVVVVVVVVVVVVk", "kkkkkkkkkkkkkkkkkkkk"];
 
 const server: Grid = [R("k", 14), "k" + R("g", 12) + "k", "kglgygGGGGGGgk", "k" + R("g", 12) + "k", R("k", 14)];
@@ -174,6 +180,13 @@ export const desk = {
     ".kkk" + R(".", 24) + "kkk.",
   ],
   monitor: ["kkkkkkkkk", "kGGGGGGGk", "kGGGGGGGk", "kGGGGGGGk", "kGGGGGGGk", "kGGGGGGlk", "kkkkkkkkk", "...kgk...", "...kgk...", "..kkkkk.."],
+  foldingBase: ["kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "kGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGk", "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "...g........................g...", "....g......................g....", ".....g....................g.....", "....g......................g....", "...g........................g...", "..gg........................gg..", "..kk........................kk.."],
+  standingBase: ["kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "kWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWk", "kGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGk", "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "......kgk..............kgk......", "......kgk..............kgk......", "......kgk..............kgk......", "......kgk..............kgk......", "......kgk..............kgk......", "....kkkkkk............kkkkkk...."],
+  rgbBase: ["kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "kKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKk", "krrYYmmSSVVPPrrYYmmSSVVPPrrYYmmk", "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", ".kKk........................kKk.", ".kKk........................kKk.", ".kKk........................kKk.", ".kKk........................kKk.", ".kKk........................kKk.", ".kkk........................kkk."],
+  ultrawide: ["kkkkkkkkkkkkkkkkkkkkkkkk", "kGGGGGGGGGGGGGGGGGGGGGGk", "kGGGGGGGGGGGGGGGGGGGGGGk", "kGGGGGGGGGGGGGGGGGGGGGGk", "kGGGGGGGGGGGGGGGGGGGGlGk", "kkkkkkkkkkkkkkkkkkkkkkkk", "..........kgk...........", "..........kgk...........", "........kkkkkkk........."],
+  monitorBlack: ["kkkkkkkkk", "kKKKKKKKk", "kKKKKKKKk", "kKKKKKKKk", "kKKKKKKKk", "kKKKKKKlk", "kkkkkkkkk", "...kKk...", "...kKk...", "..kkkkk.."],
+  pcTower: ["kkkkkkk", "kKKKKKk", "kKSSSKk", "kKSlSKk", "kKSSSKk", "kKKKKKk", "kKPPPKk", "kKPlPKk", "kKPPPKk", "kKKKKKk", "kKKKKKk", "kkkkkkk"],
+  blackLaptop: [".kkkkkkkkkk.", ".kKKKKKKKKk.", ".kKKKKKKKKk.", ".kKKKKKKKrk.", ".kKKKKKKKlk.", "kggggggggggk", "kkkkkkkkkkkk"],
   laptop: [".kkkkkkkkkk.", ".kGGGGGGGGk.", ".kGGGpGGGGk.", ".kGGGGGGGGk.", ".kGGGGGGGlk.", "kggggggggggk", "kkkkkkkkkkkk"],
 } satisfies Record<string, Grid>;
 
@@ -229,6 +242,68 @@ export const icons = {
   sparkle: [".....y......", ".....y......", "....yyy.....", "yyyyyWyyyy..", "....yyy.....", ".....y......", ".....y...Y..", "........YYY.", ".........Y..", "............", "............", "............"],
   finger: ["....kk......", "...kwwk.....", "...kwwk.....", "...kwwkkk...", "...kwwkwwkk.", ".kkkwwkwwkwk", ".kwkwwwwwwwk", ".kwwwwwwwwwk", "..kwwwwwwwk.", "...kwwwwwk..", "...kkkkkkk..", "............"],
 } satisfies Record<string, Grid>;
+
+export const breakArt = {
+  tv: ["kkkkkkkkkkkkkkkkkkkk", "knnnnnnnnnnnnnnnnnnk", "knnnnnnnnnnnnnnnnnnk", "knnnmmnnnnnnnnnnnnnk", "knnnmmnnnnnnnrrnnnnk", "knnnnnnnnnnnnrrnnnnk", "knnnnnnnnnSSnnnnnnnk", "knnnnnnnnnSSnnnnnnnk", "knnnnnnnnnnnnnnnnnnk", "kmmmmmmmmmmmmmmmmmmk", "knnnnnnnnnnnnnnnnnnk", "kkkkkkkkkkkkkkkkkkkk", "........kggk........", "......kkkkkkkk......"],
+  console: ["kkkkkkkk", "kKKKKlKk", "kKKKKKKk", "kkkkkkkk"],
+  claw: [".........g........", ".........g........", "........kgk.......", ".......k...k......", ".......k...k......"],
+  mech: ["....kkkkkkkk....", "...kFFFFFFFFk...", "...kFkkkkkkFk...", "...kFkyykyykFk..", "...kFkkkkkkFk...", "...kFFFFFFFFk...", "....kkkkkkkk....", "..kkkbbbbbbkkk..", ".kFFkbbbbbbkFFk.", ".kFFkbbyybbkFFk.", ".kFFkbyWWybkFFk.", ".kFFkbbyybbkFFk.", ".kFFkbGGGGbkFFk.", ".kkkkbbbbbbkkkk.", ".kFFkkkkkkkkFFk.", "....kbbkkbbk....", "....kbbkkbbk....", "....kbbkkbbk....", "....kbbkkbbk....", "...kkkkkkkkkk...", "..kgggggggggggk.", "..kkkkkkkkkkkkk."],
+  router: [".k......k.", ".k......k.", "kkkkkkkkkk", "kGlGlGlGGk", "kGGGGGGGGk", "kkkkkkkkkk"],
+  miniPc: ["kkkkkkk", "kglgggk"],
+  pi: ["kkkkkk", "kMlMMk", "kkkkkk"],
+  nas: ["kkkkkkkkkkkk", "kGGkGGkGGklk", "kGGkGGkGGkKk", "kGGkGGkGGkKk", "kkkkkkkkkkkk"],
+  sprout: ["m.m", ".M."],
+  leafy: [".m.m.", "mMmMm", ".mMm.", "..M.."],
+  chilli: [".m.m.", "mrMrm", ".mMm.", "rmMmr", "..M..", "..M.."],
+} satisfies Record<string, Grid>;
+
+export const bossLayers = {
+  thaiTea: [...Array(13).fill(""), "..............k.", ".............kok", "............kook", "............kook", "............kook", "............kkk."],
+  ngob: [".......kk.......", ".....kkyykk.....", "...kkyyYyyykk...", ".kkyyyyYyyyyykk.", "kkkkkkkkkkkkkkkk"],
+  phaKhaoMa: [...Array(11).fill(""), "...kWrWrWrWrk...", ".......rW.......", ".......Wr......."],
+  hoe: ["", "", "", "", "............kggk", "............kkBk", ...Array(13).fill("..............B.")],
+} satisfies Record<string, Grid>;
+
+export const bossPalettes = {
+  office: { 1: "#e8b48a", 3: "#2b2233", 4: "#a9abc4", 5: "#3b3f6b", 6: "#292542", 7: "#4a4466" },
+  farmer: { 1: "#e8b48a", 3: "#2b2233", 4: "#a9abc4", 5: "#4f8df7", 6: "#3a6bc4", 7: "#8a5f3c" },
+} satisfies Record<string, Palette>;
+
+export function clawMachine(): Grid {
+  const rows = [R("k", 18), "k" + R("P", 16) + "k", "kP" + "yP".repeat(7) + "Pk", "k" + R("P", 16) + "k", R("k", 18)];
+  for (let i = 0; i < 8; i++) rows.push("k" + R("s", 16) + "k");
+  rows.push("kssyyspps" + "mmsPPsssk", "ksyyypppsmmmsPPPsk", R("k", 18));
+  for (let i = 0; i < 10; i++) rows.push(i === 2 ? "k" + R("P", 6) + "kyk" + R("P", 7) + "k" : i === 5 ? "kPPkkkkk" + R("P", 9) + "k" : i === 6 ? "kPPkKKKk" + R("P", 9) + "k" : "k" + R("P", 16) + "k");
+  rows.push(R("k", 18), ".kk" + R(".", 12) + "kk.", ".kk" + R(".", 12) + "kk.");
+  return rows;
+}
+
+export function baristaCart(): Grid {
+  const rows = [R("k", 24), "k" + "rW".repeat(11) + "k", "k" + "Wr".repeat(11) + "k", R("k", 24)];
+  for (let i = 0; i < 8; i++) rows.push(".k" + R(".", 20) + "k.");
+  box(24, 8, "b").forEach((r, i) => rows.push(i === 3 ? "k" + R("B", 22) + "k" : r));
+  rows.push("..kk" + R(".", 16) + "kk..", "..kk" + R(".", 16) + "kk..");
+  return rows;
+}
+
+export function homelab(): Grid {
+  const rows = Array.from({ length: 26 }, (_, y) => y === 25 ? "kk" + R(".", 16) + "kk" : y % 8 === 0 ? "k" + R("b", 18) + "k" : "kB" + R(".", 16) + "Bk");
+  const put = (grid: Grid, x: number, y: number) => grid.forEach((line, dy) => {
+    const row = rows[y + dy];
+    rows[y + dy] = row.slice(0, x) + [...line].map((ch, i) => (ch === "." ? row[x + i] : ch)).join("") + row.slice(x + line.length);
+  });
+  put(breakArt.router, 4, 2);
+  [10, 12, 14].forEach((y) => put(breakArt.miniPc, 3, y));
+  put(breakArt.pi, 12, 12);
+  put(breakArt.nas, 4, 18);
+  const wiggle = (col: number, from: number, to: number, ch: string) => {
+    for (let r = from; r < to; r++) put([ch], col + ((r >> 1) % 2), r);
+  };
+  wiggle(16, 3, 22, "r");
+  wiggle(14, 9, 24, "S");
+  wiggle(11, 2, 8, "m");
+  return rows;
+}
 
 export type ReactionIcon = "party" | "sweat" | "up";
 export type IconName = keyof typeof icons;

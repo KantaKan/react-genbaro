@@ -115,6 +115,8 @@ export interface StartupRun {
   founder_offer?: StartupDev[];
   staff: StartupDev[];
   desks?: number[];
+  office?: string;
+  debt?: number;
   desk_limit?: number;
   candidates?: StartupDev[];
   items?: string[];
@@ -136,6 +138,8 @@ export interface StartupRun {
   next_bugs?: number;
   next_power?: number;
   next_traffic?: number;
+  boss_visits?: number;
+  boss_visiting?: boolean;
   infra?: StartupInfra;
   load?: StartupLoad;
   log?: string[];
@@ -204,8 +208,17 @@ export interface StartupOverview {
   oss_unlocked?: boolean;
   combo_ratings?: Record<string, string>;
   desk_prices?: StartupDeskPrices;
+  offices?: StartupOffice[];
   infra?: StartupInfraCatalog;
   opt_out: boolean;
+}
+
+export interface StartupOffice {
+  id: string;
+  name: string;
+  desks: number;
+  price: number;
+  act: number;
 }
 
 export interface StartupDeskPrices {
@@ -213,10 +226,10 @@ export interface StartupDeskPrices {
   step: number;
   upgrade: number[];
   max_tier: number;
-  upgrade_act: number;
+  tier_act: number[];
 }
 
-export type StartupBoardTab = "deepest" | "weekly" | "fame";
+export type StartupBoardTab = "value" | "deepest" | "weekly" | "fame";
 
 export interface StartupLeaderboardEntry {
   owner_id: string;
@@ -240,6 +253,7 @@ export const startupStoryService = {
   pickFounder: (index: number) => post("/runs/active/founder", { index }),
   hire: (candidateId: string) => post("/runs/active/hire", { candidate_id: candidateId }),
   buyDesk: () => post("/runs/active/desks"),
+  moveOffice: (id: string) => post("/runs/active/office", { id }),
   upgradeDesk: (index: number) => post("/runs/active/desks/upgrade", { index }),
   infra: (action: string, index = 0, id = "") => post("/runs/active/infra", { action, index, id }),
   async dismiss(staffId: string): Promise<StartupRun> {
