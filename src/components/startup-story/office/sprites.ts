@@ -126,6 +126,11 @@ export const roleGear: Record<string, Grid> = {
   sa: [...Array(13).fill(""), "............kSk.", "............kSk.", "............kSk.", "............kSk.", "............kSk.", "............kkk."],
 };
 
+export const handheld = {
+  phone: [...Array(14).fill(""), "............kkkk", "............kssk", "............kssk", "............kssk", "............kkkk"],
+  cup: [...Array(15).fill(""), "............kcck", "............kcck", "............kcck", "............kkk."],
+} satisfies Record<string, Grid>;
+
 export const gradCap: Grid = ["...kk...", ".kkkkkk.", "kkkkkkkk", "..kkkk.y"];
 
 export const desk = {

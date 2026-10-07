@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decor, desk, hairStyles, icons, oval, PAL, person, rack, roleGear, tint, toPaths, type Grid } from "./sprites";
+import { decor, desk, hairStyles, handheld, icons, oval, PAL, person, rack, roleGear, tint, toPaths, type Grid } from "./sprites";
 
 describe("toPaths", () => {
   it("merges runs into one path per color and skips transparent pixels", () => {
@@ -26,12 +26,12 @@ describe("hand-drawn grids", () => {
   };
 
   it("are rectangular and only use palette characters", () => {
-    Object.entries({ ...person, ...desk, ...decor, ...icons, ...roleGear, rack: rack(3), table: oval(30, 10, "c") }).forEach(([k, g]) => rect(k, g));
+    Object.entries({ ...person, ...desk, ...decor, ...icons, ...roleGear, ...handheld, rack: rack(3), table: oval(30, 10, "c") }).forEach(([k, g]) => rect(k, g));
     Object.entries(hairStyles).forEach(([k, h]) => Object.entries(h).forEach(([part, g]) => rect(`${k}.${part}`, g)));
   });
 
   it("line the hair and gear layers up with the 16-wide body", () => {
-    for (const g of [person.body, ...Object.values(hairStyles).flatMap((h) => Object.values(h)), ...Object.values(roleGear)]) {
+    for (const g of [person.body, ...Object.values(hairStyles).flatMap((h) => Object.values(h)), ...Object.values(roleGear), ...Object.values(handheld)]) {
       expect(Math.max(...g.map((r) => r.length))).toBe(16);
     }
   });

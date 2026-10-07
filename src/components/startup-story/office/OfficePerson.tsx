@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { StartupDev } from "@/application/services/startupStoryService";
 import { roleLook } from "../startupStoryCatalog";
-import { gradCap, hairStyleNames, hairStyles, icons, person, roleGear, tint, type ReactionIcon } from "./sprites";
+import { gradCap, hairStyleNames, hairStyles, handheld, icons, person, roleGear, tint, type ReactionIcon } from "./sprites";
 import { Sprite } from "./Sprite";
 
 const INK = "#292542";
@@ -19,6 +19,7 @@ function looksFor(dev: StartupDev) {
   const hair = hairs[(h >> 3) % hairs.length];
   const shirt = roleLook(dev.role).color;
   return {
+    coffee: (h >> 9) % 3 === 0,
     style: hairStyleNames[(h >> 6) % hairStyleNames.length],
     pal: { 1: skins[h % skins.length], 3: hair, 4: tint(hair, 1.35), 5: shirt, 6: tint(shirt, 0.78), 7: "#3b3f6b" },
   };
@@ -33,13 +34,15 @@ type Props = {
   working: boolean;
   reaction?: ReactionIcon;
   tired: boolean;
+  distracted: boolean;
   animate: boolean;
 };
 
-export function OfficePerson({ dev, x, y, seated, moving, working, reaction, tired, animate }: Props) {
-  const { style, pal } = useMemo(() => looksFor(dev), [dev]);
+export function OfficePerson({ dev, x, y, seated, moving, working, reaction, tired, distracted, animate }: Props) {
+  const { style, pal, coffee } = useMemo(() => looksFor(dev), [dev]);
   const hair = hairStyles[style];
-  const gear = dev.role ? roleGear[dev.role] : undefined;
+  const held = distracted ? handheld.phone : !working && coffee ? handheld.cup : undefined;
+  const gear = held ?? (dev.role ? roleGear[dev.role] : undefined);
   const body = reaction ? "ss-jump" : moving ? "ss-walk-bob" : working ? "ss-bob" : "ss-breathe";
   return <g style={{ transform: `translate(${x}px, ${y}px)`, transition: animate ? "transform 1.4s linear" : "none" }}>
     <ellipse cx="0" cy="0" rx="10" ry="3" fill={INK} opacity="0.18" />

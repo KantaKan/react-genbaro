@@ -68,3 +68,4 @@ export function levelUps(previous: Map<string, number>, staff: StartupDev[]): st
 }
 
 export const TIRED_AT = 80;
+export const DISTRACTED_AT = 60;

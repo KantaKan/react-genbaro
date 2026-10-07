@@ -92,7 +92,9 @@ export interface StartupRun {
   world_event?: string;
   boss_gimmick?: string;
   pending_perk?: { dev_id: string; offer: string[] };
-  pending_event?: { id: string; options: string[] };
+  pending_event?: { id: string; title?: string; options: string[] };
+  next_bugs?: number;
+  next_power?: number;
   log?: string[];
 }
 

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useReducedMotion } from "framer-motion";
 import type { StartupDev } from "@/application/services/startupStoryService";
 import { comebackLines, isSassy, roleLook, sassLine } from "./startupStoryCatalog";
-import { assignStations, deskSlots, hangoutSpots, levelUps, ROOM_H, ROOM_W, standupSpots, TABLE, TIRED_AT, type Spot } from "./office/officeLayout";
+import { assignStations, deskSlots, hangoutSpots, levelUps, ROOM_H, ROOM_W, standupSpots, TABLE, TIRED_AT, DISTRACTED_AT, type Spot } from "./office/officeLayout";
 import { Desk, MeetingTable, RoomBackdrop, Sofa } from "./office/OfficeRoom";
 import { NameTag, OfficePerson } from "./office/OfficePerson";
 import type { ReactionIcon } from "./office/sprites";
@@ -28,6 +28,7 @@ const css = `
 @media (prefers-reduced-motion: reduce) { .ss-office * { animation: none !important; transition: none !important; } }
 `;
 
+const phoneLines = ["just one more reel", "doomscrolling...", "reading tech drama", "5 min break (40 min ago)", "replying to the group chat", "staring at the screen"];
 const standupLines = ["no blockers 👍", "still fixing that bug 😅", "yesterday: meetings", "today: ship it 🚀", "can we keep it short?", "ขอกาแฟก่อน ☕"];
 
 type Phase = "idle" | "standup" | "work";
@@ -99,7 +100,8 @@ function useSpeech(staff: StartupDev[], phase: Phase) {
         if (sass.targetId) show(sass.targetId, comebackLines[Math.floor(Math.random() * comebackLines.length)], 1300);
         return;
       }
-      const pool = phase === "standup" ? standupLines : phase === "work" ? roleLook(dev.role).lines : roleLook(dev.role).idle;
+      const distracted = phase !== "work" && (dev.burnout ?? 0) >= DISTRACTED_AT;
+      const pool = phase === "standup" ? standupLines : phase === "work" ? roleLook(dev.role).lines : distracted ? phoneLines : roleLook(dev.role).idle;
       show(dev.id, pool[Math.floor(Math.random() * pool.length)]);
     };
     say();
@@ -162,7 +164,7 @@ export function PixelOffice({ staff, desks = START_DESKS, deskLimit = 0, busy, s
       return {
         y: t.y - (t.seated ? 1 : 0),
         node: <OfficePerson key={dev.id} dev={dev} x={t.x} y={t.y} seated={t.seated && !moving.has(dev.id)} moving={moving.has(dev.id)} working={atHome}
-          reaction={reactions[dev.id]} tired={(dev.burnout ?? 0) >= TIRED_AT} animate={!reduced} />,
+          reaction={reactions[dev.id]} tired={(dev.burnout ?? 0) >= TIRED_AT} distracted={!atHome && (dev.burnout ?? 0) >= DISTRACTED_AT} animate={!reduced} />,
       };
     }),
   ].sort((a, b) => a.y - b.y);

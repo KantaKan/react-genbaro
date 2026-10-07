@@ -8,7 +8,7 @@ export function EventCard({ run, pending, onPick }: { run: StartupRun; pending: 
   return <section className="space-y-4">
     <div className={`${ui.card} space-y-1 p-5 text-center`}>
       <p className="text-4xl">🎲</p>
-      <h2 className="text-2xl font-black">{info?.title ?? pendingEvent.id}</h2>
+      <h2 className="text-2xl font-black">{pendingEvent.title ?? info?.title ?? pendingEvent.id}</h2>
       <p className="text-sm font-bold">Something came up mid-project. Pick one.</p>
     </div>
     <div className="grid gap-4 sm:grid-cols-2">
