@@ -1,8 +1,9 @@
 import { useState } from "react";
-import type { StartupDeskPrices, StartupItem, StartupPerk, StartupRole, StartupRun } from "@/application/services/startupStoryService";
+import type { StartupDeskPrices, StartupInfraCatalog, StartupItem, StartupPerk, StartupRole, StartupRun } from "@/application/services/startupStoryService";
 import { bossInfo, comboKey, passMarkFor, roleLook, teamHints, ui, upcomingBoss } from "./startupStoryCatalog";
 import { DevCard } from "./DevCard";
 import { Desk } from "./office/OfficeRoom";
+import { InfraPanel } from "./InfraPanel";
 import { PitchCards } from "./PitchCards";
 
 type HubProps = {
@@ -22,12 +23,14 @@ type HubProps = {
   deskPrices?: StartupDeskPrices;
   onBuyDesk: () => void;
   onUpgradeDesk: (index: number) => void;
+  infraCatalog?: StartupInfraCatalog;
+  onInfra: (action: string, index?: number, id?: string) => void;
   onDismiss: (staffId: string) => void;
   onAbandon: () => void;
 };
 
-export function Hub({ run, types, themes, roles, perks, discovered, ratings, pending, onStart, onStartPitch, onHire, onDismiss, onAbandon, deskPrices, onBuyDesk, onUpgradeDesk }: HubProps) {
-  const [tab, setTab] = useState<"project" | "team" | "hire" | "office">("project");
+export function Hub({ run, types, themes, roles, perks, discovered, ratings, pending, onStart, onStartPitch, onHire, onDismiss, onAbandon, deskPrices, onBuyDesk, onUpgradeDesk, infraCatalog, onInfra }: HubProps) {
+  const [tab, setTab] = useState<"project" | "team" | "hire" | "office" | "infra">("project");
   const [type, setType] = useState("");
   const [theme, setTheme] = useState("");
   const [excluded, setExcluded] = useState<string[]>([]);
@@ -51,11 +54,12 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
     <button role="tab" aria-selected={tab === id} className={`${ui.chipBase} flex-1 ${tab === id ? "bg-[#292542] text-[#fffaf0]" : "bg-white text-[#292542]"}`} onClick={() => setTab(id)}>{label}</button>;
 
   return <section className="space-y-4">
-    <div role="tablist" className="flex gap-2">
+    <div role="tablist" className="flex flex-wrap gap-2">
       {tabButton("project", boss ? "👹 Boss" : "🛠️ Project")}
       {tabButton("team", `👥 Team ${run.staff.length}/${cap}`)}
       {tabButton("hire", `🤝 Hire (${run.candidates?.length ?? 0})`)}
       {tabButton("office", "🏢 Office")}
+      {tabButton("infra", "🖥️ Infra")}
     </div>
 
     {tab === "project" && <div className={`${ui.card} space-y-4 p-4`}>
@@ -135,6 +139,8 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
         ? <button className={`${ui.button} w-full bg-[#7bc4a8]`} disabled={pending || run.money < nextDesk} onClick={onBuyDesk}>Buy a desk ฿{nextDesk.toLocaleString()}</button>
         : <p className="text-center text-sm font-bold text-foreground">The office is full for this act. More floor space opens next act.</p>}
     </div>}
+
+    {tab === "infra" && <InfraPanel run={run} catalog={infraCatalog} pending={pending} onAction={onInfra} />}
 
     <div className="text-right">
       {confirmPivot

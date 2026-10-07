@@ -1,14 +1,17 @@
+import { useMemo } from "react";
 import { ROOM_H, ROOM_W, TABLE } from "./officeLayout";
-import { block, box, dashed, decor, desk, icons, oval, rack } from "./sprites";
+import { block, box, dashed, decor, desk, icons, lbBox, oval, rack } from "./sprites";
 import { Sprite } from "./Sprite";
 
 const notes: [string, number, number][] = [["y", 0, 0], ["p", 6, 1], ["s", 12, 0], ["m", 2, 7], ["y", 9, 8], ["v", 4, 13]];
 const tableTop = oval(30, 10, "c");
 const tableInner = oval(20, 6, "C");
-const serverRack = rack(4);
 const openSlot = dashed(32, 14);
 
-export function RoomBackdrop({ busyKinds, skin }: { busyKinds: Set<string>; skin?: string }) {
+type BackdropProps = { busyKinds: Set<string>; skin?: string; servers: number; balanced: boolean };
+
+export function RoomBackdrop({ busyKinds, skin, servers, balanced }: BackdropProps) {
+  const serverRack = useMemo(() => rack(Math.min(servers, 5)), [servers]);
   const rooftop = skin === "rooftop-bangkok";
   const busy = (kind: string) => busyKinds.has(kind);
   return <g>
@@ -47,7 +50,8 @@ export function RoomBackdrop({ busyKinds, skin }: { busyKinds: Set<string>; skin
     <Sprite grid={block(22, 1, "G")} x={186} y={50} />
 
     <Sprite grid={decor.poster} x={240} y={16} />
-    <Sprite grid={serverRack} x={256} y={22} blink={busy("rack")} />
+    <Sprite grid={serverRack} x={256} y={70 - serverRack.length * 2} blink={busy("rack")} />
+    {balanced && <Sprite grid={lbBox} x={254} y={64} blink={busy("rack")} />}
 
     <Sprite grid={box(20, 17, "b")} x={318} y={58} />
     <Sprite grid={block(18, 1, "B")} x={320} y={68} />

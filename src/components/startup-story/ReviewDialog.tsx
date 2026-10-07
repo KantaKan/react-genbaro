@@ -18,11 +18,16 @@ export function ReviewDialog({ result, boss, news = [], oss, onClose }: { result
         <div className="flex items-center justify-between font-black"><span>{reviewerIcons[r.reviewer]} {r.reviewer}</span><span>{r.score}/10</span></div>
         <p className="mt-1 text-sm">{r.line}</p>
       </motion.div>)}
+      {result.postmortem && <div className="rounded-2xl border-2 border-[#292542] bg-[#f7c6d9] p-3 text-sm font-bold">
+        <p className="text-xs font-black uppercase tracking-widest">Post-mortem · {Math.round((result.overload ?? 1) * 100)}% load</p>
+        <p className="mt-1">{result.postmortem}</p>
+        <p className="mt-1 text-xs">Overloaded: extra bugs, and fewer new fans stuck around.</p>
+      </div>}
       {news.length > 0 && <div className="rounded-2xl border-2 border-[#292542] bg-[#fbe39a] p-3 text-sm font-bold">
         <p className="text-xs font-black uppercase tracking-widest">📰 Office gossip</p>
         <ul className="mt-1 space-y-1">{news.map((line) => <li key={line}>{line}</li>)}</ul>
       </div>}
-      <p className="text-sm font-bold">💰 {result.money_delta >= 0 ? "+" : ""}{baht(result.money_delta)}{oss ? " sponsors 💖" : ""} · +{result.fans_delta.toLocaleString()} {fansLabel(oss)} · 🐛 {result.bugs} bugs</p>
+      <p className="text-sm font-bold">💰 {result.money_delta >= 0 ? "+" : ""}{baht(result.money_delta)}{oss ? " sponsors 💖" : ""} · +{result.fans_delta.toLocaleString()} {fansLabel(oss)} · 🐛 {result.bugs} bugs{result.cloud_bill ? ` · cloud bill ${baht(result.cloud_bill)} (included)` : ""}</p>
       <button className={`${ui.button} w-full bg-[#7bc4a8]`} onClick={onClose} autoFocus>Nice!</button>
     </div>
   </div>;

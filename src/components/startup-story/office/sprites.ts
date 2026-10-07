@@ -67,6 +67,8 @@ export function rack(servers: number): Grid {
   return rows;
 }
 
+export const lbBox: Grid = ["kkkkkkkkkkkkkkkkkkkk", "kvvvvvvvvvvvvvvvvvvk", "kvlvVVVVVVVVVVVVVvlk", "kvvvvvvvvvvvvvvvvvvk", "kVVVVVVVVVVVVVVVVVVk", "kkkkkkkkkkkkkkkkkkkk"];
+
 const server: Grid = [R("k", 14), "k" + R("g", 12) + "k", "kglgygGGGGGGgk", "k" + R("g", 12) + "k", R("k", 14)];
 
 export const person = {

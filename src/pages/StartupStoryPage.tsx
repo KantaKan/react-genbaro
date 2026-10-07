@@ -86,6 +86,7 @@ export default function StartupStoryPage() {
     hire: (id: string) => action.mutate(() => startupStoryService.hire(id)),
     buyDesk: () => action.mutate(startupStoryService.buyDesk),
     upgradeDesk: (index: number) => action.mutate(() => startupStoryService.upgradeDesk(index)),
+    infra: (kind: string, index?: number, id?: string) => action.mutate(() => startupStoryService.infra(kind, index, id)),
     dismiss: (id: string) => action.mutate(() => startupStoryService.dismiss(id)),
     abandon: () => action.mutate(startupStoryService.abandon),
   };
@@ -102,7 +103,8 @@ export default function StartupStoryPage() {
         onStart={(type, theme, staffIds) => action.mutate(() => startupStoryService.startProject(type, theme, staffIds))}
         onStartPitch={(pitchIndex, staffIds) => action.mutate(() => startupStoryService.startProjectPitch(pitchIndex, staffIds))}
         onHire={actions.hire} onDismiss={actions.dismiss} onAbandon={actions.abandon}
-        deskPrices={data.desk_prices} onBuyDesk={actions.buyDesk} onUpgradeDesk={actions.upgradeDesk} />;
+        deskPrices={data.desk_prices} onBuyDesk={actions.buyDesk} onUpgradeDesk={actions.upgradeDesk}
+        infraCatalog={data.infra} onInfra={actions.infra} />;
     }
   };
 
@@ -126,7 +128,7 @@ export default function StartupStoryPage() {
       ? <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start">
           <div className="space-y-3 lg:sticky lg:top-4">
             <Hud run={run} items={data.items} />
-            <PixelOffice staff={officeStaff} desks={run.desks} deskLimit={run.stage === "hub" ? run.desk_limit : 0} busy={run.stage === "developing"} skin={skin} reaction={reaction} />
+            <PixelOffice staff={officeStaff} infra={run.infra} desks={run.desks} deskLimit={run.stage === "hub" ? run.desk_limit : 0} busy={run.stage === "developing"} skin={skin} reaction={reaction} />
           </div>
           <div className="min-w-0">{screen}</div>
         </div>

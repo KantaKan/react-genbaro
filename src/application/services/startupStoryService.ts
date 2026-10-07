@@ -55,6 +55,41 @@ export interface StartupResult {
   bugs: number;
   money_delta: number;
   fans_delta: number;
+  cloud_bill?: number;
+  overload?: number;
+  postmortem?: string;
+}
+
+export interface StartupInfra {
+  servers: { cpu: number; ram: number }[];
+  db: string;
+  parts?: string[];
+}
+
+export interface StartupLoad {
+  app: number;
+  app_cap: number;
+  db: number;
+  db_cap: number;
+}
+
+export interface StartupInfraItem {
+  id: string;
+  branch: string;
+  fixes: string;
+  name: string;
+  act: number;
+  price: number;
+  bill: number;
+  what: string;
+  need: string;
+  effect: string;
+  thai: string;
+}
+
+export interface StartupInfraCatalog {
+  upgrade: number[];
+  items: StartupInfraItem[];
 }
 
 export interface StartupRun {
@@ -95,6 +130,9 @@ export interface StartupRun {
   pending_event?: { id: string; title?: string; options: string[] };
   next_bugs?: number;
   next_power?: number;
+  next_traffic?: number;
+  infra?: StartupInfra;
+  load?: StartupLoad;
   log?: string[];
 }
 
@@ -161,6 +199,7 @@ export interface StartupOverview {
   oss_unlocked?: boolean;
   combo_ratings?: Record<string, string>;
   desk_prices?: StartupDeskPrices;
+  infra?: StartupInfraCatalog;
   opt_out: boolean;
 }
 
@@ -197,6 +236,7 @@ export const startupStoryService = {
   hire: (candidateId: string) => post("/runs/active/hire", { candidate_id: candidateId }),
   buyDesk: () => post("/runs/active/desks"),
   upgradeDesk: (index: number) => post("/runs/active/desks/upgrade", { index }),
+  infra: (action: string, index = 0, id = "") => post("/runs/active/infra", { action, index, id }),
   async dismiss(staffId: string): Promise<StartupRun> {
     const response = await api.delete<ApiResponse<StartupRun>>(`/startup-story/runs/active/staff/${encodeURIComponent(staffId)}`);
     return response.data.data;

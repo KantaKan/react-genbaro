@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useReducedMotion } from "framer-motion";
-import type { StartupDev } from "@/application/services/startupStoryService";
+import type { StartupDev, StartupInfra } from "@/application/services/startupStoryService";
 import { comebackLines, isSassy, roleLook, sassLine } from "./startupStoryCatalog";
 import { assignStations, deskSlots, hangoutSpots, levelUps, ROOM_H, ROOM_W, standupSpots, TABLE, TIRED_AT, DISTRACTED_AT, type Spot } from "./office/officeLayout";
 import { Desk, MeetingTable, RoomBackdrop, Sofa } from "./office/OfficeRoom";
@@ -135,9 +135,9 @@ function useReactions(staff: StartupDev[], reaction?: OfficeReaction) {
 
 const START_DESKS = [1, 1];
 
-type OfficeProps = { staff: StartupDev[]; desks?: number[]; deskLimit?: number; busy: boolean; skin?: string; reaction?: OfficeReaction };
+type OfficeProps = { staff: StartupDev[]; infra?: StartupInfra; desks?: number[]; deskLimit?: number; busy: boolean; skin?: string; reaction?: OfficeReaction };
 
-export function PixelOffice({ staff, desks = START_DESKS, deskLimit = 0, busy, skin, reaction }: OfficeProps) {
+export function PixelOffice({ staff, infra, desks = START_DESKS, deskLimit = 0, busy, skin, reaction }: OfficeProps) {
   const reduced = Boolean(useReducedMotion());
   const placed = useMemo(() => assignStations(staff, desks), [staff, desks]);
   const phase = usePhase(busy, reduced);
@@ -172,7 +172,7 @@ export function PixelOffice({ staff, desks = START_DESKS, deskLimit = 0, busy, s
   return <figure className="relative overflow-hidden rounded-[22px] border-[4px] border-[#292542] shadow-[6px_7px_0_#292542]" aria-label={busy ? "Your team is working" : "Your office"}>
     <svg viewBox={`0 0 ${ROOM_W} ${ROOM_H}`} className="ss-office block h-auto w-full" shapeRendering="crispEdges" role="img" aria-hidden="true">
       <style>{css}</style>
-      <RoomBackdrop busyKinds={busyKinds} skin={skin} />
+      <RoomBackdrop busyKinds={busyKinds} skin={skin} servers={infra?.servers.length ?? 4} balanced={(infra?.parts ?? []).includes("lb")} />
       {drawables.map((d) => d.node)}
       {staff.map((dev) => <NameTag key={dev.id} name={dev.name} x={targets[dev.id].x} y={targets[dev.id].y} animate={!reduced} />)}
     </svg>
