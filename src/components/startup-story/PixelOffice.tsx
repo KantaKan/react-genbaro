@@ -144,7 +144,7 @@ const START_DESKS = [1, 1];
 
 export type DeskActions = { money: number; act: number; prices: StartupDeskPrices; pending: boolean; onUpgrade: (index: number) => void; onBuy: () => void };
 
-type OfficeProps = { deskActions?: DeskActions; staff: StartupDev[]; infra?: StartupInfra; items?: StartupItem[]; bossVisiting?: boolean; bossVisits?: number; desks?: number[]; deskLimit?: number; busy: boolean; skin?: string; reaction?: OfficeReaction };
+type OfficeProps = { office?: string; deskActions?: DeskActions; staff: StartupDev[]; infra?: StartupInfra; items?: StartupItem[]; bossVisiting?: boolean; bossVisits?: number; desks?: number[]; deskLimit?: number; busy: boolean; skin?: string; reaction?: OfficeReaction };
 
 function useNewestItem(count: number) {
   const last = useRef(count);
@@ -162,7 +162,7 @@ function useNewestItem(count: number) {
 
 const SHELF = { x: 138, y: 56, slots: 2 };
 
-export function PixelOffice({ deskActions, staff, infra, items = [], bossVisiting = false, bossVisits = 0, desks = START_DESKS, deskLimit = 0, busy, skin, reaction }: OfficeProps) {
+export function PixelOffice({ office, deskActions, staff, infra, items = [], bossVisiting = false, bossVisits = 0, desks = START_DESKS, deskLimit = 0, busy, skin, reaction }: OfficeProps) {
   const reduced = Boolean(useReducedMotion());
   const [room, setRoom] = useState<"office" | "break">(busy ? "office" : "break");
   useEffect(() => setRoom(busy ? "office" : "break"), [busy]);
@@ -264,7 +264,7 @@ export function PixelOffice({ deskActions, staff, infra, items = [], bossVisitin
     {room === "office" && <>
     <svg viewBox={`0 0 ${ROOM_W} ${ROOM_H}`} className="ss-office block h-auto w-full" shapeRendering="crispEdges">
       <style>{css}</style>
-      <g onClick={() => setOpenDesk(null)}><RoomBackdrop busyKinds={busyKinds} skin={skin} servers={infra?.servers.length ?? 4} balanced={(infra?.parts ?? []).includes("lb")} /></g>
+      <g onClick={() => setOpenDesk(null)}><RoomBackdrop busyKinds={busyKinds} skin={skin} servers={infra?.servers.length ?? 4} balanced={(infra?.parts ?? []).includes("lb")} office={office} /></g>
       {items.length > ownedDesks.length && <Sprite grid={block(17, 2, "B")} x={SHELF.x - 2} y={SHELF.y} />}
       {drawables.map((d) => d.node)}
       {staff.map((dev) => <NameTag key={dev.id} name={dev.name} x={targets[dev.id].x} y={targets[dev.id].y} animate={!reduced} />)}

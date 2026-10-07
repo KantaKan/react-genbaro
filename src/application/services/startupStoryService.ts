@@ -115,6 +115,7 @@ export interface StartupRun {
   founder_offer?: StartupDev[];
   staff: StartupDev[];
   desks?: number[];
+  office?: string;
   desk_limit?: number;
   candidates?: StartupDev[];
   items?: string[];
@@ -206,8 +207,17 @@ export interface StartupOverview {
   oss_unlocked?: boolean;
   combo_ratings?: Record<string, string>;
   desk_prices?: StartupDeskPrices;
+  offices?: StartupOffice[];
   infra?: StartupInfraCatalog;
   opt_out: boolean;
+}
+
+export interface StartupOffice {
+  id: string;
+  name: string;
+  desks: number;
+  price: number;
+  act: number;
 }
 
 export interface StartupDeskPrices {
@@ -242,6 +252,7 @@ export const startupStoryService = {
   pickFounder: (index: number) => post("/runs/active/founder", { index }),
   hire: (candidateId: string) => post("/runs/active/hire", { candidate_id: candidateId }),
   buyDesk: () => post("/runs/active/desks"),
+  moveOffice: (id: string) => post("/runs/active/office", { id }),
   upgradeDesk: (index: number) => post("/runs/active/desks/upgrade", { index }),
   infra: (action: string, index = 0, id = "") => post("/runs/active/infra", { action, index, id }),
   async dismiss(staffId: string): Promise<StartupRun> {
