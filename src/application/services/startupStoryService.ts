@@ -23,6 +23,8 @@ export interface StartupDev {
   xp_next?: number;
   burnout?: number;
   perks?: string[];
+  wildcard?: string;
+  wildcard_desc?: string;
 }
 
 export interface StartupPitch {
@@ -182,7 +184,7 @@ export interface StartupRole {
 
 export interface StartupUnlock {
   fame: number;
-  kind: "founder" | "item" | "skin";
+  kind: "founder" | "item" | "skin" | "wildcard";
   id: string;
   name: string;
 }

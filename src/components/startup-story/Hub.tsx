@@ -97,7 +97,7 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
     {tab === "team" && <div className="grid gap-3 sm:grid-cols-2">
       {run.staff.map((dev) => <div key={dev.id} className={`${ui.card} space-y-3 p-4`}>
         <DevCard dev={dev} showSalary roles={roles} perks={perks} />
-        {run.staff.length > 1 && <button className={`${ui.button} w-full bg-white py-2`} disabled={pending} onClick={() => onDismiss(dev.id)}>Let go 👋</button>}
+        {run.staff.length > 1 && dev.wildcard !== "vim" && <button className={`${ui.button} w-full bg-white py-2`} disabled={pending} onClick={() => onDismiss(dev.id)}>Let go 👋</button>}
       </div>)}
     </div>}
 

@@ -133,6 +133,38 @@ export const handheld = {
   cup: [...Array(15).fill(""), "............kcck", "............kcck", "............kcck", "............kkk."],
 } satisfies Record<string, Grid>;
 
+export const wildLayers = {
+  jesterHat: [".yy.kkkkkkkk.yy.", ".yykVVVVmmmmkyy.", "..kVVVVVmmmmmk..", "..kVVVVVmmmmmk..", "..kVVVVVmmmmmk..", "..kkkkkkkkkkkk..", "", "", "....V......m....", "", "", "", "........mmm.....", "........mmm.....", "........mmm.....", "........mmm.....", "........mmm....."],
+  catEars: ["..kk........kk..", "..kpk......kpk..", "..k1pk....kp1k..", "......o.o.......", "", "", "", "", "kk.....pp.....kk"],
+  shades: ["", "", "", "", "", "", "...kkkkkkkkkk...", "....kkk..kkk...."],
+  fine: ["", "", "", "..............k.", ".............ksk", ".............kSk", "..............k.", "", "", "", "", "", "", "", "", "............kcck", "............kcck", "............kcck", "............kkk."],
+  wizardHat: [".......kk.......", "......kVVk......", ".....kVyVVk.....", "....kVVVVVVk....", "..kkkkkkkkkkkk.."],
+  beard: ["", "", "", "", "", "", "", "", "....G......G....", "....GGG..GGG....", "....GGGGGGGG....", ".....GGGGGG.....", "......GGGG......", ".......GG......."],
+  glasses: ["", "", "", "", "", "", "...kkkk..kkkk...", "...k..kkkk..k..."],
+  lanyard: ["", "", "", "", "", "", "", "", "", "", "", "", ".....S....S.....", "......S..S......", ".......kk.......", "......kcck......", "......kkkk......"],
+} satisfies Record<string, Grid>;
+
+export const wildSprites = {
+  duck: [...Array(6).fill("................"), "......kkkk......", ".....kyyyyk.....", "....kyyyyyyk....", "....kyykyyyk....", "....kyyyyyykkk..", "....kyyyyyyoook.", "....kyyyyyykkk..", ".....kyyyyk.....", "..kkkkyyyykkk...", ".kyyyyyyyyyyyk..", "kyyyyyyyyyyyyyk.", "kyyyYYYyyyyyyyk.", "kyyyyYYYyyyyyyk.", "kyyyyyyyyyyyyyk.", ".kYyyyyyyyyyYk..", "..kkkkkkkkkkk..."],
+  robot: [".......kk.......", ".......rr.......", "....kkkkkkkk....", "...kGGGGGGGGk...", "..kGGGGGGGGGGk..", "..kGkkkkkkkkGk..", "..kGkllkkllkGk..", "..kGkkkkkkkkGk..", "..kGGGGGGGGGGk..", "...kGGkkkkGGk...", "....kkkkkkkk....", ".....kggggk.....", "..kkkkkkkkkkkk..", "..kGGGGGGGGGGk..", ".kgkGGGGGGGGkgk.", ".kgkGGsSsGGGkgk.", ".kgkGGGGGGGGkgk.", ".kkkGGGGGGGGkkk.", "...kkkkkkkkkk...", "....kgk..kgk....", "....kgk..kgk....", "....kgk..kgk....", "...kkkk..kkkk...", "................"],
+  ghost: ["................", "................", ".....kkkkkk.....", "....kWWWWWWk....", "...kWWWWWWWWk...", "..kWWWWWWWWWWk..", "..kWWkWWWWkWWk..", "..kWWkWWWWkWWk..", "..kWWWWWWWWWWk..", "..kWWWWkkWWWWk..", "..kWWWWWWWWWWk..", ".kWWWWWWWWWWWWk.", "kWWWWWWWWWWWWWWk", "kWkWWWWWWWWWWkWk", "kk.kWWWWWWWWk.kk", "...kWWWWWWWWk...", "...kWWWWWWWWk...", "...kWWWWWWWWk...", "...kWWWWWWWWk...", "...kWkWWWkWWk...", "...kk.kWk.kkk...", "................", "................", "................"],
+} satisfies Record<string, Grid>;
+
+type WildLook = { sprite?: keyof typeof wildSprites; hair?: "short" | "long" | "bob" | "ponytail" | "none"; layers?: (keyof typeof wildLayers)[]; pal?: Palette };
+
+export const wildLooks: Record<string, WildLook> = {
+  jester: { hair: "none", layers: ["jesterHat"], pal: { 1: "#fffaf0", 5: "#6a4fb3", 6: "#3aa37a", 7: "#292542" } },
+  duck: { sprite: "duck" },
+  cat: { hair: "none", layers: ["catEars"], pal: { 1: "#f2a65a", 5: "#bfe3f7", 6: "#4f8df7", 7: "#3b3f6b" } },
+  tenx: { hair: "short", layers: ["shades"], pal: { 1: "#e8b48a", 3: "#1d1a24", 4: "#4a4466", 5: "#3b3f6b", 6: "#292542", 7: "#1b1830" } },
+  fine: { hair: "bob", layers: ["fine"], pal: { 1: "#f5d0b0", 3: "#c9772e", 4: "#e8a65a", 5: "#7bc4a8", 6: "#3aa37a", 7: "#3b3f6b" } },
+  vim: { hair: "long", layers: ["beard", "wizardHat"], pal: { 1: "#e8b48a", 3: "#c9c9d6", 4: "#ffffff", 5: "#6a4fb3", 6: "#4f3a8a", 7: "#292542" } },
+  greybeard: { hair: "short", layers: ["beard", "glasses"], pal: { 1: "#f5d0b0", 3: "#a9abc4", 4: "#e4e4ee", 5: "#8a5f3c", 6: "#6b4429", 7: "#3b3f6b" } },
+  intern: { hair: "ponytail", layers: ["lanyard"], pal: { 1: "#c98b5e", 3: "#2b2233", 4: "#5a4a6b", 5: "#fbe39a", 6: "#e2a12b", 7: "#4f8df7" } },
+  ai: { sprite: "robot" },
+  ghost: { sprite: "ghost" },
+};
+
 export const gradCap: Grid = ["...kk...", ".kkkkkk.", "kkkkkkkk", "..kkkk.y"];
 
 export const desk = {

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { StartupDev } from "@/application/services/startupStoryService";
 import { roleLook } from "../startupStoryCatalog";
-import { gradCap, hairStyleNames, hairStyles, handheld, icons, person, roleGear, tint, type ReactionIcon } from "./sprites";
+import { gradCap, hairStyleNames, hairStyles, handheld, icons, person, roleGear, tint, wildLayers, wildLooks, wildSprites, type Grid, type ReactionIcon } from "./sprites";
 import { Sprite } from "./Sprite";
 
 const INK = "#292542";
@@ -16,11 +16,14 @@ function hash(text: string) {
 
 function looksFor(dev: StartupDev) {
   const h = hash(dev.name + dev.id);
+  const wild = dev.wildcard ? wildLooks[dev.wildcard] : undefined;
+  if (wild) return { coffee: false, style: wild.hair && wild.hair !== "none" ? wild.hair : undefined, pal: wild.pal ?? {}, wild };
   const hair = hairs[(h >> 3) % hairs.length];
   const shirt = roleLook(dev.role).color;
   return {
     coffee: (h >> 9) % 3 === 0,
-    style: hairStyleNames[(h >> 6) % hairStyleNames.length],
+    wild: undefined,
+    style: hairStyleNames[(h >> 6) % hairStyleNames.length] as (typeof hairStyleNames)[number] | undefined,
     pal: { 1: skins[h % skins.length], 3: hair, 4: tint(hair, 1.35), 5: shirt, 6: tint(shirt, 0.78), 7: "#3b3f6b" },
   };
 }
@@ -39,15 +42,18 @@ type Props = {
 };
 
 export function OfficePerson({ dev, x, y, seated, moving, working, reaction, tired, distracted, animate }: Props) {
-  const { style, pal, coffee } = useMemo(() => looksFor(dev), [dev]);
-  const hair = hairStyles[style];
+  const { style, pal, coffee, wild } = useMemo(() => looksFor(dev), [dev]);
+  const hair: { back?: Grid; front: Grid } | undefined = style ? hairStyles[style] : undefined;
   const held = distracted ? handheld.phone : !working && coffee ? handheld.cup : undefined;
-  const gear = held ?? (dev.role ? roleGear[dev.role] : undefined);
+  const gear = held ?? (dev.role && !wild ? roleGear[dev.role] : undefined);
   const body = reaction ? "ss-jump" : moving ? "ss-walk-bob" : working ? "ss-bob" : "ss-breathe";
   return <g style={{ transform: `translate(${x}px, ${y}px)`, transition: animate ? "transform 1.4s linear" : "none" }}>
     <ellipse cx="0" cy="0" rx="10" ry="3" fill={INK} opacity="0.18" />
     <g className={body}>
-      {"back" in hair && <Sprite grid={hair.back} pal={pal} x={-16} y={-48} />}
+      {wild?.sprite
+        ? <Sprite grid={wildSprites[wild.sprite]} x={-16} y={-48} />
+        : <>
+      {hair?.back && <Sprite grid={hair.back} pal={pal} x={-16} y={-48} />}
       <Sprite grid={person.body} pal={pal} x={-16} y={-48} />
       {!seated && (moving
         ? <>
@@ -55,7 +61,9 @@ export function OfficePerson({ dev, x, y, seated, moving, working, reaction, tir
           <Sprite grid={person.stepB} pal={pal} x={-16} y={-8} className="ss-step-b" />
         </>
         : <Sprite grid={person.legs} pal={pal} x={-16} y={-8} />)}
-      <Sprite grid={hair.front} pal={pal} x={-16} y={-48} />
+      {hair && <Sprite grid={hair.front} pal={pal} x={-16} y={-48} />}
+      {wild?.layers?.map((layer) => <Sprite key={layer} grid={wildLayers[layer]} pal={pal} x={-16} y={-48} />)}
+        </>}
       {gear && <Sprite grid={gear} x={-16} y={-48} />}
       {dev.genmate_id && <Sprite grid={gradCap} x={-18} y={-54} />}
       {reaction && <Sprite grid={icons[reaction]} x={-12} y={-76} />}
