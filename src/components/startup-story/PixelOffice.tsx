@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useReducedMotion } from "framer-motion";
-import type { StartupDev, StartupInfra } from "@/application/services/startupStoryService";
+import type { StartupDev, StartupInfra, StartupItem } from "@/application/services/startupStoryService";
 import { comebackLines, isSassy, roleLook, sassLine, ui } from "./startupStoryCatalog";
 import { assignStations, deskSlots, hangoutSpots, levelUps, ROOM_H, ROOM_W, standupSpots, TABLE, TIRED_AT, DISTRACTED_AT, type Spot } from "./office/officeLayout";
 import { Desk, MeetingTable, RoomBackdrop, Sofa } from "./office/OfficeRoom";
 import { NameTag, OfficePerson } from "./office/OfficePerson";
+import { BreakRoom } from "./office/BreakRoom";
+import { Sprite } from "./office/Sprite";
+import { block, icons, type IconName } from "./office/sprites";
+import { looksFor } from "./office/looks";
 import type { ReactionIcon } from "./office/sprites";
 
 export type OfficeReaction = { kind: "party" | "panic"; key: number };
@@ -19,6 +23,8 @@ const css = `
 .ss-pop { animation: ss-pop 2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
 .ss-slide { animation: ss-slide 3s ease-in-out infinite; }
 .ss-led { animation: ss-led 1s steps(2) infinite; }
+.ss-claw { animation: ss-claw 1.6s steps(4); }
+@keyframes ss-claw { 50% { transform: translateY(28px); } }
 @keyframes ss-bob { 50% { transform: translateY(-1px); } }
 @keyframes ss-jump { 40% { transform: translateY(-7px); } }
 @keyframes ss-step { 50% { opacity: 0; } }
@@ -28,6 +34,7 @@ const css = `
 @media (prefers-reduced-motion: reduce) { .ss-office * { animation: none !important; transition: none !important; } }
 `;
 
+const nubLines = ["I use Arch btw", "the red nub is all I need", "my laptop is older than the intern", "who needs a touchpad?", "still on the 2012 keyboard"];
 const phoneLines = ["just one more reel", "doomscrolling...", "reading tech drama", "5 min break (40 min ago)", "replying to the group chat", "staring at the screen"];
 const standupLines = ["no blockers", "still fixing that bug", "yesterday: meetings", "today: ship it", "can we keep it short?", "ขอกาแฟก่อน"];
 
@@ -101,7 +108,7 @@ function useSpeech(staff: StartupDev[], phase: Phase) {
         return;
       }
       const distracted = phase !== "work" && (dev.burnout ?? 0) >= DISTRACTED_AT;
-      const pool = phase === "standup" ? standupLines : phase === "work" ? roleLook(dev.role).lines : distracted ? phoneLines : roleLook(dev.role).idle;
+      const pool = phase === "standup" ? standupLines : distracted ? phoneLines : looksFor(dev).blackLaptop && Math.random() < 0.5 ? nubLines : phase === "work" ? roleLook(dev.role).lines : roleLook(dev.role).idle;
       show(dev.id, pool[Math.floor(Math.random() * pool.length)]);
     };
     say();
@@ -135,10 +142,32 @@ function useReactions(staff: StartupDev[], reaction?: OfficeReaction) {
 
 const START_DESKS = [1, 1];
 
-type OfficeProps = { staff: StartupDev[]; infra?: StartupInfra; desks?: number[]; deskLimit?: number; busy: boolean; skin?: string; reaction?: OfficeReaction };
+type OfficeProps = { staff: StartupDev[]; infra?: StartupInfra; items?: StartupItem[]; bossVisiting?: boolean; bossVisits?: number; desks?: number[]; deskLimit?: number; busy: boolean; skin?: string; reaction?: OfficeReaction };
 
-export function PixelOffice({ staff, infra, desks = START_DESKS, deskLimit = 0, busy, skin, reaction }: OfficeProps) {
+function useNewestItem(count: number) {
+  const last = useRef(count);
+  const [fresh, setFresh] = useState(-1);
+  useEffect(() => {
+    const grew = count > last.current;
+    last.current = count;
+    if (!grew) return;
+    setFresh(count - 1);
+    const id = window.setTimeout(() => setFresh(-1), 2400);
+    return () => window.clearTimeout(id);
+  }, [count]);
+  return fresh;
+}
+
+const SHELF = { x: 138, y: 56, slots: 2 };
+
+export function PixelOffice({ staff, infra, items = [], bossVisiting = false, bossVisits = 0, desks = START_DESKS, deskLimit = 0, busy, skin, reaction }: OfficeProps) {
   const reduced = Boolean(useReducedMotion());
+  const [room, setRoom] = useState<"office" | "break">(busy ? "office" : "break");
+  useEffect(() => setRoom(busy ? "office" : "break"), [busy]);
+  const freshItem = useNewestItem(items.length);
+  useEffect(() => {
+    if (freshItem >= 0) setRoom("office");
+  }, [freshItem]);
   const placed = useMemo(() => assignStations(staff, desks), [staff, desks]);
   const phase = usePhase(busy, reduced);
   const away = useWander(staff, phase === "idle" && !reduced);
@@ -153,9 +182,16 @@ export function PixelOffice({ staff, infra, desks = START_DESKS, deskLimit = 0, 
   const reactions = useReactions(staff, reaction);
   const busyKinds = new Set(phase === "work" ? staff.map((d) => placed.get(d.id)?.kind).filter((k): k is NonNullable<typeof k> => Boolean(k)) : []);
   const occupiedDesks = new Set(staff.map((d) => placed.get(d.id)).filter((s) => s?.kind === "desk").map((s) => `${s!.spot.x},${s!.spot.y + 4}`));
+  const nubDesks = new Set(staff.filter((d) => looksFor(d).blackLaptop).map((d) => placed.get(d.id)).filter((s) => s?.kind === "desk").map((s) => `${s!.spot.x},${s!.spot.y + 4}`));
 
+  const ownedDesks = deskSlots(desks, 0).filter((d) => d.tier > 0);
+  const itemSpots = items.slice(0, ownedDesks.length + SHELF.slots).map((item, i) => {
+    const d = ownedDesks[i];
+    return d ? { item, i, x: d.x + 20, y: d.y - 31 } : { item, i, x: SHELF.x + (i - ownedDesks.length) * 16, y: SHELF.y - 12 };
+  });
   const drawables: { y: number; node: ReactNode }[] = [
-    ...deskSlots(desks, deskLimit).map((d) => ({ y: d.y, node: <Desk key={`desk-${d.x}-${d.y}`} x={d.x} y={d.y} tier={d.tier} busy={phase === "work" && occupiedDesks.has(`${d.x},${d.y}`)} /> })),
+    ...deskSlots(desks, deskLimit).map((d) => ({ y: d.y, node: <Desk key={`desk-${d.x}-${d.y}`} x={d.x} y={d.y} tier={d.tier} busy={phase === "work" && occupiedDesks.has(`${d.x},${d.y}`)} blackLaptop={nubDesks.has(`${d.x},${d.y}`)} /> })),
+    ...itemSpots.map(({ item, x, y, i }) => ({ y: y + 13, node: <Sprite key={`item-${i}`} grid={icons[item.icon as IconName] ?? icons.gift} x={x} y={y} scale={1} className={i === freshItem && !reduced ? "ss-pop" : undefined} /> })),
     { y: TABLE.y + 6, node: <MeetingTable key="table" /> },
     { y: 226, node: <Sofa key="sofa" /> },
     ...staff.map((dev) => {
@@ -169,10 +205,21 @@ export function PixelOffice({ staff, infra, desks = START_DESKS, deskLimit = 0, 
     }),
   ].sort((a, b) => a.y - b.y);
 
-  return <figure className={`relative overflow-hidden ${ui.cardBase}`} aria-label={busy ? "Your team is working" : "Your office"}>
+  const roomButton = (id: "office" | "break", label: string) =>
+    <button type="button" aria-pressed={room === id} onClick={() => setRoom(id)}
+      className={`${ui.chipBase} px-2 py-1 ${room === id ? "bg-[#fbe39a] text-[#292542]" : "bg-[#292542] text-[#fffaf0]"}`}>{label}</button>;
+
+  return <figure className={`relative overflow-hidden ${ui.cardBase}`} aria-label={room === "break" ? "Break room" : busy ? "Your team is working" : "Your office"}>
+    <div className="absolute bottom-2 left-2 z-20 flex gap-2">{roomButton("office", "Office")}{roomButton("break", "Break Room")}</div>
+    {room === "break" && <>
+      <style>{css}</style>
+      <BreakRoom staff={busy ? [] : staff} bossVisiting={bossVisiting} bossVisits={bossVisits} reduced={reduced} />
+    </>}
+    {room === "office" && <>
     <svg viewBox={`0 0 ${ROOM_W} ${ROOM_H}`} className="ss-office block h-auto w-full" shapeRendering="crispEdges" role="img" aria-hidden="true">
       <style>{css}</style>
       <RoomBackdrop busyKinds={busyKinds} skin={skin} servers={infra?.servers.length ?? 4} balanced={(infra?.parts ?? []).includes("lb")} />
+      {items.length > ownedDesks.length && <Sprite grid={block(17, 2, "B")} x={SHELF.x - 2} y={SHELF.y} />}
       {drawables.map((d) => d.node)}
       {staff.map((dev) => <NameTag key={dev.id} name={dev.name} x={targets[dev.id].x} y={targets[dev.id].y} animate={!reduced} />)}
     </svg>
@@ -183,5 +230,6 @@ export function PixelOffice({ staff, infra, desks = START_DESKS, deskLimit = 0, 
       return <span key={dev.id} className="pointer-events-none absolute z-10 max-w-[9rem] -translate-x-1/2 -translate-y-full truncate whitespace-nowrap rounded-xl border-2 border-[#292542] bg-white px-2 py-0.5 text-xs font-bold text-[#292542] shadow-[2px_2px_0_#292542]"
         style={{ left: `clamp(4.6rem, ${left}, calc(100% - 4.6rem))`, top: `${((t.y - 50) / ROOM_H) * 100}%` }}>{lines[dev.id]}</span>;
     })}
+    </>}
   </figure>;
 }
