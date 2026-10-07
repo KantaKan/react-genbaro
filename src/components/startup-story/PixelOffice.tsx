@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useReducedMotion } from "framer-motion";
 import type { StartupDev, StartupInfra } from "@/application/services/startupStoryService";
-import { comebackLines, isSassy, roleLook, sassLine } from "./startupStoryCatalog";
+import { comebackLines, isSassy, roleLook, sassLine, ui } from "./startupStoryCatalog";
 import { assignStations, deskSlots, hangoutSpots, levelUps, ROOM_H, ROOM_W, standupSpots, TABLE, TIRED_AT, DISTRACTED_AT, type Spot } from "./office/officeLayout";
 import { Desk, MeetingTable, RoomBackdrop, Sofa } from "./office/OfficeRoom";
 import { NameTag, OfficePerson } from "./office/OfficePerson";
@@ -29,7 +29,7 @@ const css = `
 `;
 
 const phoneLines = ["just one more reel", "doomscrolling...", "reading tech drama", "5 min break (40 min ago)", "replying to the group chat", "staring at the screen"];
-const standupLines = ["no blockers 👍", "still fixing that bug 😅", "yesterday: meetings", "today: ship it 🚀", "can we keep it short?", "ขอกาแฟก่อน ☕"];
+const standupLines = ["no blockers", "still fixing that bug", "yesterday: meetings", "today: ship it", "can we keep it short?", "ขอกาแฟก่อน"];
 
 type Phase = "idle" | "standup" | "work";
 
@@ -169,7 +169,7 @@ export function PixelOffice({ staff, infra, desks = START_DESKS, deskLimit = 0, 
     }),
   ].sort((a, b) => a.y - b.y);
 
-  return <figure className="relative overflow-hidden rounded-[22px] border-[4px] border-[#292542] shadow-[6px_7px_0_#292542]" aria-label={busy ? "Your team is working" : "Your office"}>
+  return <figure className={`relative overflow-hidden ${ui.cardBase}`} aria-label={busy ? "Your team is working" : "Your office"}>
     <svg viewBox={`0 0 ${ROOM_W} ${ROOM_H}`} className="ss-office block h-auto w-full" shapeRendering="crispEdges" role="img" aria-hidden="true">
       <style>{css}</style>
       <RoomBackdrop busyKinds={busyKinds} skin={skin} servers={infra?.servers.length ?? 4} balanced={(infra?.parts ?? []).includes("lb")} />

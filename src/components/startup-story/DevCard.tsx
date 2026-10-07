@@ -1,5 +1,6 @@
+import { DevAvatar } from "./office/DevAvatar";
 import type { StartupDev, StartupPerk, StartupRole } from "@/application/services/startupStoryService";
-import { baht, isSassy, roleLook, spriteFor, traits } from "./startupStoryCatalog";
+import { baht, isSassy, roleLook, traits } from "./startupStoryCatalog";
 import { BurnoutBar } from "./BurnoutBar";
 
 function Stat({ label, value }: { label: string; value: number }) {
@@ -31,7 +32,7 @@ function LevelLine({ dev, perks }: { dev: StartupDev; perks?: StartupPerk[] }) {
     {(dev.perks ?? []).length > 0 && <ul className="flex flex-wrap gap-1" aria-label="Perks">
       {(dev.perks ?? []).map((id) => {
         const perk = perks?.find((p) => p.id === id);
-        return <li key={id} title={perk?.desc} className="rounded-full border-2 border-[#292542] bg-[#cab2f1] px-2 py-0.5 text-xs font-black">✨ {perk?.name ?? id}</li>;
+        return <li key={id} title={perk?.desc} className="rounded-full border-2 border-[#292542] bg-[#cab2f1] px-2 py-0.5 text-xs font-black">{perk?.name ?? id}</li>;
       })}
     </ul>}
   </div>;
@@ -41,11 +42,11 @@ export function DevCard({ dev, showSalary, roles, perks }: { dev: StartupDev; sh
   const trait = dev.trait ? traits[dev.trait] : undefined;
   const job = roles?.find((r) => r.id === dev.role)?.job;
   return <div className="space-y-1">
-    <p className="text-lg font-black">{spriteFor(dev)} {dev.name}{dev.genmate_id && <span title="A real genmate from your cohort" aria-label="genmate"> 🎓</span>}</p>
+    <p className="flex items-center gap-2 text-lg font-black"><DevAvatar dev={dev} />{dev.name}{dev.genmate_id && <span title="A real genmate from your cohort" className="rounded-full border-2 border-[#292542] bg-[#fbe39a] px-2 text-xs">Genmate</span>}</p>
     {dev.wildcard && <p className="inline-flex rounded-full border-2 border-[#292542] bg-[#cab2f1] px-2 py-0.5 text-xs font-black">Wildcard · {dev.title}</p>}
     {dev.wildcard_desc && <p className="text-xs font-bold">{dev.wildcard_desc}</p>}
     {dev.role && !dev.wildcard && <RoleBadge role={dev.role} roles={roles} />}
-    {isSassy(dev) && <span className="ml-1 inline-flex rounded-full border-2 border-[#292542] bg-[#f7c6d9] px-2 py-0.5 text-xs font-black" title="ชอบแซะเพื่อนร่วมทีม ศัพท์ Gen Z เต็มปาก">💅 ปากแซ่บ</span>}
+    {isSassy(dev) && <span className="ml-1 inline-flex rounded-full border-2 border-[#292542] bg-[#f7c6d9] px-2 py-0.5 text-xs font-black" title="ชอบแซะเพื่อนร่วมทีม ศัพท์ Gen Z เต็มปาก">ปากแซ่บ</span>}
     {job && <p className="text-xs font-bold">{job}</p>}
     {!dev.wildcard && (!dev.role || dev.perk) && <p className="text-xs font-bold opacity-70">{dev.role ? dev.perk : [dev.title, dev.perk].filter(Boolean).join(" · ")}</p>}
     {trait && <p className="text-xs font-black" title={trait.desc}>{trait.label} <span className="font-bold opacity-70">· {trait.desc}</span></p>}
@@ -55,6 +56,6 @@ export function DevCard({ dev, showSalary, roles, perks }: { dev: StartupDev; sh
     <Stat label="Design" value={dev.design} />
     <Stat label="Debug" value={dev.debug} />
     {(dev.burnout ?? 0) > 0 && <BurnoutBar value={dev.burnout ?? 0} />}
-    {showSalary && dev.salary > 0 && <p className="pt-1 text-xs font-black">💰 {baht(dev.salary)} / project</p>}
+    {showSalary && dev.salary > 0 && <p className="pt-1 text-xs font-black">{baht(dev.salary)} / project</p>}
   </div>;
 }

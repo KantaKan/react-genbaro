@@ -55,11 +55,11 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
 
   return <section className="space-y-4">
     <div role="tablist" className="flex flex-wrap gap-2">
-      {tabButton("project", boss ? "👹 Boss" : "🛠️ Project")}
-      {tabButton("team", `👥 Team ${run.staff.length}/${cap}`)}
-      {tabButton("hire", `🤝 Hire (${run.candidates?.length ?? 0})`)}
-      {tabButton("office", "🏢 Office")}
-      {tabButton("infra", "🖥️ Infra")}
+      {tabButton("project", boss ? "Boss" : "Project")}
+      {tabButton("team", `Team ${run.staff.length}/${cap}`)}
+      {tabButton("hire", `Hire (${run.candidates?.length ?? 0})`)}
+      {tabButton("office", "Office")}
+      {tabButton("infra", "Infra")}
     </div>
 
     {tab === "project" && <div className={`${ui.card} space-y-4 p-4`}>
@@ -78,18 +78,18 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
       </ul>}
       {!showPicker && <>
         <PitchCards pitches={pitches} hot={hot} ratings={ratings ?? {}} pending={pending || team.length === 0} onStartPitch={(i) => onStartPitch(i, team.map((s) => s.id))} />
-        <button className="text-sm font-bold underline underline-offset-4" onClick={() => setCustomProject(true)}>✏️ Custom project</button>
+        <button className="text-sm font-bold underline underline-offset-4" onClick={() => setCustomProject(true)}>Custom project</button>
       </>}
       {showPicker && <>
         {pitches.length > 0 && <button className="text-sm font-bold underline underline-offset-4" onClick={() => setCustomProject(false)}>← Today's pitches</button>}
         <div><p className="mb-2 text-xs font-black uppercase tracking-wider">Product</p><div className="flex flex-wrap gap-2">{types.map((t) => choice(t, type === t, () => setType(t)))}</div></div>
         <div>
-          <p className="mb-2 text-xs font-black uppercase tracking-wider">Theme <span className="normal-case tracking-normal opacity-70">· 🔥 hot · 🧊 cold this run</span></p>
-          <div className="flex flex-wrap gap-2">{themes.map((t) => choice(t, theme === t, () => setTheme(t), hot.includes(t) ? " 🔥" : cold.includes(t) ? " 🧊" : ""))}</div>
+          <p className="mb-2 text-xs font-black uppercase tracking-wider">Theme <span className="normal-case tracking-normal opacity-70">· hot and cold this run are marked</span></p>
+          <div className="flex flex-wrap gap-2">{themes.map((t) => choice(t, theme === t, () => setTheme(t), hot.includes(t) ? " · hot" : cold.includes(t) ? " · cold" : ""))}</div>
         </div>
-        {type && theme && discovered.includes(comboKey(type, theme)) && <p className="text-xs font-black">📒 You've shipped {type} × {theme} before.</p>}
+        {type && theme && discovered.includes(comboKey(type, theme)) && <p className="text-xs font-black">You've shipped {type} × {theme} before.</p>}
         <button className={`${ui.button} w-full bg-[#7bc4a8]`} disabled={!type || !theme || team.length === 0 || pending} onClick={() => onStart(type, theme, team.map((s) => s.id))}>
-          {boss ? "Face the boss 👹" : "Start building 🛠️"}
+          {boss ? "Face the boss" : "Start building"}
         </button>
       </>}
     </div>}
@@ -97,7 +97,7 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
     {tab === "team" && <div className="grid gap-3 sm:grid-cols-2">
       {run.staff.map((dev) => <div key={dev.id} className={`${ui.card} space-y-3 p-4`}>
         <DevCard dev={dev} showSalary roles={roles} perks={perks} />
-        {run.staff.length > 1 && dev.wildcard !== "vim" && <button className={`${ui.button} w-full bg-white py-2`} disabled={pending} onClick={() => onDismiss(dev.id)}>Let go 👋</button>}
+        {run.staff.length > 1 && dev.wildcard !== "vim" && <button className={`${ui.button} w-full bg-white py-2`} disabled={pending} onClick={() => onDismiss(dev.id)}>Let go</button>}
       </div>)}
     </div>}
 
@@ -145,7 +145,7 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
     <div className="text-right">
       {confirmPivot
         ? <span className="inline-flex flex-wrap items-center justify-end gap-2 text-sm font-bold text-foreground">End this run as a pivot?
-            <button className={`${ui.button} bg-[#f7c6d9] py-2`} disabled={pending} onClick={onAbandon}>Yes, pivot 🐱</button>
+            <button className={`${ui.button} bg-[#f7c6d9] py-2`} disabled={pending} onClick={onAbandon}>Yes, pivot</button>
             <button className={`${ui.button} bg-white py-2`} onClick={() => setConfirmPivot(false)}>Keep going</button>
           </span>
         : <button className="text-sm font-bold text-foreground underline underline-offset-4" onClick={() => setConfirmPivot(true)}>Pivot early</button>}

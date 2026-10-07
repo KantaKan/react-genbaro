@@ -3,18 +3,18 @@ import { describe, expect, it, vi } from "vitest";
 import { PitchCards } from "./PitchCards";
 
 const pitches = [
-  { type: "LINE Bot", theme: "Street Food", title: "🍜 Street-food LINE bot" },
-  { type: "Mobile App", theme: "Pets", title: "🐶 Tinder for dogs" },
-  { type: "Dev Tool/CLI", theme: "Government/Tax", title: "🧾 Tax calculator nobody asked for" },
+  { type: "LINE Bot", theme: "Street Food", title: "Street-food LINE bot" },
+  { type: "Mobile App", theme: "Pets", title: "Tinder for dogs" },
+  { type: "Dev Tool/CLI", theme: "Government/Tax", title: "Tax calculator nobody asked for" },
 ];
 
 describe("PitchCards", () => {
   it("renders the three pitches with hot badges and the real rating of shipped combos", () => {
     render(<PitchCards pitches={pitches} hot={["Pets"]} ratings={{ "LINE Bot|Street Food": "great", "Mobile App|Pets": "meh" }} pending={false} onStartPitch={vi.fn()} />);
 
-    expect(screen.getByText("🍜 Street-food LINE bot")).toBeInTheDocument();
-    expect(screen.getByText("🐶 Tinder for dogs")).toBeInTheDocument();
-    expect(screen.getByText("🧾 Tax calculator nobody asked for")).toBeInTheDocument();
+    expect(screen.getByText("Street-food LINE bot")).toBeInTheDocument();
+    expect(screen.getByText("Tinder for dogs")).toBeInTheDocument();
+    expect(screen.getByText("Tax calculator nobody asked for")).toBeInTheDocument();
 
     const cards = screen.getByRole("list", { name: "Pitch cards" });
     expect(within(cards).getAllByLabelText("Hot theme")).toHaveLength(1);

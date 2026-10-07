@@ -7,7 +7,7 @@ import type { StartupRun } from "@/application/services/startupStoryService";
 const run = {
   _id: "run-1", mode: "free", status: "active", stage: "event", act: 1, market: { hot: [] },
   bosses_passed: 0, project_index: 1, money: 1000, fans: 0, staff: [], score: 0, version: 3,
-  pending_event: { id: "friday-deploy", options: ["Do it. YOLO 😈", "Wait for Monday"] },
+  pending_event: { id: "friday-deploy", options: ["Do it. YOLO", "Wait for Monday"] },
 } as StartupRun;
 
 describe("EventCard", () => {
@@ -15,7 +15,7 @@ describe("EventCard", () => {
     render(<EventCard run={run} pending={false} onPick={vi.fn()} />);
 
     expect(screen.getByText("Push to Prod on Friday?")).toBeInTheDocument();
-    expect(screen.getByText("Do it. YOLO 😈")).toBeInTheDocument();
+    expect(screen.getByText("Do it. YOLO")).toBeInTheDocument();
     expect(screen.getByText("Wait for Monday")).toBeInTheDocument();
   });
 

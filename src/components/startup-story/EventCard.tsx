@@ -1,3 +1,4 @@
+import { PixelIcon } from "./office/PixelIcon";
 import type { StartupRun } from "@/application/services/startupStoryService";
 import { choiceEvents, ui } from "./startupStoryCatalog";
 
@@ -6,8 +7,8 @@ export function EventCard({ run, pending, onPick }: { run: StartupRun; pending: 
   if (!pendingEvent) return null;
   const info = choiceEvents[pendingEvent.id];
   return <section className="space-y-4">
-    <div className={`${ui.card} space-y-1 p-5 text-center`}>
-      <p className="text-4xl">🎲</p>
+    <div className={`${ui.card} flex flex-col items-center space-y-1 p-5 text-center`}>
+      <PixelIcon name="dice" size={4} />
       <h2 className="text-2xl font-black">{pendingEvent.title ?? info?.title ?? pendingEvent.id}</h2>
       <p className="text-sm font-bold">Something came up mid-project. Pick one.</p>
     </div>

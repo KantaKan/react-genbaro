@@ -906,3 +906,8 @@
 @media (prefers-reduced-motion: reduce) {
   .yard-drift, .yard-birds, .yard-flutter, .yard-leaf, .yard-chime, .yard-fall { animation: none; }
 }
+
+.ss-game h1, .ss-game h2, .ss-game h3, .ss-pixel {
+  font-family: 'Pixelify Sans', 'JetBrains Mono', monospace;
+  letter-spacing: 0.01em;
+}

@@ -122,7 +122,7 @@ export default function StartupStoryPage() {
   const inRun = run && !(ended && !review) && run.staff.length > 0;
   const officeStaff = run?.stage === "developing" && run.project ? run.staff.filter((s) => run.project!.staff_ids.includes(s.id)) : run?.staff ?? [];
 
-  return <main className={`mx-auto w-full space-y-4 p-4 ${inRun ? "max-w-6xl" : "max-w-3xl"}`}>
+  return <main className={`ss-game mx-auto w-full space-y-4 p-4 ${inRun ? "max-w-6xl" : "max-w-3xl"}`}>
     {actionError && <p role="alert" className="rounded-2xl border-2 border-[#292542] bg-[#f7c6d9] p-3 text-sm font-bold text-[#292542]">{actionError}</p>}
     {inRun && run
       ? <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start">
