@@ -215,7 +215,7 @@ export interface StartupDeskPrices {
   step: number;
   upgrade: number[];
   max_tier: number;
-  upgrade_act: number;
+  tier_act: number[];
 }
 
 export type StartupBoardTab = "deepest" | "weekly" | "fame";

@@ -174,6 +174,12 @@ export const desk = {
     ".kkk" + R(".", 24) + "kkk.",
   ],
   monitor: ["kkkkkkkkk", "kGGGGGGGk", "kGGGGGGGk", "kGGGGGGGk", "kGGGGGGGk", "kGGGGGGlk", "kkkkkkkkk", "...kgk...", "...kgk...", "..kkkkk.."],
+  foldingBase: ["kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "kGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGk", "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "...g........................g...", "....g......................g....", ".....g....................g.....", "....g......................g....", "...g........................g...", "..gg........................gg..", "..kk........................kk.."],
+  standingBase: ["kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "kWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWk", "kGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGk", "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "......kgk..............kgk......", "......kgk..............kgk......", "......kgk..............kgk......", "......kgk..............kgk......", "......kgk..............kgk......", "....kkkkkk............kkkkkk...."],
+  rgbBase: ["kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "kKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKk", "krrYYmmSSVVPPrrYYmmSSVVPPrrYYmmk", "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", ".kKk........................kKk.", ".kKk........................kKk.", ".kKk........................kKk.", ".kKk........................kKk.", ".kKk........................kKk.", ".kkk........................kkk."],
+  ultrawide: ["kkkkkkkkkkkkkkkkkkkkkkkk", "kGGGGGGGGGGGGGGGGGGGGGGk", "kGGGGGGGGGGGGGGGGGGGGGGk", "kGGGGGGGGGGGGGGGGGGGGGGk", "kGGGGGGGGGGGGGGGGGGGGlGk", "kkkkkkkkkkkkkkkkkkkkkkkk", "..........kgk...........", "..........kgk...........", "........kkkkkkk........."],
+  monitorBlack: ["kkkkkkkkk", "kKKKKKKKk", "kKKKKKKKk", "kKKKKKKKk", "kKKKKKKKk", "kKKKKKKlk", "kkkkkkkkk", "...kKk...", "...kKk...", "..kkkkk.."],
+  pcTower: ["kkkkkkk", "kKKKKKk", "kKSSSKk", "kKSlSKk", "kKSSSKk", "kKKKKKk", "kKPPPKk", "kKPlPKk", "kKPPPKk", "kKKKKKk", "kKKKKKk", "kkkkkkk"],
   blackLaptop: [".kkkkkkkkkk.", ".kKKKKKKKKk.", ".kKKKKKKKKk.", ".kKKKKKKKrk.", ".kKKKKKKKlk.", "kggggggggggk", "kkkkkkkkkkkk"],
   laptop: [".kkkkkkkkkk.", ".kGGGGGGGGk.", ".kGGGpGGGGk.", ".kGGGGGGGGk.", ".kGGGGGGGlk.", "kggggggggggk", "kkkkkkkkkkkk"],
 } satisfies Record<string, Grid>;

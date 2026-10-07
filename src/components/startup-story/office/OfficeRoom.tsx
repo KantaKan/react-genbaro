@@ -65,18 +65,28 @@ export function RoomBackdrop({ busyKinds, skin, servers, balanced }: BackdropPro
 export function Desk({ x, y, tier, busy, blackLaptop }: { x: number; y: number; tier: number; busy: boolean; blackLaptop?: boolean }) {
   const laptop = blackLaptop ? desk.blackLaptop : desk.laptop;
   if (tier === 0) return <g opacity="0.4"><Sprite grid={openSlot} x={x - 32} y={y - 28} /></g>;
+  const base = tier === 1 ? desk.foldingBase : tier === 4 ? desk.standingBase : tier >= 5 ? desk.rgbBase : desk.base;
   return <g>
     {tier === 1 && <Sprite grid={laptop} x={x - 12} y={y - 32} blink={busy} />}
     {tier === 2 && <>
       <Sprite grid={desk.monitor} x={x - 26} y={y - 38} blink={busy} />
       <Sprite grid={laptop} x={x - 4} y={y - 32} />
     </>}
-    {tier >= 3 && <>
+    {tier === 3 && <>
       <Sprite grid={desk.monitor} x={x - 26} y={y - 38} blink={busy} />
       <Sprite grid={desk.monitor} x={x - 6} y={y - 38} />
       <Sprite grid={decor.plant} x={x + 16} y={y - 38} />
     </>}
-    <Sprite grid={desk.base} x={x - 32} y={y - 20} />
+    {tier === 4 && <>
+      <Sprite grid={desk.ultrawide} x={x - 28} y={y - 38} blink={busy} />
+      <Sprite grid={decor.plant} x={x + 18} y={y - 40} />
+    </>}
+    {tier >= 5 && <>
+      <Sprite grid={desk.monitorBlack} x={x - 30} y={y - 38} blink={busy} />
+      <Sprite grid={desk.monitorBlack} x={x - 10} y={y - 38} />
+      <Sprite grid={desk.pcTower} x={x + 12} y={y - 42} blink />
+    </>}
+    <Sprite grid={base} x={x - 32} y={y - 20} />
   </g>;
 }
 

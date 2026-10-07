@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { StartupDeskPrices, StartupInfraCatalog, StartupItem, StartupPerk, StartupRole, StartupRun } from "@/application/services/startupStoryService";
-import { bossInfo, comboKey, passMarkFor, roleLook, teamHints, ui, upcomingBoss } from "./startupStoryCatalog";
+import { baht, bossInfo, comboKey, deskUpgrade, nextDeskPrice, passMarkFor, roleLook, teamHints, ui, upcomingBoss } from "./startupStoryCatalog";
 import { DevCard } from "./DevCard";
 import { Desk } from "./office/OfficeRoom";
 import { InfraPanel } from "./InfraPanel";
@@ -42,8 +42,7 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
   const desks = run.desks ?? [1, 1];
   const cap = desks.length;
   const deskLimit = run.desk_limit ?? cap;
-  const nextDesk = deskPrices ? deskPrices.base + deskPrices.step * Math.max(0, desks.length - 2) : 0;
-  const upgradesOpen = !deskPrices || run.act >= deskPrices.upgrade_act;
+  const nextDesk = deskPrices ? nextDeskPrice(deskPrices, desks.length) : 0;
   const hot = run.market?.hot ?? [];
   const cold = run.market?.cold ?? [];
   const pitches = run.pitches ?? [];
@@ -125,18 +124,17 @@ export function Hub({ run, types, themes, roles, perks, discovered, ratings, pen
     {tab === "office" && <div className="space-y-3">
       <p className={`${ui.card} p-4 text-sm font-bold`}>
         Every person needs a desk. Better desks give +1 per tier to the best skill of whoever sits there, and the best desks go to your earliest hires.
-        {!upgradesOpen && deskPrices && ` Upgrades open in Act ${deskPrices.upgrade_act}.`}
+        {" "}You can also tap a desk in the office.
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         {desks.map((tier, i) => {
-          const maxed = tier >= (deskPrices?.max_tier ?? 3);
-          const price = deskPrices?.upgrade[tier - 1] ?? 0;
+          const up = deskUpgrade(tier, run.act, run.money, deskPrices);
           return <div key={i} className={`${ui.card} flex items-center gap-3 p-3`}>
             <svg viewBox="0 0 64 40" className="h-auto w-20 shrink-0" shapeRendering="crispEdges" aria-hidden="true"><Desk x={32} y={40} tier={tier} busy={false} /></svg>
             <div className="min-w-0 flex-1 space-y-2">
               <p className="text-sm font-black">Desk {i + 1} · Tier {tier}{tier > 1 && <span className="font-bold opacity-70"> · +{tier - 1} skill</span>}</p>
-              <button className={`${ui.button} w-full bg-[#fbe39a] py-2`} disabled={pending || maxed || !upgradesOpen || run.money < price} onClick={() => onUpgradeDesk(i)}>
-                {maxed ? "Top tier" : `Upgrade ฿${price.toLocaleString()}`}
+              <button className={`${ui.button} w-full bg-[#fbe39a] py-2`} disabled={pending || Boolean(up.blocked)} onClick={() => onUpgradeDesk(i)}>
+                {up.blocked ?? `Upgrade ${baht(up.price)}`}
               </button>
             </div>
           </div>;
