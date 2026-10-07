@@ -62,13 +62,14 @@ export function RoomBackdrop({ busyKinds, skin, servers, balanced }: BackdropPro
   </g>;
 }
 
-export function Desk({ x, y, tier, busy }: { x: number; y: number; tier: number; busy: boolean }) {
+export function Desk({ x, y, tier, busy, blackLaptop }: { x: number; y: number; tier: number; busy: boolean; blackLaptop?: boolean }) {
+  const laptop = blackLaptop ? desk.blackLaptop : desk.laptop;
   if (tier === 0) return <g opacity="0.4"><Sprite grid={openSlot} x={x - 32} y={y - 28} /></g>;
   return <g>
-    {tier === 1 && <Sprite grid={desk.laptop} x={x - 12} y={y - 32} blink={busy} />}
+    {tier === 1 && <Sprite grid={laptop} x={x - 12} y={y - 32} blink={busy} />}
     {tier === 2 && <>
       <Sprite grid={desk.monitor} x={x - 26} y={y - 38} blink={busy} />
-      <Sprite grid={desk.laptop} x={x - 4} y={y - 32} />
+      <Sprite grid={laptop} x={x - 4} y={y - 32} />
     </>}
     {tier >= 3 && <>
       <Sprite grid={desk.monitor} x={x - 26} y={y - 38} blink={busy} />

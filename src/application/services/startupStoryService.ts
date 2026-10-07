@@ -136,6 +136,8 @@ export interface StartupRun {
   next_bugs?: number;
   next_power?: number;
   next_traffic?: number;
+  boss_visits?: number;
+  boss_visiting?: boolean;
   infra?: StartupInfra;
   load?: StartupLoad;
   log?: string[];

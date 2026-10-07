@@ -13,6 +13,7 @@ function hash(text: string) {
 
 export type Look = {
   coffee: boolean;
+  blackLaptop?: boolean;
   style?: (typeof hairStyleNames)[number];
   pal: Palette;
   wild?: (typeof wildLooks)[string];
@@ -26,6 +27,7 @@ export function looksFor(dev: StartupDev): Look {
   const shirt = roleLook(dev.role).color;
   return {
     coffee: (h >> 9) % 3 === 0,
+    blackLaptop: (h >> 11) % 4 === 0,
     style: hairStyleNames[(h >> 6) % hairStyleNames.length],
     pal: { 1: skins[h % skins.length], 3: hair, 4: tint(hair, 1.35), 5: shirt, 6: tint(shirt, 0.78), 7: "#3b3f6b" },
   };
