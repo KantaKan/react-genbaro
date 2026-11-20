@@ -20,6 +20,7 @@ import TalkBoardPage from "./pages/talk-board-page";
 import PostPage from "./pages/PostPage";
 import ReflectionsPage from "./pages/user-reflection";
 import { TodayPage } from "./learner/today/TodayPage";
+import { AttendancePage } from "./learner/attendance/AttendancePage";
 import ToolsPage from "./pages/ToolPage";
 import SpinWheelPage from "./pages/SpinWheelPage";
 import WeeklySummaryPage from "./pages/weekly-summary-page";
@@ -30,7 +31,6 @@ import { LearnerLayout } from "./routes/layouts/LearnerLayout";
 import { AppErrorBanner } from "./components/AppErrorBanner";
 import { useAuthActions } from "./features/auth/useAuthActions";
 import { AttendanceDashboard } from "./components/attendance-dashboard";
-import { StudentAttendance } from "./components/student-attendance";
 import { LeaveRequestsTable } from "./components/leave-requests-table";
 import { StudentAttendanceDetail } from "./pages/student-attendance-detail";
 import { AdminNotificationManager } from "./components/admin-notification-manager";
@@ -105,7 +105,7 @@ function AppContent() {
           <Route path="/learner" element={<LearnerLayout />}>
             <Route index element={<TodayPage />} />
             <Route path="reflections" element={<ReflectionsPage />} />
-            <Route path="attendance" element={<StudentAttendance />} />
+            <Route path="attendance" element={<AttendancePage />} />
             <Route path="directory" element={<LearnerDirectoryPage />} />
             <Route path="my-profile" element={<MyProfileWrapper />} />
           </Route>

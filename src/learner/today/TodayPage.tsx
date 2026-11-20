@@ -25,6 +25,8 @@ export function TodayPage() {
 
   const nick = nicknames(userData?.zoom_name, userData?.first_name ?? "");
   const s = summary.data;
+  const week = weekCells(history.data ?? [], today);
+  const weekOnTime = week.filter((c) => c.am === "present" && (c.pm === "present" || (c.isToday && c.pm === null))).length;
   const refresh = () => {
     qc.invalidateQueries(["my-summary"]);
     qc.invalidateQueries(["my-history"]);
@@ -65,13 +67,13 @@ export function TodayPage() {
           )}
         </div>
         <div className="lg:col-span-7">
-          <WeekCard cells={weekCells(history.data ?? [], today)} />
+          <WeekCard cells={week} />
         </div>
         <div className="lg:col-span-5">{s && <LeaveCard used={s.leave_used} allowance={s.leave_allowance} rate={s.attendance_rate} />}</div>
         <div className="lg:col-span-7">
           <BoardLatestCard />
         </div>
-        <div className="lg:col-span-5">{s && <StreakBadgesCard streak={s.streak} badges={userData?.badges ?? []} perfectWeek={s.perfect_week} />}</div>
+        <div className="lg:col-span-5">{s && <StreakBadgesCard streak={s.streak} badges={userData?.badges ?? []} perfectWeek={s.perfect_week} weekOnTime={weekOnTime} />}</div>
       </div>
     </div>
   );

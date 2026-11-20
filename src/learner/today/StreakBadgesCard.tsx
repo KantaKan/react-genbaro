@@ -1,7 +1,7 @@
 import type { Badge } from "@/domain/types";
 import { Medal } from "./Medal";
 
-export function StreakBadgesCard({ streak, badges, perfectWeek }: { streak: number; badges: Badge[]; perfectWeek: boolean }) {
+export function StreakBadgesCard({ streak, badges, perfectWeek, weekOnTime }: { streak: number; badges: Badge[]; perfectWeek: boolean; weekOnTime: number }) {
   const shown = badges.slice(0, 3);
   return (
     <section className="l-card p-[22px]">
@@ -14,7 +14,7 @@ export function StreakBadgesCard({ streak, badges, perfectWeek }: { streak: numb
         {shown.map((b) => (
           <Medal key={b._id ?? b.name} name={b.name} sub={new Date(b.awardedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} color={b.color || "#6366f1"} glyph={b.name.slice(0, 1).toUpperCase()} />
         ))}
-        {!perfectWeek && shown.length < 3 && <Medal name="Perfect week" sub="On time all week" locked progress={Math.min(1, streak / 5)} />}
+        {!perfectWeek && shown.length < 3 && <Medal name="Perfect week" sub={`${weekOnTime} of 5 days`} locked progress={Math.min(1, weekOnTime / 5)} />}
       </div>
     </section>
   );
