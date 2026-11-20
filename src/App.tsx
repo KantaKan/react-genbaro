@@ -19,6 +19,7 @@ import MyProfileWrapper from "./pages/MyProfileWrapper";
 import TalkBoardPage from "./pages/talk-board-page";
 import PostPage from "./pages/PostPage";
 import ReflectionsPage from "./pages/user-reflection";
+import { TodayPage } from "./learner/today/TodayPage";
 import ToolsPage from "./pages/ToolPage";
 import SpinWheelPage from "./pages/SpinWheelPage";
 import WeeklySummaryPage from "./pages/weekly-summary-page";
@@ -102,7 +103,7 @@ function AppContent() {
           </Route>
 
           <Route path="/learner" element={<LearnerLayout />}>
-            <Route index element={<ReflectionsPage />} />
+            <Route index element={<TodayPage />} />
             <Route path="reflections" element={<ReflectionsPage />} />
             <Route path="attendance" element={<StudentAttendance />} />
             <Route path="directory" element={<LearnerDirectoryPage />} />
