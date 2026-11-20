@@ -103,6 +103,7 @@ function AppContent() {
 
           <Route path="/learner" element={<LearnerLayout />}>
             <Route index element={<ReflectionsPage />} />
+            <Route path="reflections" element={<ReflectionsPage />} />
             <Route path="attendance" element={<StudentAttendance />} />
             <Route path="directory" element={<LearnerDirectoryPage />} />
             <Route path="my-profile" element={<MyProfileWrapper />} />
