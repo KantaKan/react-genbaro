@@ -1,0 +1,34 @@
+/* Learner area tokens. Scoped to .learner so admin pages keep their current look. */
+.learner {
+  --l-bg: #f7f7f8;
+  --l-card: #ffffff;
+  --l-sub: #fafafa;
+  --l-ink: #18181b;
+  --l-ink2: #52525b;
+  --l-ink3: #a1a1aa;
+  --l-hair: rgba(24, 24, 27, 0.07);
+  --l-green: #22c55e;
+  --l-amber: #f59e0b;
+  --l-red: #ef4444;
+  --l-indigo: #6366f1;
+  --l-shadow: 0 0 0 1px var(--l-hair), 0 1px 2px rgba(24, 24, 27, 0.04), 0 8px 24px -16px rgba(24, 24, 27, 0.12);
+  background: var(--l-bg);
+  color: var(--l-ink);
+  font-feature-settings: "tnum" 0;
+  letter-spacing: -0.006em;
+}
+.dark .learner {
+  --l-bg: #0b0b0d;
+  --l-card: #151518;
+  --l-sub: #1c1c20;
+  --l-ink: #f4f4f5;
+  --l-ink2: #a1a1aa;
+  --l-ink3: #71717a;
+  --l-hair: rgba(255, 255, 255, 0.08);
+  --l-shadow: 0 0 0 1px var(--l-hair), 0 8px 24px -16px rgba(0, 0, 0, 0.6);
+}
+.learner .l-card {
+  background: var(--l-card);
+  border-radius: 20px;
+  box-shadow: var(--l-shadow);
+}
