@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GenMate Cup</title>
+<style>
+:root{
+  --bg:#f7f7f8; --card:#fff; --sub:#fafafa; --ink:#18181b; --ink2:#52525b; --ink3:#a1a1aa; --hair:rgba(24,24,27,.07);
+  --gold1:#fde68a; --gold2:#f59e0b; --gold3:#b45309; --silver1:#f4f4f5; --silver2:#a1a1aa; --bronze1:#fed7aa; --bronze2:#c2410c;
+  --ease:cubic-bezier(.32,.72,0,1); --spring:cubic-bezier(.34,1.56,.64,1);
+  --shadow:0 0 0 1px var(--hair),0 1px 2px rgba(24,24,27,.04),0 8px 24px -16px rgba(24,24,27,.12);
+}
+:root[data-theme="dark"]{--bg:#0b0b0d;--card:#151518;--sub:#1c1c20;--ink:#f4f4f5;--ink2:#a1a1aa;--ink3:#71717a;--hair:rgba(255,255,255,.08);--shadow:0 0 0 1px var(--hair),0 8px 24px -16px rgba(0,0,0,.6)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:"Geist","Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Noto Sans Thai",system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;letter-spacing:-.006em;transition:background .4s,color .4s}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+svg.i{width:18px;height:18px;stroke:currentColor;stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.top{position:sticky;top:0;z-index:10;height:64px;display:flex;align-items:center;gap:14px;padding:0 28px;border-bottom:1px solid var(--hair);background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(12px)}
+.top b{font-size:17px;font-weight:650;letter-spacing:-.02em}
+.top span{color:var(--ink3);font-size:13px}
+.ctl{margin-left:auto;display:flex;gap:8px}
+.seg{display:inline-flex;background:var(--card);box-shadow:0 0 0 1px var(--hair);border-radius:12px;padding:3px}
+.seg button{padding:6px 12px;border-radius:9px;font-size:12.5px;font-weight:600;color:var(--ink2);transition:all .3s var(--ease)}
+.seg button.on{background:var(--ink);color:var(--bg)}
+.wrap{max-width:1180px;margin:0 auto;padding:26px 24px 80px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.card{background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:22px;position:relative;overflow:hidden;animation:up .7s var(--ease) both}
+@keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.card h3{font-size:15px;font-weight:600}
+.cap{color:var(--ink3);font-size:12.5px;margin-top:3px}
+.hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.label{font-size:12px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+.s7{grid-column:span 7}.s5{grid-column:span 5}.s12{grid-column:span 12}.s4{grid-column:span 4}.s8{grid-column:span 8}
+
+/* cup card */
+.cuphead{display:flex;align-items:center;gap:12px}
+.trophy{width:44px;height:44px;flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border-radius:99px;padding:4px 10px;background:var(--sub);box-shadow:0 0 0 1px var(--hair)}
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;align-items:end;gap:10px;margin-top:22px}
+.pod{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.pod .gl{font-size:22px;font-weight:750;letter-spacing:-.03em}
+.pod small{color:var(--ink3);font-size:12px}
+.stack{display:flex}
+.stack .av{width:30px;height:30px;margin-left:-9px;box-shadow:0 0 0 2.5px var(--card)}
+.stack .av:first-child{margin-left:0}
+.step{width:100%;border-radius:14px 14px 6px 6px;display:grid;place-items:center;font-weight:800;font-size:20px;color:#fff;position:relative;overflow:hidden}
+.step::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);background-size:250% 100%;animation:sheen 3.5s ease-in-out infinite}
+@keyframes sheen{from{background-position:130% 0}to{background-position:-130% 0}}
+.st1{height:118px;background:linear-gradient(180deg,var(--gold1),var(--gold2) 60%,var(--gold3))}
+.st2{height:86px;background:linear-gradient(180deg,#f4f4f5,#a1a1aa 70%,#71717a)}
+.st3{height:66px;background:linear-gradient(180deg,var(--bronze1),#ea580c 70%,var(--bronze2))}
+.yours{margin-top:18px;border-radius:16px;background:var(--sub);padding:14px 16px;display:flex;align-items:center;gap:12px}
+.cats{margin-top:6px}
+.cat{display:grid;grid-template-columns:120px 1fr 52px;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--hair);font-size:13px}
+.cat:first-child{border-top:0}
+.cat .bar{height:8px;border-radius:9px;background:var(--sub);overflow:hidden}
+.cat .bar i{display:block;height:100%;border-radius:9px;transform-origin:left;animation:grow 1.2s var(--ease) both}
+@keyframes grow{from{transform:scaleX(0)}}
+.cat b{text-align:right;font-variant-numeric:tabular-nums}
+.gp-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:14px}
+.gp-total{font-size:40px;font-weight:700;letter-spacing:-.045em;line-height:1;font-variant-numeric:tabular-nums}
+.gp-total small{font-size:15px;color:var(--ink3);font-weight:600;letter-spacing:-.01em;margin-left:4px}
+.rankchip{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:5px 11px;font-size:12.5px;font-weight:650}
+.stackbar{position:relative;height:14px;border-radius:9px;background:var(--sub);margin-top:14px;display:flex;overflow:visible}
+.stackbar>i{display:block;height:100%;transform-origin:left;animation:grow 1s var(--ease) both}
+.stackbar>i:first-child{border-radius:9px 0 0 9px}
+.stackbar .mk{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--ink);border-radius:2px}
+.stackbar .mk span{position:absolute;top:24px;left:50%;transform:translateX(-50%);font-size:10.5px;font-weight:650;white-space:nowrap;color:var(--ink2)}
+.tiles4{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:34px}
+.ct{border-radius:16px;background:var(--sub);padding:12px 12px 11px;display:flex;flex-direction:column;gap:6px;position:relative;transition:transform .35s var(--ease),box-shadow .3s}
+.ct:hover{transform:translateY(-2px)}
+.ct.weak{box-shadow:0 0 0 1.5px var(--wc)}
+.ct .r{display:flex;align-items:center;gap:8px}
+.ct .ico{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none}
+.ct .ico svg{width:15px;height:15px;stroke:#fff;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.ct .nm{font-size:12.5px;font-weight:600;color:var(--ink2)}
+.ct .v{font-size:22px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin-left:auto}
+.ct .vs{height:5px;border-radius:9px;background:color-mix(in srgb,var(--ink3) 22%,transparent);position:relative;overflow:hidden}
+.ct .vs i{position:absolute;left:0;top:0;bottom:0;border-radius:9px;transform-origin:left;animation:grow 1s var(--ease) both}
+.ct .tip{font-size:11.5px;color:var(--ink3);line-height:1.35}
+.ct .tip b{color:var(--ink2);font-weight:600}
+.ct .flag{position:absolute;top:-8px;right:10px;font-size:10px;font-weight:700;border-radius:99px;padding:2px 7px;color:#fff}
+.tl{margin-top:8px}
+.tl .day{font-size:11.5px;font-weight:650;color:var(--ink3);margin:12px 0 4px}
+.tl .ev{display:flex;align-items:center;gap:11px;padding:8px 0}
+.tl .ev .dot{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;flex:none}
+.tl .ev .dot svg{width:15px;height:15px;stroke:#fff;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.tl .ev .t{font-weight:600;font-size:13.5px}
+.tl .ev .m{font-size:12px;color:var(--ink3);margin-top:1px}
+.tl .ev .pts{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums;font-size:14px}
+.eyebrow{font-size:11.5px;font-weight:650;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+.g2 .hero{font-size:27px;line-height:1.15;font-weight:700;letter-spacing:-.035em;margin-top:10px}
+.g2 .hero .dim{color:var(--ink3)}
+.race{position:relative;height:74px;margin-top:22px}
+.race .track{position:absolute;left:0;right:0;top:36px;height:2px;background:var(--hair);border-radius:2px}
+.race .fill{position:absolute;left:0;top:36px;height:2px;background:var(--ink);border-radius:2px;transform-origin:left;animation:grow 1.2s var(--ease) both}
+.race .g{position:absolute;top:24px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;transition:left 1s var(--ease)}
+.race .g i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11.5px;font-weight:700;background:var(--card);box-shadow:0 0 0 1.5px var(--hair);color:var(--ink2)}
+.race .g small{font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.race .g.me{top:18px}
+.race .g.me i{width:38px;height:38px;font-size:14px;background:var(--ink);color:var(--bg);box-shadow:0 0 0 4px var(--card),0 8px 18px -8px rgba(0,0,0,.4)}
+.race .g.me small{color:var(--ink);font-weight:650}
+.race .g.lead i{background:linear-gradient(180deg,#fde68a,#f59e0b);color:#422006;box-shadow:none}
+.race .gap{position:absolute;top:2px;height:10px;border:1.5px solid var(--gold2);border-bottom:0;border-radius:6px 6px 0 0}
+.race .gap span{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:11.5px;font-weight:700;color:var(--gold3);white-space:nowrap}
+:root[data-theme="dark"] .race .gap span{color:var(--gold1)}
+.move{margin-top:22px;border-radius:18px;padding:16px 18px;background:var(--sub);display:flex;align-items:center;gap:14px}
+.move .k{font-size:11px;font-weight:650;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+.move .t{font-size:15px;font-weight:600;letter-spacing:-.015em;margin-top:3px;line-height:1.35}
+.move .p{margin-left:auto;font-size:22px;font-weight:700;letter-spacing:-.03em;color:var(--gold3);font-variant-numeric:tabular-nums;white-space:nowrap}
+:root[data-theme="dark"] .move .p{color:var(--gold1)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:24px}
+.rows .rw2{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline;padding:8px 0}
+.rows .rw2 span{font-size:13px;color:var(--ink2)}
+.rows .rw2 b{font-size:13.5px;font-weight:650;font-variant-numeric:tabular-nums}
+.rows .rw2 .ln{grid-column:1/-1;height:3px;border-radius:3px;background:var(--hair);overflow:hidden;margin-top:6px}
+.rows .rw2 .ln i{display:block;height:100%;background:var(--ink);border-radius:3px;transform-origin:left;animation:grow 1s var(--ease) both}
+.rows .rw2.low span{color:var(--ink)}
+.rows .rw2.low .ln i{background:var(--gold2)}
+.rows .rw2 em{font-style:normal;font-size:11px;color:var(--gold3);font-weight:650;margin-left:6px}
+.days{display:flex;align-items:flex-end;gap:8px;height:92px;margin-top:10px}
+.days .d{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.days .d i{width:100%;border-radius:6px;background:color-mix(in srgb,var(--ink) 14%,transparent);transform-origin:bottom;animation:growy .9s var(--ease) both}
+.days .d.today i{background:var(--ink)}
+.days .d.future i{background:transparent;box-shadow:inset 0 0 0 1px var(--hair)}
+.days .d small{font-size:11px;color:var(--ink3)}
+.days .d b{font-size:11px;font-weight:650;font-variant-numeric:tabular-nums}
+@keyframes growy{from{transform:scaleY(0)}}
+.awards{margin-top:22px;border-top:1px solid var(--hair);padding-top:14px}
+.awards .a{display:flex;align-items:baseline;gap:12px;padding:7px 0;font-size:13px}
+.awards .a b{width:34px;font-variant-numeric:tabular-nums;font-weight:700}
+.awards .a span{color:var(--ink2);flex:1}
+.awards .a small{color:var(--ink3);font-size:12px;white-space:nowrap}
+.wk{margin-top:22px}
+.wk .row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px}
+.wk .row b{font-weight:650;font-variant-numeric:tabular-nums}
+.wk .bar{position:relative;height:6px;border-radius:9px;background:var(--hair);margin-top:10px}
+.wk .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:9px;background:var(--ink);transform-origin:left;animation:grow 1.2s var(--ease) both}
+.wk .ticks{display:flex;justify-content:space-between;margin-top:7px;font-size:11px;color:var(--ink3)}
+.wk .ticks span.on{color:var(--ink);font-weight:650}
+.mom{margin-top:24px}
+.mom .m{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--hair)}
+.mom .m:first-of-type{border-top:0}
+.mom .m .gb{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--sub);box-shadow:0 0 0 1px var(--hair)}
+.mom .m .gb.gold{background:linear-gradient(180deg,#fde68a,#f59e0b);color:#422006;box-shadow:none}
+.mom .m b{font-weight:600;font-size:13.5px}
+.mom .m small{display:block;color:var(--ink3);font-size:12px;margin-top:2px}
+.prize{margin-top:22px;border-radius:18px;background:var(--sub);padding:14px 16px}
+.prize .ps{display:flex;gap:10px;margin-top:12px}
+.prize .pi{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;font-size:11.5px;font-weight:600;color:var(--ink2)}
+.prize .pi .box{width:100%;height:64px;border-radius:12px;display:grid;place-items:center;background:var(--card);box-shadow:0 0 0 1px var(--hair);position:relative;overflow:hidden;padding-top:8px}
+.more{margin-top:10px}
+.more .mv{display:flex;align-items:center;gap:12px;padding:10px 4px;border-top:1px solid var(--hair);font-size:13px}
+.more .mv:first-child{border-top:0}
+.more .mv span{flex:1;color:var(--ink2)}
+.more .mv small{font-size:11.5px;color:var(--ink3)}
+.more .mv b{font-weight:700;font-variant-numeric:tabular-nums;min-width:30px;text-align:right}
+.feed .it{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--hair);font-size:13px}
+.feed .it:first-child{border-top:0}
+.plus{font-weight:700;font-variant-numeric:tabular-nums;border-radius:8px;padding:2px 8px;font-size:12px}
+.countdown{display:flex;gap:6px;margin-top:10px}
+.countdown div{background:var(--sub);border-radius:10px;padding:6px 10px;text-align:center;min-width:52px}
+.countdown b{font-size:18px;font-weight:700;display:block;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.countdown small{font-size:10.5px;color:var(--ink3)}
+
+/* champion group strip */
+.champ{border-radius:24px;padding:22px;position:relative;overflow:hidden;box-shadow:var(--shadow);animation:up .7s var(--ease) both}
+.champ.win{background:
+  radial-gradient(60% 120% at 0% 0%,rgba(253,230,138,.85),transparent 60%),
+  radial-gradient(60% 120% at 100% 100%,rgba(251,191,36,.45),transparent 60%),
+  linear-gradient(135deg,#fffbeb,#fef3c7)}
+:root[data-theme="dark"] .champ.win{background:radial-gradient(60% 120% at 0% 0%,rgba(245,158,11,.35),transparent 60%),radial-gradient(60% 120% at 100% 100%,rgba(250,204,21,.18),transparent 60%),linear-gradient(135deg,#1c1508,#151518)}
+.champ.norm{background:radial-gradient(70% 140% at 0% 0%,rgba(129,140,248,.25),transparent 60%),var(--card)}
+.rays{position:absolute;right:-80px;top:-80px;width:340px;height:340px;background:repeating-conic-gradient(from 0deg,rgba(255,255,255,.55) 0 6deg,transparent 6deg 18deg);border-radius:50%;animation:spin 30s linear infinite;opacity:.55;-webkit-mask:radial-gradient(circle,#000 20%,transparent 70%);mask:radial-gradient(circle,#000 20%,transparent 70%)}
+:root[data-theme="dark"] .rays{opacity:.12}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sparkle{position:absolute;width:8px;height:8px;background:#fde68a;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:spk 2.4s ease-in-out infinite}
+@keyframes spk{0%,100%{transform:scale(0) rotate(0);opacity:0}50%{transform:scale(1.5) rotate(90deg);opacity:1}}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:12px;position:relative;flex-wrap:wrap}
+.ch b{font-size:17px;font-weight:650;letter-spacing:-.02em}
+.ch small{display:block;color:var(--ink2);font-size:12.5px;margin-top:2px}
+.mates{display:flex;gap:12px;margin-top:18px;position:relative;flex-wrap:wrap}
+.mate{width:140px;border-radius:18px;background:color-mix(in srgb,var(--card) 80%,transparent);box-shadow:0 0 0 1px var(--hair);padding:16px 10px 12px;text-align:center;backdrop-filter:blur(6px)}
+.mate b{display:block;margin-top:10px;font-weight:600}
+.mate small{color:var(--ink3);font-size:12px}
+
+/* avatar + champion frame */
+.av{border-radius:50%;overflow:hidden;display:grid;place-items:center;flex:none;position:relative}
+.av img{width:100%;height:100%}
+.framed{position:relative;display:inline-grid;place-items:center;border-radius:50%;padding:4px}
+.framed::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from var(--a,0deg),#fde68a,#f59e0b,#fff7cc,#b45309,#fde68a);animation:rot 4s linear infinite}
+.framed::after{content:"";position:absolute;inset:-6px;border-radius:50%;box-shadow:0 0 18px 2px rgba(245,158,11,.45);pointer-events:none}
+.framed .av{position:relative;box-shadow:0 0 0 2px var(--card)}
+.framed .crown{position:absolute;top:-14px;left:50%;transform:translateX(-50%) rotate(-8deg);width:28px;height:20px;z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+@property --a{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes rot{to{--a:360deg}}
+
+/* rewards */
+.rw{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.rwc{border-radius:18px;background:var(--sub);padding:16px;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.rwc .ic{width:100%;height:96px;border-radius:12px;display:grid;place-items:center;background:var(--card);box-shadow:0 0 0 1px var(--hair);overflow:hidden;position:relative}
+.rwc b{font-size:13.5px;font-weight:600}
+.rwc small{color:var(--ink2);font-size:12px;line-height:1.45}
+.rwc .when{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gold3)}
+
+/* victory lap check-in */
+.vstage{height:300px;border-radius:18px;margin-top:14px;position:relative;overflow:hidden;display:grid;place-items:center;
+  background:radial-gradient(80% 100% at 50% 100%,rgba(245,158,11,.25),transparent 60%),linear-gradient(180deg,#1c1917,#0c0a09)}
+.vstage .crowd{position:absolute;left:0;right:0;bottom:0;height:70px;display:flex;align-items:flex-end;justify-content:center;gap:6px;padding:0 10px}
+.vstage .crowd i{width:22px;height:40px;border-radius:12px 12px 0 0;background:#292524;transform-origin:bottom;transition:transform .3s}
+.vstage .crowd i::before{content:"";display:block;width:16px;height:16px;border-radius:50%;background:#44403c;margin:-12px auto 0}
+.vstage.cheer .crowd i{animation:jump .5s ease-in-out infinite alternate}
+@keyframes jump{to{transform:translateY(-12px)}}
+.spot{position:absolute;top:-40px;width:180px;height:380px;background:linear-gradient(180deg,rgba(253,230,138,.35),transparent 70%);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);opacity:0;transition:opacity .6s}
+.vstage.cheer .spot{opacity:1;animation:sweep 2.4s ease-in-out infinite alternate}
+@keyframes sweep{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+.vbtn{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:12px;color:#fde68a;text-align:center;transition:transform .6s var(--spring)}
+.vbtn .cupbig{width:110px;height:110px;filter:drop-shadow(0 12px 24px rgba(245,158,11,.5));transition:transform .9s var(--spring)}
+.vstage.cheer .cupbig{transform:translateY(-14px) scale(1.12) rotate(-6deg)}
+.vbtn .hold{border-radius:99px;padding:12px 22px;font-weight:700;color:#422006;background:linear-gradient(180deg,#fde68a,#f59e0b);box-shadow:0 10px 24px -10px #f59e0b,inset 0 1px 0 rgba(255,255,255,.6);position:relative;overflow:hidden}
+.vbtn .hold i{position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(255,255,255,.45)}
+.vbtn .hold.p i{width:100%;transition:width 1s linear}
+.vbtn small{font-size:12px;color:#a8a29e}
+.conf{position:absolute;left:50%;top:40%;width:8px;height:12px;border-radius:2px;pointer-events:none;animation:conf 1.4s var(--ease) forwards;z-index:3}
+@keyframes conf{to{transform:translate(var(--x),var(--y)) rotate(var(--r));opacity:0}}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,24px);opacity:0;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13px;transition:all .5s var(--ease);z-index:40}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (max-width:980px){.s7,.s5,.s4,.s8{grid-column:span 12}.rw{grid-template-columns:repeat(2,1fr)}.wrap{padding:18px 16px 80px}.top{padding:0 16px}}
+</style>
+</head>
+<body>
+<div class="top"><b>GenMate Cup</b><span>Week 11 · prototype</span>
+  <div class="ctl">
+    <div class="seg" id="viewSeg"><button class="on" data-v="win">I'm in Group F (winning)</button><button data-v="norm">I'm in Group B</button></div>
+    <div class="seg" id="themeSeg"><button class="on" data-t="light">Light</button><button data-t="dark">Dark</button></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="grid">
+    <!-- CUP CARD (Today page) -->
+    <section class="card s7">
+      <div class="hd"><div class="cuphead"><svg class="trophy" viewBox="0 0 48 48"><defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset=".6" stop-color="#f59e0b"/><stop offset="1" stop-color="#b45309"/></linearGradient></defs><path d="M14 6h20v10a10 10 0 0 1-20 0z" fill="url(#tg)"/><path d="M14 9H8a6 6 0 0 0 6 8M34 9h6a6 6 0 0 1-6 8" fill="none" stroke="#f59e0b" stroke-width="3"/><rect x="21" y="25" width="6" height="8" fill="#d97706"/><rect x="15" y="33" width="18" height="6" rx="2" fill="url(#tg)"/><ellipse cx="20" cy="11" rx="3" ry="5" fill="#fff" opacity=".45"/></svg>
+        <div><h3>GenMate Cup · Week 11</h3><div class="cap">Group points from coding, soft skills, showing up and helping</div></div></div>
+        </div>
+
+      <div class="podium" id="podium"></div>
+      <div class="wk" id="wk"></div>
+      <div class="mom" id="mom"></div>
+      <div class="prize" id="prize"></div>
+    </section>
+
+    <!-- YOUR GROUP POINTS -->
+    <section class="card s5">
+      <div class="g2" id="g2"></div>
+    </section>
+
+    <!-- CHAMPION GROUP STRIP (Classmates page) -->
+    <section class="s12"><div class="champ" id="champ"></div></section>
+
+    <!-- REWARDS -->
+    <section class="card s12">
+      <div class="hd"><div><h3>What the winning group gets</h3><div class="cap">For one week, plus a medal that stays forever</div></div></div>
+      <div class="rw" id="rw"></div>
+    </section>
+
+    <!-- VICTORY LAP -->
+    <section class="card s8">
+      <div class="hd"><div><h3>Victory Lap · exclusive check-in style</h3><div class="cap">Only the Cup winners get it, and only for their winning week</div></div><button class="pill" id="vReset">Reset</button></div>
+      <div class="vstage" id="vstage">
+        <div class="spot" style="left:12%"></div><div class="spot" style="right:12%"></div>
+        <div class="vbtn"><svg class="cupbig" viewBox="0 0 48 48"><path d="M14 6h20v10a10 10 0 0 1-20 0z" fill="url(#tg)"/><path d="M14 9H8a6 6 0 0 0 6 8M34 9h6a6 6 0 0 1-6 8" fill="none" stroke="#f59e0b" stroke-width="3"/><rect x="21" y="25" width="6" height="8" fill="#d97706"/><rect x="15" y="33" width="18" height="6" rx="2" fill="url(#tg)"/><ellipse cx="20" cy="11" rx="3" ry="5" fill="#fff" opacity=".45"/><text x="24" y="20" text-anchor="middle" font-size="7" font-weight="800" fill="#7c2d12">F</text></svg>
+          <button class="hold" id="vHold"><i></i><span style="position:relative">Hold to take your victory lap</span></button><small id="vTxt">Group F · Week 11 champions</small></div>
+        <div class="crowd" id="crowd"></div>
+      </div>
+    </section>
+    <section class="card s4">
+      <h3>Wall of fame</h3><div class="cap">Past Cup winners</div>
+      <div id="fame" style="margin-top:12px"></div>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createAvatar } from 'https://cdn.jsdelivr.net/npm/@dicebear/core@9.2.2/+esm';
+import { notionists } from 'https://cdn.jsdelivr.net/npm/@dicebear/collection@9.2.2/+esm';
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const av=(seed,size,bg)=>`<div class="av" style="width:${size}px;height:${size}px;background:${bg}"><img src="${createAvatar(notionists,{seed}).toDataUri()}"></div>`;
+const CROWN=`<svg class="crown" viewBox="0 0 28 20"><path d="M2 18 L4 5 L10 11 L14 2 L18 11 L24 5 L26 18 Z" fill="#facc15" stroke="#b45309" stroke-width="1.5" stroke-linejoin="round"/><circle cx="14" cy="2.5" r="2" fill="#fde68a"/></svg>`;
+const framed=(seed,size,bg)=>`<span class="framed">${CROWN}${av(seed,size,bg)}</span>`;
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2200)}
+
+const GROUPS={F:{pts:428,members:[['แบล็ค','Black3'],['มิ้นท์','Mint22'],['ฟ้า','Fah23'],['อิม','Im24'],['โอ','O25'],['ภูมิ','Phum45']],cats:[118,96,124,90]},
+  B:{pts:351,members:[['ตุน','Toon6'],['นนท์','Non9'],['เดียร์','Dear11'],['ปอ','Por27'],['นิว','New41']],cats:[102,88,71,90]},
+  D:{pts:372,members:[['บีเอ็ม','BM13'],['กี้','Kie16'],['วา','Wa18'],['เจ','Jay30'],['บิว','Bew43']],cats:[110,80,96,86]},
+  I:{pts:340,members:[['เถียม','Theim1'],['นุ๊ก','Nook4'],['พลอย','Ploy7']],cats:[90,95,80,75]}};
+const PAL=['#d1fae5','#e0e7ff','#fce7f3','#fef3c7','#e0f2fe','#ede9fe'];
+let view=new URLSearchParams(location.search).get('g')==='b'?'norm':'win';
+
+function render(){
+  const me=view==='win'?'F':'B';const G=GROUPS[me];
+  // podium: 2nd, 1st, 3rd
+  const order=[['D',2,'st2'],['F',1,'st1'],['B',3,'st3']];
+  $('#podium').innerHTML=order.map(([g,r,cls])=>{const x=GROUPS[g];return `<div class="pod">${r===1?framed(x.members[0][1],46,PAL[0]):''}<div class="stack">${x.members.slice(r===1?1:0,4).map((m,i)=>av(m[1],30,PAL[i%6])).join('')}</div><div class="gl">Group ${g}</div><small>${x.pts} pts</small><div class="step ${cls}">${r}</div></div>`}).join('');
+  // week progress
+  const days=['Mon','Tue','Wed','Thu','Fri'];
+  $('#wk').innerHTML=`<div class="row"><span class="eyebrow">This week</span><span style="color:var(--ink2)">Ends in <b>2d 7h 36m</b></span></div>
+    <div class="bar"><i style="width:68%"></i></div><div class="ticks">${days.map((d,k)=>`<span class="${k===3?'on':''}">${d}${k===4?' 16:45':''}</span>`).join('')}</div>`;
+  // moments
+  $('#mom').innerHTML=`<div class="eyebrow" style="margin-bottom:6px">Moments</div>`+[
+    ['F',1,'Everyone on time, 3 days running','Group F · +45 from Showing up'],
+    ['D',0,'Biggest jump today','Group D · +38, now 56 behind the lead'],
+    ['I',0,'Aced the soft-skill class','Group I · best feedback round, +20'],
+  ].map(([g,gold,t,m])=>`<div class="m"><span class="gb ${gold?'gold':''}">${g}</span><div><b>${t}</b><small>${m}</small></div></div>`).join('');
+  // prize preview
+  $('#prize').innerHTML=`<div class="row" style="display:flex;justify-content:space-between;align-items:baseline"><span class="eyebrow">Winner gets, next week</span><span style="font-size:12px;color:var(--ink3)">+ a medal forever</span></div>
+    <div class="ps">
+      <div class="pi"><div class="box">${framed('Black3',30,PAL[0])}</div>Gold frame</div>
+      <div class="pi"><div class="box"><div style="position:absolute;inset:0;background:radial-gradient(70% 120% at 0% 0%,#fde68a,transparent 60%),radial-gradient(60% 120% at 100% 100%,#fbbf24,transparent 60%),#fffbeb"></div></div>Gold background</div>
+      <div class="pi"><div class="box" style="background:linear-gradient(180deg,#1c1917,#0c0a09)"><svg viewBox="0 0 48 48" style="width:30px"><path d="M14 6h20v10a10 10 0 0 1-20 0z" fill="url(#tg)"/><rect x="21" y="25" width="6" height="8" fill="#d97706"/><rect x="15" y="33" width="18" height="6" rx="2" fill="url(#tg)"/></svg></div>Victory Lap</div>
+    </div>`;
+  const CAT=['Coding','Soft skills','Showing up','Helping'];
+  const MOVES=['Ask TA Ploy for a code-review challenge','Speak up in Thursday’s soft-skill class','Get all 5 of you checked in before 9:15 tomorrow','Answer one question on the Talk Board'];
+  const PTS=[10,10,15,5];
+  const ranked=Object.entries(GROUPS).sort((a,b)=>b[1].pts-a[1].pts);const rank=ranked.findIndex(([g])=>g===me)+1;
+  const above=rank>1?ranked[rank-2]:null, below=ranked[rank]||null;
+  const ref=rank===1?ranked[1][1]:ranked[0][1];
+  const gaps=G.cats.map((v,i)=>v-ref.cats[i]);const weak=gaps.indexOf(Math.min(...gaps));
+  const lo=Math.min(...ranked.map(r=>r[1].pts))-25, hi=ranked[0][1].pts+15, X=v=>((v-lo)/(hi-lo))*100;
+  const hero=rank===1?`You’re leading.<br><span class="dim">${G.pts-below[1].pts} points ahead of Group ${below[0]}.</span>`
+                     :`${above[1].pts-G.pts} points to pass Group ${above[0]}.<br><span class="dim">You’re #${rank} with ${G.pts}.</span>`;
+  const maxC=Math.max(...G.cats,...ref.cats);
+  const week=me==='F'?[96,88,110,134,0]:[70,82,64,135,0];
+  const wmax=Math.max(...week);
+  const AW=me==='F'?[['+20','Mini-project demo','TA Ploy · today'],['+15','Whole group on time','today'],['+10','Best feedback round','TA Ton · yesterday']]
+                   :[['+15','Presentation practice','TA Ton · today'],['+10','Code review challenge','TA Ploy · yesterday'],['+5','นนท์ recommended วา','yesterday']];
+  $('#g2').innerHTML=`<div class="eyebrow">Group ${me} · Week 11</div>
+    <div class="hero">${hero}</div>
+    <div class="race"><div class="track"></div><div class="fill" style="width:${X(G.pts)}%"></div>
+      ${above?`<div class="gap" style="left:${X(G.pts)}%;width:${X(above[1].pts)-X(G.pts)}%"><span>${above[1].pts-G.pts} pts</span></div>`:''}
+      ${ranked.map(([g,x],k)=>`<div class="g ${g===me?'me':''} ${k===0?'lead':''}" style="left:${X(x.pts)}%"><i>${g}</i><small>${x.pts}</small></div>`).join('')}</div>
+    <div class="move"><div><div class="k">${rank===1?'Stay ahead':'Your best move'}</div><div class="t">${MOVES[weak]}</div></div><div class="p">+${PTS[weak]}</div></div>
+    <div class="more">${[0,1,2,3].filter(k=>k!==weak).slice(0,2).map(k=>`<div class="mv"><span>${MOVES[k]}</span><small>${CAT[k]}</small><b>+${PTS[k]}</b></div>`).join('')}</div>
+    <div class="split">
+      <div><div class="eyebrow">Where points came from</div><div class="rows">${CAT.map((c,i)=>`<div class="rw2 ${i===weak?'low':''}"><span>${c}${i===weak?'<em>lowest</em>':''}</span><b>${G.cats[i]}</b><div class="ln"><i style="width:${G.cats[i]/maxC*100}%;animation-delay:${i*70}ms"></i></div></div>`).join('')}</div></div>
+      <div><div class="eyebrow">Points per day</div><div class="days">${['M','T','W','T','F'].map((d,k)=>`<div class="d ${k===3?'today':''} ${k===4?'future':''}"><b>${week[k]||''}</b><i style="height:${k===4?18:Math.max(10,week[k]/wmax*62)}px;animation-delay:${k*60}ms"></i><small>${d}</small></div>`).join('')}</div></div>
+    </div>
+    <div class="awards">${AW.map(([p,t,m])=>`<div class="a"><b>${p}</b><span>${t}</span><small>${m}</small></div>`).join('')}</div>`;
+
+  // champion strip
+  const ch=$('#champ');ch.className='champ '+(me==='F'?'win':'norm');
+  const sp=me==='F'?[...Array(10)].map(()=>`<i class="sparkle" style="left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*2.4}s"></i>`).join(''):'';
+  ch.innerHTML=(me==='F'?'<div class="rays"></div>':'')+sp+`<div class="ch"><div>${me==='F'?'<span class="pill" style="background:linear-gradient(180deg,#fde68a,#f59e0b);color:#422006;box-shadow:none">🏆 Cup champions · Week 11</span>':''}<b style="display:block;margin-top:8px">Your GenMate group · ${me}</b><small>${me==='F'?'Everyone on Classmates sees the gold strip and frames this week.':'Win the Cup to turn this strip gold for a week.'}</small></div><button class="pill">Open group chat</button></div>
+    <div class="mates">${G.members.map((m,i)=>`<div class="mate">${me==='F'?framed(m[1],64,PAL[i%6]):av(m[1],64,PAL[i%6])}<b>${m[0]}</b><small>${i===0&&me==='F'?'You':''}</small></div>`).join('')}</div>`;
+
+  // rewards
+  $('#rw').innerHTML=[
+    ['This week','Champion avatar frame','A turning gold ring with a crown on every member\'s avatar, everywhere in Baro.',framed('Black3',56,PAL[0])],
+    ['This week','Gold background','Your group strip, profile cover and avatar background turn gold, with slow light rays.',`<div style="position:absolute;inset:0;background:radial-gradient(60% 120% at 0% 0%,#fde68a,transparent 60%),radial-gradient(60% 120% at 100% 100%,#fbbf24,transparent 60%),#fffbeb"></div><div class="rays" style="right:-120px;top:-130px"></div>`],
+    ['This week','Victory Lap check-in','An exclusive check-in style with a trophy, spotlights and a cheering crowd. Try it below.',`<div style="position:absolute;inset:0;background:linear-gradient(180deg,#1c1917,#0c0a09)"></div><svg viewBox="0 0 48 48" style="width:52px;position:relative"><path d="M14 6h20v10a10 10 0 0 1-20 0z" fill="url(#tg)"/><rect x="21" y="25" width="6" height="8" fill="#d97706"/><rect x="15" y="33" width="18" height="6" rx="2" fill="url(#tg)"/></svg>`],
+    ['Forever','Cup medal','“GenMate Cup · Week 11” on every member\'s profile. Win 3 times and it turns into a gold version.',`<svg viewBox="0 0 76 76" style="width:62px;filter:drop-shadow(0 8px 10px rgba(0,0,0,.18))"><defs><radialGradient id="cm" cx="38%" cy="25%" r="85%"><stop offset="0" stop-color="#fde68a"/><stop offset="1" stop-color="#d97706"/></radialGradient></defs><circle cx="38" cy="38" r="35" fill="#b45309"/><circle cx="38" cy="38" r="28" fill="url(#cm)"/><ellipse cx="30" cy="20" rx="18" ry="8" fill="#fff" opacity=".25"/><text x="38" y="46" text-anchor="middle" font-size="20" font-weight="800" fill="#fff">11</text></svg>`]
+  ].map(([w,t,d,ic])=>`<div class="rwc"><div class="ic">${ic}</div><span class="when">${w}</span><b>${t}</b><small>${d}</small></div>`).join('');
+
+  $('#fame').innerHTML=[['Week 10','D'],['Week 9','F'],['Week 8','I'],['Week 7','F']].map(([w,g])=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--hair)"><svg viewBox="0 0 48 48" style="width:26px"><path d="M14 6h20v10a10 10 0 0 1-20 0z" fill="url(#tg)"/><rect x="21" y="25" width="6" height="8" fill="#d97706"/><rect x="15" y="33" width="18" height="6" rx="2" fill="url(#tg)"/></svg><b style="font-weight:600;flex:1">Group ${g}</b><span style="color:var(--ink3);font-size:12.5px">${w}</span></div>`).join('')+`<div class="cap" style="margin-top:10px">Group F has won twice. One more and their medals turn gold.</div>`;
+}
+render();
+if(view==='norm')$$('#viewSeg button').forEach(x=>x.classList.toggle('on',x.dataset.v==='norm'));
+
+$$('#viewSeg button').forEach(b=>b.onclick=()=>{view=b.dataset.v;$$('#viewSeg button').forEach(x=>x.classList.toggle('on',x===b));render()});
+$$('#themeSeg button').forEach(b=>b.onclick=()=>{document.documentElement.dataset.theme=b.dataset.t;$$('#themeSeg button').forEach(x=>x.classList.toggle('on',x===b))});
+if(new URLSearchParams(location.search).get('dark'))$$('#themeSeg button')[1].click();
+
+/* victory lap */
+$('#crowd').innerHTML=[...Array(16)].map((_,i)=>`<i style="animation-delay:${(i%5)*90}ms;height:${30+(i*7)%22}px"></i>`).join('');
+let ht,done=false;const hb=$('#vHold'),vs=$('#vstage');
+hb.onpointerdown=()=>{if(done)return;hb.classList.add('p');ht=setTimeout(win,1000)};
+hb.onpointerup=hb.onpointerleave=()=>{clearTimeout(ht);hb.classList.remove('p')};
+function win(){done=true;hb.classList.remove('p');vs.classList.add('cheer');hb.querySelector('span').textContent='Checked in · 9:04 · Champion';$('#vTxt').textContent='The crowd goes wild. Present, and still #1.';
+  for(let i=0;i<40;i++){const c=document.createElement('i');c.className='conf';const a=Math.random()*Math.PI*2,d=120+Math.random()*160;c.style.cssText=`--x:${Math.cos(a)*d}px;--y:${Math.sin(a)*d-40}px;--r:${Math.random()*720}deg;background:${['#fde68a','#f59e0b','#facc15','#fff7cc','#b45309'][i%5]};animation-delay:${Math.random()*120}ms`;vs.appendChild(c);setTimeout(()=>c.remove(),1600)}
+  toast('Victory Lap! Checked in on time')}
+$('#vReset').onclick=()=>{done=false;vs.classList.remove('cheer');hb.querySelector('span').textContent='Hold to take your victory lap';$('#vTxt').textContent='Group F · Week 11 champions'};
+</script>
+</body>
+</html>

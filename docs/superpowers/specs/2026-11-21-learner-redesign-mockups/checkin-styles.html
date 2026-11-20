@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Check-in Styles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f7f8; --card:#fff; --ink:#18181b; --ink2:#52525b; --ink3:#a1a1aa; --hair:rgba(24,24,27,.07);
+  --green:#16a34a; --amber:#f59e0b; --red:#ef4444;
+  --ease:cubic-bezier(.32,.72,0,1); --spring:cubic-bezier(.34,1.56,.64,1);
+  --shadow:0 0 0 1px var(--hair),0 1px 2px rgba(24,24,27,.04),0 8px 24px -16px rgba(24,24,27,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:"Geist","Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Noto Sans Thai",system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;letter-spacing:-.006em}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.wrap{max-width:1220px;margin:0 auto;padding:36px 24px 120px}
+h1{font-size:28px;font-weight:650;letter-spacing:-.03em}
+.lede{color:var(--ink2);margin-top:6px;max-width:720px;line-height:1.5}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:20px;margin-top:26px;align-items:start}
+.card{background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:22px}
+.sticky{position:sticky;top:20px}
+.card h3{font-size:15px;font-weight:600}
+.cap{color:var(--ink3);font-size:12.5px;margin-top:3px}
+.hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.chipbtn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:550;border-radius:999px;padding:6px 11px;box-shadow:0 0 0 1px var(--hair);background:#fff}
+.chipbtn svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.status{font-size:20px;font-weight:650;letter-spacing:-.025em;margin-top:16px;line-height:1.25}
+.status small{display:block;font-size:13px;font-weight:400;color:var(--ink2);letter-spacing:0;margin-top:4px}
+.status small b{color:var(--ink);font-variant-numeric:tabular-nums}
+.stage{position:relative;height:360px;margin-top:16px;border-radius:18px;background:radial-gradient(120% 90% at 50% 0%,#ffffff,#f4f4f5);box-shadow:inset 0 0 0 1px var(--hair);display:grid;place-items:center;overflow:hidden;user-select:none;-webkit-user-select:none}
+.stage.dark{background:radial-gradient(120% 100% at 50% 0%,#1e1b4b,#0b0a1a)}
+.stage.wood{background:linear-gradient(180deg,#f5f5f4,#e7e5e4)}
+.under{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:13px;color:var(--ink2);font-weight:500;pointer-events:none}
+.stage.dark .under{color:#c7d2fe}
+.reset{font-size:12px;color:var(--ink3);text-decoration:underline;margin-top:10px}
+
+/* gallery */
+.gal h4{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin:20px 0 10px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tile{border-radius:16px;background:#fff;box-shadow:0 0 0 1px var(--hair);padding:8px 8px 10px;text-align:center;transition:transform .35s var(--ease),box-shadow .25s;position:relative}
+.tile:hover{transform:translateY(-2px)}
+.tile.on{box-shadow:0 0 0 2px var(--ink)}
+.tile .th{height:76px;border-radius:11px;background:#fafafa;display:grid;place-items:center;margin-bottom:8px;position:relative;overflow:hidden}
+.tile .th svg{max-height:70px;max-width:100%}
+.tile b{font-size:12.5px;font-weight:600;display:block}
+.tile small{font-size:11px;color:var(--ink3)}
+.tile .new{position:absolute;top:12px;right:12px;font-size:9.5px;font-weight:700;background:#ec4899;color:#fff;border-radius:999px;padding:1px 6px;z-index:3}
+.tile.locked .th>*:not(.lk){filter:grayscale(1) blur(1.5px);opacity:.45}
+.lk{position:absolute;inset:auto 8px 7px 8px;z-index:2}
+.lk .bar{height:5px;border-radius:9px;background:rgba(24,24,27,.1);overflow:hidden}
+.lk .bar i{display:block;height:100%;background:linear-gradient(90deg,#f97316,#ec4899);border-radius:9px}
+.lk .t{font-size:10px;font-weight:650;color:var(--ink);margin-bottom:3px;display:flex;align-items:center;justify-content:center;gap:4px}
+.lk svg{width:10px;height:10px;stroke:currentColor;stroke-width:2;fill:none}
+.streakhd{display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,#fff7ed,#fdf2f8)}
+.streakhd .n{font-size:26px;font-weight:700;letter-spacing:-.04em;color:#ea580c}
+.streakhd small{display:block;color:var(--ink2);font-size:12px}
+.toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);margin-top:14px}
+.sw{width:34px;height:20px;border-radius:99px;background:#e4e4e7;position:relative;transition:background .3s}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .35s var(--spring)}
+.sw.on{background:var(--ink)}.sw.on::after{transform:translateX(14px)}
+
+/* shared done */
+.done{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;animation:pop .6s var(--spring) both;padding:0 20px}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.done .ok{width:84px;height:84px;border-radius:50%;display:grid;place-items:center}
+.done .ok svg{width:42px;height:42px;stroke:#fff;stroke-width:3.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.done .ok path{stroke-dasharray:50;stroke-dashoffset:50;animation:draw .6s .15s var(--ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.done b{font-size:18px;font-weight:650;letter-spacing:-.02em}
+.done span{color:var(--ink2);font-size:13px;max-width:300px}
+.closed{color:var(--ink3);text-align:center;font-size:14px}
+.closed b{display:block;color:var(--ink);font-size:18px;margin-bottom:4px}
+.conf{position:absolute;left:50%;top:45%;width:8px;height:12px;border-radius:2px;pointer-events:none;animation:conf 1.2s var(--ease) forwards;z-index:9}
+@keyframes conf{to{transform:translate(var(--x),var(--y)) rotate(var(--r));opacity:0}}
+.flash{position:absolute;inset:0;background:#fff;animation:flash .5s ease-out forwards;pointer-events:none;z-index:8}
+@keyframes flash{from{opacity:.9}to{opacity:0}}
+.shake{animation:shake .45s}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(-7px,2px) rotate(-.6deg)}40%{transform:translate(6px,-3px) rotate(.5deg)}60%{transform:translate(-5px,3px)}80%{transform:translate(4px,-2px)}}
+
+/* ===== clean ===== */
+.slide{--c:var(--green);position:relative;width:360px;max-width:88%;height:66px;border-radius:999px;background:#fff;box-shadow:0 0 0 1px var(--hair),0 10px 30px -18px rgba(0,0,0,.3);overflow:hidden;touch-action:none}
+.slide .fill{position:absolute;inset:0;width:66px;border-radius:999px;background:var(--c);opacity:.14}
+.slide .txt{position:absolute;inset:0;display:grid;place-items:center;font-weight:600;font-size:15px;padding-left:44px;background:linear-gradient(100deg,rgba(24,24,27,.35) 40%,rgba(24,24,27,.95) 50%,rgba(24,24,27,.35) 60%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 2.6s linear infinite}
+@keyframes shine{from{background-position:120% 0}to{background-position:-120% 0}}
+.slide .knob{position:absolute;top:6px;left:6px;width:54px;height:54px;border-radius:50%;background:var(--c);display:grid;place-items:center;cursor:grab;transition:transform .55s var(--spring);box-shadow:inset 0 1px 1px rgba(255,255,255,.35),0 6px 14px -6px var(--c)}
+.slide.drag .knob{transition:none}
+.slide .knob svg{width:22px;height:22px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.slide.gold{background:linear-gradient(180deg,#292524,#0c0a09);box-shadow:0 0 0 1.5px #a16207,0 0 0 4px #1c1917,0 18px 40px -16px rgba(161,98,7,.6)}
+.slide.gold .fill{background:linear-gradient(90deg,#fde68a,#f59e0b);opacity:.3}
+.slide.gold .txt{background:linear-gradient(100deg,#a16207 35%,#fff7cc 50%,#a16207 65%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text}
+.slide.gold .knob{background:radial-gradient(70% 70% at 35% 30%,#fff7cc,#facc15 45%,#a16207);box-shadow:inset 0 -3px 0 rgba(0,0,0,.2),0 0 18px rgba(250,204,21,.6)}
+.slide.gold .knob svg{stroke:#713f12}
+.spark{position:absolute;width:6px;height:6px;pointer-events:none;background:#fde68a;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:spk 1.2s ease-in-out infinite}
+@keyframes spk{0%,100%{transform:scale(0);opacity:0}50%{transform:scale(1.4);opacity:1}}
+.hold{--c:var(--green);position:relative;width:300px;height:66px;border-radius:18px;background:var(--ink);color:#fff;overflow:hidden;display:grid;place-items:center;font-weight:600;font-size:15px;touch-action:none;transition:transform .35s var(--ease);box-shadow:0 14px 30px -16px rgba(0,0,0,.5)}
+.hold .prog{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--c)}
+.hold.p{transform:scale(.97)}.hold.p .prog{width:100%;transition:width .9s linear}
+.hold span{position:relative}
+.ring{position:relative;width:190px;height:190px;border-radius:50%;display:grid;place-items:center;transition:transform .4s var(--spring)}
+.ring:active{transform:scale(.95)}
+.ring>svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.ring .face{position:absolute;inset:17px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px var(--hair),0 14px 30px -14px rgba(24,24,27,.25);display:flex;flex-direction:column;align-items:center;justify-content:center}
+
+/* ===== runaway ===== */
+.run{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:15px 28px;font-size:15px;background:linear-gradient(180deg,#27272a,#18181b);color:#fff;border-radius:999px;font-weight:650;transition:left .38s var(--spring),top .38s var(--spring);white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 12px 24px -10px rgba(0,0,0,.45);z-index:2}
+.run .eyes{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle}
+.run .eyes i{width:9px;height:9px;border-radius:50%;background:#fff;position:relative}
+.run .eyes i::after{content:"";position:absolute;width:4px;height:4px;border-radius:50%;background:#18181b;top:2.5px;left:var(--px,2.5px);transition:left .2s}
+.ghost{position:absolute;transform:translate(-50%,-50%);padding:15px 28px;font-size:15px;border-radius:999px;background:#18181b;color:transparent;opacity:.18;animation:ghost .5s ease-out forwards;pointer-events:none}
+@keyframes ghost{to{opacity:0;transform:translate(-50%,-50%) scale(.85)}}
+.bubble{position:absolute;transform:translate(-50%,-130%);background:#fff;border-radius:14px;padding:6px 11px;font-size:12.5px;font-weight:600;box-shadow:0 0 0 1px var(--hair),0 8px 18px -10px rgba(0,0,0,.3);white-space:nowrap;animation:pop .35s var(--spring);z-index:3;transition:left .38s var(--spring),top .38s var(--spring)}
+.bubble::after{content:"";position:absolute;left:50%;bottom:-5px;width:10px;height:10px;background:#fff;transform:translateX(-50%) rotate(45deg);box-shadow:1px 1px 0 rgba(0,0,0,.05)}
+.sweat{position:absolute;top:-8px;right:10px;width:9px;height:13px;background:#7dd3fc;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;animation:drip 1s ease-in infinite}
+@keyframes drip{0%{transform:translateY(0);opacity:1}100%{transform:translateY(14px);opacity:0}}
+
+/* ===== bubble wrap ===== */
+.wrapbox{padding:16px;border-radius:18px;background:linear-gradient(135deg,rgba(255,255,255,.7),rgba(226,232,240,.5));box-shadow:0 0 0 1px rgba(148,163,184,.3),0 20px 40px -24px rgba(0,0,0,.35);display:grid;grid-template-columns:repeat(4,58px);gap:10px;transform:rotate(-2deg)}
+.bub{width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 34% 30%,rgba(255,255,255,.95) 0 12%,rgba(255,255,255,.2) 24%,rgba(186,230,253,.35) 60%,rgba(148,163,184,.45));box-shadow:inset -4px -6px 10px rgba(100,116,139,.25),inset 2px 3px 6px rgba(255,255,255,.9),0 4px 8px -4px rgba(0,0,0,.2);transition:transform .15s}
+.bub:active{transform:scale(.9)}
+.bub.popped{background:radial-gradient(circle at 50% 50%,rgba(226,232,240,.6),rgba(203,213,225,.5));box-shadow:inset 0 2px 4px rgba(100,116,139,.3);transform:scale(.86);pointer-events:none;clip-path:polygon(10% 30%,30% 8%,55% 14%,80% 6%,94% 32%,88% 60%,96% 84%,64% 92%,40% 86%,14% 94%,6% 66%)}
+.counter{position:absolute;top:16px;right:18px;font-size:12px;font-weight:650;background:#fff;border-radius:99px;padding:4px 10px;box-shadow:0 0 0 1px var(--hair)}
+
+/* ===== scratch ===== */
+.ticket{position:relative;width:340px;height:170px;border-radius:14px;background:linear-gradient(135deg,#fef3c7,#fde68a 40%,#fbcfe8);box-shadow:0 20px 40px -22px rgba(0,0,0,.4);overflow:hidden;
+  -webkit-mask:radial-gradient(circle 10px at 0 50%,#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 10px at 100% 50%,#0000 98%,#000) right/51% 100% no-repeat;
+  mask:radial-gradient(circle 10px at 0 50%,#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 10px at 100% 50%,#0000 98%,#000) right/51% 100% no-repeat}
+.ticket .in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.ticket .in small{font-size:10px;letter-spacing:.2em;font-weight:700;color:#92400e}
+.ticket .stamp{font-size:34px;font-weight:800;letter-spacing:.04em;border:3px solid currentColor;border-radius:10px;padding:2px 14px;transform:rotate(-6deg)}
+.ticket canvas{position:absolute;inset:0;touch-action:none;cursor:grab;transition:opacity .5s}
+
+/* ===== slot ===== */
+.cab{width:300px;border-radius:26px 26px 18px 18px;background:linear-gradient(180deg,#7c3aed,#4c1d95);padding:12px 14px 16px;box-shadow:inset 0 2px 0 rgba(255,255,255,.25),inset 0 -6px 0 rgba(0,0,0,.25),0 24px 40px -22px rgba(76,29,149,.8);position:relative}
+.marq{border-radius:16px;background:linear-gradient(180deg,#1e1b4b,#312e81);padding:8px;text-align:center;position:relative;color:#fde68a;font-weight:800;letter-spacing:.14em;font-size:13px;text-shadow:0 0 8px #f59e0b}
+.bulbs{display:flex;justify-content:space-between;margin:6px 4px 0}
+.bulbs i{width:7px;height:7px;border-radius:50%;background:#fde68a;box-shadow:0 0 6px #facc15;animation:blink 1s steps(1) infinite}
+.bulbs i:nth-child(even){animation-delay:.5s}
+.cab.win .bulbs i{animation-duration:.18s}
+@keyframes blink{50%{opacity:.25}}
+.win3{display:flex;gap:6px;margin-top:10px;padding:8px;border-radius:14px;background:#0f0a1f;position:relative}
+.win3::after{content:"";position:absolute;left:4px;right:4px;top:50%;height:2px;background:rgba(239,68,68,.75);box-shadow:0 0 6px #ef4444}
+.reel{flex:1;height:84px;border-radius:10px;background:#fff;overflow:hidden;position:relative;box-shadow:inset 0 10px 12px -8px rgba(0,0,0,.45),inset 0 -10px 12px -8px rgba(0,0,0,.45)}
+.reel .strip{position:absolute;left:0;right:0;top:0}
+.reel .strip div{height:84px;display:grid;place-items:center;font-size:38px}
+.lev{position:absolute;right:-30px;top:60px;width:30px;height:120px}
+.lev .arm{position:absolute;left:10px;bottom:20px;width:8px;height:86px;border-radius:6px;background:linear-gradient(90deg,#a1a1aa,#e4e4e7,#71717a);transform-origin:50% 100%;transition:transform .35s var(--spring)}
+.lev .ball{position:absolute;left:-7px;top:-16px;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fca5a5,#dc2626 55%,#7f1d1d)}
+.lev .hub{position:absolute;left:4px;bottom:8px;width:20px;height:24px;border-radius:6px;background:linear-gradient(90deg,#3f3f46,#71717a,#27272a)}
+.lev.pull .arm{transform:scaleY(-.55)}
+.tray{margin-top:12px;height:18px;border-radius:9px;background:linear-gradient(180deg,#1e1b4b,#312e81);box-shadow:inset 0 3px 6px rgba(0,0,0,.5)}
+.coin{position:absolute;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff7cc,#facc15 50%,#a16207);box-shadow:inset 0 0 0 2px #ca8a04;animation:coin 1.1s cubic-bezier(.3,.6,.5,1) forwards;z-index:6}
+@keyframes coin{0%{transform:translate(0,0)}40%{transform:translate(calc(var(--x)*.5),-80px)}100%{transform:translate(var(--x),220px) rotate(540deg);opacity:0}}
+
+/* ===== arcade ===== */
+.arc{width:330px}
+.crt{position:relative;height:190px;border-radius:22px;background:#020617;box-shadow:0 0 0 10px #27272a,0 0 0 12px #3f3f46,0 24px 40px -18px rgba(0,0,0,.6);overflow:hidden;font-family:"Press Start 2P",ui-monospace,monospace;color:#4ade80;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center}
+.crt::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0 1px,transparent 1px 3px);pointer-events:none}
+.crt::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 50%,transparent 60%,rgba(0,0,0,.7));pointer-events:none}
+.crt .ttl{font-size:16px;color:#fde047;text-shadow:3px 3px 0 #b91c1c}
+.crt .blink{font-size:10px;animation:blink 1s steps(1) infinite}
+.crt .hs{font-size:8px;color:#94a3b8}
+.pbar{display:flex;gap:4px}.pbar i{width:16px;height:16px;background:#14532d}.pbar i.f{background:#4ade80;box-shadow:0 0 8px #4ade80}
+.panel{margin-top:18px;height:74px;border-radius:14px;background:linear-gradient(180deg,#3f3f46,#18181b);display:flex;align-items:center;justify-content:space-between;padding:0 22px;box-shadow:inset 0 2px 0 rgba(255,255,255,.1)}
+.joy{position:relative;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle,#27272a 50%,#09090b)}
+.joy i{position:absolute;left:50%;top:50%;width:8px;height:30px;margin:-30px 0 0 -4px;background:linear-gradient(90deg,#71717a,#d4d4d8);border-radius:4px;transform-origin:50% 100%;animation:joy 2.4s ease-in-out infinite}
+.joy i::before{content:"";position:absolute;left:-9px;top:-14px;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fca5a5,#dc2626 55%,#7f1d1d)}
+@keyframes joy{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+.abtn{width:36px;height:36px;border-radius:50%;box-shadow:inset 0 -4px 0 rgba(0,0,0,.3),0 3px 0 #09090b;font-family:"Press Start 2P",monospace;font-size:9px;color:#fff;transition:transform .08s}
+.abtn:active{transform:translateY(3px);box-shadow:inset 0 -2px 0 rgba(0,0,0,.3)}
+.startb{padding:8px 12px;border-radius:99px;background:#facc15;color:#422006;font-family:"Press Start 2P",monospace;font-size:9px;box-shadow:0 3px 0 #854d0e;animation:pulseS 1.2s ease-in-out infinite}
+@keyframes pulseS{50%{box-shadow:0 3px 0 #854d0e,0 0 0 6px rgba(250,204,21,.25)}}
+
+/* svg helpers */
+.svgstage{width:100%;height:100%;display:grid;place-items:center}
+.ringing{animation:ring .12s linear infinite;transform-origin:50% 60%}
+@keyframes ring{0%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}100%{transform:rotate(-5deg)}}
+.breathe{animation:breathe 3s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes breathe{50%{transform:scaleY(1.035)}}
+.zz{animation:zz 2.4s ease-in-out infinite;opacity:0}
+@keyframes zz{0%{transform:translate(0,8px);opacity:0}40%{opacity:1}100%{transform:translate(10px,-22px);opacity:0}}
+.twinkle{animation:tw 2s ease-in-out infinite}
+@keyframes tw{50%{opacity:.2}}
+.wob{animation:wob .1s linear infinite}
+@keyframes wob{0%{transform:translate(-1px,0)}50%{transform:translate(1px,1px)}100%{transform:translate(-1px,0)}}
+.flick{animation:flick .12s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 0}
+@keyframes flick{from{transform:scaleY(.85)}to{transform:scaleY(1.15)}}
+.puff{animation:puff 1.2s ease-out forwards}
+@keyframes puff{from{transform:scale(.3);opacity:.9}to{transform:scale(1.6) translate(var(--dx),-6px);opacity:0}}
+.bigcount{position:absolute;top:22px;left:0;right:0;text-align:center;font-size:54px;font-weight:800;color:#fff;letter-spacing:-.04em;text-shadow:0 0 30px rgba(129,140,248,.8);pointer-events:none}
+
+.shuf{margin-top:16px;border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#eef2ff,#fdf4ff);box-shadow:0 0 0 1px rgba(99,102,241,.15);cursor:pointer;width:100%;text-align:left;transition:box-shadow .3s}
+.shuf.on{box-shadow:0 0 0 2px #6366f1}
+.shuf .dice{width:44px;height:44px;border-radius:12px;background:#fff;display:grid;place-items:center;box-shadow:0 6px 14px -8px rgba(99,102,241,.6);flex:none;transition:transform .6s var(--spring)}
+.shuf:hover .dice{transform:rotate(-14deg)}
+.shuf b{font-size:13.5px;display:block}.shuf small{font-size:12px;color:var(--ink2)}
+.roll{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:7;background:radial-gradient(120% 90% at 50% 0%,#fff,#f4f4f5)}
+.roll small{font-size:12px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em}
+.roll .nm{font-size:30px;font-weight:700;letter-spacing:-.03em;height:40px;overflow:hidden}
+.roll .dice{animation:tumble .9s var(--ease)}
+@keyframes tumble{0%{transform:rotate(0) scale(.6)}60%{transform:rotate(540deg) scale(1.15)}100%{transform:rotate(720deg) scale(1)}}
+.reroll{position:absolute;top:12px;right:12px;z-index:6;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border-radius:999px;padding:6px 11px;background:rgba(255,255,255,.9);box-shadow:0 0 0 1px var(--hair)}
+.reroll svg,.dicesvg{width:16px;height:16px}
+.proto{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ink2);z-index:20}
+.proto b{color:var(--ink);font-variant-numeric:tabular-nums;width:38px}
+.proto input{accent-color:var(--ink);width:220px}
+@media (max-width:1040px){.layout{grid-template-columns:1fr}.sticky{position:static}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Make check-in yours</h1>
+  <p class="lede">Learners pick a check-in style from the gallery. Some are clean, some are silly, and the best ones unlock as their on-time streak grows. Every style follows the same rules (on time before 9:15, late until 10:30). Turn on sound, top right of the card.</p>
+
+  <div class="layout">
+    <section class="card sticky">
+      <div class="hd"><div><h3>Morning check-in</h3><div class="cap">Class starts 9:15</div></div>
+        <div style="display:flex;gap:6px">
+          <button class="chipbtn" id="snd"></button>
+          <span class="chipbtn" style="cursor:default"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-1.5-1.3-2.2-2.6-2h-2a2 2 0 0 1-1.6-3.2c1.2-1.6.2-3.8-2.8-3.8z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10.5" cy="7.5" r="1"/></svg><span id="curName"></span></span>
+        </div></div>
+      <div class="status" id="status"></div>
+      <div class="stage" id="stage"></div>
+      <button class="reset" id="reset">Reset and try again</button>
+    </section>
+
+    <aside class="card gal">
+      <h3>Choose your style</h3><div class="cap">Saved to your account, so it follows you to your phone too</div>
+      <div class="streakhd"><div class="n">12</div><div><b style="font-size:13.5px">day on-time streak</b><small>Keep going to unlock Rocket at 15 days</small></div></div>
+      <div class="toggle"><button class="sw" id="unl"></button>Unlock everything (prototype preview)</div>
+      <button class="shuf" id="shuf"><div class="dice">DICE</div><div style="flex:1"><b>Surprise me every day</b><small>Get a random style from the ones you've unlocked each morning</small></div><span class="sw" id="shufsw"></span></button>
+      <h4>Clean</h4><div class="tiles" id="g-clean"></div>
+      <h4>Fun</h4><div class="tiles" id="g-fun"></div>
+      <h4>Unlock with your streak</h4><div class="tiles" id="g-lock"></div>
+    </aside>
+  </div>
+</div>
+
+<div class="proto">Prototype · time <input type="range" id="clock" min="500" max="660" value="548"><b id="clk">9:08</b></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const fmt=m=>`${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`;
+const START=510,LATE=555,ABS=630, STREAK=12;
+const q=new URLSearchParams(location.search);
+if(q.get('t'))$('#clock').value=q.get('t');
+let now=+$('#clock').value, doneAt=null, doneExtra='', unlockAll=q.get('u')==='1', muted=true, timers=[], raf=null;
+const DICE=`<svg class="dicesvg" viewBox="0 0 24 24" style="width:26px;height:26px"><rect x="3" y="3" width="18" height="18" rx="5" fill="#6366f1"/><circle cx="8" cy="8" r="1.7" fill="#fff"/><circle cx="16" cy="8" r="1.7" fill="#fff"/><circle cx="12" cy="12" r="1.7" fill="#fff"/><circle cx="8" cy="16" r="1.7" fill="#fff"/><circle cx="16" cy="16" r="1.7" fill="#fff"/></svg>`;
+let shuffle=false, todays=null, rolled=false;
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let cur=q.get('s')||ls.get('baro-skin2')||'slide';
+shuffle=q.get('r')==='1'||ls.get('baro-shuffle')==='1';
+const st=()=>now<START?'pre':now<LATE?'on':now<ABS?'late':'abs';
+const isLate=()=>st()==='late';
+const col=()=>isLate()?'#f59e0b':'#16a34a';
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const later=(f,ms)=>{const t=setTimeout(f,ms);timers.push(t);return t};
+function clearRun(){timers.forEach(clearTimeout);timers=[];if(raf)cancelAnimationFrame(raf);raf=null}
+
+/* ---------- sound ---------- */
+let AC;
+function tone(f,d=.08,type='sine',delay=0,vol=.07){if(muted)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const t=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d+.02)}catch(e){}}
+const sfx={click:()=>tone(520,.05,'square',0,.04),pop:()=>{tone(700+Math.random()*500,.06,'triangle',0,.12);tone(180,.05,'sine',0,.08)},tick:()=>tone(1400,.02,'square',0,.025),
+  win:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.18,'triangle',i*.09,.08)),thud:()=>tone(90,.25,'sine',0,.2),bell:()=>{tone(1800,.08,'square',0,.03);tone(1500,.08,'square',.06,.03)},
+  rise:()=>{for(let i=0;i<10;i++)tone(200+i*60,.06,'sawtooth',i*.05,.03)},coin:()=>{tone(988,.07,'square',0,.04);tone(1319,.2,'square',.07,.04)},blip:()=>tone(880,.06,'square',0,.04)};
+function paintSnd(){$('#snd').innerHTML=`<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/>${muted?'<path d="M17 9l5 6M22 9l-5 6"/>':'<path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>'}</svg>${muted?'Sound off':'Sound on'}`}
+$('#snd').onclick=()=>{muted=!muted;paintSnd();sfx.click()};
+
+/* ---------- finish ---------- */
+const LINES={
+  on:["You're in. Your Wi-Fi didn't let you down today.","On time. TA Ploy is proud of you.","Present. Your coffee worked.","Checked in. Bug count today: 0 so far.","มาแล้วจ้า. On time, as usual.","Present. Your keyboard says good morning."],
+  late:["Late, but you made it. That counts for something.","Checked in. Traffic wins this round.","Late, but here. Tomorrow you win.","Marked late. The alarm clock has been notified.","มาสายนิดนึง. Still counts."]
+};
+function confetti(n=28){const s=$('#stage');for(let i=0;i<n;i++){const c=document.createElement('i');c.className='conf';const a=Math.random()*Math.PI*2,d=100+Math.random()*140;
+  c.style.cssText=`--x:${Math.cos(a)*d}px;--y:${Math.sin(a)*d}px;--r:${Math.random()*600}deg;background:${pick(['#16a34a','#f59e0b','#6366f1','#ec4899','#0ea5e9','#facc15'])};animation-delay:${Math.random()*80}ms`;s.appendChild(c);setTimeout(()=>c.remove(),1400)}}
+function finish(extra=''){if(doneAt!=null)return;clearRun();doneAt=now;doneExtra=extra;sfx.win();render();confetti()}
+function doneView(){const late=doneAt>=LATE,c=late?'#f59e0b':'#16a34a';
+  return `<div class="done">${doneExtra||`<div class="ok" style="background:${c};box-shadow:0 16px 36px -14px ${c}"><svg viewBox="0 0 48 48"><path d="M13 25l7 7 15-16"/></svg></div>`}<b>${late?'Checked in · late':'Checked in'} · ${fmt(doneAt)}</b><span>${pick(late?LINES.late:LINES.on)}</span></div>`}
+
+/* =================== ART =================== */
+function artCoffee(p){return `<svg viewBox="0 0 240 230" width="240" height="230">
+ <defs><linearGradient id="${p}mug" x1="0" x2="1"><stop offset="0" stop-color="#e4e4e7"/><stop offset=".35" stop-color="#ffffff"/><stop offset="1" stop-color="#d4d4d8"/></linearGradient>
+ <radialGradient id="${p}cof" cx="45%" cy="40%" r="70%"><stop offset="0" stop-color="#c08457"/><stop offset=".55" stop-color="#8a4b21"/><stop offset="1" stop-color="#4a2511"/></radialGradient>
+ <linearGradient id="${p}sau" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fafafa"/><stop offset="1" stop-color="#d4d4d8"/></linearGradient></defs>
+ <ellipse cx="120" cy="212" rx="96" ry="10" fill="rgba(0,0,0,.08)"/>
+ <ellipse cx="120" cy="200" rx="92" ry="16" fill="url(#${p}sau)" stroke="#d4d4d8"/><ellipse cx="120" cy="197" rx="58" ry="8" fill="#e4e4e7"/>
+ <path d="M176 96 q40 -4 38 34 q-2 34 -44 34" fill="none" stroke="#d4d4d8" stroke-width="16" stroke-linecap="round"/>
+ <path d="M176 96 q40 -4 38 34 q-2 34 -44 34" fill="none" stroke="#fafafa" stroke-width="10" stroke-linecap="round"/>
+ <path d="M58 78 L182 78 L172 182 Q170 196 154 196 L86 196 Q70 196 68 182 Z" fill="url(#${p}mug)" stroke="#d4d4d8" stroke-width="1.5"/>
+ <path d="M74 92 L78 176" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".8"/>
+ <text x="122" y="150" text-anchor="middle" font-size="15" font-weight="800" fill="#18181b" opacity=".85" style="letter-spacing:.12em">BARO</text>
+ <text x="122" y="166" text-anchor="middle" font-size="7.5" font-weight="600" fill="#71717a" style="letter-spacing:.2em">COFFEE CLUB</text>
+ <ellipse cx="120" cy="78" rx="62" ry="11" fill="#f4f4f5" stroke="#d4d4d8" stroke-width="1.5"/>
+ <ellipse cx="120" cy="79" rx="56" ry="8.5" fill="#3f3f46"/>
+ <g class="cof" style="transform-box:fill-box;transform-origin:center;transform:scale(0)"><ellipse cx="120" cy="79" rx="56" ry="8.5" fill="url(#${p}cof)"/>
+   <path class="art" d="M120 85 c-10 -6 -16 -10 -10 -14 c4 -2 8 0 10 3 c2 -3 6 -5 10 -3 c6 4 0 8 -10 14z" fill="#fde7c8" opacity="0" style="transition:opacity .5s"/></g>
+ <rect class="pour" x="117" y="0" width="6" height="80" rx="3" fill="#7c3f17" style="transform-origin:120px 0;transform:scaleY(0);transition:transform .2s"/>
+ <g class="steam" opacity="0" style="transition:opacity .4s"><path class="zz" d="M100 60 q-8 -12 0 -24 q8 -12 0 -24" stroke="#d4d4d8" stroke-width="5" fill="none" stroke-linecap="round"/><path class="zz" style="animation-delay:.6s" d="M124 60 q-8 -12 0 -24 q8 -12 0 -24" stroke="#d4d4d8" stroke-width="5" fill="none" stroke-linecap="round"/><path class="zz" style="animation-delay:1.2s" d="M146 60 q-8 -12 0 -24 q8 -12 0 -24" stroke="#d4d4d8" stroke-width="5" fill="none" stroke-linecap="round"/></g>
+</svg>`}
+
+function artRed(p){return `<svg viewBox="0 0 280 220" width="280" height="220">
+ <defs><linearGradient id="${p}met" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f4f5"/><stop offset=".5" stop-color="#a1a1aa"/><stop offset="1" stop-color="#e4e4e7"/></linearGradient>
+ <pattern id="${p}br" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 2h4" stroke="#fff" stroke-width=".6" opacity=".35"/></pattern>
+ <radialGradient id="${p}dome" cx="38%" cy="28%" r="80%"><stop offset="0" stop-color="#fecaca"/><stop offset=".25" stop-color="#f87171"/><stop offset=".7" stop-color="#dc2626"/><stop offset="1" stop-color="#7f1d1d"/></radialGradient>
+ <pattern id="${p}haz" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="16" fill="#facc15"/><rect x="8" width="8" height="16" fill="#18181b"/></pattern></defs>
+ <ellipse cx="140" cy="206" rx="118" ry="9" fill="rgba(0,0,0,.12)"/>
+ <rect x="20" y="22" width="240" height="176" rx="22" fill="url(#${p}met)" stroke="#71717a" stroke-width="1.5"/>
+ <rect x="20" y="22" width="240" height="176" rx="22" fill="url(#${p}br)"/>
+ ${[[38,40],[242,40],[38,180],[242,180]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="6" fill="#d4d4d8" stroke="#71717a"/><path d="M${x-4} ${y-1} l8 2" stroke="#52525b" stroke-width="1.6"/>`).join('')}
+ <rect x="58" y="36" width="160" height="22" rx="5" fill="#18181b"/><text x="138" y="51" text-anchor="middle" font-size="8.5" font-weight="800" fill="#facc15" style="letter-spacing:.14em">CHECK-IN · DON'T PANIC</text>
+ <circle class="led" cx="226" cy="47" r="6" fill="#ef4444" stroke="#7f1d1d"><animate attributeName="opacity" values="1;.25;1" dur="1s" repeatCount="indefinite"/></circle>
+ <ellipse cx="140" cy="148" rx="66" ry="24" fill="#27272a"/><ellipse cx="140" cy="144" rx="60" ry="20" fill="#3f3f46"/>
+ <g class="dome" style="transition:transform .12s">
+   <ellipse cx="140" cy="140" rx="50" ry="15" fill="#991b1b"/>
+   <path d="M90 140 Q90 92 140 92 Q190 92 190 140 Z" fill="url(#${p}dome)"/>
+   <ellipse cx="120" cy="106" rx="18" ry="8" fill="#fff" opacity=".55" transform="rotate(-20 120 106)"/>
+ </g>
+ <g class="cover" style="transform-box:fill-box;transform-origin:50% 0;transition:transform .7s cubic-bezier(.34,1.56,.64,1)">
+   <rect x="80" y="84" width="120" height="70" rx="12" fill="rgba(186,230,253,.28)" stroke="url(#${p}haz)" stroke-width="7"/>
+   <rect x="96" y="92" width="22" height="50" rx="6" fill="#fff" opacity=".35"/>
+ </g>
+ <rect x="112" y="78" width="56" height="9" rx="3" fill="#52525b"/>
+</svg>`}
+
+function artCat(p){return `<svg viewBox="0 0 280 230" width="280" height="230">
+ <defs><radialGradient id="${p}fur" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="#fed7aa"/><stop offset=".6" stop-color="#fb923c"/><stop offset="1" stop-color="#ea580c"/></radialGradient></defs>
+ <ellipse cx="146" cy="212" rx="110" ry="10" fill="rgba(0,0,0,.08)"/>
+ <path d="M226 186 q44 -6 34 -52 q-6 -22 -24 -10" fill="none" stroke="#ea580c" stroke-width="20" stroke-linecap="round"/>
+ <path d="M248 160 l12 -4 M252 144 l11 2" stroke="#9a3412" stroke-width="4" stroke-linecap="round"/>
+ <g class="paw" style="transition:transform .6s cubic-bezier(.34,1.56,.64,1);transform:translateY(80px)">
+   <path d="M166 210 V112 q0 -26 26 -26 q26 0 26 26 V210Z" fill="url(#${p}fur)" stroke="#7c2d12" stroke-width="3"/>
+   <ellipse cx="192" cy="118" rx="11" ry="9" fill="#f9a8d4"/><circle cx="178" cy="100" r="5" fill="#f9a8d4"/><circle cx="192" cy="95" r="5" fill="#f9a8d4"/><circle cx="206" cy="100" r="5" fill="#f9a8d4"/>
+ </g>
+ <g class="breathe"><ellipse cx="160" cy="170" rx="92" ry="44" fill="url(#${p}fur)" stroke="#7c2d12" stroke-width="3"/>
+   <path d="M150 132 q8 16 0 30 M176 130 q8 18 0 34 M202 136 q6 14 0 28" stroke="#c2410c" stroke-width="5" fill="none" stroke-linecap="round" opacity=".7"/></g>
+ <g class="head" style="transform-box:fill-box;transform-origin:50% 80%;transition:transform .5s cubic-bezier(.34,1.56,.64,1)">
+   <path d="M44 100 L52 46 L88 76 Z" fill="url(#${p}fur)" stroke="#7c2d12" stroke-width="3" stroke-linejoin="round"/><path d="M54 90 L58 60 L78 78Z" fill="#fbcfe8"/>
+   <path d="M148 100 L140 46 L104 76 Z" fill="url(#${p}fur)" stroke="#7c2d12" stroke-width="3" stroke-linejoin="round"/><path d="M138 90 L134 60 L114 78Z" fill="#fbcfe8"/>
+   <circle cx="96" cy="124" r="56" fill="url(#${p}fur)" stroke="#7c2d12" stroke-width="3"/>
+   <path d="M84 72 v14 M96 70 v16 M108 72 v14" stroke="#c2410c" stroke-width="4.5" stroke-linecap="round" opacity=".75"/>
+   <ellipse cx="96" cy="146" rx="26" ry="18" fill="#fff7ed"/>
+   <g class="eyes"><path d="M64 120 q10 8 20 0 M108 120 q10 8 20 0" stroke="#431407" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>
+   <ellipse cx="66" cy="138" rx="9" ry="5" fill="#fb7185" opacity=".35"/><ellipse cx="126" cy="138" rx="9" ry="5" fill="#fb7185" opacity=".35"/>
+   <path d="M90 138 h12 l-6 6z" fill="#f472b6" stroke="#9d174d" stroke-width="1.5" stroke-linejoin="round"/>
+   <path class="mouth" d="M96 144 v5 M86 152 q5 5 10 -3 q5 8 10 3" stroke="#431407" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+   <path d="M74 146 l-30 -4 M74 152 l-30 4 M118 146 l30 -4 M118 152 l30 4" stroke="#431407" stroke-width="1.6" stroke-linecap="round" opacity=".6"/>
+ </g>
+ <g class="zzs" fill="#a1a1aa" font-weight="800"><text class="zz" x="140" y="60" font-size="18">z</text><text class="zz" x="156" y="44" font-size="14" style="animation-delay:.8s">z</text><text class="zz" x="168" y="30" font-size="11" style="animation-delay:1.6s">z</text></g>
+ <g class="boom" opacity="0" style="transition:opacity .2s"><path d="M192 70 l6 -18 l4 16 l16 -10 l-8 16 l18 2 l-16 8 l10 14 l-16 -6 l-4 16 l-6 -16 l-14 10 l6 -16 l-16 -4 l16 -6 l-8 -14z" fill="#facc15" stroke="#ca8a04" stroke-width="2" stroke-linejoin="round"/></g>
+</svg>`}
+
+function artClock(p,h=9,m=8){const ha=((h%12)+m/60)*30, ma=m*6;return `<svg viewBox="0 0 240 240" width="240" height="240">
+ <defs><radialGradient id="${p}bell" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#fef9c3"/><stop offset=".5" stop-color="#facc15"/><stop offset="1" stop-color="#a16207"/></radialGradient>
+ <radialGradient id="${p}body" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#fda4af"/><stop offset=".55" stop-color="#e11d48"/><stop offset="1" stop-color="#881337"/></radialGradient></defs>
+ <ellipse cx="120" cy="222" rx="80" ry="8" fill="rgba(0,0,0,.1)"/>
+ <g class="lines" stroke="#a1a1aa" stroke-width="4" stroke-linecap="round"><path d="M22 70 l-14 -8 M18 96 h-14 M218 70 l14 -8 M222 96 h14"/></g>
+ <g class="clk">
+  <path d="M70 196 l-16 22 M170 196 l16 22" stroke="#52525b" stroke-width="8" stroke-linecap="round"/>
+  <path d="M46 70 a30 30 0 0 1 52 -22 z" fill="url(#${p}bell)" stroke="#854d0e" stroke-width="2"/>
+  <path d="M194 70 a30 30 0 0 0 -52 -22 z" fill="url(#${p}bell)" stroke="#854d0e" stroke-width="2"/>
+  <g class="ham"><path d="M120 50 v-16" stroke="#52525b" stroke-width="5"/><rect x="104" y="24" width="32" height="12" rx="6" fill="#71717a"/></g>
+  <circle cx="120" cy="128" r="80" fill="url(#${p}body)"/>
+  <circle cx="120" cy="128" r="64" fill="#fff" stroke="#fecdd3" stroke-width="4"/>
+  ${[...Array(12)].map((_,i)=>{const a=i*30*Math.PI/180;return `<line x1="${120+54*Math.sin(a)}" y1="${128-54*Math.cos(a)}" x2="${120+(i%3?50:46)*Math.sin(a)}" y2="${128-(i%3?50:46)*Math.cos(a)}" stroke="#27272a" stroke-width="${i%3?2:4}" stroke-linecap="round"/>`}).join('')}
+  <line x1="120" y1="128" x2="120" y2="96" stroke="#18181b" stroke-width="6" stroke-linecap="round" transform="rotate(${ha} 120 128)"/>
+  <line x1="120" y1="128" x2="120" y2="82" stroke="#18181b" stroke-width="4" stroke-linecap="round" transform="rotate(${ma} 120 128)"/>
+  <circle cx="120" cy="128" r="6" fill="#e11d48"/>
+  <ellipse cx="88" cy="80" rx="20" ry="9" fill="#fff" opacity=".35" transform="rotate(-30 88 80)"/>
+ </g>
+ <g class="dizzy" opacity="0" style="transition:opacity .3s"><text x="60" y="40" font-size="20">✦</text><text x="160" y="30" font-size="16">✦</text><text x="186" y="56" font-size="12">✦</text></g>
+</svg>`}
+
+function artGacha(p){const caps=[[92,70,'#f472b6'],[122,62,'#60a5fa'],[150,74,'#facc15'],[104,96,'#34d399'],[136,98,'#a78bfa'],[78,96,'#fb923c'],[162,100,'#f87171'],[118,120,'#22d3ee'],[90,122,'#facc15'],[148,124,'#f472b6']];
+ return `<svg viewBox="0 0 240 260" width="240" height="260">
+ <defs><radialGradient id="${p}gl" cx="35%" cy="25%" r="80%"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".3" stop-color="#e0f2fe" stop-opacity=".35"/><stop offset="1" stop-color="#93c5fd" stop-opacity=".25"/></radialGradient>
+ <linearGradient id="${p}bd" x1="0" x2="1"><stop offset="0" stop-color="#be123c"/><stop offset=".45" stop-color="#f43f5e"/><stop offset="1" stop-color="#9f1239"/></linearGradient>
+ <clipPath id="${p}dc"><circle cx="120" cy="96" r="70"/></clipPath></defs>
+ <ellipse cx="120" cy="248" rx="80" ry="8" fill="rgba(0,0,0,.1)"/>
+ <rect x="54" y="150" width="132" height="96" rx="16" fill="url(#${p}bd)"/>
+ <rect x="62" y="158" width="116" height="10" rx="5" fill="#fff" opacity=".25"/>
+ <rect x="92" y="212" width="40" height="26" rx="8" fill="#4c0519"/>
+ <rect x="150" y="186" width="20" height="30" rx="4" fill="#4c0519"/><rect x="157" y="191" width="6" height="20" rx="3" fill="#18181b"/>
+ <g class="caps" clip-path="url(#${p}dc)">${caps.map(([x,y,c])=>`<g><circle cx="${x}" cy="${y}" r="15" fill="#fff"/><path d="M${x-15} ${y} a15 15 0 0 1 30 0z" fill="${c}"/><circle cx="${x}" cy="${y}" r="15" fill="none" stroke="rgba(0,0,0,.15)"/></g>`).join('')}</g>
+ <circle cx="120" cy="96" r="70" fill="url(#${p}gl)" stroke="#bae6fd" stroke-width="3"/>
+ <ellipse cx="94" cy="62" rx="18" ry="10" fill="#fff" opacity=".7" transform="rotate(-30 94 62)"/>
+ <rect x="66" y="146" width="108" height="14" rx="7" fill="#881337"/>
+ <g class="knob" style="transform-box:fill-box;transform-origin:center;transition:transform .9s cubic-bezier(.34,1.3,.64,1);cursor:pointer">
+   <circle cx="112" cy="190" r="22" fill="#fde047" stroke="#ca8a04" stroke-width="3"/><rect x="108" y="172" width="8" height="36" rx="4" fill="#ca8a04"/></g>
+</svg>`}
+
+function artRocket(p){return `<svg viewBox="0 0 300 340" width="300" height="340" style="overflow:visible">
+ <defs><linearGradient id="${p}rb" x1="0" x2="1"><stop offset="0" stop-color="#cbd5e1"/><stop offset=".45" stop-color="#ffffff"/><stop offset="1" stop-color="#94a3b8"/></linearGradient>
+ <radialGradient id="${p}win" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#e0f2fe"/><stop offset=".5" stop-color="#38bdf8"/><stop offset="1" stop-color="#0c4a6e"/></radialGradient>
+ <linearGradient id="${p}fl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff7cc"/><stop offset=".4" stop-color="#facc15"/><stop offset="1" stop-color="#ef4444" stop-opacity="0"/></linearGradient></defs>
+ ${[...Array(18)].map((_,i)=>`<circle class="twinkle" cx="${(i*67)%300}" cy="${(i*41)%200}" r="${i%3?1.2:2}" fill="#fff" style="animation-delay:${i*.13}s"/>`).join('')}
+ <rect x="70" y="300" width="160" height="16" rx="4" fill="#475569"/><rect x="96" y="250" width="10" height="52" fill="#64748b"/><rect x="194" y="250" width="10" height="52" fill="#64748b"/>
+ <g class="smoke"></g>
+ <g class="rk" style="transition:transform 1.4s cubic-bezier(.55,0,.8,.4)">
+   <g class="flame" style="transform-box:fill-box;transform-origin:50% 0;transform:scaleY(0);transition:transform .3s"><path class="flick" d="M134 256 q16 70 16 70 q0 0 16 -70z" fill="url(#${p}fl)"/><path class="flick" d="M142 256 q8 40 8 40 q0 0 8 -40z" fill="#fff"/></g>
+   <g class="body">
+     <path d="M120 236 l-30 26 v-40 l30 -20z" fill="#e11d48"/><path d="M180 236 l30 26 v-40 l-30 -20z" fill="#e11d48"/>
+     <path d="M150 60 q38 50 30 176 h-60 q-8 -126 30 -176z" fill="url(#${p}rb)" stroke="#64748b" stroke-width="1.5"/>
+     <path d="M150 60 q20 26 27 60 h-54 q7 -34 27 -60z" fill="#e11d48"/>
+     <circle cx="150" cy="150" r="17" fill="#cbd5e1"/><circle cx="150" cy="150" r="12" fill="url(#${p}win)"/>
+     <rect x="128" y="236" width="44" height="14" rx="4" fill="#475569"/>
+     ${[184,198,212].map(y=>`<circle cx="130" cy="${y}" r="1.6" fill="#94a3b8"/><circle cx="170" cy="${y}" r="1.6" fill="#94a3b8"/>`).join('')}
+     <text x="150" y="215" text-anchor="middle" font-size="9" font-weight="800" fill="#334155" style="letter-spacing:.1em">BARO-1</text>
+   </g></g>
+</svg>`}
+
+function artDJ(p){return `<svg viewBox="0 0 320 240" width="320" height="240">
+ <defs><linearGradient id="${p}pl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f3f46"/><stop offset="1" stop-color="#18181b"/></linearGradient>
+ <radialGradient id="${p}vin" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#27272a"/><stop offset=".9" stop-color="#09090b"/><stop offset="1" stop-color="#27272a"/></radialGradient>
+ <linearGradient id="${p}shine" x1="0" y1="0" x2="1" y2="1"><stop offset=".35" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".18"/><stop offset=".65" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
+ <rect x="10" y="14" width="300" height="212" rx="20" fill="url(#${p}pl)"/>
+ <rect x="10" y="14" width="300" height="212" rx="20" fill="none" stroke="#52525b"/>
+ <circle cx="130" cy="120" r="96" fill="#52525b"/>
+ <g class="vinyl"><circle cx="130" cy="120" r="90" fill="url(#${p}vin)"/>
+  ${[80,72,64,56,48].map(r=>`<circle cx="130" cy="120" r="${r}" fill="none" stroke="#3f3f46" stroke-width=".8"/>`).join('')}
+  <circle cx="130" cy="120" r="30" fill="#ec4899"/><circle cx="130" cy="120" r="30" fill="none" stroke="#fbcfe8" stroke-width="2" stroke-dasharray="4 4"/>
+  <text x="130" y="116" text-anchor="middle" font-size="8" font-weight="800" fill="#fff" style="letter-spacing:.1em">BARO</text><text x="130" y="128" text-anchor="middle" font-size="5.5" font-weight="700" fill="#fff" opacity=".8">RECORDS · SIDE A</text>
+  <circle cx="130" cy="120" r="3" fill="#18181b"/></g>
+ <circle cx="130" cy="120" r="90" fill="url(#${p}shine)" pointer-events="none"/>
+ <circle class="prog" cx="130" cy="120" r="100" fill="none" stroke="#ec4899" stroke-width="4" stroke-linecap="round" stroke-dasharray="0 700" transform="rotate(-90 130 120)"/>
+ <circle cx="262" cy="50" r="14" fill="#71717a" stroke="#27272a" stroke-width="3"/>
+ <path d="M262 50 L250 150 L196 176" fill="none" stroke="#d4d4d8" stroke-width="5" stroke-linecap="round"/>
+ <rect x="184" y="168" width="22" height="14" rx="3" fill="#a1a1aa" transform="rotate(-25 195 175)"/>
+ <g class="eq">${[0,1,2,3,4,5].map(i=>`<rect x="${238+i*10}" y="200" width="6" height="14" rx="2" fill="#ec4899" style="transform-box:fill-box;transform-origin:50% 100%"/>`).join('')}</g>
+</svg>`}
+
+/* =================== SKINS =================== */
+function slideSkin(s,gold){
+  s.innerHTML=`<div class="slide ${gold?'gold':''}" style="--c:${col()}"><div class="fill"></div><div class="txt">${isLate()?'Slide to check in · late':'Slide to check in'}</div><div class="knob"><svg viewBox="0 0 24 24">${gold?'<path d="M12 3l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.4l-5.2 2.7 1-5.8L3.5 9.2l5.9-.8z" fill="#713f12" stroke="none"/>':'<path d="M5 12h14M13 6l6 6-6 6"/>'}</svg></div></div>`;
+  if(gold) for(let i=0;i<10;i++){const k=document.createElement('i');k.className='spark';k.style.cssText=`left:${10+Math.random()*80}%;top:${30+Math.random()*40}%;animation-delay:${Math.random()*1.2}s`;s.appendChild(k)}
+  const sl=s.querySelector('.slide'),k=sl.querySelector('.knob'),f=sl.querySelector('.fill');let sx,dx=0,max,lastT=0;
+  k.onpointerdown=e=>{max=sl.clientWidth-66;sx=e.clientX;sl.classList.add('drag');k.setPointerCapture(e.pointerId)};
+  k.onpointermove=e=>{if(!sl.classList.contains('drag'))return;dx=Math.max(0,Math.min(max,e.clientX-sx));k.style.transform=`translateX(${dx}px)`;f.style.width=66+dx+'px';if(Math.abs(dx-lastT)>28){lastT=dx;sfx.tick()}};
+  k.onpointerup=()=>{sl.classList.remove('drag');if(dx>=max*.92)return finish();dx=0;k.style.transform='';f.style.width='66px'};
+}
+const SKINS=[
+ {id:'slide',g:'clean',name:'Slide',sub:'Slide to unlock',th:()=>`<div style="width:86px;height:26px;border-radius:99px;background:#fff;box-shadow:0 0 0 1px var(--hair);position:relative"><i style="position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#16a34a"></i></div>`,mount:s=>slideSkin(s,false)},
+ {id:'hold',g:'clean',name:'Hold',sub:'Press and hold',th:()=>`<div style="width:86px;height:26px;border-radius:8px;background:#18181b;overflow:hidden"><i style="display:block;width:55%;height:100%;background:#16a34a"></i></div>`,
+  mount(s){s.innerHTML=`<div class="hold" style="--c:${col()}"><div class="prog"></div><span>Hold to check in</span></div>`;const h=s.firstChild;let t;h.onpointerdown=()=>{h.classList.add('p');sfx.click();t=later(finish,900)};h.onpointerup=h.onpointerleave=()=>{clearTimeout(t);h.classList.remove('p')}}},
+ {id:'ring',g:'clean',name:'Ring',sub:'Countdown timer',th:()=>`<svg width="50" height="50" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="#fff" stroke="#f0f0f1" stroke-width="4"/><circle cx="22" cy="22" r="18" fill="none" stroke="#16a34a" stroke-width="4" stroke-dasharray="80 200" stroke-linecap="round" transform="rotate(-90 22 22)"/></svg>`,
+  mount(s){const late=isLate(),L=2*Math.PI*84,fr=late?(ABS-now)/(ABS-LATE):(LATE-now)/(LATE-START);
+   s.innerHTML=`<button class="ring"><svg viewBox="0 0 190 190" width="190" height="190"><circle cx="95" cy="95" r="84" fill="none" stroke="#f0f0f1" stroke-width="8"/><circle cx="95" cy="95" r="84" fill="none" stroke="${col()}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${L*fr} ${L}"/></svg><div class="face"><div style="font-size:32px;font-weight:650;letter-spacing:-.04em;line-height:1">${late?ABS-now:LATE-now}<span style="font-size:14px;color:var(--ink3)"> min</span></div><div style="font-size:12px;color:var(--ink3);margin-top:5px">${late?'until absent':'until late'}</div><div style="margin-top:9px;font-size:12px;font-weight:600;color:#fff;background:${col()};border-radius:99px;padding:4px 11px">Tap to check in</div></div></button>`;
+   s.firstChild.onclick=()=>finish()}},
+
+ {id:'run',g:'fun',name:'Runaway',sub:'Catch it if you can',th:()=>`<div style="font-size:11px;font-weight:650;background:#18181b;color:#fff;border-radius:99px;padding:7px 12px;transform:rotate(-8deg) translateX(8px);box-shadow:-14px 4px 0 -2px rgba(24,24,27,.15)">Check in ••</div>`,
+  mount(s){let n=0;const late=isLate();
+   s.innerHTML=`<button class="run" style="left:50%;top:52%">${late?'Check in':'Check in'}<span class="eyes"><i></i><i></i></span></button><div class="under">${late?'You came late. The button is salty about it.':'You\'re on time, so the button is happy to see you.'}</div>`;
+   const b=s.querySelector('.run');
+   s.onpointermove=e=>{const r=b.getBoundingClientRect();const px=e.clientX<r.left+r.width/2?'1px':'4px';b.querySelectorAll('.eyes i').forEach(i=>i.style.setProperty('--px',px))};
+   const taunts=late?['Nope.','Too slow!','Almost had it…','Fine. You win.']:[];
+   let bub;
+   const say=(t)=>{if(!bub){bub=document.createElement('div');bub.className='bubble';s.appendChild(bub)}bub.textContent=t;bub.style.left=b.style.left;bub.style.top=b.style.top;bub.style.animation='none';void bub.offsetWidth;bub.style.animation=''};
+   if(!late) say('Good morning!');
+   b.onpointerenter=()=>{if(!late||n>=3)return;n++;const g=document.createElement('div');g.className='ghost';g.textContent='Check in ••';g.style.left=b.style.left;g.style.top=b.style.top;s.appendChild(g);setTimeout(()=>g.remove(),500);
+     b.style.left=(18+Math.random()*64)+'%';b.style.top=(22+Math.random()*52)+'%';sfx.blip();say(taunts[n-1]);
+     if(n===3){say(taunts[3]);b.insertAdjacentHTML('beforeend','<i class="sweat"></i>');s.querySelector('.under').textContent='It gave up. Click it.'}};
+   b.onclick=()=>{if(late&&n<3)return b.onpointerenter();finish()}}},
+
+ {id:'coffee',g:'fun',name:'Coffee',sub:'Hold to brew',th:p=>artCoffee(p),
+  mount(s){s.innerHTML=`<div class="svgstage" style="cursor:pointer;touch-action:none">${artCoffee('m')}</div><div class="under">Hold the mug to brew your check-in</div>`;
+   const w=s.firstChild,cof=w.querySelector('.cof'),pour=w.querySelector('.pour'),u=s.querySelector('.under');let p=0,hold=false,last=performance.now(),ok=false;
+   const loop=t=>{const dt=t-last;last=t;p=Math.max(0,Math.min(1,p+(hold?dt/1500:-dt/900)));cof.style.transform=`scale(${p})`;pour.style.transform=`scaleY(${hold&&p<1?1:0})`;
+     if(!ok)u.textContent=hold?`Brewing… ${Math.round(p*100)}%`:p>0?'Keep holding or it goes cold':'Hold the mug to brew your check-in';
+     if(p>=1&&!ok){ok=true;w.querySelector('.art').style.opacity=1;w.querySelector('.steam').style.opacity=1;u.textContent='Perfect latte. Checking you in…';later(()=>finish(),900)}
+     raf=requestAnimationFrame(loop)};raf=requestAnimationFrame(loop);
+   w.onpointerdown=()=>{hold=true;sfx.click()};w.onpointerup=w.onpointerleave=()=>hold=false}},
+
+ {id:'red',g:'fun',name:'Big red button',sub:'Open the cover first',th:p=>artRed(p),
+  mount(s){s.innerHTML=`<div class="svgstage">${artRed('m')}</div><div class="under">Lift the safety cover first</div>`;
+   const w=s.firstChild,cover=w.querySelector('.cover'),dome=w.querySelector('.dome');let open=false;
+   cover.style.cursor='pointer';dome.style.cursor='pointer';
+   cover.onclick=()=>{open=true;cover.style.transform='scaleY(-.32)';cover.style.pointerEvents='none';sfx.thud();s.querySelector('.under').textContent='Cover open. There is no going back.'};
+   dome.onpointerdown=()=>{if(!open)return;dome.style.transform='translateY(9px)'};
+   dome.onclick=()=>{if(!open){cover.animate([{transform:'translateY(0)'},{transform:'translateY(-4px)'},{transform:'translateY(0)'}],{duration:220});return}
+     const led=w.querySelector('.led');led.setAttribute('fill','#22c55e');led.innerHTML='';sfx.thud();s.insertAdjacentHTML('beforeend','<div class="flash"></div>');s.classList.add('shake');later(()=>finish(),520)}}},
+
+ {id:'cat',g:'fun',name:'Sleepy cat',sub:'Wake up, high five',th:p=>artCat(p),
+  mount(s){s.innerHTML=`<div class="svgstage" style="cursor:pointer">${artCat('m')}</div><div class="under">The cat is asleep. Poke it.</div>`;
+   const w=s.firstChild;let awake=false;
+   w.onclick=e=>{if(!awake){awake=true;sfx.blip();w.querySelector('.zzs').remove();
+       w.querySelector('.eyes').innerHTML='<ellipse cx="74" cy="118" rx="10" ry="12" fill="#431407"/><ellipse cx="118" cy="118" rx="10" ry="12" fill="#431407"/><circle cx="78" cy="113" r="4" fill="#fff"/><circle cx="122" cy="113" r="4" fill="#fff"/><circle cx="71" cy="122" r="2" fill="#fff"/><circle cx="115" cy="122" r="2" fill="#fff"/>';
+       w.querySelector('.head').style.transform='rotate(-6deg)';w.querySelector('.paw').style.transform='translateY(0)';s.querySelector('.under').textContent='It wants a high five. Tap the paw.';return}
+     if(e.target.closest('.paw')){sfx.thud();w.querySelector('.boom').setAttribute('opacity',1);w.querySelector('.eyes').innerHTML='<path d="M64 122 q10 -10 20 0 M108 122 q10 -10 20 0" stroke="#431407" stroke-width="4" fill="none" stroke-linecap="round"/>';
+       w.querySelector('.paw').style.transform='translateY(-8px) rotate(-6deg)';s.querySelector('.under').textContent='Purrrr…';later(()=>finish(),700)}
+     else{w.querySelector('.head').animate([{transform:'rotate(-6deg)'},{transform:'rotate(4deg)'},{transform:'rotate(-6deg)'}],{duration:300});s.querySelector('.under').textContent='Not me. The paw!'}}}},
+
+ {id:'bubble',g:'fun',name:'Bubble wrap',sub:'Pop them all',isNew:1,th:()=>`<div style="display:grid;grid-template-columns:repeat(4,16px);gap:4px">${[...Array(8)].map((_,i)=>`<i style="width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#fff 0 14%,rgba(186,230,253,.5) 60%,rgba(148,163,184,.6));${i===2||i===5?'opacity:.35':''}"></i>`).join('')}</div>`,
+  mount(s){const N=12;s.innerHTML=`<div class="wrapbox">${[...Array(N)].map(()=>'<button class="bub"></button>').join('')}</div><div class="counter">${N} left</div><div class="under">Pop every bubble to check in</div>`;
+   let left=N;s.querySelectorAll('.bub').forEach(b=>b.onpointerdown=()=>{b.classList.add('popped');sfx.pop();left--;s.querySelector('.counter').textContent=left?`${left} left`:'All popped!';if(!left)later(()=>finish(),350)})}},
+
+ {id:'scratch',g:'fun',name:'Scratch card',sub:'Scratch to reveal',isNew:1,th:()=>`<div style="width:90px;height:46px;border-radius:7px;background:linear-gradient(135deg,#fef3c7,#fbcfe8);position:relative;overflow:hidden"><i style="position:absolute;inset:0;background:linear-gradient(135deg,#d4d4d8,#a1a1aa 50%,#e4e4e7);clip-path:polygon(40% 0,100% 0,100% 100%,20% 100%,55% 50%)"></i><b style="position:absolute;left:8px;top:14px;font-size:10px;color:#15803d">PRES</b></div>`,
+  mount(s){const late=isLate();s.innerHTML=`<div class="ticket"><div class="in"><small>BARO DAILY TICKET · ${fmt(now)}</small><div class="stamp" style="color:${late?'#b45309':'#15803d'}">${late?'LATE':'PRESENT'}</div><small style="letter-spacing:.1em">${late?'still counts, see you tomorrow':'you win: a normal day of class'}</small></div><canvas width="340" height="170"></canvas></div><div class="under">Scratch the silver with your finger or mouse</div>`;
+   const cv=s.querySelector('canvas'),x=cv.getContext('2d');const g=x.createLinearGradient(0,0,340,170);g.addColorStop(0,'#e4e4e7');g.addColorStop(.5,'#a1a1aa');g.addColorStop(1,'#d4d4d8');x.fillStyle=g;x.fillRect(0,0,340,170);
+   for(let i=0;i<900;i++){x.fillStyle=`rgba(255,255,255,${Math.random()*.25})`;x.fillRect(Math.random()*340,Math.random()*170,1.5,1.5)}
+   x.fillStyle='rgba(63,63,70,.55)';x.font='800 15px system-ui';x.textAlign='center';x.fillText('✦  SCRATCH HERE  ✦',170,92);
+   x.globalCompositeOperation='destination-out';x.lineWidth=36;x.lineCap='round';x.lineJoin='round';
+   let down=false,lx,ly,moves=0;const pos=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*340/r.width,(e.clientY-r.top)*170/r.height]};
+   cv.onpointerdown=e=>{down=true;[lx,ly]=pos(e);cv.setPointerCapture(e.pointerId)};cv.onpointerup=()=>down=false;
+   cv.onpointermove=e=>{if(!down)return;const[nx,ny]=pos(e);x.beginPath();x.moveTo(lx,ly);x.lineTo(nx,ny);x.stroke();lx=nx;ly=ny;if(++moves%6===0)sfx.tick();
+     if(moves%10===0){const d=x.getImageData(0,0,340,170).data;let c=0;for(let i=3;i<d.length;i+=40)if(d[i]===0)c++;if(c/(d.length/40)>.55){cv.style.opacity=0;cv.style.pointerEvents='none';later(()=>finish(),600)}}}}},
+
+ {id:'alarm',g:'fun',name:'Alarm clock',sub:'Smash snooze',isNew:1,th:p=>artClock(p),
+  mount(s){s.innerHTML=`<div class="svgstage" style="cursor:pointer">${artClock('m',Math.floor(now/60),now%60)}</div><div class="under">It won't stop ringing. Hit it.</div>`;
+   const w=s.firstChild,c=w.querySelector('.clk');c.classList.add('ringing');let hits=0;const ring=setInterval(sfx.bell,260);timers.push(ring);
+   const msgs=['Still ringing!','One more hit!'];
+   w.onclick=()=>{hits++;sfx.thud();if(hits<3){s.querySelector('.under').textContent=msgs[hits-1];c.style.transform=`scale(${1+hits*.06})`;return}
+     clearInterval(ring);c.classList.remove('ringing');w.querySelector('.lines').remove();w.querySelector('.dizzy').setAttribute('opacity',1);w.querySelector('.dizzy').style.animation='ring 1s linear infinite';
+     s.querySelector('.under').textContent='Okay okay, you\'re awake.';later(()=>finish(),800)}}},
+
+ {id:'slot',g:'fun',name:'Lucky slot',sub:'Pull the lever',th:()=>`<div style="padding:5px;border-radius:9px;background:linear-gradient(#7c3aed,#4c1d95);display:flex;gap:3px">${'<i style="width:20px;height:26px;border-radius:4px;background:#fff;display:grid;place-items:center;font-style:normal;font-size:13px">7</i>'.repeat(3)}</div>`,
+  mount(s){const sym=['🍒','⭐','🔔','🍋','💎','🍀'];const win=isLate()?'⏰':'✅';
+   s.innerHTML=`<div class="cab"><div class="marq">BARO SLOTS<div class="bulbs">${'<i></i>'.repeat(12)}</div></div><div class="win3">${[0,1,2].map(()=>`<div class="reel"><div class="strip">${[...Array(16)].map(()=>`<div>${pick(sym)}</div>`).join('')}<div>${win}</div></div></div>`).join('')}</div><div class="tray"></div><div class="lev"><div class="hub"></div><div class="arm"><div class="ball"></div></div></div></div><div class="under">Pull the lever</div>`;
+   const lev=s.querySelector('.lev');lev.style.cursor='pointer';let used=false;
+   lev.onclick=()=>{if(used)return;used=true;lev.classList.add('pull');sfx.thud();later(()=>lev.classList.remove('pull'),350);
+     s.querySelectorAll('.strip').forEach((el,i)=>{el.style.transition=`transform ${1.1+i*.5}s cubic-bezier(.2,.9,.25,1)`;el.style.transform=`translateY(-${16*84}px)`});
+     let k=0;const tk=setInterval(()=>{sfx.tick();if(++k>22)clearInterval(tk)},90);timers.push(tk);
+     later(()=>{s.querySelector('.cab').classList.add('win');s.querySelector('.under').textContent=win==='✅'?'JACKPOT: Present!':'Late, but still a win';sfx.coin();
+       for(let i=0;i<16;i++){const c=document.createElement('i');c.className='coin';c.style.cssText=`left:50%;top:62%;--x:${(Math.random()-.5)*300}px;animation-delay:${i*40}ms`;s.appendChild(c);setTimeout(()=>c.remove(),1600)}
+       later(()=>finish(),1000)},2300)}}},
+
+ {id:'gacha',g:'fun',name:'Gacha',sub:'Turn the knob',isNew:1,th:p=>artGacha(p),
+  mount(s){s.innerHTML=`<div class="svgstage">${artGacha('m')}</div><div class="under">Turn the knob</div>`;
+   const w=s.firstChild,knob=w.querySelector('.knob');let used=false;
+   knob.onclick=()=>{if(used)return;used=true;knob.style.transform='rotate(360deg)';sfx.rise();w.querySelector('.caps').animate([{transform:'translateY(0)'},{transform:'translateY(-4px)'},{transform:'translateY(3px)'},{transform:'translateY(0)'}],{duration:300,iterations:3});
+     later(()=>{const cc=pick(['#f472b6','#60a5fa','#facc15','#34d399','#a78bfa']);
+       s.insertAdjacentHTML('beforeend',`<button class="capsule" style="position:absolute;left:calc(50% - 22px);top:62%;width:44px;height:44px;border-radius:50%;background:linear-gradient(180deg,${cc} 50%,#fff 50%);box-shadow:inset 0 0 0 2px rgba(0,0,0,.12),0 8px 14px -6px rgba(0,0,0,.4);animation:drop .8s cubic-bezier(.3,1.5,.6,1) both"></button>`);
+       sfx.thud();s.querySelector('.under').textContent='A capsule! Tap to open it.';
+       s.querySelector('.capsule').onclick=()=>{const R=Math.random(),r=R<.05?['SSR','#f59e0b','Legendary Learner']:R<.2?['SR','#a855f7','Debugging Wizard']:R<.5?['R','#3b82f6','Semicolon Survivor']:['N','#71717a','Regular Human'];
+         finish(`<div style="width:150px;border-radius:16px;padding:14px;background:linear-gradient(160deg,#fff,${r[1]}22);box-shadow:0 0 0 2px ${r[1]},0 18px 40px -16px ${r[1]};animation:pop .6s cubic-bezier(.34,1.56,.64,1)"><div style="font-weight:900;font-size:26px;color:${r[1]};letter-spacing:.06em">${r[0]}</div><div style="font-size:12px;font-weight:650;margin-top:4px">${r[2]}</div><div style="font-size:11px;color:var(--ink3);margin-top:2px">Pulled at ${fmt(now)}</div></div>`)}},900)}}},
+
+ {id:'rocket',g:'lock',name:'Rocket launch',sub:'15-day streak',need:15,dark:1,th:p=>`<div style="background:radial-gradient(#1e1b4b,#0b0a1a);width:100%;height:100%;display:grid;place-items:center">${artRocket(p)}</div>`,
+  mount(s){s.classList.add('dark');s.innerHTML=`<div class="svgstage" style="cursor:pointer;touch-action:none">${artRocket('m')}</div><div class="bigcount" id="cd"></div><div class="under">Hold to launch</div>`;
+   const w=s.firstChild,rk=w.querySelector('.rk'),fl=w.querySelector('.flame'),cd=s.querySelector('#cd'),sm=w.querySelector('.smoke');let t0=0,holding=false,gone=false,lastN=4;
+   const loop=t=>{if(holding&&!gone){const e=(t-t0)/1000,n=3-Math.floor(e/.7);fl.style.transform=`scaleY(${Math.min(1,e/2.1)*.8})`;rk.classList.add('wob');
+       if(Math.random()<.4){const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',150+(Math.random()-.5)*60);c.setAttribute('cy',300);c.setAttribute('r',10+Math.random()*12);c.setAttribute('fill','#e2e8f0');c.setAttribute('class','puff');c.style.setProperty('--dx',(Math.random()-.5)*40+'px');c.style.transformBox='fill-box';c.style.transformOrigin='center';sm.appendChild(c);setTimeout(()=>c.remove(),1200)}
+       if(n!==lastN&&n>0){lastN=n;cd.textContent=n;sfx.blip()}
+       if(n<=0){gone=true;cd.textContent='LIFTOFF';fl.style.transform='scaleY(1.3)';rk.classList.remove('wob');sfx.rise();rk.style.transform='translateY(-520px)';s.querySelector('.under').textContent='To the moon. And to class.';later(()=>finish(),1500)}}
+     raf=requestAnimationFrame(loop)};raf=requestAnimationFrame(loop);
+   w.onpointerdown=()=>{if(gone)return;holding=true;t0=performance.now();lastN=4};
+   w.onpointerup=w.onpointerleave=()=>{if(gone||!holding)return;holding=false;fl.style.transform='scaleY(0)';rk.classList.remove('wob');cd.textContent='';if(lastN<4)s.querySelector('.under').textContent='Launch aborted. Hold for the full countdown.'}}},
+ {id:'gold',g:'lock',name:'Gold slide',sub:'Perfect week',need:'week',th:()=>`<div style="width:86px;height:26px;border-radius:99px;background:linear-gradient(#292524,#0c0a09);box-shadow:0 0 0 1.5px #a16207;position:relative"><i style="position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff7cc,#facc15 45%,#a16207)"></i></div>`,mount:s=>slideSkin(s,true)},
+ {id:'arcade',g:'lock',name:'Arcade',sub:'20-day streak',need:20,th:()=>`<div style="width:84px;height:54px;border-radius:9px;background:#020617;box-shadow:0 0 0 4px #27272a;display:grid;place-items:center;font-family:'Press Start 2P',monospace;font-size:7px;color:#fde047;text-shadow:1px 1px 0 #b91c1c">START</div>`,
+  mount(s){s.innerHTML=`<div class="arc"><div class="crt" id="crt"><div class="ttl">BARO QUEST</div><div class="blink">PRESS START</div><div class="hs">HI-SCORE ${STREAK} DAYS</div></div><div class="panel"><div class="joy"><i></i></div><button class="startb">START</button><div style="display:flex;gap:10px"><button class="abtn" style="background:#ef4444">A</button><button class="abtn" style="background:#3b82f6">B</button></div></div></div>`;
+   const crt=s.querySelector('#crt');let go=false;
+   s.querySelectorAll('.abtn').forEach(b=>b.onclick=()=>{sfx.blip();if(!go)crt.querySelector('.blink').textContent=b.textContent==='A'?'JUMP! (PRESS START)':'BLOCK! (PRESS START)'});
+   s.querySelector('.startb').onclick=()=>{if(go)return;go=true;sfx.coin();crt.innerHTML=`<div class="ttl" style="font-size:12px">PLAYER 1 READY</div><div class="pbar">${'<i></i>'.repeat(8)}</div><div class="hs">LOADING DAY 52…</div>`;
+     const bars=crt.querySelectorAll('.pbar i');bars.forEach((b,i)=>later(()=>{b.classList.add('f');sfx.tick()},200+i*160));
+     later(()=>{crt.innerHTML=`<div class="ttl" style="font-size:13px;color:#4ade80;text-shadow:3px 3px 0 #14532d">STAGE 52 CLEAR!</div><div class="hs" style="color:#fde047">${isLate()?'+1 LATE  ·  CONTINUE?':'+1 STREAK  ·  '+(STREAK+1)+' DAYS'}</div>`;sfx.win();later(()=>finish(),900)},1700)}}},
+ {id:'dj',g:'lock',name:'DJ deck',sub:'30-day streak',need:30,th:p=>artDJ(p),
+  mount(s){s.innerHTML=`<div class="svgstage" style="touch-action:none">${artDJ('m')}</div><div class="under">Scratch the record (drag in circles) to drop the beat</div>`;
+   const sv=s.querySelector('svg'),vin=sv.querySelector('.vinyl'),prog=sv.querySelector('.prog');let rot=0,acc=0,last=null,down=false,dropped=false,tk=0;
+   const ang=e=>{const r=sv.getBoundingClientRect();const cx=r.left+r.width*130/320,cy=r.top+r.height*120/240;return Math.atan2(e.clientY-cy,e.clientX-cx)*180/Math.PI};
+   vin.style.cursor='grab';
+   vin.onpointerdown=e=>{down=true;last=ang(e);sv.setPointerCapture(e.pointerId)};
+   sv.onpointerup=()=>{down=false};
+   sv.onpointermove=e=>{if(!down||dropped)return;const a=ang(e);let d=a-last;if(d>180)d-=360;if(d<-180)d+=360;last=a;rot+=d;acc+=Math.abs(d);vin.setAttribute('transform',`rotate(${rot} 130 120)`);
+     if(acc-tk>30){tk=acc;tone(200+Math.random()*300,.04,'sawtooth',0,.04)}
+     const f=Math.min(1,acc/720);prog.setAttribute('stroke-dasharray',`${f*628} 700`);
+     if(f>=1){dropped=true;s.querySelector('.under').textContent='DROP THE BEAT';sv.querySelectorAll('.eq rect').forEach((r,i)=>r.animate([{transform:'scaleY(.3)'},{transform:'scaleY(2.6)'},{transform:'scaleY(.5)'}],{duration:300+i*40,iterations:Infinity}));
+       let sp=rot;const spin=()=>{sp+=8;vin.setAttribute('transform',`rotate(${sp} 130 120)`);raf=requestAnimationFrame(spin)};spin();
+       [0,.25,.5,.75].forEach(d=>tone(60,.18,'sine',d,.25));later(()=>finish(),1300)}}}},
+];
+
+/* ---------- gallery ---------- */
+const locked=s=>!unlockAll&&s.need&&(s.need==='week'||STREAK<s.need);
+function gallery(){
+  for(const g of ['clean','fun','lock']){
+    $('#g-'+g).innerHTML=SKINS.filter(s=>s.g===g).map(s=>{
+      const lk=locked(s);const frac=s.need==='week'?.6:STREAK/s.need, lbl=s.need==='week'?'3 of 5 days':`${STREAK} / ${s.need} days`;
+      return `<button class="tile ${s.id===cur?'on':''} ${lk?'locked':''}" data-id="${s.id}" ${lk?'':`data-choice="${s.id}"`}>${s.isNew?'<span class="new">NEW</span>':''}<div class="th">${s.th('t'+s.id)}${lk?`<div class="lk"><div class="t"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>${lbl}</div><div class="bar"><i style="width:${Math.min(100,frac*100)}%"></i></div></div>`:''}</div><b>${s.name}</b><small>${s.sub}</small></button>`}).join('');
+  }
+}
+document.querySelector('.gal').addEventListener('click',e=>{
+  const t=e.target.closest('.tile');if(!t)return;const s=SKINS.find(x=>x.id===t.dataset.id);
+  if(locked(s)){t.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],{duration:320});sfx.blip();return}
+  cur=s.id;ls.set('baro-skin2',cur);shuffle=false;ls.set('baro-shuffle','0');paintShuf();doneAt=null;sfx.click();gallery();render();
+});
+$('#unl').onclick=()=>{unlockAll=!unlockAll;$('#unl').classList.toggle('on',unlockAll);if(!unlockAll&&locked(SKINS.find(s=>s.id===cur)))cur='slide';gallery();paintShuf();render()};
+
+function render(){
+  clearRun();
+  $('#clk').textContent=fmt(now);
+  let skin;
+  if(shuffle){if(!todays||locked(SKINS.find(s=>s.id===todays))){rollNew();}skin=SKINS.find(s=>s.id===todays)}
+  else{skin=SKINS.find(s=>s.id===cur);if(!skin||locked(skin)){skin=SKINS[0];cur='slide'}}
+  $('#curName').textContent=shuffle?`Random · ${skin.name}`:skin.name;
+  const S=st();
+  $('#status').innerHTML= doneAt!=null?(doneAt>=LATE?`Checked in at ${fmt(doneAt)}<small>Marked <b>late</b>. It counts toward your 8 days.</small>`:`You're in · ${fmt(doneAt)}<small>On time. That's <b>${STREAK+1} days</b> in a row.</small>`)
+   :{pre:`Opens at 8:30<small><b>${START-now} min</b> to go.</small>`,on:`You're on time<small><b>${LATE-now} min</b> until 9:15.</small>`,late:`Running late? Still check in<small>It counts as <b>late</b> now. <b>${ABS-now} min</b> until it becomes absent.</small>`,abs:`Check-in closed<small>Marked absent. <a style="color:var(--ink);font-weight:600;text-decoration:underline">Request leave</a> if you had a reason.</small>`}[S];
+  const stage=$('#stage');stage.className='stage';stage.onpointermove=null;
+  $('#reset').style.visibility=doneAt!=null?'visible':'hidden';
+  if(doneAt!=null){if(skin.dark)stage.classList.add('dark');stage.innerHTML=doneView();if(skin.dark)stage.querySelectorAll('.done b,.done span').forEach(e=>e.style.color='#fff');return}
+  if(S==='pre'){stage.innerHTML=`<div class="closed"><b>Not yet</b>Check-in opens at 8:30</div>`;return}
+  if(S==='abs'){stage.innerHTML=`<div class="closed"><b>Closed</b>You were marked absent today</div>`;return}
+  skin.mount(stage);
+  if(shuffle){
+    const rr=document.createElement('button');rr.className='reroll';rr.innerHTML=`${DICE.replace('width:26px;height:26px','width:15px;height:15px')}Reroll`;rr.onclick=()=>{rollNew();rolled=false;render()};stage.appendChild(rr);
+    if(!rolled){rolled=true;const pool=SKINS.filter(s=>!locked(s));const ov=document.createElement('div');ov.className='roll';ov.innerHTML=`<div class="dice">${DICE}</div><small>Today's check-in style</small><div class="nm"></div>`;stage.appendChild(ov);
+      const nm=ov.querySelector('.nm');let i=0;const iv=setInterval(()=>{nm.textContent=pool[i++%pool.length].name;sfx.tick()},70);timers.push(iv);
+      later(()=>{clearInterval(iv);nm.textContent=skin.name;nm.animate([{transform:'scale(1.25)'},{transform:'scale(1)'}],{duration:400,easing:'cubic-bezier(.34,1.56,.64,1)'});sfx.coin()},900);
+      later(()=>{ov.animate([{opacity:1},{opacity:0}],{duration:350,fill:'forwards'});later(()=>ov.remove(),360)},1700)}
+  }
+}
+function rollNew(){const pool=SKINS.filter(s=>!locked(s)&&s.id!==todays);todays=pick(pool).id}
+function paintShuf(){$('#shuf').classList.toggle('on',shuffle);$('#shufsw').classList.toggle('on',shuffle);$('#shuf .dice').innerHTML=DICE;
+  document.querySelectorAll('.tile').forEach(t=>t.classList.toggle('on',!shuffle&&t.dataset.id===cur))}
+const st2=document.createElement('style');st2.textContent='@keyframes drop{0%{transform:translateY(-60px) scale(.6);opacity:0}100%{transform:none;opacity:1}}';document.head.appendChild(st2);
+$('#reset').onclick=()=>{doneAt=null;if(shuffle){rollNew();rolled=false}render()};
+$('#shuf').onclick=()=>{shuffle=!shuffle;ls.set('baro-shuffle',shuffle?'1':'0');if(shuffle){rollNew();rolled=false}doneAt=null;sfx.click();paintShuf();render()};
+$('#clock').addEventListener('input',e=>{now=+e.target.value;if(doneAt!=null&&doneAt>now)doneAt=null;render()});
+$('#unl').classList.toggle('on',unlockAll);
+paintSnd();gallery();paintShuf();render();
+</script>
+</body>
+</html>
