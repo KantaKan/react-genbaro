@@ -22,6 +22,7 @@ const summary = (over: Partial<MySummary> = {}): MySummary => ({
     morning: { open_at: { h: 8, m: 30 }, late_after: { h: 9, m: 15 }, absent_after: { h: 10, m: 30 } },
     afternoon: { open_at: { h: 12, m: 30 }, late_after: { h: 13, m: 15 }, absent_after: { h: 14, m: 30 } },
   },
+  class_today: true,
   course: { start_date: "", course_days: 75, day_number: 0, week_number: 0, total_weeks: 0 },
   preferences: { checkin_style: "", checkin_random: false },
   ...over,
@@ -113,5 +114,62 @@ describe("CheckInCard", () => {
     });
     expect(onCheckedIn).toHaveBeenCalled();
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("an auto-marked absence says absent, not 'You're in'", () => {
+    setBkk(10, 40);
+    renderCard(summary({ today: { morning: { status: "absent", checked_in_at: "2026-09-08T03:30:00Z" }, afternoon: null } }));
+    expect(screen.queryByText(/You're in/)).toBeNull();
+    expect(screen.getByText("Marked absent this morning")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Request leave" })).toBeInTheDocument();
+  });
+
+  it("an excused session says excused", () => {
+    setBkk(10, 40);
+    renderCard(summary({ today: { morning: { status: "absent_excused", checked_in_at: "2026-09-08T03:30:00Z" }, afternoon: null } }));
+    expect(screen.getByText("Excused this morning")).toBeInTheDocument();
+  });
+
+  it("a morning check-in doesn't hide the afternoon slider", async () => {
+    setBkk(9, 5);
+    vi.useFakeTimers({ shouldAdvanceTime: false });
+    setBkk(9, 5);
+    vi.mocked(learnerApi.checkIn).mockResolvedValue({ status: "present", submitted_at: "2026-09-08T02:05:00Z" } as never);
+    renderCard();
+    await act(async () => {
+      fireEvent.keyDown(screen.getByRole("slider"), { key: "Enter" });
+    });
+    expect(screen.getByText("You're in · 9:05")).toBeInTheDocument();
+    setBkk(13, 0);
+    act(() => {
+      vi.advanceTimersByTime(15_000);
+    });
+    expect(screen.getByText("Afternoon check-in")).toBeInTheDocument();
+    expect(screen.getByRole("slider")).toBeInTheDocument();
+  });
+
+  it("shows the leave message when approved leave covers the session", async () => {
+    setBkk(9, 8);
+    vi.mocked(learnerApi.checkIn).mockRejectedValue(new LearnerApiError(409, "You have approved leave for this session, so there's nothing to check in."));
+    renderCard();
+    await act(async () => {
+      fireEvent.keyDown(screen.getByRole("slider"), { key: "Enter" });
+    });
+    expect(screen.getByText(/approved leave for this session/)).toBeInTheDocument();
+  });
+
+  it("shows no check-in on a day without class", () => {
+    setBkk(9, 8);
+    renderCard(summary({ class_today: false }));
+    expect(screen.getByText("No class today")).toBeInTheDocument();
+    expect(screen.queryByRole("slider")).toBeNull();
+  });
+
+  it("has a screen-reader friendly check-in button", async () => {
+    setBkk(9, 8);
+    vi.mocked(learnerApi.checkIn).mockReturnValue(new Promise(() => {}));
+    renderCard();
+    fireEvent.click(screen.getByRole("button", { name: "Check in now" }));
+    expect(learnerApi.checkIn).toHaveBeenCalledTimes(1);
   });
 });

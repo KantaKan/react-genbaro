@@ -7,6 +7,7 @@ import { learnerApi } from "../api";
 import type { MySummary } from "../types";
 
 vi.mock("@/components/mode-toggle", () => ({ ModeToggle: () => null }));
+vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout: vi.fn(), userRole: "learner" }) }));
 vi.mock("@/UserDataContext", () => ({
   useUserData: () => ({
     userData: { _id: "u1", first_name: "Aphiradee", zoom_name: "03_Aphiradee(Black/แบล็ค)", cohort_number: 13, reflections: [], badges: [] },
@@ -36,6 +37,7 @@ const base: MySummary = {
     morning: { open_at: { h: 8, m: 30 }, late_after: { h: 9, m: 15 }, absent_after: { h: 10, m: 30 } },
     afternoon: { open_at: { h: 12, m: 30 }, late_after: { h: 13, m: 15 }, absent_after: { h: 14, m: 30 } },
   },
+  class_today: true,
   course: { start_date: "", course_days: 75, day_number: 0, week_number: 0, total_weeks: 0 },
   preferences: { checkin_style: "", checkin_random: false },
 };

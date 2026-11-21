@@ -30,6 +30,8 @@ export interface MySummary {
   attendance_rate: number;
   perfect_week: boolean;
   rules: CheckinRules;
+  /** false on weekends and holidays */
+  class_today: boolean;
   course: { start_date: string; course_days: number; day_number: number; week_number: number; total_weeks: number };
   preferences: { checkin_style: string; checkin_random: boolean };
 }

@@ -67,6 +67,10 @@ export function SlideControl({ tone, disabled, busy, onComplete }: CheckInContro
       >
         {busy ? <Loader2 className="h-5 w-5 animate-spin text-white" /> : <ArrowRight className="h-[22px] w-[22px] text-white" strokeWidth={2.2} />}
       </div>
+      {/* Screen readers can't drag; give them a plain button. */}
+      <button type="button" className="sr-only" disabled={disabled || busy} onClick={onComplete}>
+        Check in now
+      </button>
     </div>
   );
 }

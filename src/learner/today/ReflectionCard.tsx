@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Lock } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import FeedbackForm from "@/components/linear-feedback-form";
 import { useReflections, type Reflection as HookReflection } from "@/hooks/use-reflections";
@@ -33,8 +34,15 @@ export function ReflectionCard({
 
   return (
     <section className="l-card p-[22px]">
-      <h3 className="text-[15px] font-semibold">Daily reflection</h3>
-      <p className="mt-0.5 text-[12.5px] text-l-ink3">Learning barometer</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-[15px] font-semibold">Daily reflection</h3>
+          <p className="mt-0.5 text-[12.5px] text-l-ink3">Learning barometer</p>
+        </div>
+        <Link to="/learner/reflections" className="-m-2 rounded-lg p-2 text-[13px] font-medium text-l-ink2 hover:bg-l-sub">
+          History ›
+        </Link>
+      </div>
 
       {todays && sentZone ? (
         <div className="mt-4 flex items-center gap-3.5 rounded-2xl p-3.5" style={{ background: ZONES.find((z) => z.id === sentZone)?.soft }}>

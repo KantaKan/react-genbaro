@@ -9,6 +9,7 @@ import type { AttendanceRecord } from "@/domain/types";
 import type { MySummary } from "../types";
 
 vi.mock("@/components/mode-toggle", () => ({ ModeToggle: () => null }));
+vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout: vi.fn(), userRole: "learner" }) }));
 vi.mock("react-toastify", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/UserDataContext", () => ({
   useUserData: () => ({ userData: { _id: "u1", first_name: "A", zoom_name: "03_A(Black/แบล็ค)", cohort_number: 13 }, loading: false }),
@@ -28,6 +29,7 @@ const summary = {
     morning: { open_at: { h: 8, m: 30 }, late_after: { h: 9, m: 15 }, absent_after: { h: 10, m: 30 } },
     afternoon: { open_at: { h: 12, m: 30 }, late_after: { h: 13, m: 15 }, absent_after: { h: 14, m: 30 } },
   },
+  class_today: true,
   course: { start_date: "2026-06-29", course_days: 75, day_number: 52, week_number: 11, total_weeks: 15 },
   preferences: { checkin_style: "", checkin_random: false },
 } as MySummary;

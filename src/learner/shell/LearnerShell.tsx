@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
+import { LogOut, Shield } from "lucide-react";
+import { useAuth } from "@/application/contexts/AuthContext";
 import { useUserData } from "@/UserDataContext";
 import { ModeToggle } from "@/components/mode-toggle";
 import { cn } from "@/lib/utils";
@@ -33,6 +35,7 @@ const linkCls = ({ isActive }: { isActive: boolean }) =>
 export function LearnerShell({ children }: { children: ReactNode }) {
   const [header, setHeader] = useState<PageHeader | null>(null);
   const { userData } = useUserData();
+  const { logout, userRole } = useAuth();
   const nick = useMemo(() => nicknames(userData?.zoom_name, userData?.first_name ?? ""), [userData]);
   const sections = ["Learning", "Community"] as const;
 
@@ -60,7 +63,13 @@ export function LearnerShell({ children }: { children: ReactNode }) {
               </div>
             ))}
           </nav>
-          <div className="mt-auto flex items-center gap-2.5 rounded-xl p-2.5 shadow-[0_0_0_1px_var(--l-hair)]">
+          {userRole === "admin" && (
+            <Link to="/admin" className="mt-auto flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-sm font-medium text-l-ink2 hover:bg-l-sub hover:text-l-ink">
+              <Shield className="h-[18px] w-[18px]" strokeWidth={1.5} />
+              Admin panel
+            </Link>
+          )}
+          <div className={`${userRole === "admin" ? "mt-2" : "mt-auto"} flex items-center gap-2.5 rounded-xl p-2.5 shadow-[0_0_0_1px_var(--l-hair)]`}>
             <div className="grid h-[34px] w-[34px] place-items-center rounded-full bg-emerald-500 text-[13px] font-semibold text-white">
               {(nick.th || nick.en).slice(0, 2)}
             </div>
@@ -71,6 +80,15 @@ export function LearnerShell({ children }: { children: ReactNode }) {
                 {userData?.genmate_group ? ` · Group ${userData.genmate_group}` : ""}
               </div>
             </div>
+            <button
+              type="button"
+              onClick={logout}
+              aria-label="Log out"
+              title="Log out"
+              className="ml-auto grid h-8 w-8 shrink-0 place-items-center rounded-lg text-l-ink3 hover:bg-l-sub hover:text-l-ink"
+            >
+              <LogOut className="h-4 w-4" strokeWidth={1.5} />
+            </button>
           </div>
         </aside>
 

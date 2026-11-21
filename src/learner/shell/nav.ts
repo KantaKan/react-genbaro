@@ -11,6 +11,7 @@ export interface NavItem {
 export const NAV: NavItem[] = [
   { label: "Today", to: "/learner", icon: Sun, section: "Learning", end: true },
   { label: "Attendance", to: "/learner/attendance", icon: CalendarCheck, section: "Learning" },
+  { label: "Reflections", to: "/learner/reflections", icon: BookOpen, section: "Learning" },
   { label: "My profile", to: "/learner/my-profile", icon: User, section: "Learning" },
   { label: "Classmates", to: "/learner/directory", icon: Users, section: "Community" },
   { label: "Talk Board", to: "/talk-board", icon: MessageCircle, section: "Community" },
