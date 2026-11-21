@@ -47,6 +47,7 @@ const AttendanceLeaveView = lazy(() => import("./components/attendance-leave-vie
 const AttendanceCodeDispatchView = lazy(() => import("./components/attendance/attendance-code-dispatch-view").then((module) => ({ default: module.AttendanceCodeDispatchView })));
 const LeaveRequestsTable = lazy(() => import("./components/leave-requests-table").then((module) => ({ default: module.LeaveRequestsTable })));
 const StudentAttendanceDetail = lazy(() => import("./pages/student-attendance-detail").then((module) => ({ default: module.StudentAttendanceDetail })));
+const CupAwardsPage = lazy(() => import("./pages/admin/CupAwardsPage"));
 const AdminNotificationManager = lazy(() => import("./components/admin-notification-manager"));
 const AdminHistoryPage = lazy(() => import("./pages/admin-history-page"));
 const PlantVisualQaPage = lazy(() => import("./pages/PlantVisualQaPage"));
@@ -131,6 +132,7 @@ function AppContent() {
             <Route path="attendance/student/:id" element={<StudentAttendanceDetail />} />
             <Route path="leave-requests" element={<LeaveRequestsTable />} />
             <Route path="notifications" element={<AdminNotificationManager />} />
+            <Route path="cup" element={<CupAwardsPage />} />
             <Route path="history" element={<AdminHistoryPage />} />
           </Route>
 

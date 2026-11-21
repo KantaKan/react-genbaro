@@ -18,6 +18,7 @@ import {
   Stamp,
   History,
   Sparkles,
+  Trophy,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -117,6 +118,11 @@ const navigationConfig: Record<UserRole, NavItem[]> = {
             { title: "Logs", url: "/admin/attendance/logs", icon: FileText },
             { title: "Leave", url: "/admin/attendance/leave", icon: BookOpen },
           ],
+        },
+        {
+          title: "GenMate Cup",
+          url: "/admin/cup",
+          icon: Trophy,
         },
         {
           title: "Notifications",

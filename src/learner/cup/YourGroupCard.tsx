@@ -85,7 +85,7 @@ export function YourGroupCard({ cup }: { cup: MyCup }) {
       <div className="flex h-14 items-end gap-2">
         {me.by_day.map((v, i) => (
           <span key={DAYS[i]} className="flex flex-1 flex-col items-center gap-1">
-            <i className="block w-full rounded-md bg-l-ink/80" style={{ height: `${Math.max(3, (v / dayMax) * 40)}px` }} title={`${DAYS[i]}: ${v}`} />
+            <i className="block w-full rounded-md bg-l-ink opacity-80" style={{ height: `${Math.max(3, (v / dayMax) * 40)}px` }} title={`${DAYS[i]}: ${v}`} />
             <small className="text-[10.5px] text-l-ink3">{DAYS[i]}</small>
           </span>
         ))}
