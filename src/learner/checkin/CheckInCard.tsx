@@ -1,4 +1,4 @@
-import { useRef, useState, type ComponentType } from "react";
+import { Component, lazy, Suspense, useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { MySummary, SessionToday } from "../types";
 import {
@@ -11,13 +11,36 @@ import {
 import { learnerApi, LearnerApiError } from "../api";
 import { useClock } from "./useClock";
 import { SlideControl } from "./SlideControl";
+import { StyleFrame } from "./styles/StyleFrame";
+import { STYLES, styleById, type StyleId } from "./styles/registry";
+import { readReroll, bumpReroll, readDailyPick, writeDailyPick, styleUnlocked } from "./styles/unlock";
+import { resolveStyle } from "./resolveStyle";
+import { Celebrate } from "./Celebrate";
+import { pickLine } from "./lines";
+import { play } from "./sound";
 import type { CheckInControlProps } from "./types";
 
-/** Check-in styles by id. Plan 3 adds the rest; unknown ids fall back to slide. */
-export const CHECKIN_CONTROLS: Record<
-  string,
-  ComponentType<CheckInControlProps>
-> = { slide: SlideControl };
+const lazyCache = new Map<StyleId, ComponentType<CheckInControlProps>>();
+function controlFor(id: StyleId): ComponentType<CheckInControlProps> {
+  if (id === "slide") return SlideControl;
+  let c = lazyCache.get(id);
+  if (!c) {
+    c = lazy(STYLES.find((m) => m.id === id)!.load);
+    lazyCache.set(id, c);
+  }
+  return c;
+}
+
+/** If a style's code fails to load, fall back to Slide so the learner can still check in. */
+class StyleBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
 
 const hm = (iso: string) => {
   const m = bangkokNow(new Date(iso)).minutes;
@@ -27,9 +50,13 @@ const hm = (iso: string) => {
 export function CheckInCard({
   summary,
   onCheckedIn,
+  seed = "me",
+  onOpenPicker,
 }: {
   summary: MySummary;
   onCheckedIn: () => void;
+  seed?: string;
+  onOpenPicker?: () => void;
 }) {
   const now = useClock();
   const session = sessionAt(summary.rules, now);
@@ -55,8 +82,23 @@ export function CheckInCard({
       : null) ?? summary.today[session];
   const wd = new Date(`${today}T12:00:00Z`).getUTCDay();
   const classToday = summary.class_today !== false && wd !== 0 && wd !== 6;
-  const style = summary.preferences?.checkin_style || "slide";
-  const Control = CHECKIN_CONTROLS[style] ?? SlideControl;
+  const [, rerender] = useState(0);
+  const rerolls = readReroll(today, seed); // re-read every render, so a new day resets it
+  const [celebrate, setCelebrate] = useState(0);
+  const [attempt, setAttempt] = useState(0); // bumped on failure → the style remounts fresh
+  const [linger, setLinger] = useState(false); // keep the style on screen while its animation finishes
+  const lingerTimer = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => () => clearTimeout(lingerTimer.current), []);
+  const prefs = summary.preferences ?? { checkin_style: "", checkin_random: false };
+  let meta = resolveStyle(prefs, summary.streak, summary.perfect_week, today, seed, rerolls);
+  if (prefs.checkin_random) {
+    const pinned = readDailyPick(today, seed, rerolls);
+    const pm = pinned ? styleById(pinned) : undefined;
+    if (pm && styleUnlocked(pm, summary.streak, summary.perfect_week)) meta = pm;
+    else writeDailyPick(today, seed, rerolls, meta.id);
+  }
+  const style = meta.id;
+  const Control = controlFor(style);
 
   const checkIn = async () => {
     if (inFlight.current) return;
@@ -70,18 +112,25 @@ export function CheckInCard({
         date: today,
         rec: { status: rec.status, checked_in_at: rec.submitted_at, style },
       });
+      setCelebrate(Date.now());
+      setLinger(true);
+      clearTimeout(lingerTimer.current);
+      lingerTimer.current = setTimeout(() => setLinger(false), 2600);
+      play("win");
       onCheckedIn();
     } catch (e) {
       if (e instanceof LearnerApiError && e.status === 409) {
         // "already checked in" resolves once the summary refreshes; "covered by leave" stays visible.
         setConflict({ session, msg: e.message });
         onCheckedIn();
-      } else
+      } else {
+        setAttempt((a) => a + 1);
         setError(
           e instanceof Error
             ? e.message
             : "Something went wrong. Please try again.",
         );
+      }
     } finally {
       inFlight.current = false;
       setBusy(false);
@@ -116,7 +165,7 @@ export function CheckInCard({
           : "It counts toward your 8 days. Arriving on time tomorrow keeps it from growing.";
     } else {
       big = `You're in · ${hm(done.checked_in_at)}`;
-      small = `On time. That's ${summary.streak} ${summary.streak === 1 ? "day" : "days"} in a row.`;
+      small = `On time. That's ${summary.streak} ${summary.streak === 1 ? "day" : "days"} in a row.${celebrate ? ` ${pickLine(false, celebrate)}` : ""}`;
     }
   } else if (phase === "not_open") {
     big = `Opens at ${fmtClock(w.open_at)}`;
@@ -146,7 +195,8 @@ export function CheckInCard({
     classToday && !done && (phase === "on_time" || phase === "late");
 
   return (
-    <section className="l-card p-[22px]">
+    <section className="l-card relative p-[22px]">
+      {celebrate > 0 && <Celebrate key={celebrate} />}
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-[15px] font-semibold">
@@ -155,6 +205,27 @@ export function CheckInCard({
           <p className="mt-0.5 text-[12.5px] text-l-ink3">
             On time until {fmtClock(w.late_after)}
           </p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {prefs.checkin_random && rerolls < 1 && !done && (
+            <button
+              type="button"
+              onClick={() => {
+                bumpReroll(today, seed);
+                rerender((n) => n + 1);
+              }}
+              className="rounded-full px-2.5 py-1 text-[12px] font-medium text-l-ink2 hover:bg-l-sub"
+            >
+              Reroll
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onOpenPicker}
+            className="rounded-full bg-l-card px-3 py-1.5 text-[12.5px] font-medium shadow-[0_0_0_1px_var(--l-hair)] hover:shadow-[0_0_0_1px_var(--l-ink3)]"
+          >
+            {prefs.checkin_random ? "Random" : "Style"} · {meta.name}
+          </button>
         </div>
       </div>
 
@@ -175,14 +246,28 @@ export function CheckInCard({
         )}
       </div>
 
-      {canAct && (
+      {(canAct || (linger && !!done)) && (
         <div className="mt-5">
-          <Control
-            tone={phase === "late" ? "late" : "on_time"}
-            disabled={false}
-            busy={busy}
-            onComplete={checkIn}
-          />
+          <StyleFrame disabled={!canAct} busy={busy} onComplete={checkIn}>
+            {(() => {
+              const props: CheckInControlProps = {
+                tone: phase === "late" ? "late" : "on_time",
+                disabled: !canAct,
+                busy,
+                onComplete: checkIn,
+                minutesLeft: minutesUntil(phase === "late" ? w.absent_after : w.late_after, now),
+                deadline: fmtClock(phase === "late" ? w.absent_after : w.late_after),
+              };
+              const fallback = <SlideControl {...props} />;
+              return (
+                <StyleBoundary key={`${style}:${attempt}`} fallback={fallback}>
+                  <Suspense fallback={fallback}>
+                    <Control {...props} />
+                  </Suspense>
+                </StyleBoundary>
+              );
+            })()}
+          </StyleFrame>
         </div>
       )}
 

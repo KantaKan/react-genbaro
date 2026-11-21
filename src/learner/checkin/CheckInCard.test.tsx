@@ -5,6 +5,10 @@ import { CheckInCard } from "./CheckInCard";
 import type { MySummary } from "../types";
 import { learnerApi, LearnerApiError } from "../api";
 
+vi.mock("./styles/registry", async (orig) => {
+  const real = await orig<typeof import("./styles/registry")>();
+  return { ...real, STYLES: real.STYLES.map((m) => (m.id === "alarm" ? { ...m, load: () => Promise.reject(new Error("chunk failed")) } : m)) };
+});
 vi.mock("../api", async (orig) => {
   const real = await orig<typeof import("../api")>();
   return { ...real, learnerApi: { ...real.learnerApi, checkIn: vi.fn() } };
@@ -171,5 +175,66 @@ describe("CheckInCard", () => {
     renderCard();
     fireEvent.click(screen.getByRole("button", { name: "Check in now" }));
     expect(learnerApi.checkIn).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the chosen style in the chip", async () => {
+    setBkk(9, 8);
+    renderCard(summary({ preferences: { checkin_style: "hold", checkin_random: false } }));
+    expect(screen.getByRole("button", { name: /Style · Hold/ })).toBeInTheDocument();
+  });
+
+  it("falls back to Slide when the saved style is locked", () => {
+    setBkk(9, 8);
+    renderCard(summary({ streak: 3, preferences: { checkin_style: "rocket", checkin_random: false } }));
+    expect(screen.getByRole("button", { name: /Style · Slide/ })).toBeInTheDocument();
+  });
+
+  it("still offers a way to check in when a style fails to load", async () => {
+    vi.useRealTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    setBkk(9, 8);
+    renderCard(summary({ preferences: { checkin_style: "alarm", checkin_random: false } }));
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
+    expect(screen.getByRole("slider")).toBeInTheDocument();
+  });
+
+  it("random mode labels the pick and allows one reroll per day", () => {
+    const m = new Map<string, string>();
+    vi.stubGlobal("localStorage", { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v) });
+    setBkk(9, 8);
+    renderCard(summary({ preferences: { checkin_style: "", checkin_random: true } }));
+    expect(screen.getByRole("button", { name: /Random · / })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Reroll" }));
+    expect(screen.queryByRole("button", { name: "Reroll" })).toBeNull();
+    vi.unstubAllGlobals();
+  });
+
+  it("after a failed check-in, the style can be used again", async () => {
+    vi.useRealTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    setBkk(9, 8);
+    vi.mocked(learnerApi.checkIn).mockRejectedValueOnce(new LearnerApiError(403, "Check-in isn't allowed from this network."));
+    renderCard(summary({ preferences: { checkin_style: "red", checkin_random: false } }));
+    fireEvent.click(await screen.findByRole("button", { name: "Lift the safety cover" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Press the button" }));
+    });
+    expect(await screen.findByText("Check-in isn't allowed from this network.")).toBeInTheDocument();
+    // a fresh button again: the cover is back down
+    expect(await screen.findByRole("button", { name: "Lift the safety cover" })).toBeInTheDocument();
+  });
+
+  it("random mode keeps today's style when the streak changes mid-day, and rerolls are per day", () => {
+    const m = new Map<string, string>();
+    vi.stubGlobal("localStorage", { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v) });
+    setBkk(9, 8);
+    const { unmount } = renderCard(summary({ streak: 14, preferences: { checkin_style: "", checkin_random: true } }));
+    const first = screen.getByRole("button", { name: /Random · / }).textContent;
+    unmount();
+    renderCard(summary({ streak: 15, preferences: { checkin_style: "", checkin_random: true } }));
+    expect(screen.getByRole("button", { name: /Random · / }).textContent).toBe(first);
+    vi.unstubAllGlobals();
   });
 });
