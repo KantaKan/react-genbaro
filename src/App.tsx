@@ -36,7 +36,7 @@ const ToolsPage = lazy(() => import("./pages/ToolPage"));
 const SpinWheelPage = lazy(() => import("./pages/SpinWheelPage"));
 const WeeklySummaryPage = lazy(() => import("./pages/weekly-summary-page"));
 const AdminTodayPage = lazy(() => import("./admin/today/TodayPage").then((m) => ({ default: m.TodayPage })));
-const AdminRegisterPage = () => <div>Register</div>;
+const AdminRegisterPage = lazy(() => import("./admin/attendance/RegisterPage").then((m) => ({ default: m.RegisterPage })));
 const AdminLeavePage = () => <div>Leave</div>;
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard").then((module) => ({ default: module.AdminDashboard })));
 const GenmateGardenPage = lazy(() => import("./pages/admin/GenmateGardenPage").then((module) => ({ default: module.GenmateGardenPage })));
@@ -122,9 +122,9 @@ function AppContent() {
             <Route path="garden" element={<GenmateGardenPage />} />
             <Route path="cohort-farm" element={<AdminCohortFarmPage />} />
             <Route path="weekly-summary" element={<WeeklySummaryPage />} />
+            <Route path="attendance/register" element={<AdminRegisterPage />} />
             <Route path="attendance" element={<AttendanceShell />}>
               <Route index element={<Navigate to="register" replace />} />
-              <Route path="register" element={<AdminRegisterPage />} />
               <Route path="code-dispatch" element={<Navigate to="/admin" replace />} />
               <Route path="all-students" element={<AttendanceAllStudentsView />} />
               <Route path="calendar" element={<AttendanceCalendarView />} />
