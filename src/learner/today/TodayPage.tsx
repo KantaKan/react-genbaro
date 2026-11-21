@@ -3,6 +3,8 @@ import { useUserData } from "@/UserDataContext";
 import { learnerApi } from "../api";
 import { usePageHeader } from "../shell/LearnerShell";
 import { CheckInCard } from "../checkin/CheckInCard";
+import { StylePicker } from "../checkin/StylePicker";
+import { useState } from "react";
 import { useClock } from "../checkin/useClock";
 import { bangkokNow } from "../lib/time";
 import { nicknames } from "../lib/name";
@@ -15,6 +17,7 @@ import { StreakBadgesCard } from "./StreakBadgesCard";
 
 export function TodayPage() {
   const qc = useQueryClient();
+  const [picker, setPicker] = useState(false);
   const { userData, refetchUserData } = useUserData();
   const summary = useQuery(["my-summary"], learnerApi.getSummary, { refetchInterval: 60_000 });
   const history = useQuery(["my-history", 14], () => learnerApi.getHistory(14));
@@ -60,7 +63,7 @@ export function TodayPage() {
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-12">
-        <div className="lg:col-span-7">{s ? <CheckInCard summary={s} onCheckedIn={refresh} seed={userData?._id ?? "me"} /> : <div className="l-card h-[340px] animate-pulse" />}</div>
+        <div className="lg:col-span-7">{s ? <CheckInCard summary={s} onCheckedIn={refresh} seed={userData?._id ?? "me"} onOpenPicker={() => setPicker(true)} /> : <div className="l-card h-[340px] animate-pulse" />}</div>
         <div className="lg:col-span-5">
           {userData?._id && (
             <ReflectionCard userId={userData._id} reflections={userData.reflections ?? []} nowSec={now} today={today} onSubmitted={() => refetchUserData?.()} />
@@ -75,6 +78,7 @@ export function TodayPage() {
         </div>
         <div className="lg:col-span-5">{s && <StreakBadgesCard streak={s.streak} badges={userData?.badges ?? []} perfectWeek={s.perfect_week} weekOnTime={weekOnTime} />}</div>
       </div>
+      {s && <StylePicker open={picker} onOpenChange={setPicker} summary={s} />}
     </div>
   );
 }

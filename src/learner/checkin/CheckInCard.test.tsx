@@ -194,7 +194,10 @@ describe("CheckInCard", () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     setBkk(9, 8);
     renderCard(summary({ preferences: { checkin_style: "alarm", checkin_random: false } }));
-    expect(await screen.findByRole("slider")).toBeInTheDocument();
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
+    expect(screen.getByRole("slider")).toBeInTheDocument();
   });
 
   it("random mode labels the pick and allows one reroll per day", () => {
