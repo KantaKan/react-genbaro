@@ -14,7 +14,7 @@ export const NAV: NavItem[] = [
   { label: "Reflections", to: "/learner/reflections", icon: BookOpen, section: "Learning" },
   { label: "My profile", to: "/learner/my-profile", icon: User, section: "Learning" },
   { label: "Classmates", to: "/learner/directory", icon: Users, section: "Community" },
-  { label: "Talk Board", to: "/talk-board", icon: MessageCircle, section: "Community" },
+  { label: "Talk Board", to: "/learner/board", icon: MessageCircle, section: "Community" },
   { label: "Stamp Board", to: "/stamp-board", icon: Stamp, section: "Community" },
   { label: "Genmate Garden", to: "/learner/garden", icon: Sprout, section: "Play" },
   { label: "My Baro Character", to: "/character", icon: Smile, section: "Play" },
@@ -26,6 +26,6 @@ export const TABS: NavItem[] = [
   { label: "Today", to: "/learner", icon: Sun, section: "Learning", end: true },
   { label: "Reflect", to: "/learner/reflections", icon: BookOpen, section: "Learning" },
   { label: "Attendance", to: "/learner/attendance", icon: CalendarCheck, section: "Learning" },
-  { label: "Board", to: "/talk-board", icon: MessageCircle, section: "Community" },
+  { label: "Board", to: "/learner/board", icon: MessageCircle, section: "Community" },
   { label: "Me", to: "/learner/my-profile", icon: User, section: "Learning" },
 ];

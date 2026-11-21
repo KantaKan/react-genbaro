@@ -51,7 +51,7 @@ export function BarometerStrip({ reflections }: { reflections: Reflection[] }) {
             ))}
           </div>
           <p className="mt-3.5 rounded-[14px] bg-l-sub px-3.5 py-3 text-[13px] text-l-ink2">
-            Mostly <b className="text-l-ink">{top.a} {top.b !== "zone" ? `, ${top.b}` : "zone"}</b>. {counts[2] + counts[3] > 0 ? "Hard days are normal. Tell a TA when it piles up." : "Nice and steady."}
+            Mostly <b className="text-l-ink">{top.a}{top.b !== "zone" ? `, ${top.b}` : " zone"}</b>. {counts[2] + counts[3] > 0 ? "Hard days are normal. Tell a TA when it piles up." : "Nice and steady."}
           </p>
         </>
       )}

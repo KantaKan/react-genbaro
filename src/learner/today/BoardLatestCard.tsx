@@ -15,7 +15,7 @@ export function BoardLatestCard() {
     <section className="l-card p-[22px]">
       <div className="flex items-start justify-between">
         <h3 className="text-[15px] font-semibold">From the Talk Board</h3>
-        <Link to="/talk-board" className="-m-2 rounded-lg p-2 text-[13px] font-medium text-l-ink2 hover:bg-l-sub">
+        <Link to="/learner/board" className="-m-2 rounded-lg p-2 text-[13px] font-medium text-l-ink2 hover:bg-l-sub">
           Open board ›
         </Link>
       </div>
