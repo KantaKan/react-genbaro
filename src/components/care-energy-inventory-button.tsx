@@ -1,0 +1,147 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import { careEnergyService } from "@/lib/api";
+import { toast } from "sonner";
+import { Shield, Sparkles } from "lucide-react";
+
+interface CareEnergyInventoryButtonProps {
+  userId: string;
+  balance: number;
+  eligibleProtectDate: string | null;
+  onUsed?: () => void | Promise<void>;
+}
+
+export function CareEnergyInventoryButton({ userId, balance, eligibleProtectDate, onUsed }: CareEnergyInventoryButtonProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedAmount, setFeedAmount] = useState(1);
+  const [pendingAction, setPendingAction] = useState<{ kind: "protect" } | { kind: "feed"; quantity: number } | null>(null);
+
+  if (balance <= 0) return null;
+
+  const handleProtect = async () => {
+    if (!eligibleProtectDate) return;
+    setIsSubmitting(true);
+    try {
+      await careEnergyService.protect(userId, eligibleProtectDate);
+      toast.success(`Protected ${eligibleProtectDate} — your streak is safe!`);
+      setIsOpen(false);
+      await onUsed?.();
+    } catch {
+      toast.error("Couldn't protect that day. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFeed = async (quantity: number) => {
+    if (quantity < 1) return;
+    setIsSubmitting(true);
+    try {
+      await careEnergyService.feed(userId, quantity);
+      toast.success(`Your plant feels nourished! +${quantity * 10} growth ✨`);
+      setIsOpen(false);
+      setFeedAmount(1);
+      await onUsed?.();
+    } catch {
+      toast.error("Couldn't feed your plant. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-1.5 rounded-full">
+          💛 {balance}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72">
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium">Use Care Energy</p>
+          <Button
+            variant="outline"
+            className="justify-start gap-2"
+            disabled={!eligibleProtectDate || isSubmitting}
+            onClick={() => setPendingAction({ kind: "protect" })}
+          >
+            <Shield className="h-4 w-4" />
+            {eligibleProtectDate ? `Protect ${eligibleProtectDate}` : "No missed day to protect"}
+          </Button>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              min={1}
+              max={balance}
+              value={feedAmount}
+              disabled={isSubmitting}
+              onChange={(e) => {
+                const n = Math.floor(Number(e.target.value));
+                setFeedAmount(Number.isFinite(n) ? Math.min(Math.max(n, 1), balance) : 1);
+              }}
+              className="w-16"
+            />
+            <Button
+              variant="outline"
+              className="flex-1 justify-start gap-2"
+              disabled={isSubmitting}
+              onClick={() => setPendingAction({ kind: "feed", quantity: feedAmount })}
+            >
+              <Sparkles className="h-4 w-4" />
+              Feed (+{feedAmount * 10} growth)
+            </Button>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="justify-start gap-2 text-muted-foreground"
+            disabled={isSubmitting}
+            onClick={() => setPendingAction({ kind: "feed", quantity: balance })}
+          >
+            <Sparkles className="h-4 w-4" />
+            Feed all ({balance} Care Energy → +{balance * 10} growth)
+          </Button>
+        </div>
+      </PopoverContent>
+
+      <AlertDialog open={pendingAction !== null} onOpenChange={(open) => !open && setPendingAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{pendingAction?.kind === "protect" ? "Protect this missed day?" : "Feed your plant?"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingAction?.kind === "protect"
+                ? `Spend 1 Care Energy to protect ${eligibleProtectDate ?? "this missed day"}.`
+                : `Spend ${pendingAction?.quantity ?? 0} Care Energy for +${(pendingAction?.kind === "feed" ? pendingAction.quantity : 0) * 10} growth.`} This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Care Energy</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isSubmitting || (pendingAction?.kind === "feed" && pendingAction.quantity > balance) || (pendingAction?.kind === "protect" && !eligibleProtectDate)}
+              onClick={() => {
+                if (pendingAction?.kind === "protect") void handleProtect();
+                if (pendingAction?.kind === "feed") void handleFeed(pendingAction.quantity);
+                setPendingAction(null);
+              }}
+            >
+              Confirm use
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Popover>
+  );
+}

@@ -1,4 +1,3 @@
-import React from "react";
 import AdminReflectionsTable from "./admin-reflections-table";
 
 export function AdminTablePage() {

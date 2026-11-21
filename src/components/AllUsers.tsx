@@ -1,15 +1,15 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { api } from "../lib/api";
 import { getAuthToken } from "@/infrastructure/storage";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
-import { 
-  ArrowDownAZ, ArrowUpAZ, Users, GraduationCap, Crown, 
-  Filter, ChevronDown, Check
+import {
+  ArrowDownAZ, ArrowUpAZ, GraduationCap, Crown,
+  ChevronDown, Check
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -19,19 +19,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import SkeletonLoader from "@/components/ui/SkeletonLoader";
+import { usePersistedState } from "@/hooks/use-persisted-state";
+import { SkeletonCard } from "@/components/loading-skeleton";
 import type { JWTPayload, User } from "@/domain/types";
+
+const COHORT_KEY = "baro:learner-directory:cohort";
 
 export function AllUsers() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [selectedCohort, setSelectedCohort] = useState<number | "all">(
-    () => {
-      const cohortParam = searchParams.get("cohort");
-      if (!cohortParam || cohortParam === "all") return "all";
-      const num = Number(cohortParam);
-      return isNaN(num) ? "all" : num;
-    }
+  const cohortParam = searchParams.get("cohort");
+  const initialCohort: number | "all" =
+    !cohortParam || cohortParam === "all" || isNaN(Number(cohortParam))
+      ? "all"
+      : Number(cohortParam);
+  const [selectedCohort, setSelectedCohort] = usePersistedState<number | "all">(
+    COHORT_KEY,
+    initialCohort
   );
 
   const handleCohortChange = (value: number | "all") => {
@@ -81,9 +85,7 @@ export function AllUsers() {
     return (
       <Card className="border-none bg-transparent shadow-none">
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-0">
-          {[...Array(8)].map((_, i) => (
-            <SkeletonLoader key={i} height="80px" className="rounded-xl" />
-          ))}
+          <SkeletonCard count={8} />
         </CardContent>
       </Card>
     );
@@ -159,8 +161,8 @@ export function AllUsers() {
       <Card className="border-none bg-transparent shadow-none">
         <CardContent className="p-0">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {users.length > 0 ? (
-              users.map((user) => (
+            {sortedUsers.length > 0 ? (
+              sortedUsers.map((user) => (
                 <Link key={user._id} to={`/profile/${user._id}`}>
                   <Card className="hover:bg-card hover:scale-[1.02] hover:shadow-lg transition-all duration-300 border-none shadow-sm group bg-card/50 backdrop-blur-sm">
                     <CardContent className="p-4 flex items-center gap-4">

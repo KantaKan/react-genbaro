@@ -1,5 +1,6 @@
 import { api } from "../../infrastructure/api";
 import type {
+  ApiResponse,
   WeeklyReflection,
   BarometerData,
   CreateReflectionPayload,
@@ -20,8 +21,8 @@ export const reflectionService = {
     if (cohort) {
       url += `&cohort=${cohort}`;
     }
-    const response = await api.get<BarometerData[]>(url);
-    return response.data;
+    const response = await api.get<ApiResponse<BarometerData[]>>(url);
+    return response.data.data;
   },
 };
 

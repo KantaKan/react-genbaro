@@ -5,6 +5,19 @@ interface ConfettiEffectProps {
   onComplete?: () => void;
 }
 
+interface Particle {
+  x: number;
+  y: number;
+  radius: number;
+  color: string;
+  velocity: { x: number; y: number };
+  gravity: number;
+  friction: number;
+  opacity: number;
+  rotation: number;
+  rotationSpeed: number;
+}
+
 export const ConfettiEffect: React.FC<ConfettiEffectProps> = ({ isActive, onComplete }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -18,7 +31,7 @@ export const ConfettiEffect: React.FC<ConfettiEffectProps> = ({ isActive, onComp
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const particles: any[] = [];
+    const particles: Particle[] = [];
     const particleCount = 150;
     const colors = ['#f87171', '#60a5fa', '#34d399', '#fbbf24', '#a78bfa'];
 

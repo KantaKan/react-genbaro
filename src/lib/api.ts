@@ -8,7 +8,11 @@ export {
   attendanceService,
   leaveService,
   badgeService,
+  careEnergyService,
   boardService,
+  stampService,
+  historyService,
+  cosmeticService,
 } from "../application/services";
 
 export { awardBadge } from "../application/services/badgeService";
@@ -24,8 +28,18 @@ export {
   deletePost,
   deleteComment,
 } from "../application/services/boardService";
-export { getAllUsers, getCohort, getUsersByBarometer, deleteUserById } from "../application/services/userService";
+export { getAllUsers, getCohort, deleteUserById, getMyGenmateGarden, getCohortGarden } from "../application/services/userService";
 export { getWeeklyReflections, createReflection, getBarometerData } from "../application/services/reflectionService";
+export {
+  listCohorts,
+  getCohortInfo,
+  getCohortStamps,
+  createStamp,
+  updateCohort,
+  uploadPoster,
+  clearCohortStamps,
+  deleteStamp,
+} from "../application/services/stampService";
 export {
   submitLeaveRequest,
   getMyLeaveRequests,
@@ -48,7 +62,6 @@ export {
   getTodayOverview,
   lockAttendance,
   deleteAttendanceRecord,
-  getAttendanceStatsByDays,
   getDailyAttendanceStats,
   getMyAttendanceHistory,
   getMyDailyStats,

@@ -75,6 +75,25 @@ export function getTodayISOString(): string {
   return today.toISOString().split("T")[0];
 }
 
+/**
+ * Gets the current date/time adjusted to Asia/Bangkok (UTC+7)
+ */
+export function getThailandTime(): Date {
+  const thailandString = new Date().toLocaleString("en-US", { timeZone: "Asia/Bangkok" });
+  return new Date(thailandString);
+}
+
+export function getThailandHour(timestamp: number): number {
+  return Number(new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone: "Asia/Bangkok" }).format(timestamp));
+}
+
+/**
+ * Gets today's date in Asia/Bangkok as an ISO string (YYYY-MM-DD)
+ */
+export function getThailandDateISO(): string {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
+}
+
 export const HOLIDAYS = [
   new Date("2025-04-07"), // Specific holiday
   // Thai holidays (add more as needed)
@@ -112,6 +131,7 @@ export const HOLIDAYS = [
   new Date("2026-12-05"), // Father's Day
   new Date("2026-12-10"), // Constitution Day
   new Date("2026-12-31"), // New Year's Eve
+  new Date("2026-06-01"),
 ].map((date) => {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -128,6 +148,20 @@ export const isHoliday = (date: Date): boolean => {
   const normalizedDate = new Date(date);
   normalizedDate.setHours(0, 0, 0, 0);
   return HOLIDAYS.some((holiday) => holiday.getTime() === normalizedDate.getTime());
+};
+
+// Formats a date as a local YYYY-MM-DD key (not UTC — toISOString() would shift
+// the calendar day in non-UTC timezones like Thailand's UTC+7).
+export const toLocalDateKey = (date: Date): string => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
+// Helper function to check if a date has been protected by Care Energy
+export const isProtectedDate = (date: Date, protectedDates: Set<string>): boolean => {
+  return protectedDates.has(toLocalDateKey(date));
 };
 
 // Function to check if a date is a valid workday (not weekend, not holiday)

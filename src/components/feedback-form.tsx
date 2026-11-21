@@ -25,7 +25,7 @@ interface ReflectionData {
   non_tech_sessions: NonTechSession;
 }
 
-interface Reflection {
+export interface Reflection {
   user_id: string;
   date: string;
   reflection: ReflectionData;
@@ -155,7 +155,6 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
       };
 
       await onSubmit(newReflection);
-      toast.success("Reflection submitted successfully!");
 
       // Reset form
       setCategoryInputs({});
@@ -167,7 +166,7 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
   if (error) return <div>Error loading user data</div>;
 
   return (

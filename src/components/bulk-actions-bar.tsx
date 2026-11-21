@@ -1,13 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { Award, Calendar, Download, X, Users } from "lucide-react";
+import { Award, Calendar, Download, Sparkles, X, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface BulkActionsBarProps {
   selectedCount: number;
   totalCount: number;
+  onSelectAll: () => void;
   onClearSelection: () => void;
   onBulkBadge: () => void;
+  onBulkCareEnergy: () => void;
   onBulkAttendance: () => void;
   onBulkExport: () => void;
   isExporting?: boolean;
@@ -16,8 +18,10 @@ interface BulkActionsBarProps {
 export function BulkActionsBar({
   selectedCount,
   totalCount,
+  onSelectAll,
   onClearSelection,
   onBulkBadge,
+  onBulkCareEnergy,
   onBulkAttendance,
   onBulkExport,
   isExporting,
@@ -43,7 +47,8 @@ export function BulkActionsBar({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => {/* select all - handled by parent */}}
+              onClick={onSelectAll}
+              disabled={selectedCount === totalCount}
               className="text-xs h-7 px-2"
             >
               Select All
@@ -59,6 +64,16 @@ export function BulkActionsBar({
             >
               <Award className="h-4 w-4" />
               Award Badge
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onBulkCareEnergy}
+              className="gap-1.5"
+            >
+              <Sparkles className="h-4 w-4" />
+              Grant Care Energy
             </Button>
 
             <Button

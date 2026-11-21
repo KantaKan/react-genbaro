@@ -1,5 +1,6 @@
 import type { UserRole } from "./auth";
 import type { Badge } from "./badge";
+import type { CareEnergyLogEntry } from "./care-energy";
 
 export type { Badge };
 
@@ -11,6 +12,7 @@ export interface User {
   cohort_number: number;
   jsd_number?: string;
   role: UserRole;
+  startup_story_opt_out?: boolean;
   project_group?: string;
   genmate_group?: string;
   zoom_name?: string;
@@ -19,9 +21,14 @@ export interface User {
   salesforce_id?: string;
   profile_comments?: ProfileComment[];
   profile_reactions?: ProfileReaction[];
+  plant_reactions?: ProfileReaction[];
   bio?: string;
   social_links?: SocialLinks;
   pinned_badge_ids?: string[];
+  selected_palette?: string;
+  care_energy_balance?: number;
+  growth_points?: number;
+  care_energy_log?: CareEnergyLogEntry[];
 }
 
 export interface SocialLinks {
@@ -75,6 +82,46 @@ export interface GetAllUsersResponse {
   };
 }
 
+export interface GenmateGardenMember {
+  _id: string;
+  first_name: string;
+  last_name: string;
+  cohort_number: number;
+  genmate_group: string;
+  reflection_dates: string[];
+  growth_points?: number;
+  protected_dates?: string[];
+  plant_reactions?: ProfileReaction[];
+  selected_palette?: string;
+  selected_species?: string;
+  selected_pot?: string;
+  selected_leaf?: string;
+  selected_flower?: string;
+  selected_stem?: string;
+  equipped_cosmetics?: Partial<Record<"palette" | "pot" | "aura" | "particle" | "accessory" | "mutation", string>>;
+}
+
+export interface GenmateGardenResponse {
+  status: string;
+  message: string;
+  data: {
+    users: GenmateGardenMember[];
+  };
+}
+
+export interface CohortGardenGroup {
+  group_name: string;
+  members: GenmateGardenMember[];
+}
+
+export interface CohortGardenResponse {
+  status: string;
+  message: string;
+  data: {
+    groups: CohortGardenGroup[];
+  };
+}
+
 export interface JWTPayload {
   user_id: string;
   cohort?: number;
@@ -105,6 +152,9 @@ export interface Reflection {
   day?: string;
   createdAt?: string;
   reflection: ReflectionData;
+  admin_feedback?: string;
+  reward_boxes?: import("./gift-box").TeacherGiftBox[];
+  reward_warning?: string;
 }
 
 export interface ReflectionData {

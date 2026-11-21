@@ -1,4 +1,3 @@
-import React from "react";
 import spinWheel from "@/assets/spin.jpg";
 import { useNavigate } from "react-router-dom";
 

@@ -38,6 +38,23 @@ export const BOARD_REACTION_URLS = BOARD_REACTIONS.reduce<Record<string, string>
   return acc;
 }, {});
 
+const HTML_ENTITIES: Record<string, string> = {
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&quot;": '"',
+  "&#34;": '"',
+  "&#39;": "'",
+  "&apos;": "'",
+};
+
+// Some older posts/comments were stored with their HTML entities already
+// escaped server-side, even though the frontend renders content as plain
+// text (React escapes it for us). Decode those entities back to plain
+// characters so they display correctly instead of showing raw "&#34;" etc.
+export const decodeHtmlEntities = (text: string): string =>
+  text.replace(/&(?:amp|lt|gt|quot|#34|#39|apos);/g, (match) => HTML_ENTITIES[match] ?? match);
+
 export const getBoardReactionCounts = (reactions: BoardReaction[] = []): Record<string, number> => {
   return reactions.reduce((acc, reaction) => {
     acc[reaction.value] = (acc[reaction.value] || 0) + 1;

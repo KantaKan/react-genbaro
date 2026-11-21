@@ -37,7 +37,7 @@ export function LearnerShell({ children }: { children: ReactNode }) {
   const { userData } = useUserData();
   const { logout, userRole } = useAuth();
   const nick = useMemo(() => nicknames(userData?.zoom_name, userData?.first_name ?? ""), [userData]);
-  const sections = ["Learning", "Community"] as const;
+  const sections = ["Learning", "Community", "Play"] as const;
 
   return (
     <HeaderCtx.Provider value={setHeader}>

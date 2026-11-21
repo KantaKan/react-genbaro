@@ -16,7 +16,7 @@ import { toast } from "react-toastify";
 import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/application/contexts/UserDataContext";
 import { addReaction, createPost, getPosts, removeReaction, deletePost } from "@/lib/api";
-import { getBoardUserPayload, type BoardPost } from "@/lib/board";
+import { getBoardUserPayload, decodeHtmlEntities, type BoardPost } from "@/lib/board";
 
 const COHORT_COLORS: Record<number, string> = {
   1: "border-l-[hsl(var(--cohort-1))]",
@@ -101,7 +101,6 @@ const PostCard: React.FC<PostCardProps> = ({ post, addReactionMutation, removeRe
                 userId={post.userId}
                 name={post.zoomName}
                 className="h-10 w-10 border-2 border-primary/20"
-                fallbackClassName="bg-primary/10 text-primary font-semibold text-sm"
               />
               <div>
                 <p className="font-semibold text-sm">{post.zoomName}</p>
@@ -111,7 +110,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, addReactionMutation, removeRe
               </div>
             </div>
 
-            <p className="text-foreground/90 leading-relaxed mb-4">{post.content}</p>
+            <p className="text-foreground/90 leading-relaxed mb-4">{decodeHtmlEntities(post.content)}</p>
 
             <BoardReactionSummary
               reactions={postReactions}
@@ -178,7 +177,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, addReactionMutation, removeRe
 const TalkBoardPage: React.FC = () => {
   const queryClient = useQueryClient();
   const { userData } = useUserData();
-  const { isAdmin } = useAuth();
+  const { userRole } = useAuth();
+  const isAdmin = userRole === "admin";
   const [newPostContent, setNewPostContent] = useState("");
   const [showComposer, setShowComposer] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
@@ -289,7 +289,6 @@ const TalkBoardPage: React.FC = () => {
                       lastName={composerUser.lastName}
                       email={composerUser.email}
                       className="h-10 w-10 border-2 border-primary/30"
-                      fallbackClassName="bg-primary/10 text-primary font-semibold"
                     />
                     <div className="flex-1">
                       <Textarea

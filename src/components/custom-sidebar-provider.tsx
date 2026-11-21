@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { SidebarProvider as BaseSidebarProvider, SidebarProviderProps } from '@/components/ui/sidebar';
+import { SidebarProvider as BaseSidebarProvider } from '@/components/ui/sidebar';
 import { useConfig } from '@/hooks/use-config';
 
-type CustomSidebarProviderProps = SidebarProviderProps & {
+type CustomSidebarProviderProps = React.ComponentProps<typeof BaseSidebarProvider> & {
   children: React.ReactNode;
 };
 

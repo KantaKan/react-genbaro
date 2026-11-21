@@ -33,8 +33,7 @@ export interface ReflectionEntry {
 
 export interface BarometerData {
   date: string;
-  barometer: string;
-  count: number;
+  [zone: string]: string | number;
 }
 
 export interface ReflectionStats {

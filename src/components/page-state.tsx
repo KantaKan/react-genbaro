@@ -6,7 +6,7 @@ interface PageLoadingProps {
   className?: string;
 }
 
-export function PageLoading({ label = "Loading...", className }: PageLoadingProps) {
+export function PageLoading({ label = "Just a moment", className }: PageLoadingProps) {
   return (
     <div className={cn("min-h-[60vh] flex items-center justify-center", className)}>
       <div className="flex flex-col items-center gap-3 text-muted-foreground">

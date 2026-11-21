@@ -99,24 +99,15 @@ export const attendanceService = {
   async lockAttendance(
     date: string,
     session: AttendanceSession,
-    locked: boolean
+    locked: boolean,
+    cohort?: number
   ) {
-    const response = await api.post("/admin/attendance/lock", { date, session, locked });
+    const response = await api.post("/admin/attendance/lock", { date, session, locked, cohort });
     return response.data;
   },
 
   async deleteAttendanceRecord(recordId: string): Promise<AttendanceRecord> {
     const response = await api.delete(`/admin/attendance/${recordId}`);
-    return response.data.data;
-  },
-
-  async getAttendanceStatsByDays(
-    cohort?: number,
-    days = 7
-  ): Promise<AttendanceStats[]> {
-    let url = `/admin/attendance/stats-by-days?days=${days}`;
-    if (cohort) url += `&cohort=${cohort}`;
-    const response = await api.get(url);
     return response.data.data;
   },
 
@@ -230,7 +221,6 @@ export const getStudentAttendanceHistory = attendanceService.getStudentAttendanc
 export const getTodayOverview = attendanceService.getTodayOverview;
 export const lockAttendance = attendanceService.lockAttendance;
 export const deleteAttendanceRecord = attendanceService.deleteAttendanceRecord;
-export const getAttendanceStatsByDays = attendanceService.getAttendanceStatsByDays;
 export const getDailyAttendanceStats = attendanceService.getDailyAttendanceStats;
 export const getMyAttendanceHistory = attendanceService.getMyAttendanceHistory;
 export const getMyDailyStats = attendanceService.getMyDailyStats;

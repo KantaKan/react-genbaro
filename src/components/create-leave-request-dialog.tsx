@@ -61,7 +61,6 @@ export function CreateLeaveRequestDialog({
   const [reason, setReason] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Update selectedUserId when preselectedStudent changes
   useEffect(() => {
     if (preselectedStudent?.user_id) {
       setSelectedUserId(preselectedStudent.user_id);
@@ -117,32 +116,32 @@ export function CreateLeaveRequestDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 font-register-heading">
             <UserPlus className="h-5 w-5" />
             Create Leave Request
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="font-register-body text-sm text-muted-foreground">
             Manually create a leave request for a learner. This will be auto-approved and the learner will be notified.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="student">Student</Label>
+            <Label htmlFor="student" className="font-register-body text-sm">Student</Label>
             {preselectedStudent ? (
-              <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                <span className="font-medium">
+              <div className="flex items-center gap-2 p-2 bg-muted rounded border border-register-border/30">
+                <span className="font-register-mono text-xs">
                   {preselectedStudent.jsd_number} - {preselectedStudent.first_name} {preselectedStudent.last_name}
                 </span>
               </div>
             ) : (
               <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                <SelectTrigger id="student">
+                <SelectTrigger id="student" className="font-register-mono text-xs">
                   <SelectValue placeholder="Select student" />
                 </SelectTrigger>
                 <SelectContent>
                   {students.map((student, index) => (
-                    <SelectItem key={student.user_id ?? `student-${index}`} value={student.user_id ?? ""}>
+                    <SelectItem key={student.user_id ?? `student-${index}`} value={student.user_id ?? ""} className="font-register-mono text-xs">
                       {student.jsd_number} - {student.first_name} {student.last_name}
                     </SelectItem>
                   ))}
@@ -152,19 +151,19 @@ export function CreateLeaveRequestDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="leave-type">Leave Type</Label>
+            <Label htmlFor="leave-type" className="font-register-body text-sm">Leave Type</Label>
             <Select
               value={leaveType}
               onValueChange={(v) => setLeaveType(v as "late" | "half_day" | "full_day")}
             >
-              <SelectTrigger id="leave-type">
+              <SelectTrigger id="leave-type" className="font-register-mono text-xs">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
                 {LEAVE_TYPES.map((type) => {
                   const Icon = type.icon;
                   return (
-                    <SelectItem key={type.value} value={type.value}>
+                    <SelectItem key={type.value} value={type.value} className="font-register-mono text-xs">
                       <div className="flex items-center gap-2">
                         <Icon className="h-4 w-4" />
                         <span>{type.label}</span>
@@ -177,28 +176,29 @@ export function CreateLeaveRequestDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
+            <Label htmlFor="date" className="font-register-body text-sm">Date</Label>
             <Input
               id="date"
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
+              className="font-register-mono text-xs"
             />
           </div>
 
           {leaveType === "half_day" && (
             <div className="space-y-2">
-              <Label htmlFor="session">Session</Label>
+              <Label htmlFor="session" className="font-register-body text-sm">Session</Label>
               <Select
                 value={session}
                 onValueChange={(v) => setSession(v as "morning" | "afternoon")}
               >
-                <SelectTrigger id="session">
+                <SelectTrigger id="session" className="font-register-mono text-xs">
                   <SelectValue placeholder="Select session" />
                 </SelectTrigger>
                 <SelectContent>
                   {SESSIONS.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>
+                    <SelectItem key={s.value} value={s.value} className="font-register-mono text-xs">
                       {s.label}
                     </SelectItem>
                   ))}
@@ -208,13 +208,14 @@ export function CreateLeaveRequestDialog({
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="reason">Reason</Label>
+            <Label htmlFor="reason" className="font-register-body text-sm">Reason</Label>
             <Textarea
               id="reason"
-              placeholder="Enter reason for leave (e.g., from Google Form, message, etc.)"
+              placeholder="Enter reason for leave..."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={3}
+              className="font-register-mono text-xs"
             />
           </div>
 
@@ -226,10 +227,11 @@ export function CreateLeaveRequestDialog({
                 resetForm();
                 onOpenChange(false);
               }}
+              className="font-register-mono text-xs"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="font-register-mono text-xs">
               {isSubmitting ? "Creating..." : "Create & Approve"}
             </Button>
           </DialogFooter>

@@ -1,10 +1,10 @@
-import { BookOpen, CalendarCheck, MessageCircle, Sun, User, Users, type LucideIcon } from "lucide-react";
+import { BookOpen, CalendarCheck, Gamepad2, MessageCircle, Smile, Sprout, Stamp, Sun, Trees, User, Users, type LucideIcon } from "lucide-react";
 
 export interface NavItem {
   label: string;
   to: string;
   icon: LucideIcon;
-  section: "Learning" | "Community";
+  section: "Learning" | "Community" | "Play";
   end?: boolean;
 }
 
@@ -15,6 +15,11 @@ export const NAV: NavItem[] = [
   { label: "My profile", to: "/learner/my-profile", icon: User, section: "Learning" },
   { label: "Classmates", to: "/learner/directory", icon: Users, section: "Community" },
   { label: "Talk Board", to: "/talk-board", icon: MessageCircle, section: "Community" },
+  { label: "Stamp Board", to: "/stamp-board", icon: Stamp, section: "Community" },
+  { label: "Genmate Garden", to: "/learner/garden", icon: Sprout, section: "Play" },
+  { label: "My Baro Character", to: "/character", icon: Smile, section: "Play" },
+  { label: "Showcase Lawn", to: "/showcase-lawn", icon: Trees, section: "Play" },
+  { label: "Startup Story", to: "/startup-story", icon: Gamepad2, section: "Play" },
 ];
 
 export const TABS: NavItem[] = [

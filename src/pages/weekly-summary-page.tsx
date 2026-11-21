@@ -6,11 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { AlertCircle, TrendingDown, TrendingUp, UserX, MessageSquare, Users } from "lucide-react";
+import { SkeletonWarm } from "@/components/loading-skeleton";
+import { AlertCircle, TrendingDown, TrendingUp, UserX } from "lucide-react";
 import { getDayBadge } from "@/utils/day-colors";
-import { toast } from "react-toastify";
 
 const DayBadgeComponent: React.FC<{ dateString: string }> = ({ dateString }) => {
   const { dayName, colorClass } = getDayBadge(dateString);
@@ -54,30 +52,30 @@ const WeeklySummarySkeleton: React.FC = () => (
     {[...Array(2)].map((_, i) => (
       <Card key={i}>
         <CardHeader>
-          <Skeleton className="h-7 w-1/2" />
-          <Skeleton className="h-4 w-1/3" />
+          <SkeletonWarm className="h-7 w-1/2" />
+          <SkeletonWarm className="h-4 w-1/3" />
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <Skeleton className="h-6 w-2/4" />
+              <SkeletonWarm className="h-6 w-2/4" />
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-4">
-                <Skeleton className="h-10 w-full" />
+                <SkeletonWarm className="h-10 w-full" />
               </div>
               <div className="flex items-center space-x-4">
-                <Skeleton className="h-10 w-full" />
+                <SkeletonWarm className="h-10 w-full" />
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <Skeleton className="h-6 w-2/4" />
+              <SkeletonWarm className="h-6 w-2/4" />
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-4">
-                <Skeleton className="h-10 w-full" />
+                <SkeletonWarm className="h-10 w-full" />
               </div>
             </CardContent>
           </Card>
@@ -253,17 +251,25 @@ const WeeklySummaryPage: React.FC = () => {
         <Pagination className="mt-12">
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious onClick={() => handlePageChange(page - 1)} disabled={page === 1} />
+              <PaginationPrevious
+                onClick={() => page > 1 && handlePageChange(page - 1)}
+                aria-disabled={page === 1}
+                className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
             </PaginationItem>
             {[...Array(totalPages)].map((_, i) => (
               <PaginationItem key={i}>
-                <PaginationLink isActive={page === i + 1} onClick={() => handlePageChange(i + 1)}>
+                <PaginationLink isActive={page === i + 1} onClick={() => handlePageChange(i + 1)} className="cursor-pointer">
                   {i + 1}
                 </PaginationLink>
               </PaginationItem>
             ))}
             <PaginationItem>
-              <PaginationNext onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} />
+              <PaginationNext
+                onClick={() => page < totalPages && handlePageChange(page + 1)}
+                aria-disabled={page === totalPages}
+                className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
             </PaginationItem>
           </PaginationContent>
         </Pagination>

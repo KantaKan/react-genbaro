@@ -49,7 +49,7 @@ interface SignUpProps {
 
 export function SignUp({ onSignUp }: SignUpProps) {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<z.input<typeof formSchema>, unknown, z.output<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       first_name: "",

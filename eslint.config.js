@@ -21,7 +21,21 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': [
         'warn',
-        { allowConstantExport: true },
+        {
+          allowConstantExport: true,
+          allowExportNames: [
+            'useAuth',
+            'useUserData',
+            'useAttendanceContext',
+            'badgeColors',
+            'reflectionZones',
+            'useTheme',
+            'badgeVariants',
+            'buttonVariants',
+            'useFormField',
+            'useSidebar',
+          ],
+        },
       ],
     },
   },

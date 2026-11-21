@@ -1,5 +1,11 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getAvatarFallback, getUserAvatarUrl } from "@/lib/avatar";
+import { useCallback } from "react";
+import { Blobatar } from "@blobatar/react";
+import { useGaze } from "@blobatar/react/gaze";
+import "blobatar/motion.css";
+import "blobatar/gaze.css";
+import { Avatar } from "@/components/ui/avatar";
+import { getUserAvatarSeed } from "@/lib/avatar";
+import { cn } from "@/lib/utils";
 
 interface UserAvatarProps {
   userId?: string | null;
@@ -8,7 +14,21 @@ interface UserAvatarProps {
   lastName?: string | null;
   email?: string | null;
   className?: string;
-  fallbackClassName?: string;
+  followPointer?: boolean;
+  gazeTravel?: number;
+}
+
+function PointerGazeAvatar({ name, title, className, travel }: { name: string; title: string; className?: string; travel: number }) {
+  const { ref } = useGaze({ travel, lookAt: "pointer" });
+  const attachAvatar = useCallback((element: HTMLSpanElement | null) => {
+    ref(element?.querySelector("svg") ?? null);
+  }, [ref]);
+
+  return (
+    <Avatar ref={attachAvatar} className={cn("bg-muted", className)}>
+      <Blobatar name={name} title={title} animate="always" className="h-full w-full" />
+    </Avatar>
+  );
 }
 
 export function UserAvatar({
@@ -18,16 +38,19 @@ export function UserAvatar({
   lastName,
   email,
   className,
-  fallbackClassName,
+  followPointer = false,
+  gazeTravel = 3,
 }: UserAvatarProps) {
   const displayName = name || firstName || email || "User";
-  const avatarUrl = getUserAvatarUrl(userId, email, name, firstName);
-  const fallback = getAvatarFallback(name, firstName, lastName, email);
+  const avatarSeed = getUserAvatarSeed(userId, email, name, firstName, lastName);
+
+  if (followPointer) {
+    return <PointerGazeAvatar name={avatarSeed} title={displayName} className={className} travel={gazeTravel} />;
+  }
 
   return (
-    <Avatar className={className}>
-      <AvatarImage src={avatarUrl} alt={displayName} />
-      <AvatarFallback className={fallbackClassName}>{fallback}</AvatarFallback>
+    <Avatar className={cn("bg-muted", className)}>
+      <Blobatar name={avatarSeed} alt={displayName} className="h-full w-full object-cover" />
     </Avatar>
   );
 }

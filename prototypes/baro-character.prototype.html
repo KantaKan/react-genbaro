@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Baro Character — prototype</title>
+  <style>
+    :root { color-scheme: light; font-family: "Segoe UI", sans-serif; background: #eee8dd; color: #25223d; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .shell { max-width: 1120px; margin: auto; padding: 32px 20px 80px; }
+    .eyebrow { margin: 0 0 8px; color: #7354ad; font: 800 12px/1.4 ui-monospace, monospace; letter-spacing: .16em; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 10px; font: 800 clamp(32px, 5vw, 56px)/1.02 "Trebuchet MS", sans-serif; letter-spacing: -.05em; }
+    .intro { max-width: 740px; color: #56526a; line-height: 1.6; }
+    .flag { display: inline-block; margin: 0 0 24px; padding: 7px 11px; border: 1px solid #b39ccc; border-radius: 999px; color: #654b8c; font-size: 12px; font-weight: 800; }
+    .stage { display: grid; grid-template-columns: minmax(280px, 420px) minmax(0, 1fr); gap: 22px; align-items: start; }
+    .card { position: relative; overflow: hidden; min-height: 610px; padding: 20px; border: 5px solid #282442; border-radius: 26px; background: #c9f2dc; box-shadow: 12px 13px 0 #302942; }
+    .card[data-rare="true"] { background: #f7d9eb; box-shadow: 12px 13px 0 #6d3e78; }
+    .card[data-rarity="legendary"] { background: radial-gradient(circle at 50% 38%, #fff9d9, #f4d58d 46%, #eeb0d8); box-shadow: 12px 13px 0 #805b4b; }
+    .card[data-rare="true"]::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(125deg, transparent 38%, #ffffff55 49%, transparent 57%); }
+    .card::before { content: ""; position: absolute; width: 430px; height: 430px; left: 50%; top: 104px; transform: translateX(-50%); border: 2px solid #25223d2e; border-radius: 50%; box-shadow: 0 0 0 26px #ffffff22, 0 0 0 58px #ffffff18; }
+    .card-head, .card-foot { position: relative; z-index: 1; }
+    .card-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+    .card-kicker { font: 800 12px ui-monospace, monospace; letter-spacing: .14em; }
+    .card-name { margin: 5px 0 0; font: 800 36px/1 "Trebuchet MS", sans-serif; letter-spacing: -.04em; }
+    .serial { padding: 9px 11px; border: 2px solid #292643; border-radius: 9px; background: #fffaec; font: 800 12px ui-monospace, monospace; white-space: nowrap; }
+    .pattern-badge { position: absolute; z-index: 2; top: 91px; right: 18px; padding: 6px 10px; border: 2px solid #302942; border-radius: 999px; background: #fffaf0; font: 900 11px ui-monospace, monospace; letter-spacing: .05em; }
+    .pattern-badge[data-rare="true"] { background: #ffdc68; transform: rotate(7deg); }
+    .card[data-rarity="legendary"] .pattern-badge { background: #fff5aa; border-color: #805b4b; }
+    .portrait { position: relative; z-index: 1; display: grid; place-items: center; height: 400px; }
+    .portrait svg { width: min(90%, 330px); height: 360px; overflow: visible; filter: drop-shadow(0 18px 1px #1d25452b); }
+    .portrait svg .buddy { animation: buddy-breathe 3.8s ease-in-out infinite; transform-origin: 50% 75%; }
+    .portrait svg .eyes { animation: buddy-blink 5.5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+    .portrait svg .twinkle { animation: buddy-twinkle 3s ease-in-out infinite alternate; }
+    @keyframes buddy-breathe { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-5px) rotate(1deg); } }
+    @keyframes buddy-blink { 0%, 91%, 95%, 100% { transform: scaleY(1); } 93% { transform: scaleY(.08); } }
+    @keyframes buddy-twinkle { from { opacity: .35; transform: scale(.82); } to { opacity: 1; transform: scale(1.1); } }
+    .card-foot { padding: 15px; border: 2px solid #282442; border-radius: 15px; background: #fffaec; }
+    .trait-line { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+    .trait-line span { border-radius: 999px; padding: 5px 9px; background: #e9e2f4; font-size: 12px; font-weight: 700; }
+    .panel { display: grid; gap: 18px; }
+    .box { padding: 20px; border: 2px solid #34304d; border-radius: 18px; background: #fffaf0; box-shadow: 5px 5px 0 #d1c5d5; }
+    .box h2 { margin-bottom: 8px; font: 800 22px "Trebuchet MS", sans-serif; }
+    .box p { color: #615d6b; line-height: 1.5; }
+    .field { display: flex; gap: 8px; margin: 14px 0; }
+    .field input { min-width: 0; flex: 1; padding: 11px 12px; border: 2px solid #6e6982; border-radius: 10px; background: #fff; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .action { padding: 10px 13px; border: 2px solid #302b4b; border-radius: 10px; background: #fff; color: #292542; font-weight: 800; }
+    .action.primary { background: #efaa83; }
+    .action:focus-visible, input:focus-visible { outline: 3px solid #7b5ece; outline-offset: 2px; }
+    .status { margin: 12px 0 0; color: #4b4562; font-size: 13px; }
+    .looks-label { margin: 15px 0 7px; font-size: 12px; font-weight: 800; color: #61536e; }
+    .looks { display: flex; flex-wrap: wrap; gap: 6px; }
+    .looks button { padding: 6px 9px; border: 1px solid #bbafc8; border-radius: 999px; background: #fff; color: #3c3454; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .looks button[aria-pressed="true"] { border-color: #302942; background: #302942; color: #fff; }
+    .looks button:focus-visible { outline: 3px solid #7b5ece; outline-offset: 2px; }
+    .facts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 0; }
+    .facts div { padding: 10px; border-radius: 10px; background: #f0ebdf; }
+    .facts dt { font-size: 11px; color: #666174; }
+    .facts dd { margin: 4px 0 0; font: 800 14px ui-monospace, monospace; overflow-wrap: anywhere; }
+    .steps { display: grid; gap: 8px; }
+    .steps button { padding: 10px; border: 1px solid #c8bbcf; border-radius: 9px; text-align: left; background: white; }
+    .steps button.current { border: 2px solid #7653b5; background: #eee5ff; font-weight: 800; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+    .tabs button { border: 1px solid #c8bbcf; border-radius: 999px; padding: 7px 11px; background: white; }
+    .tabs button[aria-selected="true"] { background: #302942; color: white; }
+    .crowd { margin-top: 30px; }
+    .crowd-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+    .crowd-head h2 { font: 800 24px "Trebuchet MS", sans-serif; }
+    .crowd-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 9px; }
+    .mini { min-width: 0; padding: 6px; border: 1px solid #d6c6ce; border-radius: 12px; background: #fffaf0; text-align: center; }
+    .mini[data-rare="true"] { border: 3px solid #bd6bb1; background: #ffedf8; }
+    .mini svg { width: 100%; height: 95px; }
+    .mini span { display: block; font: 700 10px ui-monospace, monospace; }
+    .note { max-width: 780px; margin-top: 26px; color: #6b6571; font-size: 13px; line-height: 1.6; }
+    .experience { display: grid; gap: 22px; margin-top: 36px; }
+    .experience-title { margin-bottom: 5px; font: 800 clamp(25px, 3vw, 36px)/1.1 "Trebuchet MS", sans-serif; letter-spacing: -.035em; }
+    .experience-intro { max-width: 720px; color: #625d70; line-height: 1.55; }
+    .experience-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 18px; align-items: start; }
+    .experience .box { min-width: 0; }
+    .experience .box h3 { margin-bottom: 5px; font: 800 18px "Trebuchet MS", sans-serif; }
+    .experience textarea, .experience select, .experience input:not([type="range"]) { width: 100%; border: 2px solid #6e6982; border-radius: 10px; padding: 10px 12px; background: #fff; color: #292542; font: inherit; }
+    .experience textarea:focus-visible, .experience select:focus-visible, .experience input:focus-visible { outline: 3px solid #7b5ece; outline-offset: 2px; }
+    .experience textarea { min-height: 73px; resize: vertical; }
+    .control-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0; }
+    .control-row label { font-size: 13px; font-weight: 800; }
+    .control-row input { min-width: 140px; flex: 1; padding: 9px 10px; border: 2px solid #6e6982; border-radius: 10px; }
+    .showcase { position: relative; overflow: hidden; min-height: 300px; border: 2px solid #292542; border-radius: 19px; padding: 17px; background: radial-gradient(circle at 90% 15%, #fffbd6 0 9%, transparent 10%), linear-gradient(#b9d8e0 0 49%, #a5d69c 49% 100%); }
+    .showcase::before { position: absolute; content: ""; left: -5%; right: -5%; top: 47%; height: 30px; border: 3px solid #292542; border-radius: 50%; background: #79b879; transform: rotate(-2deg); }
+    .showcase-head { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 800; }
+    .showcase-head span { padding: 4px 9px; border: 1px solid #292542; border-radius: 99px; background: #fffaf0; font-size: 11px; }
+    .showcase-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end; margin-top: 16px; }
+    .showcase-buddy { min-width: 0; border: 2px solid #292542; border-radius: 14px; padding: 7px; background: #fffaf0ed; box-shadow: 3px 4px 0 #29254255; }
+    .showcase-buddy svg { display: block; width: 100%; height: 120px; }
+    .showcase-buddy strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+    .showcase-buddy p { min-height: 30px; margin: 3px 0 5px; color: #514c63; font-size: 11px; line-height: 1.25; overflow-wrap: anywhere; }
+    .showcase-buddy .reaction { border: 1px solid #b9abc3; border-radius: 99px; background: #fff; padding: 3px 6px; font-size: 11px; }
+    .showcase-buddy .reaction[aria-pressed="true"] { background: #e9d9ff; border-color: #6741a2; }
+    .showcase-empty { position: relative; z-index: 1; grid-column: 1 / -1; margin: 70px auto; width: min(100%, 300px); border-radius: 14px; padding: 14px; background: #fffaf0; text-align: center; font-weight: 700; }
+    .god-scene { position: relative; overflow: hidden; border: 2px solid #292542; border-radius: 16px; padding: 16px; min-height: 122px; background: linear-gradient(115deg, #372a66, #7761ae 57%, #f6b8dd); color: #fffaf0; }
+    .god-scene::after { position: absolute; content: "✦ ✦ ✦"; right: 15px; top: 6px; font-size: 42px; color: #ffe68e; letter-spacing: 8px; transform: rotate(-14deg); opacity: .8; }
+    .god-scene[data-kind="giant"] { background: linear-gradient(115deg, #323351, #6e74b7 58%, #e9c3ef); }
+    .god-scene[data-kind="parade"] { background: linear-gradient(115deg, #803b72, #e18b9e 58%, #f6cf87); }
+    .god-scene strong { position: relative; z-index: 1; display: block; font: 800 21px "Trebuchet MS", sans-serif; }
+    .god-scene p { position: relative; z-index: 1; max-width: 75%; margin: 5px 0 0; color: #fff8ed; }
+    .god-history { display: grid; gap: 6px; margin-top: 10px; }
+    .god-history button { width: 100%; border: 1px solid #c8bbcf; border-radius: 9px; padding: 8px; background: #fff; color: #292542; text-align: left; }
+    .gift-card { display: grid; gap: 6px; border: 2px dashed #a778ac; border-radius: 13px; padding: 14px; background: #fff2de; }
+    .gift-card strong { font: 800 16px "Trebuchet MS", sans-serif; }
+    .gift-card small { color: #665b68; }
+    .pill-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+    .pill-list span { border: 1px solid #b9abc3; border-radius: 999px; padding: 5px 8px; background: #f1e6f6; font-size: 11px; font-weight: 700; }
+    .growth-track { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 11px 0; }
+    .growth-track span { border: 1px solid #b9abc3; border-radius: 8px; padding: 8px 4px; background: #eee6ee; color: #6e6874; text-align: center; font-size: 11px; font-weight: 800; }
+    .growth-track span.active { border-color: #3b7865; background: #d7efdc; color: #245e49; }
+    .small-note { font-size: 12px; color: #686175; line-height: 1.5; }
+    @media (prefers-reduced-motion: reduce) { .portrait svg .buddy, .portrait svg .eyes, .portrait svg .twinkle { animation: none; } }
+    @media (max-width: 760px) { .stage, .experience-grid { grid-template-columns: 1fr; } .card { max-width: 430px; margin: auto; width: 100%; } .crowd-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 490px) { .showcase-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <p class="eyebrow">Baro character lab</p>
+    <h1>คู่หูที่เป็นของเรา<br>ไม่เหมือนใคร</h1>
+    <p class="intro">ลองสุ่มคู่หูที่มีลายเฉพาะตัว แล้วพาไปโชว์บนลาน ส่งกล่องของขวัญ และดูเหตุการณ์สุดเวอร์ที่แอดมินเสกไว้ ข้อมูลตัวอย่างทั้งหมดอยู่ในหน่วยความจำของหน้านี้เท่านั้น</p>
+    <span class="flag">PROTOTYPE · ยังไม่เชื่อมบัญชีหรือของรางวัลจริง</span>
+
+    <div class="stage">
+      <section class="card" id="card" aria-label="การ์ดตัวละครตัวอย่าง">
+        <div class="card-head"><div><span class="card-kicker">YOUR BARO BUDDY</span><h2 class="card-name" id="card-name">—</h2></div><span class="serial" id="card-serial">—</span></div>
+        <span class="pattern-badge" id="pattern-badge">PATTERN / ?</span>
+        <div class="portrait" id="portrait"></div>
+        <div class="card-foot"><strong>ตัวตนถาวร</strong><div class="trait-line" id="trait-line"></div></div>
+      </section>
+
+      <div class="panel">
+        <section class="box">
+          <h2>ลองเปิดตัวละคร</h2>
+          <p>ใช้รหัสทดสอบแทนนักเรียนจริง รหัสเดิมกลับมาได้ตัวเดิม แม้กดเปิดซ้ำ</p>
+          <div class="field"><input id="learner-id" aria-label="รหัสนักเรียนทดสอบ" value="learner-001" maxlength="40"><button class="action primary" id="reveal">เปิดตัวละคร</button></div>
+          <div class="actions"><button class="action" id="new-learner">ลองคนถัดไป</button><button class="action" id="change-outfit">เปลี่ยนของแต่ง</button><button class="action" id="find-cat">ดูหูแมวติดตัว</button><button class="action" id="find-rare">ดูแรร์ถัดไป</button><button class="action" id="fill-cohort">จำลอง 120 คน</button><button class="action" id="reset">เริ่มใหม่</button></div>
+          <p class="looks-label">หูแมวติดตัวเป็น DNA ส่วนที่คาดหูแมวถอดเปลี่ยนได้ · ตัวที่มีหูแมวอยู่แล้วจะได้โบว์กับกระดิ่งแทน</p>
+          <p class="looks-label">ลองลุคของแต่ง · ยังไม่ใช่ของปลดล็อกจริง</p><div class="looks" id="looks"></div>
+          <p class="status" role="status" id="status"></p>
+        </section>
+        <section class="box">
+          <h2>สิ่งที่ระบบจำ</h2>
+          <dl class="facts" id="facts"></dl>
+        </section>
+        <section class="box">
+          <h2>ลองตามเหตุการณ์</h2>
+          <div class="tabs" role="tablist" id="tabs"></div>
+          <p id="scenario-description"></p>
+          <div class="steps" id="steps"></div>
+        </section>
+      </div>
+    </div>
+    <section class="crowd"><div class="crowd-head"><h2>เพื่อนในรุ่นเดียวกัน</h2><span id="crowd-count"></span></div><div class="crowd-grid" id="crowd-grid"></div></section>
+    <section class="experience" aria-label="ทดลองลานโชว์ตัวและของขวัญ">
+      <div><p class="eyebrow">THE SHOWCASE LAWN</p><h2 class="experience-title">แวะมาดูเพื่อน แม้ไม่ได้ออนไลน์พร้อมกัน</h2><p class="experience-intro">ปักตัวละครที่อยากโชว์ ทิ้งข้อความสั้น ๆ แล้วกลับมาเปลี่ยนเมื่อไรก็ได้ เพื่อนเข้ามาดูการ์ดและส่งใจให้ได้โดยไม่ต้องมีห้องแชต</p></div>
+      <div class="experience-grid">
+        <section class="box"><h3>ลานโชว์ตัว · รุ่นตัวอย่าง</h3><div class="showcase" id="showcase"><div class="showcase-head">คู่หูที่แวะมานั่งเล่น <span>ไม่ต้องออนไลน์พร้อมกัน</span></div><div class="showcase-grid" id="showcase-grid"></div></div><div class="control-row"><button class="action" id="showcase-demo">เติมเพื่อนตัวอย่าง</button></div><label for="showcase-message" class="looks-label">ข้อความของตัวที่คุณปักไว้ · ไม่เกิน 160 ตัวอักษร</label><textarea id="showcase-message" maxlength="160" placeholder="วันนี้เขียนโค้ดผ่านแล้ว เย้!"></textarea><div class="control-row"><button class="action primary" id="pin-showcase">ปักตัวนี้ไว้บนลาน</button><button class="action" id="remove-showcase">เอาออกจากลาน</button></div><p class="small-note" id="showcase-status" role="status"></p></section>
+        <div class="panel"><section class="box"><h3>พลัง GOD ของแอดมิน</h3><p>เสกฉากให้รุ่นเดียวหรือทุกรุ่น คนที่มาทีหลังก็ดูเหตุการณ์ย้อนหลังได้</p><div class="god-scene" id="god-scene" data-kind="stars"><strong id="god-title">ยังไม่มีเหตุการณ์</strong><p id="god-caption">ลองเสกฉากแรกให้เพื่อนมาเจอ</p></div><div class="control-row"><select id="god-kind" aria-label="เอฟเฟกต์ GOD"><option value="stars">ฝนดาวแห่งกำลังใจ</option><option value="giant">GOD ตัวโตบังจอ</option><option value="parade">ขบวนเต้นหลุดโลก</option></select><select id="god-scope" aria-label="ผู้ชม"><option value="cohort">รุ่นนี้</option><option value="all">ทุกรุ่น</option></select></div><input id="god-message" maxlength="120" placeholder="ข้อความจากแอดมิน" aria-label="ข้อความจากแอดมิน"><div class="control-row"><button class="action primary" id="cast-god">เสกเหตุการณ์</button></div><div class="god-history" id="god-history"></div></section>
+        <section class="box"><h3>คู่หูโตไปกับ streak</h3><p>ร่างหลักโตตาม streak สูงสุดที่เคยทำได้ เมื่อพักไปแล้วไม่หดกลับ</p><div class="growth-track" id="growth-track"></div><div class="control-row"><label for="growth-days">ลองดูที่</label><input id="growth-days" type="range" min="0" max="100" value="0"><strong id="growth-label">0 วัน</strong></div><p class="small-note" id="growth-detail"></p></section></div>
+      </div>
+      <div class="experience-grid"><section class="box"><h3>กล่องของขวัญส่งต่อได้</h3><p>แอดมินแจกกล่องให้ใครก็ได้ เจ้าของเลือกเปิดเองหรือส่งต่อก่อนเปิด ของที่มีแล้วจะไม่ออกซ้ำ</p><div class="gift-card" id="gift-card"></div><div class="control-row"><button class="action primary" id="grant-box">แอดมินส่งกล่องให้ฉัน</button><button class="action" id="open-box">เปิดกล่อง</button></div><div class="control-row"><label for="gift-recipient">ส่งต่อให้</label><input id="gift-recipient" value="learner-002" maxlength="40"><button class="action" id="transfer-box">ส่งต่อกล่อง</button></div><p class="small-note" id="gift-status" role="status"></p></section><section class="box"><h3>สมุดสะสมของฉัน</h3><p>ของจากกล่องเป็นของสะสมถาวร เปลี่ยนใช้ทีหลังได้ ไม่ใช้พลังดูแลเพื่อเปิดกล่อง</p><div class="pill-list" id="collection-list"></div><p class="small-note">ต้นแบบนี้แสดงการไหลของของขวัญเท่านั้น ยังไม่บันทึกลงบัญชีจริง</p></section></div>
+    </section>
+    <p class="note">นี่เป็นต้นแบบ 2D สำหรับทดลองทิศทาง ยังไม่เชื่อมบัญชี ฐานข้อมูล สิทธิ์แอดมิน หรือฟาร์ม 3D จริง อัตราตั้งต้นในต้นแบบคือปกติ 83% มีมแรร์ 15% และเลเจนดารี 2% ไม่จำกัดจำนวนต่อรุ่น ระบบจริงต้องให้ backend เป็นผู้สุ่มและรับประกันว่า DNA ไม่ซ้ำกัน</p>
+  </main>
+  <script>
+    const CharacterCore = (() => {
+      const bodies = ["pebble", "bean", "drop", "tall", "pillow", "pear", "squish", "cloud", "boxy", "wobble", "mushroom", "dumpling"];
+      const ears = ["round", "point", "horn", "antenna", "leaf", "cat", "none"];
+      const eyes = ["dots", "oval", "sleepy", "spark", "wide"];
+      const marks = ["star", "spots", "stripe", "heart", "moon", "none"];
+      const commonPatterns = ["freckles", "polka", "stripes", "waves", "marble", "checker", "sprouts", "hearts", "bubbles", "zigzag", "mosaic", "constellation", "paint", "petals"];
+      const rarePatterns = ["egg", "potato", "ramen", "error404"];
+      const patternNames = { freckles: "กระดาว", polka: "จุดกลม", stripes: "ริ้วขนม", waves: "คลื่นนุ่ม", marble: "หินอ่อน", checker: "ตารางจิ๋ว", sprouts: "ยอดอ่อน", hearts: "หัวใจ", bubbles: "ฟองสบู่", zigzag: "ซิกแซก", mosaic: "โมเสก", constellation: "กลุ่มดาว", paint: "สีหก", petals: "กลีบดอก", egg: "ไข่ดาวหลงทาง", potato: "มันฝรั่งฮาเฮ", ramen: "บะหมี่วน", error404: "บั๊ก 404" };
+      const palettes = [
+        { name: "Mint", body: "#8cdab7", shade: "#56ac94", accent: "#f49b7c" },
+        { name: "Peach", body: "#f6ac8c", shade: "#df7e78", accent: "#ffdc76" },
+        { name: "Lilac", body: "#c7a5e9", shade: "#9d7bc9", accent: "#f6c4a1" },
+        { name: "Honey", body: "#f1c966", shade: "#d6a15d", accent: "#82c6b9" },
+        { name: "Lagoon", body: "#86cade", shade: "#5fa2c2", accent: "#f4a0ad" },
+        { name: "Berry", body: "#d99dbc", shade: "#b76e9b", accent: "#f2d16f" },
+        { name: "Moss", body: "#a6c887", shade: "#779e76", accent: "#f5ae80" },
+        { name: "Cloud", body: "#e5d7c8", shade: "#b9aab5", accent: "#96c8b5" }
+      ];
+      const outfits = [
+        { id: "none", name: "ตัวเปล่า" }, { id: "kitty", name: "ที่คาดหูแมว" }, { id: "cozy", name: "วันสบาย" },
+        { id: "garden", name: "นักปลูก" }, { id: "bookworm", name: "หนอนหนังสือ" },
+        { id: "explorer", name: "นักสำรวจ" }, { id: "starlight", name: "นักดูดาว" },
+        { id: "music", name: "สายดนตรี" }, { id: "rainy", name: "วันฝนตก" },
+        { id: "party", name: "วันฉลอง" }, { id: "little-chef", name: "เชฟตัวจิ๋ว" }
+      ];
+      function hash(value) { let h = 2166136261; for (const char of value) { h ^= char.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+      function random(seed) { let state = hash(seed); return () => { state += 0x6D2B79F5; let x = state; x = Math.imul(x ^ x >>> 15, x | 1); x ^= x + Math.imul(x ^ x >>> 7, x | 61); return ((x ^ x >>> 14) >>> 0) / 4294967296; }; }
+      function createDNA(seed) { const next = random(seed); const pick = list => list[Math.floor(next() * list.length)]; const body = pick(bodies), ear = pick(ears), eye = pick(eyes), mark = pick(marks), palette = pick(palettes).name; const patternSeed = Math.floor(next() * 1000000); const rarityRoll = next(); const rarity = rarityRoll < .83 ? "normal" : rarityRoll < .98 ? "meme_rare" : "legendary"; const rare = rarity !== "normal"; const pattern = pick(rare ? rarePatterns : commonPatterns); return { body, ears: ear, eyes: eye, mark, palette, pattern, patternSeed, rarity, rare }; }
+      function fingerprint(dna) { return [dna.body, dna.ears, dna.eyes, dna.mark, dna.palette, dna.pattern, dna.patternSeed].join(":"); }
+      function issue(id, used) { for (let attempt = 0; attempt < 100000; attempt++) { const seed = `baro-v2:${id}:${attempt}`; const dna = createDNA(seed); const key = fingerprint(dna); if (!used.has(key)) return { id, seed, dna, fingerprint: key, serial: "B-" + hash(seed).toString(16).padStart(8, "0").toUpperCase(), outfit: "none", attempt }; } throw new Error("ชุดลักษณะเต็มแล้ว"); }
+      return { issue, outfits, random, hash, rarePatterns, patternName: id => patternNames[id], palette: name => palettes.find(item => item.name === name) };
+    })();
+
+    const bodyPaths = {
+      pebble: "M110 71 C155 69 187 101 182 154 C178 205 156 228 111 230 C64 228 41 205 38 153 C35 105 68 72 110 71 Z",
+      bean: "M92 67 C151 55 187 93 182 151 C178 209 143 239 95 230 C52 223 37 184 41 139 C44 101 59 75 92 67 Z",
+      drop: "M110 53 C129 83 177 102 180 150 C183 198 157 231 110 231 C63 231 37 198 40 150 C43 102 91 83 110 53 Z",
+      tall: "M105 59 C149 57 172 91 174 145 L177 193 C177 218 153 231 110 231 C67 231 43 218 43 193 L46 145 C48 91 71 61 105 59 Z",
+      pillow: "M73 80 C91 65 128 65 148 78 C174 65 191 99 179 127 C193 154 184 194 164 213 C142 232 79 234 56 214 C36 196 31 156 42 127 C29 99 49 66 73 80 Z",
+      pear: "M110 65 C134 67 145 83 148 107 C168 116 184 144 183 174 C181 211 153 230 110 231 C67 230 39 211 37 174 C36 144 52 116 72 107 C75 83 86 67 110 65 Z",
+      squish: "M91 93 C115 73 151 77 168 100 C193 110 195 155 179 174 C187 204 160 232 124 224 C96 238 65 226 58 211 C25 207 26 169 41 152 C29 124 55 92 91 93 Z",
+      cloud: "M77 91 C89 69 117 66 132 84 C154 68 183 88 177 112 C201 122 202 154 181 168 C196 194 170 227 145 219 C119 239 91 228 82 220 C51 227 29 200 43 176 C20 161 28 127 54 117 C50 105 60 92 77 91 Z",
+      boxy: "M61 76 Q110 68 161 76 Q178 85 177 109 L181 194 Q182 224 154 228 L65 228 Q38 224 39 194 L43 109 Q42 85 61 76 Z",
+      wobble: "M95 68 C119 83 142 58 159 87 C181 97 167 123 181 145 C200 174 171 187 170 207 C160 240 133 220 111 230 C85 241 65 222 57 207 C35 195 45 170 38 151 C32 122 52 112 56 88 C67 69 77 81 95 68 Z",
+      mushroom: "M110 66 C150 67 181 88 184 126 Q185 146 160 150 L165 194 Q164 228 110 230 Q56 228 55 194 L60 150 Q35 146 36 126 C39 88 70 67 110 66 Z",
+      dumpling: "M110 72 Q151 69 178 112 Q186 143 173 175 Q190 194 172 215 Q147 235 110 225 Q73 235 48 215 Q30 194 47 175 Q34 143 42 112 Q69 69 110 72 Z"
+    };
+    function earsMarkup(dna, palette) {
+      const fill = palette.body, shade = palette.shade;
+      if (dna.ears === "round") return `<circle cx="66" cy="80" r="24" fill="${fill}" stroke="#292542" stroke-width="5"/><circle cx="154" cy="80" r="24" fill="${fill}" stroke="#292542" stroke-width="5"/><circle cx="66" cy="80" r="10" fill="${shade}"/><circle cx="154" cy="80" r="10" fill="${shade}"/>`;
+      if (dna.ears === "point") return `<path d="M55 105 L55 40 Q78 51 88 88 Z M165 105 L165 40 Q142 51 132 88 Z" fill="${fill}" stroke="#292542" stroke-width="5" stroke-linejoin="round"/>`;
+      if (dna.ears === "horn") return `<path d="M65 94 L76 38 Q87 63 88 89 Z M155 94 L144 38 Q133 63 132 89 Z" fill="${palette.accent}" stroke="#292542" stroke-width="5" stroke-linejoin="round"/>`;
+      if (dna.ears === "antenna") return `<path d="M75 88 Q53 48 54 36 M145 88 Q167 48 166 36" fill="none" stroke="#292542" stroke-width="5"/><circle cx="54" cy="34" r="12" fill="${palette.accent}" stroke="#292542" stroke-width="4"/><circle cx="166" cy="34" r="12" fill="${palette.accent}" stroke="#292542" stroke-width="4"/>`;
+      if (dna.ears === "leaf") return `<path d="M80 94 Q22 85 42 43 Q83 47 80 94 Z M140 94 Q198 85 178 43 Q137 47 140 94 Z" fill="${shade}" stroke="#292542" stroke-width="5" stroke-linejoin="round"/>`;
+      if (dna.ears === "cat") return `<path d="M55 107 Q48 80 58 41 Q75 48 93 87 Z M165 107 Q172 80 162 41 Q145 48 127 87 Z" fill="${fill}" stroke="#292542" stroke-width="5" stroke-linejoin="round"/><path d="M65 81 Q64 65 66 58 Q78 64 83 81 Z M155 81 Q156 65 154 58 Q142 64 137 81 Z" fill="${palette.accent}" opacity=".85"/>`;
+      return "";
+    }
+    function eyesMarkup(dna) {
+      if (dna.eyes === "sleepy") return `<path d="M74 139 Q87 150 100 139 M120 139 Q133 150 146 139" fill="none" stroke="#292542" stroke-width="6" stroke-linecap="round"/>`;
+      if (dna.eyes === "spark") return `<path d="M87 126 L91 136 L101 140 L91 144 L87 154 L83 144 L73 140 L83 136 Z M133 126 L137 136 L147 140 L137 144 L133 154 L129 144 L119 140 L129 136 Z" fill="#292542"/>`;
+      if (dna.eyes === "wide") return `<ellipse cx="87" cy="140" rx="14" ry="17" fill="#292542"/><ellipse cx="133" cy="140" rx="14" ry="17" fill="#292542"/><circle cx="82" cy="134" r="5" fill="white"/><circle cx="128" cy="134" r="5" fill="white"/>`;
+      if (dna.eyes === "oval") return `<ellipse cx="87" cy="140" rx="8" ry="13" fill="#292542"/><ellipse cx="133" cy="140" rx="8" ry="13" fill="#292542"/>`;
+      return `<circle cx="87" cy="140" r="8" fill="#292542"/><circle cx="133" cy="140" r="8" fill="#292542"/>`;
+    }
+    function markMarkup(dna, palette) {
+      const fill = palette.accent;
+      if (dna.mark === "star") return `<path d="M110 176 L115 188 L128 189 L118 198 L121 211 L110 204 L99 211 L102 198 L92 189 L105 188 Z" fill="${fill}"/>`;
+      if (dna.mark === "spots") return `<circle cx="88" cy="185" r="9" fill="${fill}"/><circle cx="129" cy="197" r="7" fill="${fill}"/><circle cx="114" cy="177" r="4" fill="${fill}"/>`;
+      if (dna.mark === "stripe") return `<path d="M74 189 Q110 210 147 185" fill="none" stroke="${fill}" stroke-width="11" stroke-linecap="round"/>`;
+      if (dna.mark === "heart") return `<path d="M110 207 C77 190 92 168 110 182 C128 168 143 190 110 207 Z" fill="${fill}"/>`;
+      if (dna.mark === "moon") return `<path d="M119 176 A17 17 0 1 0 127 203 A14 14 0 1 1 119 176 Z" fill="${fill}"/>`;
+      return "";
+    }
+    function patternMarkup(dna, palette) {
+      const next = CharacterCore.random(`pattern:${dna.patternSeed}`);
+      const points = count => Array.from({ length: count }, () => ({ x: 54 + next() * 112, y: 100 + next() * 110, size: 3 + next() * 8, turn: Math.round(next() * 60 - 30) }));
+      const accent = palette.accent, shade = palette.shade;
+      if (dna.pattern === "freckles") return points(26).map(({ x, y, size }) => `<circle cx="${x}" cy="${y}" r="${size * .34}" fill="${shade}" opacity=".68"/>`).join("");
+      if (dna.pattern === "polka") return points(13).map(({ x, y, size }) => `<circle cx="${x}" cy="${y}" r="${size}" fill="${accent}" opacity=".78"/>`).join("");
+      if (dna.pattern === "stripes") return Array.from({ length: 6 }, (_, i) => `<path d="M${34 + i * 27} 92 Q${59 + i * 19} ${140 + next() * 34} ${30 + i * 29} 232" fill="none" stroke="${shade}" stroke-width="${5 + next() * 7}" opacity=".53" stroke-linecap="round"/>`).join("");
+      if (dna.pattern === "waves") return Array.from({ length: 5 }, (_, i) => `<path d="M40 ${110 + i * 27} Q75 ${92 + i * 27 + next() * 12} 110 ${110 + i * 27} T185 ${110 + i * 27}" fill="none" stroke="${i % 2 ? accent : shade}" stroke-width="6" opacity=".63" stroke-linecap="round"/>`).join("");
+      if (dna.pattern === "marble") return Array.from({ length: 6 }, (_, i) => `<path d="M${44 + i * 27} 94 C${77 + i * 20} 135 ${27 + i * 32} 168 ${69 + i * 20} 236" fill="none" stroke="${i % 2 ? accent : shade}" stroke-width="${3 + next() * 5}" opacity=".65"/>`).join("");
+      if (dna.pattern === "checker") return Array.from({ length: 28 }, (_, i) => `<rect x="${49 + i % 7 * 20 + next() * 3}" y="${103 + Math.floor(i / 7) * 28}" width="11" height="11" rx="2" fill="${i % 3 ? shade : accent}" opacity=".54" transform="rotate(${Math.round(next() * 15 - 7)} ${58 + i % 7 * 20} ${110 + Math.floor(i / 7) * 28})"/>`).join("");
+      if (dna.pattern === "sprouts") return points(10).map(({ x, y, size, turn }) => `<g transform="translate(${x} ${y}) rotate(${turn})"><path d="M0 ${size} L0 -${size} M0 0 Q-${size * 1.7} -${size * 1.4} -${size} -${size * 2} Q0 -${size * 1.4} 0 0 M0 0 Q${size * 1.7} -${size * 1.4} ${size} -${size * 2} Q0 -${size * 1.4} 0 0" fill="${shade}" stroke="${shade}" stroke-width="2"/></g>`).join("");
+      if (dna.pattern === "hearts") return points(12).map(({ x, y, size, turn }) => `<path d="M${x} ${y + size} C${x - size * 2} ${y} ${x - size} ${y - size} ${x} ${y} C${x + size} ${y - size} ${x + size * 2} ${y} ${x} ${y + size} Z" fill="${accent}" opacity=".75" transform="rotate(${turn} ${x} ${y})"/>`).join("");
+      if (dna.pattern === "bubbles") return points(16).map(({ x, y, size }) => `<circle cx="${x}" cy="${y}" r="${size}" fill="none" stroke="#fffaf0" stroke-width="3" opacity=".8"/>`).join("");
+      if (dna.pattern === "zigzag") return Array.from({ length: 6 }, (_, i) => `<path d="M40 ${110 + i * 21} l25 -10 24 12 25 -11 24 10 26 -11 23 10" fill="none" stroke="${i % 2 ? accent : shade}" stroke-width="5" opacity=".64" stroke-linejoin="round"/>`).join("");
+      if (dna.pattern === "mosaic") return points(22).map(({ x, y, size, turn }, i) => `<rect x="${x}" y="${y}" width="${size * 1.7}" height="${size * 1.4}" rx="2" fill="${i % 3 ? shade : accent}" opacity=".62" transform="rotate(${turn} ${x} ${y})"/>`).join("");
+      if (dna.pattern === "constellation") { const stars = points(11); return `${stars.slice(1).map((point, i) => `<path d="M${stars[i].x} ${stars[i].y} L${point.x} ${point.y}" stroke="#fffaf0" stroke-width="2" opacity=".65"/>`).join("")}${stars.map(({ x, y, size }) => `<circle cx="${x}" cy="${y}" r="${size * .4}" fill="#fffaf0"/>`).join("")}`; }
+      if (dna.pattern === "paint") return points(7).map(({ x, y, size }, i) => `<path d="M${x} ${y - size} Q${x + size * 1.7} ${y - size * .4} ${x + size} ${y + size} Q${x - size * .2} ${y + size * 1.8} ${x - size * 1.4} ${y + size * .4} Q${x - size * 1.3} ${y - size * .9} ${x} ${y - size} Z" fill="${i % 2 ? accent : shade}" opacity=".62"/>`).join("");
+      if (dna.pattern === "petals") return points(14).map(({ x, y, size, turn }) => `<ellipse cx="${x}" cy="${y}" rx="${size * .55}" ry="${size * 1.25}" fill="${accent}" opacity=".7" transform="rotate(${turn} ${x} ${y})"/>`).join("");
+      if (dna.pattern === "egg") return points(5).map(({ x, y, size, turn }) => `<g transform="translate(${x} ${y}) rotate(${turn})"><path d="M-${size * 1.5} 0 Q-${size} -${size * 1.7} 0 -${size} Q${size * 1.7} -${size * 1.2} ${size * 1.4} 0 Q${size} ${size * 1.6} 0 ${size} Q-${size * 1.6} ${size * 1.1} -${size * 1.5} 0 Z" fill="#fffaf0" stroke="#c49baf" stroke-width="2"/><circle r="${size * .53}" fill="#f3ba48"/></g>`).join("");
+      if (dna.pattern === "potato") return `${points(20).map(({ x, y, size }) => `<circle cx="${x}" cy="${y}" r="${size * .24}" fill="#987352" opacity=".7"/>`).join("")}<path d="M77 193 Q84 207 95 192 M126 192 Q136 208 145 191" fill="none" stroke="#8e654a" stroke-width="4" stroke-linecap="round"/><path d="M98 204 Q110 214 122 204" fill="none" stroke="#8e654a" stroke-width="3" stroke-linecap="round"/>`;
+      if (dna.pattern === "ramen") return `${Array.from({ length: 5 }, (_, i) => `<path d="M${71 + i * 18} 104 q-11 19 0 34 t0 37" fill="none" stroke="#f7e4a8" stroke-width="6" opacity=".9"/>`).join("")}<path d="M76 182 Q110 193 144 182 L134 217 Q109 227 86 217 Z" fill="#fff5da" stroke="#8c5d72" stroke-width="4"/><path d="M92 200 Q110 205 128 200" fill="none" stroke="#ed9b86" stroke-width="4"/>`;
+      if (dna.pattern === "error404") return `${points(16).map(({ x, y, size }, i) => `<rect x="${x}" y="${y}" width="${size}" height="${size}" fill="${i % 2 ? accent : shade}" opacity=".6"/>`).join("")}<rect x="75" y="183" width="70" height="34" rx="5" fill="#fffaf0" stroke="#292542" stroke-width="3"/><text aria-hidden="true" x="110" y="207" text-anchor="middle" font-size="20" font-family="monospace" font-weight="900" fill="#292542">404</text>`;
+      return "";
+    }
+    function eggHeadPinMarkup(dna) {
+      if (dna.pattern !== "egg") return "";
+      const side = dna.patternSeed % 2 ? 1 : -1;
+      return `<g transform="translate(110 0) scale(${side} 1) translate(-110 0)"><path d="M148 96 Q153 72 165 58" fill="none" stroke="#7e6c79" stroke-width="4" stroke-linecap="round"/><path d="M151 90 Q159 84 163 87" fill="none" stroke="#fff5d4" stroke-width="3"/><path d="M150 49 Q157 39 167 44 Q180 37 186 48 Q192 58 181 64 Q176 75 165 69 Q151 72 149 62 Q142 57 150 49 Z" fill="#fffaf0" stroke="#292542" stroke-width="3"/><circle cx="167" cy="56" r="9" fill="#f5bd4f"/><circle cx="164" cy="53" r="3" fill="#fff1aa" opacity=".7"/></g>`;
+    }
+    function outfitMarkup(outfit, palette, dna) {
+      const scarf = `<path d="M59 177 Q110 198 161 177 L156 195 Q110 213 64 195 Z" fill="${palette.accent}" stroke="#292542" stroke-width="4"/><path d="M139 194 L150 229 L132 225 L123 198" fill="${palette.accent}" stroke="#292542" stroke-width="4"/><path d="M141 211 L148 214" stroke="#fff7de" stroke-width="3"/>`;
+      const satchel = `<path d="M65 119 Q101 183 149 213" fill="none" stroke="#292542" stroke-width="9"/><path d="M132 201 Q163 196 170 216 L168 235 Q150 246 132 232 Z" fill="#ad7956" stroke="#292542" stroke-width="4"/><circle cx="151" cy="216" r="4" fill="#ffda75"/>`;
+      const glasses = `<circle cx="86" cy="140" r="18" fill="#ffffff22" stroke="#292542" stroke-width="5"/><circle cx="134" cy="140" r="18" fill="#ffffff22" stroke="#292542" stroke-width="5"/><path d="M104 137 Q110 132 116 137" fill="none" stroke="#292542" stroke-width="5"/>`;
+      const flower = `<path d="M155 91 L169 71" stroke="#4d8b6f" stroke-width="4"/><circle cx="169" cy="70" r="6" fill="#ffd56d"/><circle cx="169" cy="58" r="7" fill="#fff4d9"/><circle cx="180" cy="66" r="7" fill="#fff4d9"/><circle cx="175" cy="78" r="7" fill="#fff4d9"/><circle cx="158" cy="77" r="7" fill="#fff4d9"/><circle cx="159" cy="63" r="7" fill="#fff4d9"/>`;
+      const bow = `<path d="M93 91 Q62 65 62 98 Q67 118 94 102 L110 98 L126 102 Q153 118 158 98 Q158 65 127 91 Z" fill="${palette.accent}" stroke="#292542" stroke-width="4"/><circle cx="110" cy="98" r="8" fill="#fff1cb" stroke="#292542" stroke-width="3"/>`;
+      if (outfit === "kitty") return dna.ears === "cat"
+        ? `<path d="M57 105 Q70 91 85 101 Q77 116 57 105 Z" fill="#f8d674" stroke="#292542" stroke-width="3"/><circle cx="72" cy="103" r="5" fill="#fffaf0"/><path d="M69 183 Q110 198 151 183" fill="none" stroke="#9d83bb" stroke-width="7"/><circle cx="110" cy="193" r="10" fill="#f8d674" stroke="#292542" stroke-width="3"/><path d="M108 195 Q110 198 112 195" fill="none" stroke="#292542" stroke-width="2"/>`
+        : `<path d="M60 103 Q110 76 160 103" fill="none" stroke="#9d83bb" stroke-width="7" stroke-linecap="round"/><path d="M54 101 L61 54 Q78 62 84 87 Z M166 101 L159 54 Q142 62 136 87 Z" fill="#b595d3" stroke="#292542" stroke-width="4" stroke-linejoin="round"/><path d="M63 81 L65 65 L74 82 Z M157 81 L155 65 L146 82 Z" fill="#f5a4ae"/><circle cx="110" cy="198" r="10" fill="#f8d674" stroke="#292542" stroke-width="3"/>`;
+      if (outfit === "cozy") return `<path d="M57 100 Q67 64 110 66 Q153 64 163 100 Z" fill="#a88bc8" stroke="#292542" stroke-width="4"/><path d="M53 98 Q110 110 167 98" fill="none" stroke="#292542" stroke-width="12" stroke-linecap="round"/><circle cx="110" cy="63" r="13" fill="#f9d27d" stroke="#292542" stroke-width="3"/>${scarf}`;
+      if (outfit === "garden") return `${flower}${satchel}<path d="M143 215 L150 205 L157 215" fill="none" stroke="#fff5cd" stroke-width="3"/>`;
+      if (outfit === "bookworm") return `${glasses}${scarf}<path d="M147 213 L174 205 L178 231 L152 237 Z" fill="#fff2d1" stroke="#292542" stroke-width="4"/><path d="M159 215 L163 230 M167 213 L171 228" stroke="#c395a6" stroke-width="2"/>`;
+      if (outfit === "explorer") return `${satchel}<path d="M57 105 Q110 83 163 105 L160 116 Q110 103 60 116 Z" fill="#f0c273" stroke="#292542" stroke-width="4"/><path d="M79 99 L96 88 L111 101" fill="none" stroke="#fff0bd" stroke-width="3"/>`;
+      if (outfit === "starlight") return `<path d="M62 111 Q110 78 158 111" fill="none" stroke="#292542" stroke-width="6"/><path d="M110 74 L115 87 L129 88 L118 97 L121 110 L110 102 L99 110 L102 97 L91 88 L105 87 Z" fill="#f7dc78" stroke="#292542" stroke-width="3"/><circle cx="159" cy="188" r="13" fill="#fff3cb" stroke="#292542" stroke-width="3"/><path d="M159 180 L161 186 L167 188 L161 190 L159 196 L157 190 L151 188 L157 186 Z" fill="#efa478"/>`;
+      if (outfit === "music") return `<path d="M63 139 Q58 90 110 87 Q162 90 157 139" fill="none" stroke="#292542" stroke-width="9"/><rect x="49" y="127" width="20" height="34" rx="9" fill="#bba6dc" stroke="#292542" stroke-width="4"/><rect x="151" y="127" width="20" height="34" rx="9" fill="#bba6dc" stroke="#292542" stroke-width="4"/><path d="M144 204 L144 185 L158 181 L158 200" fill="none" stroke="#292542" stroke-width="3"/><circle cx="139" cy="205" r="5" fill="#f7da7b"/><circle cx="153" cy="201" r="5" fill="#f7da7b"/>`;
+      if (outfit === "rainy") return `<path d="M54 102 Q71 57 110 62 Q149 57 166 102 L180 108 Q110 124 40 108 Z" fill="#f3c96d" stroke="#292542" stroke-width="4"/><path d="M60 188 Q110 203 160 188 L169 221 Q109 239 51 221 Z" fill="#82b5c3" stroke="#292542" stroke-width="4"/><circle cx="76" cy="211" r="4" fill="#fff4db"/><circle cx="144" cy="211" r="4" fill="#fff4db"/>`;
+      if (outfit === "party") return `${bow}<path d="M145 192 L153 206 L170 207 L157 217 L161 234 L145 225 L130 234 L134 217 L121 207 L138 206 Z" fill="#f6d26e" stroke="#292542" stroke-width="3"/>`;
+      if (outfit === "little-chef") return `<path d="M69 103 Q56 91 65 76 Q70 69 79 72 Q84 55 101 61 Q109 49 124 61 Q141 55 146 73 Q161 74 158 91 Q156 100 151 103 Z" fill="#fffaf0" stroke="#292542" stroke-width="4"/><path d="M68 101 Q110 109 152 101 L151 115 Q110 123 69 115 Z" fill="#fffaf0" stroke="#292542" stroke-width="4"/><path d="M79 190 Q110 206 141 190 L145 226 Q110 238 75 226 Z" fill="#fffaf0" stroke="#292542" stroke-width="4"/><circle cx="110" cy="214" r="6" fill="${palette.accent}"/>`;
+      return "";
+    }
+    function renderCharacter(character, instance = "card") {
+      const dna = character.dna, palette = CharacterCore.palette(dna.palette);
+      const clipId = `body-${character.serial}-${instance}`;
+      return `<svg viewBox="0 0 220 280" role="img" aria-label="ตัวละคร Baro สี${dna.palette} ลาย${CharacterCore.patternName(dna.pattern)}${dna.rare ? " แรร์" : ""}">
+        <defs><clipPath id="${clipId}"><path d="${bodyPaths[dna.body]}"/></clipPath></defs>
+        <ellipse cx="110" cy="256" rx="69" ry="10" fill="#25223d" opacity=".16"/>
+        <g class="twinkle"><path d="M25 89 L28 97 L36 100 L28 103 L25 111 L22 103 L14 100 L22 97 Z" fill="#fffaf0"/><circle cx="191" cy="74" r="4" fill="#fffaf0"/></g>
+        <g class="buddy">
+        <path d="M72 213 Q58 245 68 247 Q86 253 91 222 M148 213 Q162 245 152 247 Q134 253 129 222" fill="${palette.shade}" stroke="#292542" stroke-width="5" stroke-linejoin="round"/>
+        <path d="M72 241 L84 244 M136 244 L148 241" stroke="#292542" stroke-width="3" stroke-linecap="round"/>
+        ${earsMarkup(dna, palette)}
+        <path d="M55 155 Q23 173 35 199 Q46 206 59 181 M165 155 Q197 173 185 199 Q174 206 161 181" fill="${palette.body}" stroke="#292542" stroke-width="5" stroke-linejoin="round"/>
+        <path d="${bodyPaths[dna.body]}" fill="${palette.body}" stroke="#292542" stroke-width="5" stroke-linejoin="round"/>
+        ${dna.rare ? markMarkup(dna, palette) : ""}
+        <g clip-path="url(#${clipId})">${patternMarkup(dna, palette)}</g>
+        <path d="M57 184 Q70 216 107 219" fill="none" stroke="${palette.shade}" stroke-width="9" opacity=".35" stroke-linecap="round"/>
+        <path d="M61 113 Q74 83 104 82" fill="none" stroke="#fffaf0" stroke-width="6" opacity=".38" stroke-linecap="round"/>
+        <path d="M78 181 Q87 177 95 181 M125 181 Q133 177 142 181" fill="none" stroke="#fffaf0" stroke-width="3" opacity=".5" stroke-linecap="round"/>
+        ${dna.rare ? "" : markMarkup(dna, palette)}
+        <circle cx="58" cy="162" r="8" fill="${palette.accent}" opacity=".6"/><circle cx="162" cy="162" r="8" fill="${palette.accent}" opacity=".6"/>
+        <circle cx="51" cy="167" r="2" fill="#fffaf0"/><circle cx="65" cy="169" r="2" fill="#fffaf0"/><circle cx="155" cy="169" r="2" fill="#fffaf0"/><circle cx="169" cy="167" r="2" fill="#fffaf0"/>
+        <g class="eyes">${eyesMarkup(dna)}</g>
+        <path d="M101 161 Q110 170 119 161" fill="none" stroke="#292542" stroke-width="4" stroke-linecap="round"/>
+        ${outfitMarkup(character.outfit, palette, dna)}
+        ${eggHeadPinMarkup(dna)}
+        </g>
+      </svg>`;
+    }
+    function escapeHTML(value) { return String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]); }
+
+    const state = { byLearner: new Map(), used: new Set(), current: null, message: "ลองเปิดตัวละครคนแรกได้เลย", nextLearner: 2, rareIndex: 0, scenario: 0, step: 0, showcase: new Map(), reactions: new Map(), boxes: [], collections: new Map(), godEvents: [], viewedEvent: null, giftMessage: "เปิดตัวละครก่อน แล้วลองรับกล่องจากแอดมิน", showcaseMessage: "เลือกตัวละครก่อนปักไว้บนลาน" };
+    const giftPool = ["การ์ด · สวนดวงดาว", "การ์ด · ฟ้าลูกกวาด", "การ์ด · คืนจันทร์", "พร็อพ · ไข่ดาวปักหัว", "พร็อพ · แมวซ่อนตัว", "พร็อพ · แว่นหัวโต", "ท่า · เด้งดึ๋ง", "ท่า · ล้มแบบตั้งใจ", "อีโมต · ส่งหัวใจ", "อีโมต · งงเป็นไก่"];
+    const godKinds = { stars: "ฝนดาวแห่งกำลังใจ", giant: "GOD ตัวโตบังจอ", parade: "ขบวนเต้นหลุดโลก" };
+    const growthMilestones = [0, 1, 3, 7, 14, 21, 30, 50, 75, 100];
+    const growthForms = [{ days: 0, name: "ตัวจิ๋ว" }, { days: 7, name: "ตัวป่วน" }, { days: 30, name: "ตัวมั่นใจ" }, { days: 75, name: "ตัวในตำนาน" }];
+    const scenarios = [
+      { title: "เจอครั้งแรก", description: "แจกตัวละครถาวรให้คนหนึ่ง แล้วลองดูว่าเขาได้อะไร", steps: [{ label: "เปิดให้ learner-001", run: () => showLearner("learner-001") }] },
+      { title: "กลับมาอีกวัน", description: "คนเดิมกลับมาแล้วต้องได้ตัวเดิม ไม่ถูกสุ่มใหม่", steps: [{ label: "เปิดให้ learner-001", run: () => showLearner("learner-001") }, { label: "กลับมาเปิดอีกครั้ง", run: () => showLearner("learner-001") }] },
+      { title: "แต่งตัว", description: "ของแต่งเปลี่ยนได้ แต่ลักษณะถาวรและรหัสยังเดิม", steps: [{ label: "เปิดให้ learner-001", run: () => showLearner("learner-001") }, { label: "เปลี่ยนของแต่ง", run: changeOutfit }] },
+      { title: "หูแมว", description: "หูแมวติดตัวกับที่คาดหูแมวเป็นคนละอย่าง ตัวที่มีหูแล้วจะได้กระดิ่งแทน", steps: [{ label: "ดูตัวที่มีหูแมวติดตัว", run: findCat }, { label: "ลองใส่ที่คาดหูแมว", run: () => chooseOutfit("kitty") }] },
+      { title: "ลายแรร์", description: "ไล่ดูตัวอย่างลายแรร์ แล้วลองเปลี่ยนชุดดูว่าลายยังติดตัว", steps: [{ label: "ดูแรร์แบบแรก", run: findRare }, { label: "เปลี่ยนของแต่ง", run: changeOutfit }] },
+      { title: "ทั้งรุ่น", description: "แจกให้ 120 คน แล้วดูว่าชุดลักษณะซ้ำกันหรือไม่", steps: [{ label: "แจกให้ทั้งรุ่น", run: fillCohort }] }
+    ];
+    function showLearner(id) {
+      id = id.trim();
+      if (!id) { state.message = "ใส่รหัสทดสอบก่อน"; render(); return; }
+      let character = state.byLearner.get(id);
+      if (character) state.message = `${id} กลับมา: ได้ตัวเดิม ${character.serial}`;
+      else { character = CharacterCore.issue(id, state.used); state.byLearner.set(id, character); state.used.add(character.fingerprint); state.message = `${id} พบคู่หูใหม่ ${character.serial}${character.attempt ? ` · ข้ามผลซ้ำ ${character.attempt} ครั้ง` : ""}`; }
+      state.current = character;
+      document.querySelector("#learner-id").value = id;
+      document.querySelector("#showcase-message").value = state.showcase.get(id)?.message ?? "";
+      render();
+    }
+    function changeOutfit() {
+      if (!state.current) { state.message = "เปิดตัวละครก่อนจึงเปลี่ยนของแต่งได้"; render(); return; }
+      const outfits = CharacterCore.outfits;
+      const index = outfits.findIndex(item => item.id === state.current.outfit);
+      chooseOutfit(outfits[(index + 1) % outfits.length].id);
+    }
+    function chooseOutfit(id) {
+      if (!state.current) { state.message = "เปิดตัวละครก่อนจึงเลือกของแต่งได้"; render(); return; }
+      const look = CharacterCore.outfits.find(item => item.id === id);
+      if (!look) return;
+      state.current.outfit = look.id;
+      state.message = `เปลี่ยนเป็น ${look.name} · ตัวตนและรหัสไม่เปลี่ยน`;
+      render();
+    }
+    function findRare() {
+      const target = CharacterCore.rarePatterns[state.rareIndex % CharacterCore.rarePatterns.length];
+      for (let n = 1; n <= 1000; n++) {
+        const id = `rare-demo-${String(n).padStart(3, "0")}`;
+        const character = state.byLearner.get(id) ?? CharacterCore.issue(id, state.used);
+        if (character.dna.pattern === target) { showLearner(id); state.rareIndex++; state.message = `ตัวอย่างลายแรร์ ${CharacterCore.patternName(target)} · ปุ่มนี้พาไล่ดูแบบ ไม่ใช่สิทธิ์เลือกแรร์ในเกมจริง`; render(); return; }
+      }
+      state.message = "ยังไม่เจอตัวอย่างลายแรร์ในชุดทดสอบนี้";
+      render();
+    }
+    function findCat() {
+      for (let n = 1; n <= 100; n++) {
+        const id = `cat-demo-${String(n).padStart(3, "0")}`;
+        const character = state.byLearner.get(id) ?? CharacterCore.issue(id, state.used);
+        if (character.dna.ears === "cat") { showLearner(id); state.message = "นี่คือหูแมวติดตัวใน DNA ลองลุคที่คาดหูแมวเพื่อดูโบว์กับกระดิ่งแทน"; render(); return; }
+      }
+      state.message = "ยังไม่เจอตัวอย่างหูแมวในชุดทดสอบนี้";
+      render();
+    }
+    function fillCohort() {
+      for (let n = 1; n <= 120; n++) { const id = `learner-${String(n).padStart(3, "0")}`; if (!state.byLearner.has(id)) { const character = CharacterCore.issue(id, state.used); state.byLearner.set(id, character); state.used.add(character.fingerprint); } }
+      state.current = state.byLearner.get("learner-001");
+      state.message = `แจกให้รุ่นทดสอบ 120 คนแล้ว · รวมตัวอย่างอื่น ${state.byLearner.size} ตัว · พบลายแรร์ ${[...state.byLearner.values()].filter(item => item.dna.rare).length} ตัว · ชุดลักษณะซ้ำ 0 ชุด`;
+      render();
+    }
+    function reset() { state.byLearner.clear(); state.used.clear(); state.showcase.clear(); state.reactions.clear(); state.boxes = []; state.collections.clear(); state.godEvents = []; state.viewedEvent = null; state.current = null; state.nextLearner = 2; state.rareIndex = 0; state.message = "เริ่มใหม่แล้ว ข้อมูลต้นแบบถูกล้าง"; state.giftMessage = "เปิดตัวละครก่อน แล้วลองรับกล่องจากแอดมิน"; state.showcaseMessage = "เลือกตัวละครก่อนปักไว้บนลาน"; document.querySelector("#showcase-message").value = ""; render(); }
+    function selectScenario(index) { state.scenario = index; state.step = 0; reset(); render(); }
+    function seedShowcase() {
+      const examples = [
+        ["minty", "วันนี้แก้บั๊กได้แล้ว ขอเต้นหนึ่งที 🌟"],
+        ["mochi", "ใครเหนื่อย แวะมาพักข้าง ๆ กันได้นะ"],
+        ["boba", "ขอพลังใจให้ presentation พรุ่งนี้หน่อย!"],
+        ["pudding", "เพิ่งเข้าใจ useEffect แบบงง ๆ แต่ก็เย้"],
+        ["nori", "ทำทีละนิดก็ยังไปข้างหน้านะ"],
+        ["jelly", "วันนี้อยากอวดหมวกใหม่ ✨"]
+      ];
+      for (const [id, message] of examples) {
+        if (!state.byLearner.has(id)) { const character = CharacterCore.issue(id, state.used); state.byLearner.set(id, character); state.used.add(character.fingerprint); }
+        if (!state.showcase.has(id)) state.showcase.set(id, { character: state.byLearner.get(id), message });
+      }
+      state.showcaseMessage = "เพื่อนตัวอย่างมารออยู่บนลานแล้ว";
+      render();
+    }
+    function pinShowcase() {
+      if (!state.current) { state.showcaseMessage = "เปิดตัวละครก่อน แล้วค่อยปักบนลาน"; render(); return; }
+      const message = document.querySelector("#showcase-message").value.trim();
+      state.showcase.set(state.current.id, { character: state.current, message });
+      state.showcaseMessage = `ปัก ${state.current.id} ไว้บนลานแล้ว · ตัวนี้แยกจากชุดที่ equip`;
+      render();
+    }
+    function removeShowcase() {
+      if (!state.current) return;
+      state.showcase.delete(state.current.id);
+      state.showcaseMessage = `เอา ${state.current.id} ออกจากลานแล้ว`;
+      render();
+    }
+    function toggleReaction(owner, emoji) {
+      if (!state.current) { state.showcaseMessage = "เปิดตัวละครก่อนส่งรีแอ็กชัน"; render(); return; }
+      if (owner === state.current.id) { state.showcaseMessage = "ลองส่งใจให้เพื่อนตัวอื่นดูนะ"; render(); return; }
+      const key = `${owner}:${emoji}`;
+      const people = state.reactions.get(key) ?? new Set();
+      if (people.has(state.current.id)) people.delete(state.current.id); else people.add(state.current.id);
+      state.reactions.set(key, people);
+      state.showcaseMessage = `${emoji} ${people.has(state.current.id) ? "ส่งให้" : "ยกเลิกจาก"} ${owner} แล้ว`;
+      render();
+    }
+    function grantBox() {
+      if (!state.current) { state.giftMessage = "เปิดตัวละครก่อนรับกล่อง"; render(); return; }
+      const box = { id: `GIFT-${String(state.boxes.length + 1).padStart(3, "0")}`, owner: state.current.id, history: ["แอดมิน"], opened: false };
+      state.boxes.push(box);
+      state.giftMessage = `แอดมินส่ง ${box.id} ให้ ${box.owner} · เปิดหรือส่งต่อก็ได้`;
+      render();
+    }
+    function currentBox() { return state.boxes.find(box => !box.opened && box.owner === state.current?.id); }
+    function openBox() {
+      const box = currentBox();
+      if (!box) { state.giftMessage = "ไม่มีกล่องที่ยังไม่เปิดในบัญชีนี้"; render(); return; }
+      const owned = state.collections.get(box.owner) ?? new Set();
+      const eligible = giftPool.filter(item => !owned.has(item));
+      if (!eligible.length) { state.giftMessage = "มีของชุดนี้ครบแล้ว เก็บกล่องไว้หรือส่งต่อให้เพื่อนได้"; render(); return; }
+      const prize = eligible[CharacterCore.hash(`${box.id}:${box.owner}`) % eligible.length];
+      owned.add(prize);
+      state.collections.set(box.owner, owned);
+      box.opened = true;
+      state.giftMessage = `${box.owner} เปิด ${box.id} ได้ ${prize} · ไม่ซ้ำกับของที่มี`;
+      render();
+    }
+    function transferBox() {
+      const box = currentBox();
+      if (!box) { state.giftMessage = "ไม่มีกล่องที่ยังไม่เปิดให้ส่งต่อ"; render(); return; }
+      const recipient = document.querySelector("#gift-recipient").value.trim();
+      if (!recipient || recipient === box.owner) { state.giftMessage = "ใส่รหัสบัญชีผู้รับที่ต่างจากเจ้าของกล่อง"; render(); return; }
+      box.history.push(box.owner);
+      box.owner = recipient;
+      state.giftMessage = `ส่ง ${box.id} ให้ ${recipient} แล้ว · ยังไม่เปิดและส่งต่อได้อีก`;
+      render();
+    }
+    function castGod() {
+      const kind = document.querySelector("#god-kind").value;
+      const scope = document.querySelector("#god-scope").value;
+      const caption = document.querySelector("#god-message").value.trim() || "วันนี้ทุกคนเก่งมาก!";
+      const event = { id: state.godEvents.length + 1, kind, scope, caption, at: Date.now() };
+      state.godEvents.unshift(event);
+      state.viewedEvent = event.id;
+      render();
+    }
+    function renderExperience() {
+      const currentId = state.current?.id;
+      const entries = [...state.showcase.entries()].slice(0, 9);
+      document.querySelector("#showcase-grid").innerHTML = entries.length ? entries.map(([owner, entry], index) => {
+        const count = state.reactions.get(`${owner}:💜`)?.size ?? 0;
+        const pressed = state.reactions.get(`${owner}:💜`)?.has(currentId) ?? false;
+        return `<article class="showcase-buddy">${renderCharacter(entry.character, `lawn-${index}`)}<strong>${escapeHTML(owner)}</strong><p>${escapeHTML(entry.message || "แวะมานั่งเล่น")}</p><button class="reaction" data-react="${escapeHTML(owner)}" aria-pressed="${pressed}">💜 ${count}</button></article>`;
+      }).join("") : `<div class="showcase-empty">ยังไม่มีใครบนลาน · ปักคู่หูตัวแรกได้เลย</div>`;
+      document.querySelector("#showcase-status").textContent = state.showcaseMessage;
+      const box = currentBox();
+      const unopened = state.boxes.filter(item => !item.opened && item.owner === currentId).length;
+      document.querySelector("#gift-card").innerHTML = box ? `<strong>🎁 ${box.id}</strong><span>กล่องของ ${escapeHTML(box.owner)} · ยังไม่เปิด</span><small>ส่งต่อมาแล้ว ${Math.max(0, box.history.length - 1)} ครั้ง · มีกล่องรออีก ${Math.max(0, unopened - 1)} ใบ</small>` : `<strong>🎁 ยังไม่มีกล่องที่รอเปิด</strong><small>กดให้แอดมินส่งกล่องตัวอย่าง หรือเปลี่ยนรหัสไปดูผู้รับคนอื่น</small>`;
+      document.querySelector("#gift-status").textContent = state.giftMessage;
+      const collected = [...(state.collections.get(currentId) ?? new Set())];
+      document.querySelector("#collection-list").innerHTML = collected.length ? collected.map(item => `<span>${escapeHTML(item)}</span>`).join("") : `<span>ยังไม่มีของสะสมจากกล่อง</span>`;
+      const active = state.godEvents.find(item => Date.now() - item.at < 24 * 60 * 60 * 1000);
+      const viewed = state.godEvents.find(item => item.id === state.viewedEvent) ?? active;
+      document.querySelector("#god-scene").dataset.kind = viewed?.kind ?? "stars";
+      document.querySelector("#god-title").textContent = viewed ? godKinds[viewed.kind] : "ยังไม่มีเหตุการณ์";
+      document.querySelector("#god-caption").textContent = viewed ? `${viewed.caption} · ${viewed.scope === "all" ? "ทุกรุ่น" : "รุ่นนี้"}${viewed === active ? " · กำลังแสดง" : " · ดูย้อนหลัง"}` : "ลองเสกฉากแรกให้เพื่อนมาเจอ";
+      document.querySelector("#god-history").innerHTML = state.godEvents.slice(0, 5).map(item => `<button data-event="${item.id}">✦ ${godKinds[item.kind]} · ${escapeHTML(item.caption)} · ${item.scope === "all" ? "ทุกรุ่น" : "รุ่นนี้"}</button>`).join("");
+      const days = Number(document.querySelector("#growth-days").value);
+      const form = [...growthForms].reverse().find(item => days >= item.days);
+      const detail = [...growthMilestones].reverse().find(item => days >= item);
+      document.querySelector("#growth-label").textContent = `${days} วัน`;
+      document.querySelector("#growth-track").innerHTML = growthForms.map(item => `<span class="${days >= item.days ? "active" : ""}">${item.name}<br>${item.days} วัน</span>`).join("");
+      document.querySelector("#growth-detail").textContent = `ร่าง ${form.name} · ดีเทลขั้น ${growthMilestones.indexOf(detail) + 1}/10 · ใช้ streak สูงสุด ไม่หดเมื่อพัก`;
+    }
+    function render() {
+      const character = state.current;
+      document.querySelector("#portrait").innerHTML = character ? renderCharacter(character) : "";
+      document.querySelector("#card").dataset.rare = String(Boolean(character?.dna.rare));
+      document.querySelector("#card").dataset.rarity = character?.dna.rarity ?? "normal";
+      document.querySelector("#pattern-badge").dataset.rare = String(Boolean(character?.dna.rare));
+      document.querySelector("#pattern-badge").textContent = character ? `${character.dna.rarity === "legendary" ? "LEGENDARY ✦" : character.dna.rare ? "MEME RARE ★" : "PATTERN"} #${String(character.dna.patternSeed).padStart(6, "0")}` : "PATTERN / ?";
+      document.querySelector("#card-name").textContent = character ? character.id : "คู่หูของคุณ";
+      document.querySelector("#card-serial").textContent = character ? character.serial : "BARO / ?";
+      document.querySelector("#trait-line").innerHTML = character ? [character.dna.body, character.dna.ears, character.dna.eyes, character.dna.mark, character.dna.palette, CharacterCore.patternName(character.dna.pattern)].map(value => `<span>${value}</span>`).join("") : "<span>รอเปิดตัวละคร</span>";
+      document.querySelector("#status").textContent = state.message;
+      const facts = [
+        ["จำนวนที่แจก", state.byLearner.size],
+        ["ชุดลักษณะซ้ำ", state.byLearner.size - state.used.size],
+        ["ลายแรร์ในรุ่น", [...state.byLearner.values()].filter(item => item.dna.rare).length],
+        ["รหัสตัวละคร", character?.serial ?? "ยังไม่มี"],
+        ["ลายติดตัว", character ? `${CharacterCore.patternName(character.dna.pattern)} ${character.dna.rare ? "★ แรร์" : ""}` : "ยังไม่มี"],
+        ["เลขแพตเทิร์น", character ? String(character.dna.patternSeed).padStart(6, "0") : "ยังไม่มี"],
+        ["สูตรลักษณะ", character?.fingerprint ?? "ยังไม่มี"],
+        ["ของแต่งปัจจุบัน", character ? CharacterCore.outfits.find(item => item.id === character.outfit)?.name : "ยังไม่มี"],
+        ["ครั้งที่ข้ามผลซ้ำ", character?.attempt ?? "—"]
+      ];
+      document.querySelector("#facts").innerHTML = facts.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join("");
+      document.querySelector("#looks").innerHTML = CharacterCore.outfits.map(item => `<button data-look="${item.id}" aria-pressed="${character?.outfit === item.id}">${item.name}</button>`).join("");
+      document.querySelector("#tabs").innerHTML = scenarios.map((item, index) => `<button role="tab" aria-selected="${index === state.scenario}" data-scenario="${index}">${item.title}</button>`).join("");
+      document.querySelector("#scenario-description").textContent = scenarios[state.scenario].description;
+      document.querySelector("#steps").innerHTML = scenarios[state.scenario].steps.map((step, index) => `<button class="${index === state.step ? "current" : ""}" data-step="${index}">${index + 1}. ${step.label}</button>`).join("");
+      document.querySelector("#crowd-count").textContent = `แสดง ${Math.min(state.byLearner.size, 18)} / ${state.byLearner.size} ตัว`;
+      document.querySelector("#crowd-grid").innerHTML = [...state.byLearner.values()].slice(0, 18).map((item, index) => `<div class="mini" data-rare="${item.dna.rare}">${renderCharacter(item, `mini-${index}`)}<span>${item.dna.rare ? "★ " : ""}${escapeHTML(item.id)}</span></div>`).join("");
+      renderExperience();
+    }
+    document.querySelector("#reveal").addEventListener("click", () => showLearner(document.querySelector("#learner-id").value));
+    document.querySelector("#learner-id").addEventListener("keydown", event => { if (event.key === "Enter") showLearner(event.currentTarget.value); });
+    document.querySelector("#new-learner").addEventListener("click", () => showLearner(`learner-${String(state.nextLearner++).padStart(3, "0")}`));
+    document.querySelector("#change-outfit").addEventListener("click", changeOutfit);
+    document.querySelector("#find-cat").addEventListener("click", findCat);
+    document.querySelector("#find-rare").addEventListener("click", findRare);
+    document.querySelector("#looks").addEventListener("click", event => { const button = event.target.closest("[data-look]"); if (button) chooseOutfit(button.dataset.look); });
+    document.querySelector("#fill-cohort").addEventListener("click", fillCohort);
+    document.querySelector("#reset").addEventListener("click", reset);
+    document.querySelector("#tabs").addEventListener("click", event => { const button = event.target.closest("[data-scenario]"); if (button) selectScenario(Number(button.dataset.scenario)); });
+    document.querySelector("#steps").addEventListener("click", event => { const button = event.target.closest("[data-step]"); if (button) { const index = Number(button.dataset.step); scenarios[state.scenario].steps[index].run(); state.step = Math.min(index + 1, scenarios[state.scenario].steps.length); render(); } });
+    document.querySelector("#showcase-demo").addEventListener("click", seedShowcase);
+    document.querySelector("#pin-showcase").addEventListener("click", pinShowcase);
+    document.querySelector("#remove-showcase").addEventListener("click", removeShowcase);
+    document.querySelector("#showcase-grid").addEventListener("click", event => { const button = event.target.closest("[data-react]"); if (button) toggleReaction(button.dataset.react, "💜"); });
+    document.querySelector("#grant-box").addEventListener("click", grantBox);
+    document.querySelector("#open-box").addEventListener("click", openBox);
+    document.querySelector("#transfer-box").addEventListener("click", transferBox);
+    document.querySelector("#cast-god").addEventListener("click", castGod);
+    document.querySelector("#god-history").addEventListener("click", event => { const button = event.target.closest("[data-event]"); if (button) { state.viewedEvent = Number(button.dataset.event); render(); } });
+    document.querySelector("#growth-days").addEventListener("input", renderExperience);
+    render();
+  </script>
+</body>
+</html>

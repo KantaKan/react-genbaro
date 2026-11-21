@@ -1,7 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/AuthContext";
-import UserProfilePage from "./UserProfilePage";
 
 const MyProfileWrapper: React.FC = () => {
   const { userId } = useAuth();

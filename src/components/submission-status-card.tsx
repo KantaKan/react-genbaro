@@ -6,11 +6,10 @@ import { CheckCircle, Clock, Calendar } from "lucide-react"
 
 interface SubmissionStatusCardProps {
   hasSubmitted: boolean
-  submissionDate?: string | null
-  todaysReflection?: any
+  todaysReflection?: { createdAt?: string }
 }
 
-export const SubmissionStatusCard = ({ hasSubmitted, submissionDate, todaysReflection }: SubmissionStatusCardProps) => {
+export const SubmissionStatusCard = ({ hasSubmitted, todaysReflection }: SubmissionStatusCardProps) => {
   if (!hasSubmitted) return null
 
   return (
@@ -42,7 +41,7 @@ export const SubmissionStatusCard = ({ hasSubmitted, submissionDate, todaysRefle
                   <Calendar className="h-4 w-4" />
                   <span>Today</span>
                 </div>
-                {todaysReflection && (
+                {todaysReflection?.createdAt && (
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
                     <span>

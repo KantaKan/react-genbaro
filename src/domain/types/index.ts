@@ -3,3 +3,8 @@ export * from "./user";
 export * from "./reflection";
 export * from "./attendance";
 export * from "./badge";
+export * from "./care-energy";
+export * from "./history";
+export * from "./cosmetic";
+export * from "./gift-box";
+export * from "./baro-character";

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, FileSpreadsheet, MessageSquare, Award, Eye, Filter, Calendar, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, FileSpreadsheet, MessageSquare, Award, Eye, Filter, Calendar, Trash2, User as UserIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "react-toastify";
@@ -40,6 +40,7 @@ interface AdminUsersTableProps {
 import { BarometerVisual, reflectionZones } from "@/components/barometer-visual";
 import { BulkActionsBar } from "@/components/bulk-actions-bar";
 import { AwardBadgeBulkDialog } from "@/components/award-badge-bulk-dialog";
+import { AwardCareEnergyBulkDialog } from "@/components/award-care-energy-bulk-dialog";
 import { BulkAttendanceDialog } from "@/components/bulk-attendance-dialog";
 import { LoadingRow } from "@/components/loading-row";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -66,6 +67,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
   const [projectGroupFilter, setProjectGroupFilter] = useState<string>("all");
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
   const [bulkBadgeOpen, setBulkBadgeOpen] = useState(false);
+  const [bulkCareEnergyOpen, setBulkCareEnergyOpen] = useState(false);
   const [bulkAttendanceOpen, setBulkAttendanceOpen] = useState(false);
   const [isBulkExporting, setIsBulkExporting] = useState(false);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
@@ -244,7 +246,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
       await deleteUserById(deleteUserId);
       toast.success("User deleted successfully");
       setDeleteUserId(null);
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete user");
     } finally {
       setIsDeleting(false);
@@ -262,7 +264,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
       } else {
         toast.error("Failed to export data.");
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred while exporting data.");
     } finally {
       setIsExporting(false);
@@ -311,7 +313,7 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
         <TableCell key={column} className="text-center">
           <div className="flex items-center justify-center gap-1">
             <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${user._id}`); }} title="View Social Profile" className="text-primary hover:text-primary hover:bg-primary/10">
-              <User className="h-4 w-4" />
+              <UserIcon className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleQuickAction("view", user._id, user); }} title="View Internal Details">
               <Eye className="h-4 w-4" />
@@ -436,8 +438,10 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
       <BulkActionsBar
         selectedCount={selectedUserIds.size}
         totalCount={filteredUsers.length}
+        onSelectAll={handleSelectAll}
         onClearSelection={() => setSelectedUserIds(new Set())}
         onBulkBadge={() => setBulkBadgeOpen(true)}
+        onBulkCareEnergy={() => setBulkCareEnergyOpen(true)}
         onBulkAttendance={() => setBulkAttendanceOpen(true)}
         onBulkExport={handleBulkExport}
         isExporting={isBulkExporting}
@@ -504,6 +508,13 @@ export function AdminUsersTable({ users, isLoading }: AdminUsersTableProps) {
       <AwardBadgeBulkDialog
         isOpen={bulkBadgeOpen}
         onClose={() => setBulkBadgeOpen(false)}
+        userIds={Array.from(selectedUserIds)}
+        onSuccess={() => setSelectedUserIds(new Set())}
+      />
+
+      <AwardCareEnergyBulkDialog
+        isOpen={bulkCareEnergyOpen}
+        onClose={() => setBulkCareEnergyOpen(false)}
         userIds={Array.from(selectedUserIds)}
         onSuccess={() => setSelectedUserIds(new Set())}
       />

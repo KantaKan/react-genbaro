@@ -39,13 +39,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUserIdState(fetchedUserId);
           setUserRole(role);
           setUserId(fetchedUserId);
-        } catch (error: any) {
-          console.error("[AuthContext] Token verification failed:", error.message);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Token verification failed.";
+          console.error("[AuthContext] Token verification failed:", message);
           Cookies.remove("authToken");
           setIsAuthenticated(false);
           setUserRoleState(null);
           setUserIdState(null);
-          setError(error.message || "Token verification failed.");
+          setError(message);
         } finally {
           setLoading(false);
         }

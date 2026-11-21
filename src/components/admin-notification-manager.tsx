@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Switch } from "./ui/switch";
 import { Badge } from "./ui/badge";
 import { toast } from "sonner";
-import { Trash2, Edit, Plus, Bell, X } from "lucide-react";
+import { Trash2, Edit, Plus, Bell } from "lucide-react";
+import { SkeletonCard, SkeletonWarm } from "./loading-skeleton";
 import {
   Dialog,
   DialogContent,
@@ -69,7 +70,7 @@ export function AdminNotificationManager() {
       setIsDialogOpen(false);
       resetForm();
       loadNotifications();
-    } catch (error) {
+    } catch {
       toast.error("Failed to save notification");
     }
   };
@@ -80,7 +81,7 @@ export function AdminNotificationManager() {
       await notificationService.deleteNotification(id);
       toast.success("Notification deleted successfully");
       loadNotifications();
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete notification");
     }
   };
@@ -90,7 +91,7 @@ export function AdminNotificationManager() {
       await notificationService.toggleNotificationActive(notification.id, !notification.is_active);
       toast.success(`Notification ${notification.is_active ? "deactivated" : "activated"} successfully`);
       loadNotifications();
-    } catch (error) {
+    } catch {
       toast.error("Failed to update notification status");
     }
   };
@@ -276,7 +277,13 @@ export function AdminNotificationManager() {
 
       <div className="grid gap-4">
         {isLoading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading...</div>
+          <>
+            <div className="flex items-center justify-between mb-2">
+              <SkeletonWarm className="h-8 w-48" />
+              <SkeletonWarm className="h-9 w-36 rounded-md" />
+            </div>
+            <SkeletonCard count={3} />
+          </>
         ) : notifications.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">

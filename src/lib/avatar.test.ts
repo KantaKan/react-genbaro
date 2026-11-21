@@ -1,19 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { getAvatarFallback, getUserAvatarUrl } from "./avatar";
+import { getUserAvatarSeed } from "./avatar";
 
 describe("avatar helpers", () => {
-  it("builds stable DiceBear URLs from the first available seed", () => {
-    expect(getUserAvatarUrl(undefined, "user@example.com", "Jane")).toBe(
-      "https://api.dicebear.com/9.x/thumbs/svg?seed=user%40example.com",
-    );
+  it("uses the first available user identifier", () => {
+    expect(getUserAvatarSeed(undefined, "user@example.com", "Jane")).toBe("user@example.com");
   });
 
-  it("creates two-letter fallbacks from name parts", () => {
-    expect(getAvatarFallback("Jane", "Doe")).toBe("JD");
-  });
-
-  it("falls back when no name parts are available", () => {
-    expect(getAvatarFallback()).toBe("?");
+  it("uses a stable seed when no identifier is available", () => {
+    expect(getUserAvatarSeed()).toBe("unknown-user");
   });
 });

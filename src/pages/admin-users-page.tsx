@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AdminUsersTable } from "@/components/admin-users-table";
+import { BulkRegisterDialog } from "@/components/bulk-register-dialog";
 import { SalesforceExportButton } from "@/components/salesforce-export";
 import { SalesforceIDManager } from "@/components/salesforce-id-manager";
 import { api } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { UserPlus } from "lucide-react";
+import { AdminCohortGiftBoxDialog } from "@/components/admin-cohort-gift-box-dialog";
 import {
   Select,
   SelectContent,
@@ -36,14 +40,17 @@ interface ApiResponse {
   };
 }
 
-type Tab = "users" | "salesforce";
+type Tab = "users" | "register" | "salesforce";
+
+const LAST_COHORT_KEY = "admin-users-last-cohort";
 
 export function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  const cohort = searchParams.get("cohort") || "12";
+  const cohort = searchParams.get("cohort") || localStorage.getItem(LAST_COHORT_KEY) || "0";
   const [activeTab, setActiveTab] = useState<Tab>("users");
+  const [isBulkRegisterOpen, setIsBulkRegisterOpen] = useState(false);
 
   const fetchUsers = async (cohortValue: string) => {
     setIsLoading(true);
@@ -77,6 +84,7 @@ export function AdminUsersPage() {
 
   const tabs: { key: Tab; label: string; emoji: string }[] = [
     { key: "users", label: "User Table", emoji: "👥" },
+    { key: "register", label: "Bulk Register", emoji: "📋" },
     { key: "salesforce", label: "Salesforce IDs", emoji: "☁️" },
   ];
 
@@ -92,6 +100,7 @@ export function AdminUsersPage() {
               Cohort:
             </label>
             <Select value={cohort} onValueChange={(value) => {
+              localStorage.setItem(LAST_COHORT_KEY, value);
               setSearchParams((prev) => {
                 if (value === "0") {
                   prev.delete("cohort");
@@ -117,6 +126,7 @@ export function AdminUsersPage() {
 
           {/* Salesforce export button — always visible */}
           <SalesforceExportButton cohort={Number(cohort)} />
+          <AdminCohortGiftBoxDialog cohort={Number(cohort)} learnerCount={users.length} teams={[...new Set(users.map((user) => user.genmate_group?.trim()).filter((team): team is string => Boolean(team)))].sort()} />
         </div>
       </div>
 
@@ -146,6 +156,26 @@ export function AdminUsersPage() {
       {/* Tab content */}
       {activeTab === "users" && (
         <AdminUsersTable users={users as never} isLoading={isLoading} />
+      )}
+
+      {activeTab === "register" && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <UserPlus className="h-16 w-16 text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Bulk Register Learners</h2>
+          <p className="text-muted-foreground mb-6 max-w-md">
+            Register multiple learners to a new cohort at once. Paste CSV data with names, emails, and JSD numbers.
+          </p>
+          <Button onClick={() => setIsBulkRegisterOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Open Bulk Register
+          </Button>
+
+          <BulkRegisterDialog
+            isOpen={isBulkRegisterOpen}
+            onClose={() => setIsBulkRegisterOpen(false)}
+            onSuccess={() => fetchUsers(cohort)}
+          />
+        </div>
       )}
 
       {activeTab === "salesforce" && (

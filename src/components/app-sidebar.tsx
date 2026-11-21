@@ -11,11 +11,17 @@ import {
   User,
   Hammer,
   ClipboardCheck,
+  Radio,
   Bell,
+  Sprout,
+  Rocket,
+  Stamp,
+  History,
+  Sparkles,
 } from "lucide-react";
-import { motion } from "framer-motion"; // New import for animation
-import { Badge } from "@/components/ui/badge"; // New import for the 'New' badge
-import { NavMain } from "@/components/nav-main";
+import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { NavMain, type NavItem } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
 import {
@@ -40,7 +46,7 @@ const teams = [
 const showNewTalkBoardIndicator = true; // Set to false to hide the 'New' indicator
 
 // Navigation configurations for different roles
-const navigationConfig: Record<UserRole, any[]> = {
+const navigationConfig: Record<UserRole, NavItem[]> = {
   admin: [
     {
       title: "Dashboard Panel",
@@ -64,6 +70,31 @@ const navigationConfig: Record<UserRole, any[]> = {
           icon: Users, // Add icon for sub-menu item
         },
         {
+          title: "Genmate Garden",
+          url: "/admin/garden",
+          icon: Sprout,
+        },
+        {
+          title: "Cohort Field",
+          url: "/admin/cohort-farm",
+          icon: Sprout,
+        },
+        {
+          title: "My Baro Character",
+          url: "/character",
+          icon: Sparkles,
+        },
+        {
+          title: "Showcase Lawn",
+          url: "/showcase-lawn",
+          icon: Sprout,
+        },
+        {
+          title: "Startup Story",
+          url: "/startup-story",
+          icon: Rocket,
+        },
+        {
           title: "Learner Directory",
           url: "/learner/directory",
           icon: Users,
@@ -77,11 +108,25 @@ const navigationConfig: Record<UserRole, any[]> = {
           title: "Attendance",
           url: "/admin/attendance",
           icon: ClipboardCheck,
+          isActive: true,
+          items: [
+            { title: "Register", url: "/admin/attendance/register", icon: ClipboardCheck },
+            { title: "Code Dispatch", url: "/admin/attendance/code-dispatch", icon: Radio },
+            { title: "All Students", url: "/admin/attendance/all-students", icon: Users },
+            { title: "Calendar", url: "/admin/attendance/calendar", icon: Calendar },
+            { title: "Logs", url: "/admin/attendance/logs", icon: FileText },
+            { title: "Leave", url: "/admin/attendance/leave", icon: BookOpen },
+          ],
         },
         {
           title: "Notifications",
           url: "/admin/notifications",
           icon: Bell,
+        },
+        {
+          title: "History",
+          url: "/admin/history",
+          icon: History,
         },
         {
           title: "Tools",
@@ -119,6 +164,19 @@ const navigationConfig: Record<UserRole, any[]> = {
         },
       ],
     },
+    {
+      title: "Stamp Board",
+      url: "/stamp-board",
+      icon: Stamp,
+      isActive: false,
+      items: [
+        {
+          title: "Stamp Board",
+          url: "/stamp-board",
+          icon: Stamp, // Add icon for sub-menu item
+        },
+      ],
+    },
   ],
   learner: [
     {
@@ -146,6 +204,26 @@ const navigationConfig: Record<UserRole, any[]> = {
           title: "Learner Directory",
           url: "/learner/directory",
           icon: Users,
+        },
+        {
+          title: "Genmate Garden",
+          url: "/learner/garden",
+          icon: Sprout,
+        },
+        {
+          title: "My Baro Character",
+          url: "/character",
+          icon: Sparkles,
+        },
+        {
+          title: "Showcase Lawn",
+          url: "/showcase-lawn",
+          icon: Sprout,
+        },
+        {
+          title: "Startup Story",
+          url: "/startup-story",
+          icon: Rocket,
         },
       ],
     },
@@ -175,6 +253,19 @@ const navigationConfig: Record<UserRole, any[]> = {
           title: "Discussion",
           url: "/talk-board",
           icon: MessageSquare, // Add icon for sub-menu item
+        },
+      ],
+    },
+    {
+      title: "Stamp Board",
+      url: "/stamp-board",
+      icon: Stamp,
+      isActive: false,
+      items: [
+        {
+          title: "Stamp Board",
+          url: "/stamp-board",
+          icon: Stamp, // Add icon for sub-menu item
         },
       ],
     },

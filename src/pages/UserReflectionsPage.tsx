@@ -1,38 +1,32 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, School, ClipboardList, TrendingUp, Award } from "lucide-react";
+import { ArrowLeft, Users, School, ClipboardList, type LucideIcon } from "lucide-react";
+import { Badge as UiBadge } from "@/components/ui/badge";
 import { BadgeRenderer } from "@/components/badge-renderer";
+import { useAuth } from "@/AuthContext";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonWarm } from "@/components/loading-skeleton";
 import { ReflectionsTable } from "@/components/reflections-table";
-import { reflectionZones } from "@/components/reflection-zones";
-import { BarometerVisual } from "@/components/barometer-visual";
-import { formatDate } from "@/lib/utils";
+import { useStreakCalculation } from "@/hooks/use-streak-calculation";
+import { useHolidayDates } from "@/hooks/use-holiday-dates";
+import { StreakIcon } from "@/components/streak-components";
 import { AwardBadgeButton } from "@/components/award-badge-button";
+import { AwardCareEnergyButton } from "@/components/award-care-energy-button";
+import { AdminPlantOverrideButton } from "@/components/admin-plant-override-button";
+import { AdminCosmeticGrantDialog } from "@/components/admin-cosmetic-grant-dialog";
+import { AdminGiftBoxDialog } from "@/components/admin-gift-box-dialog";
+import { AdminCharacterDialog } from "@/components/character/AdminCharacterDialog";
+import { resolvePlantAppearance } from "@/lib/plant-appearance";
+import { getEffectivePlantDays, getPlantTier } from "@/lib/streak-milestones";
 import type { Badge } from "@/lib/types";
-interface Reflection {
-  day: string;
-  user_id: string;
-  date: string;
-  reflection: {
-    barometer: string;
-    tech_sessions: {
-      session_name: string[];
-      happy: string;
-      improve: string;
-    };
-    non_tech_sessions: {
-      session_name: string[];
-      happy: string;
-      improve: string;
-    };
-  };
-}
+import type { Reflection } from "@/hooks/use-reflections";
+import type { CareEnergyLogEntry } from "@/domain/types";
+import type { PlantCosmeticSelection } from "@/lib/plant-appearance";
 
 interface User {
   cohort_number: number;
@@ -43,9 +37,18 @@ interface User {
   role: string;
   _id: string;
   badges?: Badge[];
+  care_energy_log?: CareEnergyLogEntry[];
+  growth_points?: number;
+  selected_palette?: string;
+  selected_species?: string;
+  selected_pot?: string;
+  selected_leaf?: string;
+  selected_flower?: string;
+  selected_stem?: string;
+  equipped_cosmetics?: PlantCosmeticSelection;
 }
 
-const StatCard = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | number | JSX.Element }) => (
+const StatCard = ({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string | number | JSX.Element }) => (
   <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
     <div className={`p-2.5 rounded-full bg-primary/10 shrink-0`}>
       <Icon className="h-5 w-5 text-primary" />
@@ -60,6 +63,7 @@ const StatCard = ({ icon: Icon, label, value }: { icon: any; label: string; valu
 export default function UserReflectionsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { userRole } = useAuth();
   const [reflections, setReflections] = useState<Reflection[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,7 +71,7 @@ export default function UserReflectionsPage() {
 
   const fetchUserData = async (userId: string) => {
     try {
-      const response = await api.get(`/admin/userreflections/${userId}`);
+      const response = await api.get<{ data: { reflections: Reflection[]; user: User } }>(`/admin/userreflections/${userId}`);
       if (response.data.data.reflections) {
         const sortedReflections = response.data.data.reflections.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setReflections(sortedReflections);
@@ -107,40 +111,50 @@ export default function UserReflectionsPage() {
     }
   };
 
-  const getZoneStats = () => {
-    const stats = reflections.reduce(
-      (acc, reflection) => {
-        const zone = reflectionZones.find((z) => z.label === reflection.reflection.barometer);
-        if (zone) {
-          acc[zone.id] = (acc[zone.id] || 0) + 1;
-        }
-        return acc;
-      },
-      { comfort: 0, "stretch-enjoying": 0, "stretch-overwhelmed": 0, panic: 0 } as Record<string, number>,
-    );
+  const protectedDates = useMemo(() => {
+    const dates = (user?.care_energy_log ?? [])
+      .filter((entry) => entry.kind === "protect" && entry.relatedDate)
+      .map((entry) => entry.relatedDate as string);
+    return new Set(dates);
+  }, [user?.care_energy_log]);
 
-    const total = reflections.length;
-    const dominantZone = Object.entries(stats).reduce((a, b) => (b[1] > a[1] ? b : a))[0];
+  const holidayDates = useHolidayDates();
+  const streakData = useStreakCalculation(reflections, protectedDates, holidayDates);
 
-    return {
-      ...stats,
-      total,
-      dominantZone,
-    };
-  };
+  const plantAppearance = useMemo(
+    () =>
+      user
+        ? resolvePlantAppearance({
+            userId: user._id,
+            tier: getPlantTier(getEffectivePlantDays(streakData.bestStreak, user.growth_points ?? 0)),
+            active: streakData.hasCurrentStreak,
+            growthPoints: user.growth_points ?? 0,
+            overrides: {
+              palette: user.selected_palette,
+              species: user.selected_species,
+              pot: user.selected_pot,
+              leaf: user.selected_leaf,
+              flower: user.selected_flower,
+              stem: user.selected_stem,
+            },
+            cosmetics: user.equipped_cosmetics,
+          })
+        : undefined,
+    [streakData.bestStreak, streakData.hasCurrentStreak, user]
+  );
 
   if (isLoading) {
   return (
     <div className="container mx-auto pt-16 pb-10 space-y-6">
-        <Skeleton className="h-10 w-40" />
+        <SkeletonWarm className="h-10 w-40" />
         <Card>
           <CardHeader>
-            <Skeleton className="h-7 w-32" />
+            <SkeletonWarm className="h-7 w-32" />
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-24 w-full" />
+                <SkeletonWarm key={i} className="h-24 w-full" />
               ))}
             </div>
           </CardContent>
@@ -148,7 +162,7 @@ export default function UserReflectionsPage() {
         <div className="rounded-md border">
           <div className="p-4 space-y-4">
             {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
+              <SkeletonWarm key={i} className="h-16 w-full" />
             ))}
           </div>
         </div>
@@ -174,15 +188,45 @@ export default function UserReflectionsPage() {
     );
   }
 
-  const stats = getZoneStats();
-
   return (
     <div className="container mx-auto py-10 space-y-6">
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="flex justify-between items-center mb-4">
-        <Button onClick={handleBack} variant="outline">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to All Reflections
-        </Button>
-        {id && <AwardBadgeButton userId={id} onBadgeAwarded={handleBadgeAwarded} />}
+        <div className="flex items-center gap-3">
+          <Button onClick={handleBack} variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to All Reflections
+          </Button>
+          {userRole === "admin" && <UiBadge variant="default">Admin</UiBadge>}
+        </div>
+        {id && (
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <AwardBadgeButton userId={id} onBadgeAwarded={handleBadgeAwarded} />
+            <AwardCareEnergyButton userId={id} onCareEnergyAwarded={handleBadgeAwarded} />
+            <AdminCosmeticGrantDialog
+              userId={id}
+              learnerName={user ? `${user.first_name} ${user.last_name}` : "this learner"}
+            />
+            <AdminCharacterDialog
+              userId={id}
+              learnerName={user ? `${user.first_name} ${user.last_name}` : "this learner"}
+            />
+            <AdminGiftBoxDialog
+              userId={id}
+              learnerName={user ? `${user.first_name} ${user.last_name}` : "this learner"}
+            />
+            <AdminPlantOverrideButton
+              userId={id}
+              current={{
+                palette: user?.selected_palette,
+                species: user?.selected_species,
+                pot: user?.selected_pot,
+                leaf: user?.selected_leaf,
+                flower: user?.selected_flower,
+                stem: user?.selected_stem,
+              }}
+              onSaved={handleBadgeAwarded}
+            />
+          </div>
+        )}
       </motion.div>
 
       {user && (
@@ -196,20 +240,9 @@ export default function UserReflectionsPage() {
                 <StatCard icon={Users} label="Student Name" value={`${user.first_name} ${user.last_name}`} />
                 <StatCard icon={School} label="JSD Number" value={user.jsd_number} />
                 <StatCard icon={ClipboardList} label="Total Reflections" value={reflections.length} />
-                <StatCard
-                  icon={TrendingUp}
-                  label="Most Common Zone"
-                  value={
-                    stats.total > 0 ? (
-                      <div className="flex items-center gap-2 text-base">
-                        <span className="shrink-0">{reflectionZones.find((z) => z.id === stats.dominantZone)?.emoji}</span>
-                        <span className="truncate">{reflectionZones.find((z) => z.id === stats.dominantZone)?.label || "N/A"}</span>
-                      </div>
-                    ) : (
-                      "No data"
-                    )
-                  }
-                />
+                <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+                  {plantAppearance && <StreakIcon streakData={streakData} showMilestoneToast={false} appearance={plantAppearance} />}
+                </div>
               </div>
               {user.badges && user.badges.length > 0 && (
                 <div className="mt-8">

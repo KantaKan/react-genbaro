@@ -14,14 +14,18 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
   const [userId, setUserId] = useState("");
 
   const fetchUserData = async () => {
+    const token = getAuthToken();
+    if (!token) {
+      setUserData(null);
+      setUserId("");
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-
-      const token = getAuthToken();
-      if (!token) {
-        throw new Error("Authentication required");
-      }
 
       const decodedToken = jwtDecode<JWTPayload>(token);
 
