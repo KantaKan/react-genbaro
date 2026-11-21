@@ -18,9 +18,10 @@ import { StreakBadgesCard } from "./StreakBadgesCard";
 export function TodayPage() {
   const qc = useQueryClient();
   const [picker, setPicker] = useState(false);
-  const { userData, refetchUserData } = useUserData();
+  const { userData } = useUserData();
   const summary = useQuery(["my-summary"], learnerApi.getSummary, { refetchInterval: 60_000 });
   const history = useQuery(["my-history", 14], () => learnerApi.getHistory(14));
+  const reflections = useQuery(["my-reflections", userData?._id], () => learnerApi.getMyReflections(userData!._id), { enabled: !!userData?._id });
   const now = useClock(30_000);
   const today = bangkokNow().date;
   const dateLabel = new Date(`${today}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
@@ -66,7 +67,7 @@ export function TodayPage() {
         <div className="lg:col-span-7">{s ? <CheckInCard summary={s} onCheckedIn={refresh} seed={userData?._id ?? "me"} onOpenPicker={() => setPicker(true)} /> : <div className="l-card h-[340px] animate-pulse" />}</div>
         <div className="lg:col-span-5">
           {userData?._id && (
-            <ReflectionCard userId={userData._id} reflections={userData.reflections ?? []} nowSec={now} today={today} onSubmitted={() => refetchUserData?.()} />
+            <ReflectionCard userId={userData._id} reflections={reflections.data ?? []} nowSec={now} today={today} onSubmitted={() => qc.invalidateQueries(["my-reflections"])} />
           )}
         </div>
         <div className="lg:col-span-7">
