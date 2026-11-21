@@ -17,7 +17,6 @@ export interface StyleMeta {
   load: Loader;
 }
 
-const ph: Loader = () => import("./Placeholder");
 const slide: Loader = () => import("../SlideControl").then((m) => ({ default: m.SlideControl }));
 
 export const STYLES: StyleMeta[] = [
@@ -33,10 +32,10 @@ export const STYLES: StyleMeta[] = [
   { id: "alarm", name: "Alarm clock", sub: "Smash snooze", group: "fun", load: () => import("./AlarmClockControl") },
   { id: "slot", name: "Lucky slot", sub: "Pull the lever", group: "fun", load: () => import("./LuckySlotControl") },
   { id: "gacha", name: "Gacha", sub: "Turn the knob", group: "fun", load: () => import("./GachaControl") },
-  { id: "rocket", name: "Rocket launch", sub: "15-day streak", group: "unlock", need: 15, load: ph },
+  { id: "rocket", name: "Rocket launch", sub: "15-day streak", group: "unlock", need: 15, load: () => import("./RocketControl") },
   { id: "gold", name: "Gold slide", sub: "Perfect week", group: "unlock", need: "perfect_week", load: () => import("./GoldSlideControl") },
-  { id: "arcade", name: "Arcade", sub: "20-day streak", group: "unlock", need: 20, load: ph },
-  { id: "dj", name: "DJ deck", sub: "30-day streak", group: "unlock", need: 30, load: ph },
+  { id: "arcade", name: "Arcade", sub: "20-day streak", group: "unlock", need: 20, load: () => import("./ArcadeControl") },
+  { id: "dj", name: "DJ deck", sub: "30-day streak", group: "unlock", need: 30, load: () => import("./DjDeckControl") },
 ];
 
 export const styleById = (id: string): StyleMeta | undefined => STYLES.find((s) => s.id === id);

@@ -24,7 +24,7 @@ function Switch({ on, label, onChange }: { on: boolean; label: string; onChange:
       aria-checked={on}
       aria-label={label}
       onClick={() => onChange(!on)}
-      className={`relative h-5 w-[34px] shrink-0 rounded-full transition-colors ${on ? "bg-l-ink" : "bg-l-hair"}`}
+      className={`relative h-5 w-[34px] shrink-0 rounded-full transition-colors ${on ? "bg-l-ink" : "bg-zinc-300 dark:bg-zinc-600"}`}
     >
       <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-300 ${on ? "translate-x-4" : "translate-x-0.5"}`} />
     </button>

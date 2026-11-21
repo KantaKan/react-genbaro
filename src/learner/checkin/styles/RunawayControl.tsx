@@ -20,7 +20,7 @@ export default function RunawayControl({ tone, disabled, busy, onComplete }: Che
   return (
     <div className="relative h-[220px] overflow-hidden rounded-2xl bg-l-sub">
       <span
-        className="absolute -translate-x-1/2 -translate-y-[160%] whitespace-nowrap rounded-xl bg-l-card px-2.5 py-1 text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)] transition-all duration-300"
+        className="absolute -translate-x-1/2 -translate-y-[210%] whitespace-nowrap rounded-xl bg-l-card px-2.5 py-1 text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)] transition-all duration-300"
         style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
       >
         {say}

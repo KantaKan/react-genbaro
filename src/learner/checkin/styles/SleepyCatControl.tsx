@@ -35,7 +35,7 @@ export default function SleepyCatControl({ disabled, busy, onComplete }: CheckIn
           </defs>
           <ellipse cx="146" cy="212" rx="110" ry="10" fill="rgba(0,0,0,.08)" />
           <path d="M226 186 q44 -6 34 -52 q-6 -22 -24 -10" fill="none" stroke="#ea580c" strokeWidth="20" strokeLinecap="round" />
-          <g style={{ transform: awake ? (hi5 ? "translateY(-8px) rotate(-6deg)" : "none") : "translateY(80px)", transition: "transform .6s cubic-bezier(.34,1.56,.64,1)", transformOrigin: "192px 200px" }}>
+          <g style={{ opacity: awake ? 1 : 0, transform: awake ? (hi5 ? "translateY(-8px) rotate(-6deg)" : "none") : "translateY(80px)", transition: "transform .6s cubic-bezier(.34,1.56,.64,1)", transformOrigin: "192px 200px" }}>
             <path d="M166 210 V112 q0 -26 26 -26 q26 0 26 26 V210Z" fill="url(#fur)" stroke="#7c2d12" strokeWidth="3" />
             <ellipse cx="192" cy="118" rx="11" ry="9" fill="#f9a8d4" />
             <circle cx="178" cy="100" r="5" fill="#f9a8d4" />
