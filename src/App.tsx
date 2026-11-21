@@ -35,7 +35,7 @@ const AttendancePage = lazy(() => import("./learner/attendance/AttendancePage").
 const ToolsPage = lazy(() => import("./pages/ToolPage"));
 const SpinWheelPage = lazy(() => import("./pages/SpinWheelPage"));
 const WeeklySummaryPage = lazy(() => import("./pages/weekly-summary-page"));
-const AdminTodayPage = () => <div>Today</div>;
+const AdminTodayPage = lazy(() => import("./admin/today/TodayPage").then((m) => ({ default: m.TodayPage })));
 const AdminRegisterPage = () => <div>Register</div>;
 const AdminLeavePage = () => <div>Leave</div>;
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard").then((module) => ({ default: module.AdminDashboard })));
