@@ -29,6 +29,8 @@ const TalkBoardPage = lazy(() => import("./pages/talk-board-page"));
 const PostPage = lazy(() => import("./pages/PostPage"));
 const StampBoardPage = lazy(() => import("./pages/stamp-board-page"));
 const ReflectionsPage = lazy(() => import("./pages/user-reflection"));
+const TodayPage = lazy(() => import("./learner/today/TodayPage").then((module) => ({ default: module.TodayPage })));
+const AttendancePage = lazy(() => import("./learner/attendance/AttendancePage").then((module) => ({ default: module.AttendancePage })));
 const ToolsPage = lazy(() => import("./pages/ToolPage"));
 const SpinWheelPage = lazy(() => import("./pages/SpinWheelPage"));
 const WeeklySummaryPage = lazy(() => import("./pages/weekly-summary-page"));
@@ -42,7 +44,6 @@ const AttendanceCalendarView = lazy(() => import("./components/attendance-calend
 const AttendanceLogsView = lazy(() => import("./components/attendance-logs-view").then((module) => ({ default: module.AttendanceLogsView })));
 const AttendanceLeaveView = lazy(() => import("./components/attendance-leave-view").then((module) => ({ default: module.AttendanceLeaveView })));
 const AttendanceCodeDispatchView = lazy(() => import("./components/attendance/attendance-code-dispatch-view").then((module) => ({ default: module.AttendanceCodeDispatchView })));
-const StudentAttendance = lazy(() => import("./components/student-attendance").then((module) => ({ default: module.StudentAttendance })));
 const LeaveRequestsTable = lazy(() => import("./components/leave-requests-table").then((module) => ({ default: module.LeaveRequestsTable })));
 const StudentAttendanceDetail = lazy(() => import("./pages/student-attendance-detail").then((module) => ({ default: module.StudentAttendanceDetail })));
 const AdminNotificationManager = lazy(() => import("./components/admin-notification-manager"));
@@ -133,8 +134,9 @@ function AppContent() {
           </Route>
 
           <Route path="/learner" element={<LearnerLayout />}>
-            <Route index element={<ReflectionsPage />} />
-            <Route path="attendance" element={<StudentAttendance />} />
+            <Route index element={<TodayPage />} />
+            <Route path="reflections" element={<ReflectionsPage />} />
+            <Route path="attendance" element={<AttendancePage />} />
             <Route path="directory" element={<LearnerDirectoryPage />} />
             <Route path="my-profile" element={<MyProfileWrapper />} />
             <Route path="garden" element={<LearnerGenmateGardenPage />} />

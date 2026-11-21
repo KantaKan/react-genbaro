@@ -19,6 +19,11 @@ export default {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+  			l: {
+  				bg: 'var(--l-bg)', card: 'var(--l-card)', sub: 'var(--l-sub)', ink: 'var(--l-ink)', ink2: 'var(--l-ink2)',
+  				ink3: 'var(--l-ink3)', hair: 'var(--l-hair)', green: 'var(--l-green)', amber: 'var(--l-amber)',
+  				red: 'var(--l-red)', indigo: 'var(--l-indigo)'
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
