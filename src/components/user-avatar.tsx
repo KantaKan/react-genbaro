@@ -37,7 +37,22 @@ function PointerGazeAvatar({ name, title, className, travel }: { name: string; t
   );
 }
 
-export function UserAvatar({
+/** GenMate Cup champions get a slowly turning gold ring and a small crown, everywhere. */
+export function UserAvatar(props: UserAvatarProps) {
+  if (!props.champion) return <AvatarInner {...props} />;
+  return (
+    <span data-champion className={cn("relative inline-flex shrink-0 rounded-full", props.className)}>
+      <span aria-hidden className="absolute -inset-[3px] animate-[spin_6s_linear_infinite] rounded-full bg-[conic-gradient(#fde68a,#f59e0b,#b45309,#fde68a,#f59e0b,#fde68a)] motion-reduce:animate-none" />
+      <span aria-hidden className="absolute -inset-px rounded-full bg-[var(--l-card,white)]" />
+      <AvatarInner {...props} className="relative h-full w-full" />
+      <svg aria-hidden viewBox="0 0 24 16" className="absolute -top-[22%] left-1/2 w-[38%] min-w-[12px] -translate-x-1/2 drop-shadow-sm">
+        <path d="M2 14 L4 3 L9 8 L12 1 L15 8 L20 3 L22 14 Z" fill="#f59e0b" stroke="#b45309" strokeWidth="1.2" strokeLinejoin="round" />
+      </svg>
+    </span>
+  );
+}
+
+function AvatarInner({
   userId,
   name,
   firstName,

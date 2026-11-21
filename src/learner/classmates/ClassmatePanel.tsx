@@ -7,6 +7,7 @@ import { userService } from "@/application/services/userService";
 import { nicknames } from "../lib/name";
 import type { Person } from "../lib/people";
 import { usePeople, safeUrl } from "../lib/usePeople";
+import { useChampion } from "../cup/useChampion";
 import { Medal } from "../today/Medal";
 
 const QUICK = ["Great pair partner", "Always helps", "Clean code"];
@@ -35,6 +36,7 @@ export function ClassmatePanel({ person, isMe, onClose, onEditAvatar }: { person
   const raw = person.social_links ?? {};
   const links = { github: safeUrl(raw.github), linkedin: safeUrl(raw.linkedin), instagram: safeUrl(raw.instagram) };
   const { byId } = usePeople();
+  const { isChampion } = useChampion();
   return (
     <Sheet open onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="learner flex w-full flex-col gap-0 border-l-0 bg-l-card p-0 text-l-ink sm:max-w-[440px] [&>button]:hidden">
@@ -46,7 +48,7 @@ export function ClassmatePanel({ person, isMe, onClose, onEditAvatar }: { person
           </div>
           <div className="relative z-[1] -mt-[38px] flex items-end gap-3.5">
             <span className="rounded-full shadow-[0_0_0_4px_var(--l-card)]">
-              <UserAvatar userId={person._id} name={n.en} avatar={person.avatar} className="h-[84px] w-[84px]" />
+              <UserAvatar userId={person._id} name={n.en} avatar={person.avatar} champion={isChampion(person.genmate_group)} className="h-[84px] w-[84px]" />
             </span>
             <div className="pb-1">
               <SheetTitle className="text-[21px] font-semibold text-l-ink">{n.th ? `${n.th} · ${n.en}` : n.en}</SheetTitle>

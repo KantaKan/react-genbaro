@@ -98,7 +98,7 @@ export function StylePicker({ open, onOpenChange, summary }: { open: boolean; on
               <h4 className="mb-2.5 text-[12px] font-semibold uppercase tracking-[.08em] text-l-ink3">{title}</h4>
               <div className="grid grid-cols-3 gap-2.5">
                 {STYLES.filter((m) => m.group === g).map((m) => {
-                  const unlocked = styleUnlocked(m, summary.streak, summary.perfect_week);
+                  const unlocked = styleUnlocked(m, summary.streak, summary.perfect_week, !!summary.champion);
                   const prog = unlockProgress(m, summary.streak);
                   const selected = !prefs.checkin_random && (prefs.checkin_style || "slide") === m.id;
                   return (
@@ -120,7 +120,7 @@ export function StylePicker({ open, onOpenChange, summary }: { open: boolean; on
                         <span className="absolute inset-x-2 top-[52px] text-center">
                           <span className="flex items-center justify-center gap-1 text-[10px] font-semibold">
                             <Lock className="h-2.5 w-2.5" />
-                            {prog ? `${prog.have} / ${prog.need} days` : "Perfect week"}
+                            {prog ? `${prog.have} / ${prog.need} days` : m.need === "champion" ? "Cup winners" : "Perfect week"}
                           </span>
                           {prog && (
                             <span className="mt-0.5 block h-1 overflow-hidden rounded-full bg-l-hair">

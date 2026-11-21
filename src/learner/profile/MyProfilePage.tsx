@@ -17,6 +17,7 @@ import { StylePicker } from "../checkin/StylePicker";
 import { styleById } from "../checkin/styles/registry";
 import { BarometerStrip } from "./BarometerStrip";
 import { usePeople } from "../lib/usePeople";
+import { useChampion } from "../cup/useChampion";
 
 const MAX_SKILLS = 5;
 
@@ -27,12 +28,14 @@ export function MyProfilePage() {
   const summary = useQuery(["my-summary"], learnerApi.getSummary);
   const reflections = useQuery(["my-reflections", me?._id], () => learnerApi.getMyReflections(me!._id), { enabled: !!me?._id });
   const { byId } = usePeople();
+  const { isChampion, medals } = useChampion();
   const [skill, setSkill] = useState("");
   const [skills, setSkills] = useState<string[] | null>(null);
   const [editing, setEditing] = useState<"avatar" | "profile" | "style" | null>(null);
   usePageHeader({ title: "My profile", context: "Classmates see your bio, skills, avatar and badges" });
   const n = useMemo(() => nicknames(me?.zoom_name, me?.first_name ?? ""), [me]);
   if (!me) return null;
+  const champ = isChampion(me.genmate_group);
   const mySkills = skills ?? me.skills ?? [];
   const s = summary.data;
 
@@ -52,10 +55,10 @@ export function MyProfilePage() {
   return (
     <div className="flex flex-col gap-4">
       <section className="l-card overflow-hidden p-[22px]">
-        <div className="-m-[22px] mb-0 h-[150px] bg-[radial-gradient(60%_120%_at_15%_20%,#c7d2fe,transparent_60%),radial-gradient(50%_120%_at_85%_10%,#fbcfe8,transparent_60%),radial-gradient(60%_120%_at_60%_100%,#bbf7d0,transparent_60%)] bg-l-sub dark:opacity-60" />
+        <div className={`-m-[22px] mb-0 h-[150px] bg-l-sub dark:opacity-60 ${champ ? "bg-[radial-gradient(60%_120%_at_15%_20%,#fde68a,transparent_60%),radial-gradient(50%_120%_at_85%_10%,#fbbf24,transparent_60%),radial-gradient(60%_120%_at_60%_100%,#fef3c7,transparent_60%)]" : "bg-[radial-gradient(60%_120%_at_15%_20%,#c7d2fe,transparent_60%),radial-gradient(50%_120%_at_85%_10%,#fbcfe8,transparent_60%),radial-gradient(60%_120%_at_60%_100%,#bbf7d0,transparent_60%)]"}`} />
         <div className="relative z-[1] -mt-[46px] flex flex-wrap items-end gap-4">
           <button type="button" aria-label="Customize avatar" onClick={() => setEditing("avatar")} className="relative rounded-full shadow-[0_0_0_5px_var(--l-card),0_12px_24px_-12px_rgba(0,0,0,.3)]">
-            <UserAvatar userId={me._id} name={n.en} avatar={me.avatar} className="h-[104px] w-[104px]" />
+            <UserAvatar userId={me._id} name={n.en} avatar={me.avatar} champion={champ} className="h-[104px] w-[104px]" />
             <span className="absolute bottom-1 right-1 grid h-7 w-7 place-items-center rounded-full bg-l-ink text-l-card shadow-[0_0_0_3px_var(--l-card)]">
               <Pencil className="h-3.5 w-3.5" />
             </span>
@@ -138,6 +141,9 @@ export function MyProfilePage() {
               <Medal name={`${s?.streak ?? 0}-day streak`} sub="On time" color="#ea580c" glyph={String(s?.streak ?? 0)} />
               {(me.badges ?? []).map((b) => (
                 <Medal key={b._id ?? b.name} name={b.name} color={b.color || "#6366f1"} glyph={b.name.slice(0, 1).toUpperCase()} />
+              ))}
+              {medals.map((m) => (
+                <Medal key={m.week} name={`GenMate Cup · Week ${m.week_no}`} sub={medals.length >= 3 ? "Gold" : "Cup"} color={medals.length >= 3 ? "#f59e0b" : "#a1a1aa"} glyph={String(m.week_no)} />
               ))}
               {!s?.perfect_week && <Medal name="Perfect week" sub="Not yet" locked progress={0} />}
             </div>

@@ -12,4 +12,14 @@ describe("resolveStyle", () => {
     expect(resolveStyle(prefs("", true), 3, false, "2026-09-08", "u1", 0).id).toBe(a.id);
     expect(["rocket", "arcade", "dj", "gold"]).not.toContain(a.id);
   });
+
+  it("random mode only deals Victory Lap to champions", () => {
+    const picks = (champ: boolean) => Array.from({ length: 300 }, (_, i) => resolveStyle({ checkin_style: "", checkin_random: true }, 99, true, "2026-09-08", `s${i}`, 0, champ).id);
+    expect(picks(false)).not.toContain("victory");
+    expect(picks(true)).toContain("victory");
+  });
+  it("a saved Victory Lap falls back to Slide after the champion week", () => {
+    expect(resolveStyle({ checkin_style: "victory", checkin_random: false }, 0, false, "2026-09-08", "s", 0, false).id).toBe("slide");
+    expect(resolveStyle({ checkin_style: "victory", checkin_random: false }, 0, false, "2026-09-08", "s", 0, true).id).toBe("victory");
+  });
 });

@@ -18,8 +18,12 @@ describe("styleUnlocked", () => {
   ] as const)("%s streak=%i perfect=%s → %s", (id, streak, perfect, want) => {
     expect(styleUnlocked(m(id), streak, perfect)).toBe(want);
   });
-  it("lists the 16 styles in order", () => {
-    expect(STYLES.map((s) => s.id).join(" ")).toBe("slide hold ring run coffee red cat bubble scratch alarm slot gacha rocket gold arcade dj");
+  it("Victory Lap is for Cup champions only", () => {
+    expect(styleUnlocked(m("victory"), 99, true)).toBe(false);
+    expect(styleUnlocked(m("victory"), 0, false, true)).toBe(true);
+  });
+  it("lists the 17 styles in order", () => {
+    expect(STYLES.map((s) => s.id).join(" ")).toBe("slide hold ring run coffee red cat bubble scratch alarm slot gacha rocket gold arcade dj victory");
   });
 });
 

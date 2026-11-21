@@ -108,6 +108,16 @@ export function StyleThumb({ id }: { id: StyleId }) {
       );
     case "arcade":
       return <div className="grid h-12 w-[84px] place-items-center rounded-lg bg-slate-950 font-mono text-[9px] font-bold text-yellow-300 shadow-[0_0_0_4px_#27272a]">START</div>;
+    case "victory":
+      return (
+        <svg viewBox="0 0 60 44" width="56">
+          <rect width="60" height="44" rx="8" fill="#1c1917" />
+          <path d="M14 0l8 44H6zM46 0l8 44H38z" fill="#fde68a" opacity=".18" />
+          <path d="M22 8h16v8a8 8 0 0 1-16 0z" fill="#f59e0b" />
+          <rect x="28" y="24" width="4" height="7" fill="#d97706" />
+          <rect x="23" y="31" width="14" height="5" rx="1.5" fill="#fbbf24" />
+        </svg>
+      );
     case "dj":
       return (
         <svg viewBox="0 0 60 44" width="56">

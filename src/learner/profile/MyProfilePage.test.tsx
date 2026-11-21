@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { MyProfilePage } from "./MyProfilePage";
 import { learnerApi } from "../api";
 
+vi.mock("../cup/api", () => ({ cupApi: { me: vi.fn().mockResolvedValue({ champion_group: "F", my_medals: [{ week: "2026-08-24", week_no: 8 }], standings: [] }) } }));
 vi.mock("@blobatar/react/gaze", () => ({ useGaze: () => ({ ref: vi.fn() }) }));
 vi.mock("react-toastify", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/UserDataContext", () => ({
@@ -67,5 +68,11 @@ describe("MyProfilePage", () => {
     fireEvent.change(await screen.findByPlaceholderText("Add a skill"), { target: { value: "Docker" } });
     expect(screen.getByRole("button", { name: "Add skill" })).toBeDisabled();
     expect(learnerApi.savePreferences).not.toHaveBeenCalled();
+  });
+
+  it("shows Cup medals and the champion frame", async () => {
+    renderPage();
+    expect(await screen.findByText("GenMate Cup · Week 8")).toBeInTheDocument();
+    expect(document.querySelector("[data-champion]")).not.toBeNull();
   });
 });

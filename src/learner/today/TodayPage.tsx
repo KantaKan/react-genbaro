@@ -2,6 +2,9 @@ import { useQuery, useQueryClient } from "react-query";
 import { useUserData } from "@/UserDataContext";
 import { learnerApi } from "../api";
 import { usePageHeader } from "../shell/LearnerShell";
+import { useCup } from "../cup/useChampion";
+import { LeaderboardCard } from "../cup/LeaderboardCard";
+import { YourGroupCard } from "../cup/YourGroupCard";
 import { CheckInCard } from "../checkin/CheckInCard";
 import { StylePicker } from "../checkin/StylePicker";
 import { useState } from "react";
@@ -21,6 +24,7 @@ export function TodayPage() {
   const { userData } = useUserData();
   const summary = useQuery(["my-summary"], learnerApi.getSummary, { refetchInterval: 60_000 });
   const history = useQuery(["my-history", 14], () => learnerApi.getHistory(14));
+  const cup = useCup();
   const reflections = useQuery(["my-reflections", userData?._id], () => learnerApi.getMyReflections(userData!._id), { enabled: !!userData?._id });
   const now = useClock(30_000);
   const today = bangkokNow().date;
@@ -70,6 +74,16 @@ export function TodayPage() {
             <ReflectionCard userId={userData._id} reflections={reflections.data ?? []} nowSec={now} today={today} onSubmitted={() => qc.invalidateQueries(["my-reflections"])} />
           )}
         </div>
+        {cup.data && (
+          <>
+            <div className="lg:col-span-7">
+              <LeaderboardCard cup={cup.data} now={new Date()} />
+            </div>
+            <div className="lg:col-span-5">
+              <YourGroupCard cup={cup.data} />
+            </div>
+          </>
+        )}
         <div className="lg:col-span-7">
           <WeekCard cells={week} />
         </div>

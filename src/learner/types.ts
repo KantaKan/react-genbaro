@@ -29,6 +29,8 @@ export interface MySummary {
   warning_level: "none" | "first" | "second" | "third";
   attendance_rate: number;
   perfect_week: boolean;
+  /** in last week's GenMate Cup winning group */
+  champion?: boolean;
   rules: CheckinRules;
   /** false on weekends and holidays */
   class_today: boolean;

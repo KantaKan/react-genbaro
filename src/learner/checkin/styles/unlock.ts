@@ -1,8 +1,9 @@
 import type { StyleId, StyleMeta } from "./registry";
 
 /** Mirrors the backend's StyleUnlocked. */
-export function styleUnlocked(m: StyleMeta, streak: number, perfectWeek: boolean): boolean {
+export function styleUnlocked(m: StyleMeta, streak: number, perfectWeek: boolean, champion = false): boolean {
   if (m.need === undefined) return true;
+  if (m.need === "champion") return champion;
   if (m.need === "perfect_week") return perfectWeek;
   return streak >= m.need;
 }

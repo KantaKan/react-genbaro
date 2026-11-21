@@ -11,6 +11,7 @@ const { people } = vi.hoisted(() => ({ people: [
       { _id: "u2", first_name: "Mint", zoom_name: "22_Mint(Mint/มิ้นท์)", jsd_number: "22", genmate_group: "F", cohort_number: 13, role: "learner", bio: "Loves CSS", skills: ["CSS"], avatar: { style: "lorelei", seed: "m", bg: "fce7f3" } },
       { _id: "u3", first_name: "Ajjima", zoom_name: "01_Ajjima(Theim/เถียม)", jsd_number: "01", genmate_group: "I", cohort_number: 13, role: "learner", attendance_status: "dropout", social_links: { github: "javascript:alert(1)", linkedin: "https://linkedin.com/in/x" }, profile_comments: [{ id: "c1", userId: "u2", zoomName: "22_Mint(Mint/มิ้นท์)", content: "Great at CSS", createdAt: "2026-09-01" }] },
     ] }));
+vi.mock("../cup/api", () => ({ cupApi: { me: vi.fn().mockResolvedValue({ champion_group: "I", my_medals: [], standings: [] }) } }));
 vi.mock("@blobatar/react/gaze", () => ({ useGaze: () => ({ ref: vi.fn() }) }));
 vi.mock("@/components/mode-toggle", () => ({ ModeToggle: () => null }));
 vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout: vi.fn(), userRole: "learner" }) }));
@@ -66,5 +67,12 @@ describe("ClassmatesPage", () => {
     expect(within(panel).getByText("LinkedIn").closest("a")).toHaveAttribute("href", "https://linkedin.com/in/x");
     const rec = within(panel).getByText("Great at CSS").closest("div")!.parentElement!;
     expect(rec.querySelector("img[data-avatar='dicebear']")).not.toBeNull();
+  });
+
+  it("frames last week's Cup champions", async () => {
+    renderPage();
+    const card = await screen.findByRole("button", { name: /Open เถียม/ });
+    await waitFor(() => expect(card.querySelector("[data-champion]")).not.toBeNull());
+    for (const b of screen.getAllByRole("button", { name: /Open มิ้นท์/ })) expect(b.querySelector("[data-champion]")).toBeNull();
   });
 });

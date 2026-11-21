@@ -10,6 +10,7 @@ import { filterPeople, type Person, type PeopleQuery } from "../lib/people";
 import { ClassmatePanel } from "./ClassmatePanel";
 import { AvatarEditor } from "../avatar/AvatarEditor";
 import { learnerApi } from "../api";
+import { useChampion } from "../cup/useChampion";
 
 const GROUPS = ["All", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
 const SORTS: { id: NonNullable<PeopleQuery["sort"]>; label: string }[] = [
@@ -22,6 +23,7 @@ export function ClassmatesPage() {
   const qc = useQueryClient();
   const { userData, refetchUserData } = useUserData();
   const { list: data } = usePeople();
+  const { isChampion } = useChampion();
   const summary = useQuery(["my-summary"], learnerApi.getSummary, { staleTime: 60_000 });
   const people = data.filter((p) => p.role !== "admin");
   const [q, setQ] = useState("");
@@ -66,8 +68,9 @@ export function ClassmatesPage() {
   return (
     <div>
       {myGroup.length > 0 && (
-        <section aria-label="Your GenMate group" className="l-card bg-[radial-gradient(70%_140%_at_0%_0%,rgba(129,140,248,.18),transparent_60%),radial-gradient(60%_140%_at_100%_100%,rgba(244,114,182,.14),transparent_60%)] p-[22px]">
+        <section aria-label="Your GenMate group" className={`l-card p-[22px] ${isChampion(userData?.genmate_group) ? "bg-[radial-gradient(70%_140%_at_0%_0%,rgba(253,230,138,.55),transparent_60%),radial-gradient(60%_140%_at_100%_100%,rgba(245,158,11,.22),transparent_60%)]" : "bg-[radial-gradient(70%_140%_at_0%_0%,rgba(129,140,248,.18),transparent_60%),radial-gradient(60%_140%_at_100%_100%,rgba(244,114,182,.14),transparent_60%)]"}`}>
           <b className="text-[17px] font-semibold tracking-tight">Your GenMate group · {userData?.genmate_group}</b>
+          {isChampion(userData?.genmate_group) && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">Cup champions this week</span>}
           <p className="mt-0.5 text-[12.5px] text-l-ink2">The people you'll see most. Say hi, pair up, cheer each other on.</p>
           <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
             {myGroup.map((p) => {
@@ -81,7 +84,7 @@ export function ClassmatesPage() {
                   onClick={() => (self ? setEditing(true) : setOpen(p))}
                   className="relative w-[140px] shrink-0 rounded-[18px] bg-l-card/80 px-2.5 pb-3 pt-4 text-center shadow-[0_0_0_1px_var(--l-hair)] transition duration-500 hover:-translate-y-1"
                 >
-                  <UserAvatar userId={p._id} name={n.en} avatar={p.avatar} className="mx-auto h-16 w-16" />
+                  <UserAvatar userId={p._id} name={n.en} avatar={p.avatar} champion={isChampion(p.genmate_group)} className="mx-auto h-16 w-16" />
                   {self && (
                     <span className="absolute left-[calc(50%+14px)] top-14 grid h-6 w-6 place-items-center rounded-full bg-l-ink text-l-card shadow-[0_0_0_3px_var(--l-card)]">
                       <Pencil className="h-3 w-3" />
@@ -136,7 +139,7 @@ export function ClassmatesPage() {
             return (
               <button key={p._id} type="button" aria-label={`Open ${n.th || n.en}`} onClick={() => setOpen(p)} className="l-card flex flex-col gap-3 p-4 text-left transition duration-500 hover:-translate-y-[3px]">
                 <span className="flex items-center gap-3">
-                  <UserAvatar userId={p._id} name={n.en} avatar={p.avatar} className="h-[52px] w-[52px]" />
+                  <UserAvatar userId={p._id} name={n.en} avatar={p.avatar} champion={isChampion(p.genmate_group)} className="h-[52px] w-[52px]" />
                   <span className="min-w-0">
                     <b className="block text-[15px] font-semibold">{n.th || n.en}</b>
                     <small className="text-[12.5px] text-l-ink3">
@@ -164,7 +167,7 @@ export function ClassmatesPage() {
             const n = nicknames(p.zoom_name, p.first_name);
             return (
               <button key={p._id} type="button" aria-label={`Open ${n.th || n.en}`} onClick={() => setOpen(p)} className="grid w-full grid-cols-[40px_1fr_50px] items-center gap-3.5 border-t border-l-hair px-4 py-3 text-left first:border-t-0 hover:bg-l-sub sm:grid-cols-[40px_1.3fr_50px_2fr]">
-                <UserAvatar userId={p._id} name={n.en} avatar={p.avatar} className="h-10 w-10" />
+                <UserAvatar userId={p._id} name={n.en} avatar={p.avatar} champion={isChampion(p.genmate_group)} className="h-10 w-10" />
                 <span>
                   <b className="font-semibold">{n.th || n.en}</b> <span className="text-[12.5px] text-l-ink3">{n.en} · #{p.jsd_number ?? "–"}</span>
                 </span>

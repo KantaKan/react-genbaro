@@ -90,11 +90,11 @@ export function CheckInCard({
   const lingerTimer = useRef<ReturnType<typeof setTimeout>>();
   useEffect(() => () => clearTimeout(lingerTimer.current), []);
   const prefs = summary.preferences ?? { checkin_style: "", checkin_random: false };
-  let meta = resolveStyle(prefs, summary.streak, summary.perfect_week, today, seed, rerolls);
+  let meta = resolveStyle(prefs, summary.streak, summary.perfect_week, today, seed, rerolls, !!summary.champion);
   if (prefs.checkin_random) {
     const pinned = readDailyPick(today, seed, rerolls);
     const pm = pinned ? styleById(pinned) : undefined;
-    if (pm && styleUnlocked(pm, summary.streak, summary.perfect_week)) meta = pm;
+    if (pm && styleUnlocked(pm, summary.streak, summary.perfect_week, !!summary.champion)) meta = pm;
     else writeDailyPick(today, seed, rerolls, meta.id);
   }
   const style = meta.id;
