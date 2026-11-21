@@ -15,6 +15,8 @@ describe("cup helpers", () => {
   it("headline when leading", () => expect(headline(cup("C", S))).toBe("You're leading. 18 points ahead."));
   it("headline without a group", () => expect(headline(cup("", S))).toBe("You're not in a GenMate group yet."));
   it("headline when tied for first", () => expect(headline(cup("B", [g("A", 10, 0, 0, 0), g("B", 0, 10, 0, 0)]))).toBe("Tied on 10 with Group A. Coding points break the tie."));
+  it("Monday morning with no points is not a tie", () =>
+    expect(headline(cup("B", [g("A", 0, 0, 0, 0), g("B", 0, 0, 0, 0)]))).toBe("Every point counts. Be the first on the board."));
   it("best move targets my weakest category against #1", () => {
     const m = bestMoves(cup("F", S));
     expect(m[0].category).toBe("coding"); // 10 vs 30 → biggest gap

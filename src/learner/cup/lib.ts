@@ -18,9 +18,10 @@ export function headline(cup: MyCup): string {
   const i = rankOf(s, cup.my_group);
   if (!cup.my_group || i < 0) return "You're not in a GenMate group yet.";
   const me = s[i];
+  if ((s[0]?.total ?? 0) === 0) return "Every point counts. Be the first on the board.";
   if (i === 0) {
     const gap = me.total - (s[1]?.total ?? 0);
-    if (s.length === 1 || me.total === 0) return "Every point counts. Be the first on the board.";
+    if (s.length === 1) return "Every point counts. Be the first on the board.";
     if (gap === 0) return `Tied on ${me.total} with Group ${s[1].group}. Coding points break the tie.`;
     return `You're leading. ${gap} ${gap === 1 ? "point" : "points"} ahead.`;
   }

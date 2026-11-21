@@ -30,6 +30,24 @@ describe("LeaderboardCard", () => {
   });
 });
 
+describe("LeaderboardCard extras", () => {
+  it("never puts the last group or a 0-point group on the podium", () => {
+    render(<LeaderboardCard cup={cup("F", [g("C", 10, 0, 0, 0), g("F", 5, 0, 0, 0), g("A", 0, 0, 0, 0)])} now={now} />);
+    const groups = within(screen.getByRole("list", { name: "Top 3" })).getAllByRole("listitem").map((li) => li.getAttribute("data-group"));
+    expect(groups.filter(Boolean)).toEqual(["F", "C"]);
+  });
+  it("with 3 groups shows only the top 2", () => {
+    render(<LeaderboardCard cup={cup("F", [g("C", 10, 0, 0, 0), g("F", 5, 0, 0, 0), g("A", 3, 0, 0, 0)])} now={now} />);
+    expect(screen.queryByText("Group A")).toBeNull();
+  });
+  it("lists past winners on the wall of fame", () => {
+    const c = { ...cup("F", S), wall_of_fame: [{ week_no: 9, group: "B", points: 50 }, { week_no: 8, group: "C", points: 41 }] };
+    render(<LeaderboardCard cup={c} now={now} />);
+    const wall = screen.getByRole("list", { name: "Wall of fame" });
+    expect(within(wall).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["Week 9Group B50 pts", "Week 8Group C41 pts"]);
+  });
+});
+
 describe("YourGroupCard", () => {
   it("shows the headline, best move and recent awards", () => {
     render(<YourGroupCard cup={cup("F", S)} />);

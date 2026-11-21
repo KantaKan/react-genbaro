@@ -12,7 +12,9 @@ const PLACE = [2, 1, 3];
 const todayIdx = (now: Date, week: string) => Math.floor((now.getTime() - new Date(`${week}T00:00:00+07:00`).getTime()) / 86_400_000);
 
 export function LeaderboardCard({ cup, now }: { cup: MyCup; now: Date }) {
-  const top = cup.standings.slice(0, 3);
+  // Podium = top 3 with points, and never the last-placed group (spec: no last place).
+  const last = cup.standings[cup.standings.length - 1];
+  const top = cup.standings.filter((s) => s.total > 0 && (cup.standings.length > 3 || s !== last)).slice(0, 3);
   const podium = [top[1], top[0], top[2]];
   const empty = (cup.standings[0]?.total ?? 0) === 0;
   const { pct, left } = weekProgress(now, cup.week, cup.ends_at);
@@ -69,6 +71,21 @@ export function LeaderboardCard({ cup, now }: { cup: MyCup; now: Date }) {
               <li key={t} className="flex items-start gap-2">
                 <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" strokeWidth={1.75} />
                 {t}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {cup.wall_of_fame.length > 0 && (
+        <>
+          <h4 className="mb-1.5 mt-5 text-[12px] font-semibold uppercase tracking-[.08em] text-l-ink3">Wall of fame</h4>
+          <ul aria-label="Wall of fame" className="text-[12.5px]">
+            {cup.wall_of_fame.slice(0, 5).map((w) => (
+              <li key={w.week_no} className="flex items-center gap-3 border-t border-l-hair py-1.5 first:border-t-0">
+                <span className="w-14 text-l-ink3">Week {w.week_no}</span>
+                <b className="flex-1 font-semibold">Group {w.group}</b>
+                <span className="tabular-nums text-l-ink2">{w.points} pts</span>
               </li>
             ))}
           </ul>
