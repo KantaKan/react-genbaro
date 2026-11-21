@@ -22,8 +22,8 @@ const slide: Loader = () => import("../SlideControl").then((m) => ({ default: m.
 
 export const STYLES: StyleMeta[] = [
   { id: "slide", name: "Slide", sub: "Slide to unlock", group: "clean", load: slide },
-  { id: "hold", name: "Hold", sub: "Press and hold", group: "clean", load: ph },
-  { id: "ring", name: "Ring", sub: "Countdown timer", group: "clean", load: ph },
+  { id: "hold", name: "Hold", sub: "Press and hold", group: "clean", load: () => import("./HoldControl") },
+  { id: "ring", name: "Ring", sub: "Countdown timer", group: "clean", load: () => import("./RingControl") },
   { id: "run", name: "Runaway", sub: "Catch it if you can", group: "fun", load: ph },
   { id: "coffee", name: "Coffee", sub: "Hold to brew", group: "fun", load: ph },
   { id: "red", name: "Big red button", sub: "Open the cover first", group: "fun", load: ph },
@@ -34,7 +34,7 @@ export const STYLES: StyleMeta[] = [
   { id: "slot", name: "Lucky slot", sub: "Pull the lever", group: "fun", load: ph },
   { id: "gacha", name: "Gacha", sub: "Turn the knob", group: "fun", load: ph },
   { id: "rocket", name: "Rocket launch", sub: "15-day streak", group: "unlock", need: 15, load: ph },
-  { id: "gold", name: "Gold slide", sub: "Perfect week", group: "unlock", need: "perfect_week", load: ph },
+  { id: "gold", name: "Gold slide", sub: "Perfect week", group: "unlock", need: "perfect_week", load: () => import("./GoldSlideControl") },
   { id: "arcade", name: "Arcade", sub: "20-day streak", group: "unlock", need: 20, load: ph },
   { id: "dj", name: "DJ deck", sub: "30-day streak", group: "unlock", need: 30, load: ph },
 ];

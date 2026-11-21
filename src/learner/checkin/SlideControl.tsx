@@ -5,11 +5,12 @@ import type { CheckInControlProps } from "./types";
 const KNOB = 54;
 const PAD = 6;
 
-export function SlideControl({ tone, disabled, busy, onComplete }: CheckInControlProps) {
+export function SlideControl({ tone, disabled, busy, onComplete, skin }: CheckInControlProps & { skin?: "gold" }) {
   const track = useRef<HTMLDivElement>(null);
   const start = useRef<number | null>(null);
   const [dx, setDx] = useState(0);
-  const color = tone === "late" ? "var(--l-amber)" : "var(--l-green)";
+  const gold = skin === "gold";
+  const color = gold ? "#facc15" : tone === "late" ? "var(--l-amber)" : "var(--l-green)";
   const max = () => (track.current?.clientWidth ?? 360) - KNOB - PAD * 2;
 
   const down = (e: PointerEvent<HTMLDivElement>) => {
@@ -37,11 +38,11 @@ export function SlideControl({ tone, disabled, busy, onComplete }: CheckInContro
   return (
     <div
       ref={track}
-      className="relative h-[66px] w-full max-w-[380px] select-none overflow-hidden rounded-full bg-l-card shadow-[0_0_0_1px_var(--l-hair),0_10px_30px_-18px_rgba(0,0,0,.3)]"
+      className={`relative h-[66px] w-full max-w-[380px] select-none overflow-hidden rounded-full ${gold ? "bg-gradient-to-b from-stone-800 to-stone-950 shadow-[0_0_0_1.5px_#a16207,0_18px_40px_-16px_rgba(161,98,7,.6)]" : "bg-l-card shadow-[0_0_0_1px_var(--l-hair),0_10px_30px_-18px_rgba(0,0,0,.3)]"}`}
       style={{ touchAction: "none" }}
     >
       <div className="absolute inset-y-0 left-0 rounded-full opacity-[.14]" style={{ width: KNOB + PAD * 2 + dx, background: color }} />
-      <div className="absolute inset-0 grid place-items-center pl-11 text-[15px] font-semibold text-l-ink2" style={{ opacity: 1 - dx / (max() || 1) }}>
+      <div className={`absolute inset-0 grid place-items-center pl-11 text-[15px] font-semibold ${gold ? "text-amber-300" : "text-l-ink2"}`} style={{ opacity: 1 - dx / (max() || 1) }}>
         {busy ? "Checking you in…" : tone === "late" ? "Slide to check in · late" : "Slide to check in"}
       </div>
       <div
