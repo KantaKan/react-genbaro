@@ -11,7 +11,7 @@ export default function RocketControl({ disabled, busy, onComplete }: CheckInCon
   const [msg, setMsg] = useState("Hold to launch");
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const clear = () => (timers.current.forEach(clearTimeout), (timers.current = []));
-  useEffect(() => clear, []);
+  useEffect(() => () => void clear(), []);
   const down = () => {
     if (gone || disabled || busy) return;
     setMsg("Hold… hold…");
