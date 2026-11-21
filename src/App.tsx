@@ -35,17 +35,16 @@ const AttendancePage = lazy(() => import("./learner/attendance/AttendancePage").
 const ToolsPage = lazy(() => import("./pages/ToolPage"));
 const SpinWheelPage = lazy(() => import("./pages/SpinWheelPage"));
 const WeeklySummaryPage = lazy(() => import("./pages/weekly-summary-page"));
+const AdminTodayPage = () => <div>Today</div>;
+const AdminRegisterPage = () => <div>Register</div>;
+const AdminLeavePage = () => <div>Leave</div>;
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard").then((module) => ({ default: module.AdminDashboard })));
 const GenmateGardenPage = lazy(() => import("./pages/admin/GenmateGardenPage").then((module) => ({ default: module.GenmateGardenPage })));
 const AdminCohortFarmPage = lazy(() => import("./pages/admin/AdminCohortFarmPage").then((module) => ({ default: module.AdminCohortFarmPage })));
 const AttendanceShell = lazy(() => import("./components/attendance-shell").then((module) => ({ default: module.AttendanceShell })));
-const AttendanceRegisterView = lazy(() => import("./components/attendance-register-view").then((module) => ({ default: module.AttendanceRegisterView })));
 const AttendanceAllStudentsView = lazy(() => import("./components/attendance-all-students-view").then((module) => ({ default: module.AttendanceAllStudentsView })));
 const AttendanceCalendarView = lazy(() => import("./components/attendance-calendar-view").then((module) => ({ default: module.AttendanceCalendarView })));
 const AttendanceLogsView = lazy(() => import("./components/attendance-logs-view").then((module) => ({ default: module.AttendanceLogsView })));
-const AttendanceLeaveView = lazy(() => import("./components/attendance-leave-view").then((module) => ({ default: module.AttendanceLeaveView })));
-const AttendanceCodeDispatchView = lazy(() => import("./components/attendance/attendance-code-dispatch-view").then((module) => ({ default: module.AttendanceCodeDispatchView })));
-const LeaveRequestsTable = lazy(() => import("./components/leave-requests-table").then((module) => ({ default: module.LeaveRequestsTable })));
 const StudentAttendanceDetail = lazy(() => import("./pages/student-attendance-detail").then((module) => ({ default: module.StudentAttendanceDetail })));
 const CupAwardsPage = lazy(() => import("./pages/admin/CupAwardsPage"));
 const AdminNotificationManager = lazy(() => import("./components/admin-notification-manager"));
@@ -113,7 +112,10 @@ function AppContent() {
           />
 
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
+            <Route index element={<AdminTodayPage />} />
+            <Route path="overview" element={<AdminDashboard />} />
+            <Route path="leave" element={<AdminLeavePage />} />
+            <Route path="leave-requests" element={<Navigate to="/admin/leave" replace />} />
             <Route path="table" element={<AdminTablePage />} />
             <Route path="table/:id" element={<UserReflectionsPage />} />
             <Route path="users" element={<AdminUsersPage />} />
@@ -122,15 +124,14 @@ function AppContent() {
             <Route path="weekly-summary" element={<WeeklySummaryPage />} />
             <Route path="attendance" element={<AttendanceShell />}>
               <Route index element={<Navigate to="register" replace />} />
-              <Route path="register" element={<AttendanceRegisterView />} />
-              <Route path="code-dispatch" element={<AttendanceCodeDispatchView />} />
+              <Route path="register" element={<AdminRegisterPage />} />
+              <Route path="code-dispatch" element={<Navigate to="/admin" replace />} />
               <Route path="all-students" element={<AttendanceAllStudentsView />} />
               <Route path="calendar" element={<AttendanceCalendarView />} />
               <Route path="logs" element={<AttendanceLogsView />} />
-              <Route path="leave" element={<AttendanceLeaveView />} />
+              <Route path="leave" element={<Navigate to="/admin/leave" replace />} />
             </Route>
             <Route path="attendance/student/:id" element={<StudentAttendanceDetail />} />
-            <Route path="leave-requests" element={<LeaveRequestsTable />} />
             <Route path="notifications" element={<AdminNotificationManager />} />
             <Route path="cup" element={<CupAwardsPage />} />
             <Route path="history" element={<AdminHistoryPage />} />

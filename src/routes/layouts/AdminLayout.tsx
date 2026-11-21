@@ -1,14 +1,13 @@
 import { Outlet } from "react-router-dom";
-import Page from "../../app/dashboard/page";
 import { ProtectedRoute } from "../ProtectedRoute";
+import { AdminShell } from "../../admin/shell/AdminShell";
 
 export function AdminLayout() {
   return (
-    <Page>
-      <ProtectedRoute allowedRoles={["admin"]}>
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminShell>
         <Outlet />
-      </ProtectedRoute>
-    </Page>
+      </AdminShell>
+    </ProtectedRoute>
   );
 }
-
