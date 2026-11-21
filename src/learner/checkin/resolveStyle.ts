@@ -8,13 +8,14 @@ export function resolveStyle(
   perfectWeek: boolean,
   date: string,
   seed: string,
-  reroll: number
+  reroll: number,
+  champion = false
 ): StyleMeta {
   const slide = styleById("slide")!;
   if (prefs.checkin_random) {
-    const ids = STYLES.filter((m) => styleUnlocked(m, streak, perfectWeek)).map((m) => m.id);
+    const ids = STYLES.filter((m) => styleUnlocked(m, streak, perfectWeek, champion)).map((m) => m.id);
     return styleById(dailyStyle(ids, date, seed, reroll)) ?? slide;
   }
   const m = styleById(prefs.checkin_style || "slide");
-  return m && styleUnlocked(m, streak, perfectWeek) ? m : slide;
+  return m && styleUnlocked(m, streak, perfectWeek, champion) ? m : slide;
 }

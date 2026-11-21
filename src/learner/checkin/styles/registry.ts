@@ -3,7 +3,7 @@ import type { CheckInControlProps } from "../types";
 
 export type StyleId =
   | "slide" | "hold" | "ring" | "run" | "coffee" | "red" | "cat" | "bubble"
-  | "scratch" | "alarm" | "slot" | "gacha" | "rocket" | "gold" | "arcade" | "dj";
+  | "scratch" | "alarm" | "slot" | "gacha" | "rocket" | "gold" | "arcade" | "dj" | "victory";
 
 type Loader = () => Promise<{ default: ComponentType<CheckInControlProps> }>;
 
@@ -12,8 +12,8 @@ export interface StyleMeta {
   name: string;
   sub: string;
   group: "clean" | "fun" | "unlock";
-  /** streak days needed, or "perfect_week"; undefined = free */
-  need?: number | "perfect_week";
+  /** streak days needed, "perfect_week", or "champion" (GenMate Cup winners); undefined = free */
+  need?: number | "perfect_week" | "champion";
   load: Loader;
 }
 
@@ -36,6 +36,7 @@ export const STYLES: StyleMeta[] = [
   { id: "gold", name: "Gold slide", sub: "Perfect week", group: "unlock", need: "perfect_week", load: () => import("./GoldSlideControl") },
   { id: "arcade", name: "Arcade", sub: "20-day streak", group: "unlock", need: 20, load: () => import("./ArcadeControl") },
   { id: "dj", name: "DJ deck", sub: "30-day streak", group: "unlock", need: 30, load: () => import("./DjDeckControl") },
+  { id: "victory", name: "Victory Lap", sub: "Cup winners only", group: "unlock", need: "champion", load: () => import("./VictoryLapControl") },
 ];
 
 export const styleById = (id: string): StyleMeta | undefined => STYLES.find((s) => s.id === id);

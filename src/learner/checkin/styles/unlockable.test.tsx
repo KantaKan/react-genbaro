@@ -3,6 +3,7 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import RocketControl from "./RocketControl";
 import ArcadeControl from "./ArcadeControl";
 import DjDeckControl from "./DjDeckControl";
+import VictoryLapControl from "./VictoryLapControl";
 
 const base = { tone: "on_time" as const, disabled: false, busy: false, minutesLeft: 7, deadline: "9:15" };
 
@@ -51,5 +52,26 @@ describe("unlockable styles", () => {
     for (let d = 20; d <= 760; d += 20) fireEvent.pointerMove(rec, pt(d));
     act(() => void vi.advanceTimersByTime(1500));
     expect(done).toHaveBeenCalledTimes(1);
+  });
+
+  it("victory lap: holding completes the lap once", () => {
+    const done = vi.fn();
+    render(<VictoryLapControl {...base} onComplete={done} />);
+    const b = screen.getByRole("button", { name: /Hold for your victory lap/ });
+    fireEvent.pointerDown(b);
+    fireEvent.pointerDown(b); // second finger
+    act(() => void vi.advanceTimersByTime(1600));
+    expect(done).toHaveBeenCalledTimes(1);
+  });
+
+  it("victory lap: letting go early does nothing", () => {
+    const done = vi.fn();
+    render(<VictoryLapControl {...base} onComplete={done} />);
+    const b = screen.getByRole("button", { name: /Hold for your victory lap/ });
+    fireEvent.pointerDown(b);
+    act(() => void vi.advanceTimersByTime(500));
+    fireEvent.pointerUp(b);
+    act(() => void vi.advanceTimersByTime(3000));
+    expect(done).not.toHaveBeenCalled();
   });
 });
