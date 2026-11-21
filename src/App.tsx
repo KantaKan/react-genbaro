@@ -21,7 +21,7 @@ const AdminTablePage = lazy(() => import("./components/AdminTablePage").then((mo
 const AdminUsersPage = lazy(() => import("./pages/admin-users-page").then((module) => ({ default: module.AdminUsersPage })));
 const UserReflectionsPage = lazy(() => import("./pages/UserReflectionsPage"));
 const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
-const LearnerDirectoryPage = lazy(() => import("./pages/LearnerDirectoryPage"));
+const DirectoryRoute = lazy(() => import("./learner/classmates/DirectoryRoute"));
 const MyProfileWrapper = lazy(() => import("./pages/MyProfileWrapper"));
 const LearnerGenmateGardenPage = lazy(() => import("./pages/LearnerGenmateGardenPage"));
 const CohortGenmateGardenPage = lazy(() => import("./pages/CohortGenmateGardenPage"));
@@ -137,7 +137,7 @@ function AppContent() {
             <Route index element={<TodayPage />} />
             <Route path="reflections" element={<ReflectionsPage />} />
             <Route path="attendance" element={<AttendancePage />} />
-            <Route path="directory" element={<LearnerDirectoryPage />} />
+            <Route path="directory" element={<DirectoryRoute />} />
             <Route path="my-profile" element={<MyProfileWrapper />} />
             <Route path="garden" element={<LearnerGenmateGardenPage />} />
             <Route path="cohort-garden" element={<CohortGenmateGardenPage />} />
