@@ -16,7 +16,7 @@ const renderPanel = (l = mkLearner()) =>
       <LearnerPanel learner={l} session="morning" date="2026-11-23" onChanged={vi.fn()} onPrev={vi.fn()} onNext={vi.fn()} onClose={vi.fn()} />
     </QueryClientProvider>
   );
-const undo = () => (vi.mocked(toast).mock.calls[vi.mocked(toast).mock.calls.length - 1][1] as { action: { onClick: () => void } }).action.onClick();
+const undo = () => (vi.mocked(toast).mock.calls[vi.mocked(toast).mock.calls.length - 1][1] as unknown as { action: { onClick: () => void } }).action.onClick();
 
 describe("LearnerPanel", () => {
   beforeEach(() => {
