@@ -60,7 +60,7 @@ export function TodayPage() {
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-12">
-        <div className="lg:col-span-7">{s ? <CheckInCard summary={s} onCheckedIn={refresh} /> : <div className="l-card h-[340px] animate-pulse" />}</div>
+        <div className="lg:col-span-7">{s ? <CheckInCard summary={s} onCheckedIn={refresh} seed={userData?._id ?? "me"} /> : <div className="l-card h-[340px] animate-pulse" />}</div>
         <div className="lg:col-span-5">
           {userData?._id && (
             <ReflectionCard userId={userData._id} reflections={userData.reflections ?? []} nowSec={now} today={today} onSubmitted={() => refetchUserData?.()} />
