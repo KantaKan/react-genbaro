@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "react-query";
 import { useUserData } from "@/UserDataContext";
 import { learnerApi } from "../api";
 import { usePageHeader } from "../shell/LearnerShell";
-import { cupApi } from "../cup/api";
+import { useCup } from "../cup/useChampion";
 import { LeaderboardCard } from "../cup/LeaderboardCard";
 import { YourGroupCard } from "../cup/YourGroupCard";
 import { CheckInCard } from "../checkin/CheckInCard";
@@ -24,7 +24,7 @@ export function TodayPage() {
   const { userData } = useUserData();
   const summary = useQuery(["my-summary"], learnerApi.getSummary, { refetchInterval: 60_000 });
   const history = useQuery(["my-history", 14], () => learnerApi.getHistory(14));
-  const cup = useQuery(["my-cup"], cupApi.me, { staleTime: 60_000, retry: false });
+  const cup = useCup();
   const reflections = useQuery(["my-reflections", userData?._id], () => learnerApi.getMyReflections(userData!._id), { enabled: !!userData?._id });
   const now = useClock(30_000);
   const today = bangkokNow().date;

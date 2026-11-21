@@ -40,4 +40,10 @@ describe("UserAvatar with a saved avatar", () => {
     expect(img.getAttribute("src")).toBe(ref);
     expect((img.parentElement as HTMLElement).style.background).toMatch(/252, 231, 243|fce7f3/i);
   });
+  it("draws the champion frame only for champions", () => {
+    const { container, rerender } = render(<UserAvatar userId="u1" name="Jane" champion />);
+    expect(container.querySelector("[data-champion]")).not.toBeNull();
+    rerender(<UserAvatar userId="u1" name="Jane" />);
+    expect(container.querySelector("[data-champion]")).toBeNull();
+  });
 });
