@@ -49,7 +49,10 @@ export function UserAvatar({
   avatar,
 }: UserAvatarProps) {
   const displayName = name || firstName || email || "User";
-  const avatarSeed = getUserAvatarSeed(userId, email, name, firstName, lastName);
+  // a saved Blobatar keeps its own seed (Shuffle) and background
+  const blob = avatar?.style === "blobatar" ? avatar : null;
+  const avatarSeed = blob?.seed || getUserAvatarSeed(userId, email, name, firstName, lastName);
+  const blobBg = blob?.bg ? { background: `#${blob.bg}` } : undefined;
 
   if (avatar && avatar.style !== "blobatar") {
     return (
@@ -64,7 +67,7 @@ export function UserAvatar({
   }
 
   return (
-    <Avatar className={cn("bg-muted", className)}>
+    <Avatar className={cn("bg-muted", className)} style={blobBg}>
       <Blobatar name={avatarSeed} alt={displayName} className="h-full w-full object-cover" />
     </Avatar>
   );

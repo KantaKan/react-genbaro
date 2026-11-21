@@ -9,6 +9,8 @@ import { UserAvatar } from "@/components/user-avatar";
 import { BOARD_REACTIONS, decodeHtmlEntities, type BoardPost } from "@/lib/board";
 import { usePageHeader } from "../shell/LearnerShell";
 import { nicknames } from "../lib/name";
+import { usePeople } from "../lib/usePeople";
+import type { Person } from "../lib/people";
 
 export function rankPosts(list: BoardPost[], mode: "latest" | "popular"): BoardPost[] {
   const score = (p: BoardPost) => (p.reactions?.length ?? 0) + (p.comments?.length ?? 0);
@@ -26,6 +28,7 @@ const ago = (iso: string) => {
 export function BoardPage() {
   const qc = useQueryClient();
   const { userData } = useUserData();
+  const { byId } = usePeople();
   const { data = [] } = useQuery(["board-posts"], () => boardService.getPosts(), { staleTime: 30_000 });
   const [mode, setMode] = useState<"latest" | "popular">("latest");
   const [text, setText] = useState("");
@@ -78,7 +81,7 @@ export function BoardPage() {
       <div className="flex flex-col gap-3.5">
         <section className="l-card p-[22px]">
           <div className="flex items-start gap-3">
-            <UserAvatar userId={userData?._id} name={me.en} className="h-10 w-10" />
+            <UserAvatar userId={userData?._id} name={me.en} avatar={(userData as Person | null)?.avatar} className="h-10 w-10" />
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
@@ -99,7 +102,7 @@ export function BoardPage() {
           return (
             <article key={p.id} className="l-card p-[22px]">
               <div className="flex items-center gap-2.5">
-                <UserAvatar userId={p.userId} name={n.en} className="h-[38px] w-[38px]" />
+                <UserAvatar userId={p.userId} name={n.en} avatar={byId.get(p.userId)?.avatar} className="h-[38px] w-[38px]" />
                 <div className="flex-1">
                   <b className="font-semibold">{n.th || n.en}</b>
                   <small className="block text-xs text-l-ink3">{ago(p.createdAt)}</small>

@@ -16,6 +16,7 @@ import { AvatarEditor } from "../avatar/AvatarEditor";
 import { StylePicker } from "../checkin/StylePicker";
 import { styleById } from "../checkin/styles/registry";
 import { BarometerStrip } from "./BarometerStrip";
+import { usePeople } from "../lib/usePeople";
 
 const MAX_SKILLS = 5;
 
@@ -25,6 +26,7 @@ export function MyProfilePage() {
   const me = userData as Person | null;
   const summary = useQuery(["my-summary"], learnerApi.getSummary);
   const reflections = useQuery(["my-reflections", me?._id], () => learnerApi.getMyReflections(me!._id), { enabled: !!me?._id });
+  const { byId } = usePeople();
   const [skill, setSkill] = useState("");
   const [skills, setSkills] = useState<string[] | null>(null);
   const [editing, setEditing] = useState<"avatar" | "profile" | "style" | null>(null);
@@ -120,7 +122,7 @@ export function MyProfilePage() {
               .slice(0, 5)
               .map((c) => (
                 <div key={c.id ?? c._id} className="flex gap-3 border-t border-l-hair py-3.5 first:mt-2 first:border-t-0">
-                  <UserAvatar userId={c.userId} name={c.zoomName} className="h-[34px] w-[34px]" />
+                  <UserAvatar userId={c.userId} name={c.zoomName} avatar={byId.get(c.userId)?.avatar} className="h-[34px] w-[34px]" />
                   <div>
                     <q className="block leading-relaxed">{c.content}</q>
                     <small className="text-xs text-l-ink3">{nicknames(c.zoomName, c.zoomName).th || nicknames(c.zoomName, c.zoomName).en}</small>

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "react-query";
 import { LayoutGrid, List, Pencil, Search } from "lucide-react";
 import { useUserData } from "@/UserDataContext";
-import { userService } from "@/application/services/userService";
+import { usePeople } from "../lib/usePeople";
 import { UserAvatar } from "@/components/user-avatar";
 import { usePageHeader } from "../shell/LearnerShell";
 import { nicknames } from "../lib/name";
@@ -21,7 +21,7 @@ const SORTS: { id: NonNullable<PeopleQuery["sort"]>; label: string }[] = [
 export function ClassmatesPage() {
   const qc = useQueryClient();
   const { userData, refetchUserData } = useUserData();
-  const { data = [] } = useQuery(["cohort-people"], () => userService.getAllUsers() as Promise<Person[]>, { staleTime: 60_000 });
+  const { list: data } = usePeople();
   const summary = useQuery(["my-summary"], learnerApi.getSummary, { staleTime: 60_000 });
   const people = data.filter((p) => p.role !== "admin");
   const [q, setQ] = useState("");

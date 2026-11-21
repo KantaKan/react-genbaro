@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { Blobatar } from "@blobatar/react";
 import { UserAvatar } from "./user-avatar";
 
 const gazeRef = vi.hoisted(() => vi.fn());
@@ -31,5 +32,12 @@ describe("UserAvatar with a saved avatar", () => {
   it("treats a saved blobatar choice like the default", () => {
     const { container } = render(<UserAvatar userId="u1" name="Jane" avatar={{ style: "blobatar", seed: "a", bg: "" }} />);
     expect(container.querySelector("img[data-avatar='dicebear']")).toBeNull();
+  });
+  it("uses the saved blobatar seed and background", () => {
+    const ref = render(<Blobatar name="zz9" />).container.querySelector("img")!.getAttribute("src");
+    const { container } = render(<UserAvatar userId="u1" name="Jane" avatar={{ style: "blobatar", seed: "zz9", bg: "fce7f3" }} />);
+    const img = container.querySelectorAll("img")[0];
+    expect(img.getAttribute("src")).toBe(ref);
+    expect((img.parentElement as HTMLElement).style.background).toMatch(/252, 231, 243|fce7f3/i);
   });
 });

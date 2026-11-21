@@ -8,6 +8,7 @@ import type { BoardPost } from "@/lib/board";
 
 vi.mock("@blobatar/react/gaze", () => ({ useGaze: () => ({ ref: vi.fn() }) }));
 vi.mock("react-toastify", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("../api", () => ({ learnerApi: { getCohortPeople: vi.fn().mockResolvedValue([{ _id: "u", first_name: "Ajjima", avatar: { style: "lorelei", seed: "q", bg: "e0e7ff" } }]) } }));
 vi.mock("@/UserDataContext", () => ({ useUserData: () => ({ userData: { _id: "me", first_name: "A", zoom_name: "03_A(Black/แบล็ค)", cohort_number: 13 }, loading: false }) }));
 const post = (id: string, reactions: number, comments: number, createdAt: string): BoardPost =>
   ({ id, userId: "u", zoomName: "01_Ajjima(Theim/เถียม)", cohort: 13, content: `post ${id}`, createdAt, reactions: Array.from({ length: reactions }, (_, i) => ({ id: `${id}r${i}`, userId: `x${i}`, type: "image", value: "peepolike" })), comments: Array.from({ length: comments }, () => ({})) } as BoardPost);
@@ -54,5 +55,11 @@ describe("BoardPage", () => {
     const card = (await screen.findByText("post a")).closest("article")!;
     fireEvent.click(within(card).getByRole("button", { name: /React with peepoheart/ }));
     await waitFor(() => expect(boardService.addReaction).toHaveBeenCalledWith({ postId: "a", reaction: "peepoheart" }));
+  });
+
+  it("shows each author's saved avatar", async () => {
+    renderPage();
+    const card = (await screen.findByText("post a")).closest("article")!;
+    await waitFor(() => expect(card.querySelector("img[data-avatar='dicebear']")).not.toBeNull());
   });
 });

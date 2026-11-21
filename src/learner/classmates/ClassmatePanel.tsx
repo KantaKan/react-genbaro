@@ -6,6 +6,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { userService } from "@/application/services/userService";
 import { nicknames } from "../lib/name";
 import type { Person } from "../lib/people";
+import { usePeople, safeUrl } from "../lib/usePeople";
 import { Medal } from "../today/Medal";
 
 const QUICK = ["Great pair partner", "Always helps", "Clean code"];
@@ -31,7 +32,9 @@ export function ClassmatePanel({ person, isMe, onClose, onEditAvatar }: { person
     }
   };
   const recs = (person.profile_comments ?? []).filter((c) => !c.parentId).slice(0, 3);
-  const links = person.social_links ?? {};
+  const raw = person.social_links ?? {};
+  const links = { github: safeUrl(raw.github), linkedin: safeUrl(raw.linkedin), instagram: safeUrl(raw.instagram) };
+  const { byId } = usePeople();
   return (
     <Sheet open onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="learner flex w-full flex-col gap-0 border-l-0 bg-l-card p-0 text-l-ink sm:max-w-[440px] [&>button]:hidden">
@@ -92,7 +95,7 @@ export function ClassmatePanel({ person, isMe, onClose, onEditAvatar }: { person
           {recs.length === 0 && <p className="text-[13px] text-l-ink3">No recommendations yet.</p>}
           {recs.map((c) => (
             <div key={c.id ?? c._id} className="flex gap-2.5 border-t border-l-hair py-2.5 first:border-t-0">
-              <UserAvatar userId={c.userId} name={c.zoomName} className="h-[30px] w-[30px]" />
+              <UserAvatar userId={c.userId} name={c.zoomName} avatar={byId.get(c.userId)?.avatar} className="h-[30px] w-[30px]" />
               <div>
                 <q className="block text-[13px] leading-relaxed">{c.content}</q>
                 <small className="text-[11.5px] text-l-ink3">{nicknames(c.zoomName, c.zoomName).th || nicknames(c.zoomName, c.zoomName).en}</small>
