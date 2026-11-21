@@ -21,8 +21,9 @@ const AdminTablePage = lazy(() => import("./components/AdminTablePage").then((mo
 const AdminUsersPage = lazy(() => import("./pages/admin-users-page").then((module) => ({ default: module.AdminUsersPage })));
 const UserReflectionsPage = lazy(() => import("./pages/UserReflectionsPage"));
 const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
-const LearnerDirectoryPage = lazy(() => import("./pages/LearnerDirectoryPage"));
-const MyProfileWrapper = lazy(() => import("./pages/MyProfileWrapper"));
+const DirectoryRoute = lazy(() => import("./learner/classmates/DirectoryRoute"));
+const BoardPage = lazy(() => import("./learner/board/BoardPage").then((module) => ({ default: module.BoardPage })));
+const MyProfilePage = lazy(() => import("./learner/profile/MyProfilePage").then((module) => ({ default: module.MyProfilePage })));
 const LearnerGenmateGardenPage = lazy(() => import("./pages/LearnerGenmateGardenPage"));
 const CohortGenmateGardenPage = lazy(() => import("./pages/CohortGenmateGardenPage"));
 const TalkBoardPage = lazy(() => import("./pages/talk-board-page"));
@@ -137,8 +138,9 @@ function AppContent() {
             <Route index element={<TodayPage />} />
             <Route path="reflections" element={<ReflectionsPage />} />
             <Route path="attendance" element={<AttendancePage />} />
-            <Route path="directory" element={<LearnerDirectoryPage />} />
-            <Route path="my-profile" element={<MyProfileWrapper />} />
+            <Route path="directory" element={<DirectoryRoute />} />
+            <Route path="my-profile" element={<MyProfilePage />} />
+            <Route path="board" element={<BoardPage />} />
             <Route path="garden" element={<LearnerGenmateGardenPage />} />
             <Route path="cohort-garden" element={<CohortGenmateGardenPage />} />
           </Route>

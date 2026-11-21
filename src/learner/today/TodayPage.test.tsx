@@ -22,7 +22,7 @@ vi.mock("@/components/linear-feedback-form", () => ({
 vi.mock("@/application/services/boardService", () => ({ getPosts: vi.fn().mockResolvedValue([]) }));
 vi.mock("../api", async (orig) => {
   const real = await orig<typeof import("../api")>();
-  return { ...real, learnerApi: { ...real.learnerApi, getSummary: vi.fn(), getHistory: vi.fn().mockResolvedValue([]) } };
+  return { ...real, learnerApi: { ...real.learnerApi, getSummary: vi.fn(), getHistory: vi.fn().mockResolvedValue([]), getMyReflections: vi.fn().mockResolvedValue([{ _id: "r1", user_id: "u1", date: "2026-09-07T10:00:00Z", day: "2026-09-07", reflection: { barometer: "Comfort Zone", tech_sessions: {}, non_tech_sessions: {} } }]) } };
 });
 
 const base: MySummary = {
@@ -86,5 +86,12 @@ describe("TodayPage", () => {
     renderPage();
     fireEvent.click(await screen.findByRole("button", { name: /Stretch.*enjoying/ }));
     expect(await screen.findByText("form:stretch-enjoying")).toBeInTheDocument();
+  });
+
+  it("loads reflections from the learner's own endpoint (profile data doesn't include them)", async () => {
+    setBkk(10, 0);
+    vi.mocked(learnerApi.getSummary).mockResolvedValue(base);
+    renderPage();
+    expect(await screen.findByText("Comfort Zone")).toBeInTheDocument();
   });
 });
