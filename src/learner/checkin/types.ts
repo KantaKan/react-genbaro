@@ -4,4 +4,8 @@ export interface CheckInControlProps {
   disabled: boolean;
   busy: boolean;
   onComplete: () => void;
+  /** minutes until the next cutoff (late or absent) */
+  minutesLeft: number;
+  /** label of the next cutoff, e.g. "9:15" */
+  deadline: string;
 }

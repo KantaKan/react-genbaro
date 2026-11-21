@@ -11,6 +11,7 @@ import {
 import { learnerApi, LearnerApiError } from "../api";
 import { useClock } from "./useClock";
 import { SlideControl } from "./SlideControl";
+import { StyleFrame } from "./styles/StyleFrame";
 import type { CheckInControlProps } from "./types";
 
 /** Check-in styles by id. Plan 3 adds the rest; unknown ids fall back to slide. */
@@ -177,12 +178,16 @@ export function CheckInCard({
 
       {canAct && (
         <div className="mt-5">
-          <Control
-            tone={phase === "late" ? "late" : "on_time"}
-            disabled={false}
-            busy={busy}
-            onComplete={checkIn}
-          />
+          <StyleFrame disabled={false} busy={busy} onComplete={checkIn}>
+            <Control
+              tone={phase === "late" ? "late" : "on_time"}
+              disabled={false}
+              busy={busy}
+              onComplete={checkIn}
+              minutesLeft={minutesUntil(phase === "late" ? w.absent_after : w.late_after, now)}
+              deadline={fmtClock(phase === "late" ? w.absent_after : w.late_after)}
+            />
+          </StyleFrame>
         </div>
       )}
 
