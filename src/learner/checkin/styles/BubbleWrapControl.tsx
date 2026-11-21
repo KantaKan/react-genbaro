@@ -15,7 +15,7 @@ export default function BubbleWrapControl({ disabled, busy, onComplete }: CheckI
     play("pop");
     if (next.every(Boolean) && !fired.current) {
       fired.current = true;
-      setTimeout(onComplete, 350);
+      onComplete();
     }
   };
   return (

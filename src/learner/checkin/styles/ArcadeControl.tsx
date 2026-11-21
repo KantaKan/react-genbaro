@@ -15,10 +15,10 @@ export default function ArcadeControl({ tone, disabled, busy, onComplete }: Chec
     setScreen("loading");
     play("blip");
     for (let i = 1; i <= 8; i++) setTimeout(() => (setBars(i), play("tick")), 150 * i);
+    onComplete();
     setTimeout(() => {
       setScreen("clear");
       play("win");
-      setTimeout(onComplete, 900);
     }, 1700);
   };
   return (

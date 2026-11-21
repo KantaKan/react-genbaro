@@ -15,4 +15,9 @@ describe("StyleFrame", () => {
     fireEvent.click(screen.getByRole("button", { name: "Check in now" }));
     expect(done).not.toHaveBeenCalled();
   });
+
+  it("the fallback button becomes visible when focused with a keyboard", () => {
+    render(<StyleFrame disabled={false} busy={false} onComplete={vi.fn()}><div>art</div></StyleFrame>);
+    expect(screen.getByRole("button", { name: "Check in now" }).className).toMatch(/focus:not-sr-only/);
+  });
 });

@@ -10,7 +10,7 @@ export default function RedButtonControl({ disabled, busy, onComplete }: CheckIn
     if (!open || pressed || disabled || busy) return;
     setPressed(true);
     play("thud");
-    setTimeout(onComplete, 520);
+    onComplete();
   };
   return (
     <div className={`flex flex-col items-center gap-2 ${pressed ? "animate-[l-shake_.45s]" : ""}`}>

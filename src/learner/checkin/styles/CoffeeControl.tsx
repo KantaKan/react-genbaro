@@ -20,7 +20,7 @@ export default function CoffeeControl({ disabled, busy, onComplete }: CheckInCon
       setP(level.current);
       if (level.current >= 1) {
         done.current = true;
-        setTimeout(() => complete.current(), 700);
+        complete.current();
       }
     }, STEP);
     return () => clearInterval(id);

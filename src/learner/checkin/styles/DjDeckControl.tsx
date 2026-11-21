@@ -39,7 +39,7 @@ export default function DjDeckControl({ disabled, busy, onComplete }: CheckInCon
       setDropped(true);
       last.current = null;
       play("win");
-      setTimeout(onComplete, 1300);
+      onComplete();
     }
   };
   const frac = Math.min(1, acc / NEED);

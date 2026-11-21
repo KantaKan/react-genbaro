@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Clock3 } from "lucide-react";
 import type { CheckInControlProps } from "../types";
 import { play } from "../sound";
@@ -9,17 +9,20 @@ export default function HoldControl({ tone, disabled, busy, onComplete }: CheckI
   const [pressing, setPressing] = useState(false);
   const t = useRef<ReturnType<typeof setTimeout>>();
   const color = tone === "late" ? "var(--l-amber)" : "var(--l-green)";
+  useEffect(() => () => clearTimeout(t.current), []);
   const start = () => {
-    if (disabled || busy) return;
+    if (disabled || busy || t.current) return; // a second finger doesn't start another timer
     setPressing(true);
     play("tick");
     t.current = setTimeout(() => {
+      t.current = undefined;
       setPressing(false);
       onComplete();
     }, MS);
   };
   const stop = () => {
     clearTimeout(t.current);
+    t.current = undefined;
     setPressing(false);
   };
   return (

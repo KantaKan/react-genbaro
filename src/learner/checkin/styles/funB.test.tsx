@@ -22,7 +22,6 @@ describe("fun styles B", () => {
     expect(done).not.toHaveBeenCalled();
     expect(screen.getByText("1 left")).toBeInTheDocument();
     fireEvent.pointerDown(bubbles[11]);
-    act(() => void vi.advanceTimersByTime(500));
     expect(done).toHaveBeenCalledTimes(1);
   });
 
@@ -47,13 +46,12 @@ describe("fun styles B", () => {
     expect(done).toHaveBeenCalledTimes(1);
   });
 
-  it("slot: pulling the lever checks in after the reels stop", () => {
+  it("slot: pulling the lever checks in right away (the spin is just for show)", () => {
     const done = vi.fn();
     render(<LuckySlotControl {...base} onComplete={done} />);
     fireEvent.click(screen.getByRole("button", { name: "Pull the lever" }));
-    act(() => void vi.advanceTimersByTime(1000));
-    expect(done).not.toHaveBeenCalled();
-    act(() => void vi.advanceTimersByTime(3000));
+    expect(done).toHaveBeenCalledTimes(1);
+    act(() => void vi.advanceTimersByTime(4000));
     expect(done).toHaveBeenCalledTimes(1);
   });
 

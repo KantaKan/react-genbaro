@@ -14,8 +14,7 @@ describe("unlockable styles", () => {
     const done = vi.fn();
     render(<RocketControl {...base} onComplete={done} />);
     fireEvent.pointerDown(screen.getByRole("button", { name: /Hold to launch/ }));
-    act(() => void vi.advanceTimersByTime(2300));
-    act(() => void vi.advanceTimersByTime(1600));
+    act(() => void vi.advanceTimersByTime(2150));
     expect(done).toHaveBeenCalledTimes(1);
   });
 

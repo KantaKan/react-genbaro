@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CheckInControlProps } from "../types";
 import { play } from "../sound";
 
@@ -11,6 +11,7 @@ export default function RocketControl({ disabled, busy, onComplete }: CheckInCon
   const [msg, setMsg] = useState("Hold to launch");
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const clear = () => (timers.current.forEach(clearTimeout), (timers.current = []));
+  useEffect(() => clear, []);
   const down = () => {
     if (gone || disabled || busy) return;
     setMsg("Hold… hold…");
@@ -21,7 +22,7 @@ export default function RocketControl({ disabled, busy, onComplete }: CheckInCon
         setCount(null);
         setMsg("To the moon. And to class.");
         play("win");
-        setTimeout(onComplete, 1500);
+        onComplete();
       }, 3 * STEP)
     );
   };

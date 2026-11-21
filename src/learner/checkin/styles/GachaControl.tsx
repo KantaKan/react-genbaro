@@ -33,7 +33,7 @@ export default function GachaControl({ disabled, busy, onComplete }: CheckInCont
     setCard(rarity());
     setStage("card");
     play("win");
-    setTimeout(onComplete, 1200);
+    onComplete();
   };
   return (
     <div className="flex flex-col items-center gap-2">

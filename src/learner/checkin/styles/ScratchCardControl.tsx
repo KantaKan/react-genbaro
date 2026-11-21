@@ -16,7 +16,7 @@ export default function ScratchCardControl({ tone, disabled, busy, onComplete }:
     if (fired.current || disabled || busy) return;
     fired.current = true;
     setRevealed(true);
-    setTimeout(onComplete, 600);
+    onComplete();
   };
   useEffect(() => {
     let x: CanvasRenderingContext2D | null = null;

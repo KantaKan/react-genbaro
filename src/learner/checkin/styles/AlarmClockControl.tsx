@@ -21,7 +21,7 @@ export default function AlarmClockControl({ disabled, busy, onComplete }: CheckI
     play("thud");
     if (n === 3 && !fired.current) {
       fired.current = true;
-      setTimeout(onComplete, 800);
+      onComplete();
     }
   };
   const m = bangkokNow().minutes;

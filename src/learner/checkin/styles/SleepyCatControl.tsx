@@ -20,7 +20,7 @@ export default function SleepyCatControl({ disabled, busy, onComplete }: CheckIn
     setHi5(true);
     setMsg("Purrrr…");
     play("thud");
-    setTimeout(onComplete, 700);
+    onComplete();
   };
   return (
     <div className="flex flex-col items-center gap-2">

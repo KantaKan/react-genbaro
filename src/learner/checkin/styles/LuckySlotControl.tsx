@@ -17,10 +17,10 @@ export default function LuckySlotControl({ tone, disabled, busy, onComplete }: C
     used.current = true;
     setSpun(true);
     play("thud");
+    onComplete();
     setTimeout(() => {
       setStopped(true);
       play("win");
-      setTimeout(onComplete, 1000);
     }, 2300);
   };
   return (

@@ -26,23 +26,42 @@ export function dailyStyle(unlocked: StyleId[], date: string, seed: string, rero
   return unlocked[fnv1a(`${seed}|${date}|${reroll}`) % unlocked.length];
 }
 
-const KEY = "baro-reroll";
+/** Per-learner keys so learners sharing a browser don't use up each other's reroll. */
+const key = (name: string, seed: string) => (seed ? `baro-${name}:${seed}` : `baro-${name}`);
 
-export function readReroll(date: string): number {
+export function readReroll(date: string, seed = ""): number {
   try {
-    const v = JSON.parse(localStorage.getItem(KEY) || "null") as { date: string; n: number } | null;
+    const v = JSON.parse(localStorage.getItem(key("reroll", seed)) || "null") as { date: string; n: number } | null;
     return v && v.date === date ? v.n : 0;
   } catch {
     return 0;
   }
 }
 
-export function bumpReroll(date: string): number {
-  const n = readReroll(date) + 1;
+export function bumpReroll(date: string, seed = ""): number {
+  const n = readReroll(date, seed) + 1;
   try {
-    localStorage.setItem(KEY, JSON.stringify({ date, n }));
+    localStorage.setItem(key("reroll", seed), JSON.stringify({ date, n }));
   } catch {
     /* storage unavailable: reroll just won't persist */
   }
   return n;
+}
+
+/** Today's random pick is pinned so a mid-day streak change doesn't swap the style. */
+export function readDailyPick(date: string, seed: string, reroll: number): StyleId | null {
+  try {
+    const v = JSON.parse(localStorage.getItem(key("daily", seed)) || "null") as { date: string; reroll: number; id: StyleId } | null;
+    return v && v.date === date && v.reroll === reroll ? v.id : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeDailyPick(date: string, seed: string, reroll: number, id: StyleId) {
+  try {
+    localStorage.setItem(key("daily", seed), JSON.stringify({ date, reroll, id }));
+  } catch {
+    /* ignore */
+  }
 }

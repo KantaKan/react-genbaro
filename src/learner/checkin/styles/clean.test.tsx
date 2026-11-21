@@ -42,4 +42,17 @@ describe("clean styles", () => {
     render(<GoldSlideControl {...base} onComplete={vi.fn()} />);
     expect(screen.getByRole("slider")).toBeInTheDocument();
   });
+
+  it("hold: a second finger doesn't keep the timer running after both lift", () => {
+    const done = vi.fn();
+    render(<HoldControl {...base} onComplete={done} />);
+    const b = screen.getByRole("button", { name: /Hold to check in/ });
+    fireEvent.pointerDown(b, { pointerId: 1 });
+    fireEvent.pointerDown(b, { pointerId: 2 });
+    act(() => void vi.advanceTimersByTime(300));
+    fireEvent.pointerUp(b, { pointerId: 1 });
+    fireEvent.pointerUp(b, { pointerId: 2 });
+    act(() => void vi.advanceTimersByTime(1500));
+    expect(done).not.toHaveBeenCalled();
+  });
 });
