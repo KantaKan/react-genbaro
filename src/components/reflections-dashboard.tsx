@@ -200,9 +200,8 @@ export default function ReflectionsDashboard({ userId, initialReflections = [], 
       setFormData(undefined);
       setIsDialogOpen(false);
     } catch (err) {
-      console.error("Error submitting reflection:", err);
       setIsSubmitting(false);
-      return;
+      throw err; // the form shows the message (once)
     }
 
     try {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, within, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { TodayPage } from "./TodayPage";
@@ -55,6 +55,16 @@ const renderPage = () =>
 describe("TodayPage", () => {
   beforeEach(() => vi.useFakeTimers({ shouldAdvanceTime: true }));
   afterEach(() => vi.useRealTimers());
+
+  it("shows badges right under the daily reflection", async () => {
+    setBkk(10, 0);
+    vi.mocked(learnerApi.getSummary).mockResolvedValue(base);
+    renderPage();
+    const reflection = (await screen.findByText("Daily reflection")).closest("section")!;
+    const column = reflection.parentElement!;
+    expect(within(column).getByText("Streak & badges")).toBeInTheDocument();
+    expect(reflection.nextElementSibling).toBe(within(column).getByText("Streak & badges").closest("section"));
+  });
 
   it("hides course progress when no start date is set", async () => {
     setBkk(10, 0);
