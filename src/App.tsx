@@ -29,7 +29,7 @@ const CohortGenmateGardenPage = lazy(() => import("./pages/CohortGenmateGardenPa
 const TalkBoardPage = lazy(() => import("./pages/talk-board-page"));
 const PostPage = lazy(() => import("./pages/PostPage"));
 const StampBoardPage = lazy(() => import("./pages/stamp-board-page"));
-const ReflectionsPage = lazy(() => import("./pages/user-reflection"));
+const ReflectionsPage = lazy(() => import("./learner/reflections/ReflectionsPage"));
 const TodayPage = lazy(() => import("./learner/today/TodayPage").then((module) => ({ default: module.TodayPage })));
 const AttendancePage = lazy(() => import("./learner/attendance/AttendancePage").then((module) => ({ default: module.AttendancePage })));
 const ToolsPage = lazy(() => import("./pages/ToolPage"));
