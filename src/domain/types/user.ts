@@ -155,6 +155,10 @@ export interface Reflection {
   createdAt?: string;
   reflection: ReflectionData;
   admin_feedback?: string;
+  /** who replied: staff user id, their Zoom name (or first name), and when */
+  admin_feedback_by?: string;
+  admin_feedback_name?: string;
+  admin_feedback_at?: string;
   reward_boxes?: import("./gift-box").TeacherGiftBox[];
   reward_warning?: string;
 }

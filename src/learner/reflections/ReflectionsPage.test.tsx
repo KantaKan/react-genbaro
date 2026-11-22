@@ -193,4 +193,16 @@ describe("ReflectionsPage", () => {
     renderPage();
     expect(await screen.findByText("New")).toBeInTheDocument();
   });
+
+  it("names the TA who replied, in the card and on the reply", async () => {
+    reflections = [
+      r("2026-11-16", "Comfort Zone", "Hooks lab went well", "Nice work"),
+      { ...r("2026-11-18", "Panic Zone", "Lost on async errors", "Let's pair at 9:30"), admin_feedback_by: "ta1", admin_feedback_name: "00_Kan(Kan/กัน)" },
+    ];
+    localStorage.setItem("baro:reflections-seen:u1", JSON.stringify(["r16"]));
+    renderPage();
+    expect(await screen.findByText("1 new reply from Kan")).toBeInTheDocument();
+    const bubble = screen.getByText("Let's pair at 9:30").closest("div")!;
+    expect(within(bubble).getByText("Kan")).toBeInTheDocument();
+  });
 });

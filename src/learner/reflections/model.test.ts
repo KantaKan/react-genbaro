@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Reflection } from "@/domain/types";
-import { answersComplete, courseWeekOf, groupByWeek, matchesFilter, monthGrid, nightStats, readSeen, toNights, unseenReplies, weekStrip, zoneOf } from "./model";
+import { answersComplete, courseWeekOf, repliesFrom, groupByWeek, matchesFilter, monthGrid, nightStats, readSeen, toNights, unseenReplies, weekStrip, zoneOf } from "./model";
 
 const refl = (day: string, barometer: string, reply = "", id = day): Reflection => ({
   _id: id,
@@ -184,5 +184,30 @@ describe("answersComplete", () => {
   it("needs all four answers with text", () => {
     expect(answersComplete({ th: "a", ti: "b", sh: "c", si: "d" })).toBe(true);
     expect(answersComplete({ th: "a", ti: " ", sh: "c", si: "d" })).toBe(false);
+  });
+});
+
+describe("reply author", () => {
+  const withAuthor = (day: string, id: string, by?: string, name?: string) => ({ ...refl(day, "Comfort Zone", "reply", id), admin_feedback_by: by, admin_feedback_name: name });
+  it("reads the replier's nickname from their Zoom name", () => {
+    const [n] = toNights([withAuthor("2026-11-18", "r1", "ta1", "00_Kan(Kan/กัน)")]);
+    expect(n).toMatchObject({ replyBy: "ta1", replyName: "Kan" });
+  });
+  it("uses a plain name as is, and nothing for older replies", () => {
+    expect(toNights([withAuthor("2026-11-18", "r1", "ta2", "Neeti")])[0].replyName).toBe("Neeti");
+    expect(toNights([withAuthor("2026-11-18", "r1")])[0]).toMatchObject({ replyBy: "", replyName: "" });
+  });
+  it("says who new replies are from", () => {
+    const n = toNights([
+      withAuthor("2026-11-19", "a", "ta1", "00_Kan(Kan/กัน)"),
+      withAuthor("2026-11-18", "b", "ta1", "00_Kan(Kan/กัน)"),
+      withAuthor("2026-11-17", "c", "ta2", "Neeti"),
+      withAuthor("2026-11-16", "d"),
+    ]);
+    expect(repliesFrom(n.slice(0, 1))).toBe("Kan");
+    expect(repliesFrom(n.slice(0, 2))).toBe("Kan");
+    expect(repliesFrom(n.slice(0, 3))).toBe("Kan and Neeti");
+    expect(repliesFrom(n)).toBe("your TAs");
+    expect(repliesFrom([])).toBe("your TAs");
   });
 });

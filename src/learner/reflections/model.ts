@@ -2,6 +2,7 @@ import type { Reflection } from "@/domain/types";
 import { reflectionZones } from "@/components/reflection-zones";
 import { decodeHtmlEntities } from "@/lib/board";
 import { bangkokNow } from "../lib/time";
+import { nicknames } from "../lib/name";
 import type { ZoneId } from "../today/BarometerFace";
 
 /** One written reflection, flattened for the page. */
@@ -15,6 +16,8 @@ export interface Night {
   softHappy: string;
   softImprove: string;
   reply: string;
+  replyBy: string; // staff user id, "" for older replies
+  replyName: string; // their nickname, "" when unknown
 }
 
 export type Filter = "all" | "reply" | "rough";
@@ -79,6 +82,8 @@ export function toNights(reflections: Reflection[]): Night[] {
       softHappy: text(r.reflection?.non_tech_sessions?.happy),
       softImprove: text(r.reflection?.non_tech_sessions?.improve),
       reply: text(r.admin_feedback).trim(),
+      replyBy: r.admin_feedback_by ?? "",
+      replyName: r.admin_feedback_name ? nicknames(r.admin_feedback_name, r.admin_feedback_name).en : "",
     });
   }
   return [...byDay.values()].sort((a, b) => (a.day < b.day ? 1 : -1));
@@ -243,3 +248,10 @@ export interface Answers {
 }
 
 export const answersComplete = (a: Answers) => [a.th, a.ti, a.sh, a.si].every((s) => s.trim() !== "");
+
+/** Who these replies are from: "Kan", "Kan and Neeti", else "your TAs" (3+ people, or any reply without a name). */
+export function repliesFrom(nights: Night[]): string {
+  const names = [...new Set(nights.map((n) => n.replyName))];
+  if (names.length === 0 || names.length > 2 || names.includes("")) return "your TAs";
+  return names.join(" and ");
+}
