@@ -49,6 +49,13 @@ describe("roles in the admin shell", () => {
     expect(within(screen.getAllByRole("navigation", { name: "Admin" })[0]).getByText("Weekly report")).toBeInTheDocument();
   });
 
+  it("everyone can look at the calendar", async () => {
+    me("viewer");
+    renderAdmin(<p>page</p>, "/admin/x");
+    await screen.findByText("Read only");
+    expect(within(screen.getAllByRole("navigation", { name: "Admin" })[0]).getByText("Calendar")).toBeInTheDocument();
+  });
+
   it("Slack settings are for the owner only", async () => {
     me("admin", [13]);
     renderAdmin(<p>page</p>, "/admin/x");

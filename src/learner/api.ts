@@ -1,6 +1,7 @@
 import { api } from "@/infrastructure/api";
 import type { AttendanceRecord, CreateLeaveRequestPayload, LeaveRequest, Reflection } from "@/domain/types";
 import type { MySummary } from "./types";
+import type { LearnerCalendar } from "@/calendar/types";
 import type { AvatarConfig } from "./avatar/types";
 import type { Person } from "./lib/people";
 
@@ -23,6 +24,8 @@ async function call<T>(p: Promise<{ data: { data: T } }>): Promise<T> {
 
 export const learnerApi = {
   getSummary: () => call<MySummary>(api.get("/attendance/me/summary")),
+  /** My cohort's published calendar weeks. */
+  getCalendar: () => call<LearnerCalendar>(api.get("/calendar/me")),
   checkIn: (style: string) => call<AttendanceRecord>(api.post("/attendance/check-in", { style })),
   getHistory: (days?: number) => call<AttendanceRecord[]>(api.get(`/attendance/my-history${days ? `?days=${days}` : ""}`)),
   /** The learner's own reflections (the profile endpoint leaves them out). */

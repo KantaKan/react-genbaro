@@ -1,4 +1,4 @@
-import { BookOpen, CalendarCheck, Gamepad2, MessageCircle, Smile, Sprout, Stamp, Sun, Trees, User, Users, type LucideIcon } from "lucide-react";
+import { BookOpen, CalendarCheck, CalendarDays, Gamepad2, MessageCircle, Smile, Sprout, Stamp, Sun, Trees, User, Users, type LucideIcon } from "lucide-react";
 
 export interface NavItem {
   label: string;
@@ -10,6 +10,7 @@ export interface NavItem {
 
 export const NAV: NavItem[] = [
   { label: "Today", to: "/learner", icon: Sun, section: "Learning", end: true },
+  { label: "Schedule", to: "/learner/calendar", icon: CalendarDays, section: "Learning" },
   { label: "Attendance", to: "/learner/attendance", icon: CalendarCheck, section: "Learning" },
   { label: "Reflections", to: "/learner/reflections", icon: BookOpen, section: "Learning" },
   { label: "My profile", to: "/learner/my-profile", icon: User, section: "Learning" },

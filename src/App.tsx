@@ -48,6 +48,8 @@ const AdminLearnersPage = lazy(() => import("./admin/learners/LearnersPage").the
 const AdminProfilePage = lazy(() => import("./admin/learners/ProfilePage").then((m) => ({ default: m.ProfilePage })));
 const AdminReflectionsPage = lazy(() => import("./admin/reflections/ReflectionsPage").then((m) => ({ default: m.ReflectionsPage })));
 const AdminLeavePage = lazy(() => import("./admin/leave/LeavePage").then((m) => ({ default: m.LeavePage })));
+const AdminCalendarPage = lazy(() => import("./admin/calendar/CalendarPage").then((m) => ({ default: m.CalendarPage })));
+const LearnerCalendarPage = lazy(() => import("./learner/calendar/CalendarPage").then((m) => ({ default: m.CalendarPage })));
 const AdminReportPage = lazy(() => import("./admin/report/ReportPage").then((m) => ({ default: m.ReportPage })));
 const AdminSlackPage = lazy(() => import("./admin/slack/SlackPage").then((m) => ({ default: m.SlackPage })));
 const AdminTeamPage = lazy(() => import("./admin/team/TeamPage").then((m) => ({ default: m.TeamPage })));
@@ -141,6 +143,7 @@ function AppContent() {
             <Route path="team" element={<AdminTeamPage />} />
             <Route path="settings/slack" element={<AdminSlackPage />} />
             <Route path="report" element={<AdminReportPage />} />
+            <Route path="calendar" element={<AdminCalendarPage />} />
             <Route path="announce" element={<AdminAnnouncePage />} />
             <Route path="learners/:id" element={<AdminProfilePage />} />
             <Route path="leave-requests" element={<Navigate to="/admin/leave" replace />} />
@@ -168,6 +171,7 @@ function AppContent() {
           <Route path="/learner" element={<LearnerLayout />}>
             <Route index element={<TodayPage />} />
             <Route path="reflections" element={<ReflectionsPage />} />
+            <Route path="calendar" element={<LearnerCalendarPage />} />
             <Route path="attendance" element={<AttendancePage />} />
             <Route path="directory" element={<DirectoryRoute />} />
             <Route path="my-profile" element={<MyProfilePage />} />
