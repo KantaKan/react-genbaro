@@ -68,11 +68,17 @@ export function TodayPage() {
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-12">
-        <div className="lg:col-span-7">{s ? <CheckInCard summary={s} onCheckedIn={refresh} seed={userData?._id ?? "me"} onOpenPicker={() => setPicker(true)} /> : <div className="l-card h-[340px] animate-pulse" />}</div>
-        <div className="lg:col-span-5">
+        <div className="flex flex-col gap-4 lg:col-span-7">
+          {s ? <CheckInCard summary={s} onCheckedIn={refresh} seed={userData?._id ?? "me"} onOpenPicker={() => setPicker(true)} /> : <div className="l-card h-[340px] animate-pulse" />}
+          <WeekCard cells={week} />
+          <BoardLatestCard />
+        </div>
+        <div className="flex flex-col gap-4 lg:col-span-5">
           {userData?._id && (
             <ReflectionCard userId={userData._id} reflections={reflections.data ?? []} nowSec={now} today={today} onSubmitted={() => qc.invalidateQueries(["my-reflections"])} />
           )}
+          {s && <StreakBadgesCard streak={s.streak} badges={userData?.badges ?? []} perfectWeek={s.perfect_week} weekOnTime={weekOnTime} />}
+          {s && <LeaveCard used={s.leave_used} allowance={s.leave_allowance} rate={s.attendance_rate} />}
         </div>
         {cup.data && (
           <>
@@ -84,14 +90,6 @@ export function TodayPage() {
             </div>
           </>
         )}
-        <div className="lg:col-span-7">
-          <WeekCard cells={week} />
-        </div>
-        <div className="lg:col-span-5">{s && <LeaveCard used={s.leave_used} allowance={s.leave_allowance} rate={s.attendance_rate} />}</div>
-        <div className="lg:col-span-7">
-          <BoardLatestCard />
-        </div>
-        <div className="lg:col-span-5">{s && <StreakBadgesCard streak={s.streak} badges={userData?.badges ?? []} perfectWeek={s.perfect_week} weekOnTime={weekOnTime} />}</div>
       </div>
       {s && <StylePicker open={picker} onOpenChange={setPicker} summary={s} />}
     </div>
