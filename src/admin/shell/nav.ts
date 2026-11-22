@@ -17,7 +17,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { label: "Attendance", to: "/admin/attendance", icon: CalendarCheck, section: "Daily" },
   { label: "Leave requests", to: "/admin/leave", icon: ClipboardCheck, section: "Daily", badge: "leave" },
   { label: "Reflections", to: "/admin/reflections", icon: BookOpen, section: "Daily" },
-  { label: "All learners", to: "/admin/users", icon: Users, section: "Learners" },
+  { label: "All learners", to: "/admin/learners", icon: Users, section: "Learners" },
   { label: "GenMate Cup", to: "/admin/cup", icon: Trophy, section: "Engage" },
   { label: "Announcements", to: "/admin/notifications", icon: Megaphone, section: "Engage" },
   { label: "Talk Board", to: "/talk-board", icon: MessageCircle, section: "Engage" },

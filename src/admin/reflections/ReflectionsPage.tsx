@@ -7,13 +7,9 @@ import { BarometerFace, ZONES, type ZoneId } from "@/learner/today/BarometerFace
 import { nicknames } from "@/learner/lib/name";
 import { useAdminHeader, useSidePanel } from "../shell/AdminShell";
 import { useCohort } from "../shell/useCohort";
-import { wellbeingApi, type Board, type Entry, type LearnerRef, type Zone } from "../wellbeing";
+import { wellbeingApi, type Board, type Entry, type LearnerRef } from "../wellbeing";
 
-const ZONE_BG: Record<string, string> = { comfort: "#a3e635", "stretch-enjoying": "#fde047", "stretch-overwhelmed": "#fdba74", panic: "#fb7185" };
-const zoneLabel = (z: Zone) => {
-  const m = ZONES.find((x) => x.id === z);
-  return m ? (m.b === "zone" ? m.a : `${m.a} · ${m.b}`) : "Not written";
-};
+import { ZONE_BG, zoneLabel } from "../ui/zones";
 const nick = (l: Pick<LearnerRef, "zoom_name" | "first_name">) => nicknames(l.zoom_name, l.first_name);
 const shortDay = (d: string) => new Date(`${d}T12:00:00+07:00`).toLocaleDateString("en-GB", { weekday: "narrow", day: "numeric", timeZone: "Asia/Bangkok" });
 
