@@ -12,6 +12,8 @@ interface BulkRegisterDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  /** Pre-fills the cohort number (used by the admin New cohort wizard). */
+  defaultCohort?: number;
 }
 
 interface ParsedUser {
@@ -52,8 +54,8 @@ function parseCSV(text: string): ParsedUser[] {
     });
 }
 
-export function BulkRegisterDialog({ isOpen, onClose, onSuccess }: BulkRegisterDialogProps) {
-  const [cohortNumber, setCohortNumber] = useState("");
+export function BulkRegisterDialog({ isOpen, onClose, onSuccess, defaultCohort }: BulkRegisterDialogProps) {
+  const [cohortNumber, setCohortNumber] = useState(defaultCohort ? String(defaultCohort) : "");
   const [fallbackPassword, setFallbackPassword] = useState("");
   const [csvText, setCsvText] = useState("");
   const [parsed, setParsed] = useState<ParsedUser[]>([]);

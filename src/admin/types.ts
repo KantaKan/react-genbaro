@@ -11,6 +11,7 @@ export type SessionCell = {
   style?: string;
   marked_by?: "self" | "admin" | "system";
   record_id?: string;
+  flag?: "shared_ip";
 };
 export type TodayLearner = {
   id: string;

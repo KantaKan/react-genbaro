@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { ADMIN_NAV, SECTIONS } from "./nav";
 import { CommandPalette } from "./CommandPalette";
+import { NewCohortWizard } from "../cohort/NewCohortWizard";
 import { useCohort } from "./useCohort";
 import { adminApi } from "../api";
 import { wellbeingApi } from "../wellbeing";
@@ -57,6 +58,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [panel, setPanel] = useState<Panel>(null);
   const [palette, setPalette] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [wizard, setWizard] = useState(false);
   const [cohort, setCohort] = useCohort();
   const { userData } = useUserData();
   const { logout } = useAuth();
@@ -114,6 +116,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
               </button>
             </PopoverTrigger>
             <PopoverContent className="learner w-56 rounded-xl border-0 bg-l-card p-3 text-l-ink shadow-[0_0_0_1px_var(--l-hair),0_12px_30px_-16px_rgba(0,0,0,.35)]">
+              <button type="button" onClick={() => setWizard(true)} className="mb-2.5 w-full rounded-lg bg-l-sub px-2.5 py-1.5 text-left text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
+                + New cohort…
+              </button>
               <label className="text-xs font-semibold text-l-ink2">
                 Cohort number
                 <input
@@ -195,6 +200,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           {navList}
         </SheetContent>
       </Sheet>
+      <NewCohortWizard open={wizard} onOpenChange={setWizard} onDone={setCohort} />
       <CommandPalette open={palette} onOpenChange={setPalette} cohort={cohort} />
       <Toaster position="bottom-center" />
     </Ctx.Provider>
