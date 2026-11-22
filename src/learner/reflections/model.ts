@@ -83,7 +83,7 @@ export function toNights(reflections: Reflection[]): Night[] {
       softImprove: text(r.reflection?.non_tech_sessions?.improve),
       reply: text(r.admin_feedback).trim(),
       replyBy: r.admin_feedback_by ?? "",
-      replyName: r.admin_feedback_name ? nicknames(r.admin_feedback_name, r.admin_feedback_name).en : "",
+      replyName: replierName(r.admin_feedback_name),
     });
   }
   return [...byDay.values()].sort((a, b) => (a.day < b.day ? 1 : -1));
@@ -248,6 +248,16 @@ export interface Answers {
 }
 
 export const answersComplete = (a: Answers) => [a.th, a.ti, a.sh, a.si].every((s) => s.trim() !== "");
+
+/** A replier's nickname from their Zoom name ("00_Kan(Kan/กัน)" → "Kan", "05_Neeti(นีติ)" → "นีติ", "07_Ploy" → "Ploy"). */
+function replierName(raw: string | undefined): string {
+  const name = (raw ?? "").trim();
+  if (!name) return "";
+  const bare = name.replace(/^\d+_/, "");
+  if (!name.includes("(")) return bare;
+  const n = nicknames(name, "");
+  return n.en || n.th || bare.replace(/\(.*$/, "").trim();
+}
 
 /** Who these replies are from: "Kan", "Kan and Neeti", else "your TAs" (3+ people, or any reply without a name). */
 export function repliesFrom(nights: Night[]): string {

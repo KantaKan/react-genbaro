@@ -193,6 +193,10 @@ describe("reply author", () => {
     const [n] = toNights([withAuthor("2026-11-18", "r1", "ta1", "00_Kan(Kan/กัน)")]);
     expect(n).toMatchObject({ replyBy: "ta1", replyName: "Kan" });
   });
+  it("uses the Thai nickname when there is no English one, and drops the number prefix", () => {
+    expect(toNights([withAuthor("2026-11-18", "r1", "ta3", "05_Neeti(นีติ)")])[0].replyName).toBe("นีติ");
+    expect(toNights([withAuthor("2026-11-18", "r1", "ta4", "07_Ploy")])[0].replyName).toBe("Ploy");
+  });
   it("uses a plain name as is, and nothing for older replies", () => {
     expect(toNights([withAuthor("2026-11-18", "r1", "ta2", "Neeti")])[0].replyName).toBe("Neeti");
     expect(toNights([withAuthor("2026-11-18", "r1")])[0]).toMatchObject({ replyBy: "", replyName: "" });
