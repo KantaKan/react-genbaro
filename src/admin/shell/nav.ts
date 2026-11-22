@@ -26,7 +26,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { label: "GenMate groups", to: "/admin/groups", icon: UsersRound, section: "Learners", cap: "cohort_admin" },
   { label: "GenMate Cup", to: "/admin/cup", icon: Trophy, section: "Engage" },
   { label: "Announcements", to: "/admin/announce", icon: Megaphone, section: "Engage", cap: "announce" },
-  { label: "Talk Board", to: "/talk-board", icon: MessageCircle, section: "Engage" },
+  { label: "Talk Board", to: "/admin/board", icon: MessageCircle, section: "Engage" },
   { label: "Garden & Cohort field", to: "/admin/garden", icon: Sprout, section: "Play" },
   { label: "Baro Characters", to: "/character", icon: Smile, section: "Play" },
   { label: "Showcase & Startup Story", to: "/showcase-lawn", icon: Gamepad2, section: "Play" },

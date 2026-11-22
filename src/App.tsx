@@ -48,6 +48,7 @@ const AdminLearnersPage = lazy(() => import("./admin/learners/LearnersPage").the
 const AdminProfilePage = lazy(() => import("./admin/learners/ProfilePage").then((m) => ({ default: m.ProfilePage })));
 const AdminReflectionsPage = lazy(() => import("./admin/reflections/ReflectionsPage").then((m) => ({ default: m.ReflectionsPage })));
 const AdminLeavePage = lazy(() => import("./admin/leave/LeavePage").then((m) => ({ default: m.LeavePage })));
+const AdminBoardPage = lazy(() => import("./admin/board/BoardPage").then((m) => ({ default: m.AdminBoardPage })));
 const AdminCalendarPage = lazy(() => import("./admin/calendar/CalendarPage").then((m) => ({ default: m.CalendarPage })));
 const LearnerCalendarPage = lazy(() => import("./learner/calendar/CalendarPage").then((m) => ({ default: m.CalendarPage })));
 const AdminReportPage = lazy(() => import("./admin/report/ReportPage").then((m) => ({ default: m.ReportPage })));
@@ -144,6 +145,7 @@ function AppContent() {
             <Route path="settings/slack" element={<AdminSlackPage />} />
             <Route path="report" element={<AdminReportPage />} />
             <Route path="calendar" element={<AdminCalendarPage />} />
+            <Route path="board" element={<AdminBoardPage />} />
             <Route path="announce" element={<AdminAnnouncePage />} />
             <Route path="learners/:id" element={<AdminProfilePage />} />
             <Route path="leave-requests" element={<Navigate to="/admin/leave" replace />} />
