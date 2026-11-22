@@ -48,6 +48,8 @@ const AdminLearnersPage = lazy(() => import("./admin/learners/LearnersPage").the
 const AdminProfilePage = lazy(() => import("./admin/learners/ProfilePage").then((m) => ({ default: m.ProfilePage })));
 const AdminReflectionsPage = lazy(() => import("./admin/reflections/ReflectionsPage").then((m) => ({ default: m.ReflectionsPage })));
 const AdminLeavePage = lazy(() => import("./admin/leave/LeavePage").then((m) => ({ default: m.LeavePage })));
+const AdminTeamPage = lazy(() => import("./admin/team/TeamPage").then((m) => ({ default: m.TeamPage })));
+const InvitePage = lazy(() => import("./admin/team/InvitePage").then((m) => ({ default: m.InvitePage })));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard").then((module) => ({ default: module.AdminDashboard })));
 const GenmateGardenPage = lazy(() => import("./pages/admin/GenmateGardenPage").then((module) => ({ default: module.GenmateGardenPage })));
 const AdminCohortFarmPage = lazy(() => import("./pages/admin/AdminCohortFarmPage").then((module) => ({ default: module.AdminCohortFarmPage })));
@@ -86,6 +88,7 @@ function AppContent() {
               )
             }
           />
+          <Route path="/invite/:token" element={<InvitePage />} />
           <Route
             path="/signupxdd"
             element={
@@ -133,6 +136,7 @@ function AppContent() {
             <Route path="groups" element={<AdminGroupsPage />} />
             <Route path="exports" element={<AdminExportsPage />} />
             <Route path="activity" element={<AdminActivityPage />} />
+            <Route path="team" element={<AdminTeamPage />} />
             <Route path="announce" element={<AdminAnnouncePage />} />
             <Route path="learners/:id" element={<AdminProfilePage />} />
             <Route path="leave-requests" element={<Navigate to="/admin/leave" replace />} />
