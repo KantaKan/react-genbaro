@@ -29,7 +29,7 @@ export const boardService = {
     return response.data.data;
   },
 
-  async createComment({ postId, ...payload }: CreateBoardEntryPayload & { postId: string }) {
+  async createComment({ postId, ...payload }: Omit<CreateBoardEntryPayload, "cohort"> & { postId: string; cohort?: number }) {
     const response = await api.post(`/board/posts/${postId}/comments`, payload);
     return response.data.data;
   },
@@ -44,13 +44,13 @@ export const boardService = {
     return response.data.data;
   },
 
-  async addCommentReaction({ commentId, reaction }: { commentId: string; reaction: string }) {
-    const response = await api.post(`/board/comments/${commentId}/reactions`, { reaction });
+  async addCommentReaction({ postId, commentId, reaction }: { postId: string; commentId: string; reaction: string }) {
+    const response = await api.post(`/board/posts/${postId}/comments/${commentId}/reactions`, { reaction });
     return response.data.data;
   },
 
-  async removeCommentReaction(commentId: string) {
-    const response = await api.delete(`/board/comments/${commentId}/reactions`);
+  async removeCommentReaction({ postId, commentId }: { postId: string; commentId: string }) {
+    const response = await api.delete(`/board/posts/${postId}/comments/${commentId}/reactions`);
     return response.data.data;
   },
 

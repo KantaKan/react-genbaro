@@ -13,7 +13,7 @@ vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout:
 vi.mock("@/UserDataContext", () => ({ useUserData: () => ({ userData: { _id: "me", first_name: "Kan", zoom_name: "00_Kan(Kan/กัน)", cohort_number: 13 }, loading: false }) }));
 vi.mock("../wellbeing", async (o) => ({ ...(await o<object>()), wellbeingApi: { support: vi.fn().mockResolvedValue([]) } }));
 vi.mock("../api", () => ({ adminApi: { leaves: vi.fn().mockResolvedValue([]), me: vi.fn(), cohorts: vi.fn().mockRejectedValue(new Error("x")) } }));
-vi.mock("@/application/services/boardService", () => ({ boardService: { getCohortPosts: vi.fn(), createPost: vi.fn(), deletePost: vi.fn(), deleteComment: vi.fn() } }));
+vi.mock("@/application/services/boardService", () => ({ boardService: { getCohortPosts: vi.fn(), createPost: vi.fn(), createComment: vi.fn(), deletePost: vi.fn(), deleteComment: vi.fn() } }));
 
 const post = (id: string, content: string, createdAt: string, o: Partial<BoardPost> = {}): BoardPost => ({
   id,
@@ -41,6 +41,7 @@ describe("AdminBoardPage", () => {
       post("p2", "Meme of the day", "2026-11-22T03:00:00Z", { reactions: [{ id: "r1", userId: "u2", type: "image", value: "pepelaugh" }, { id: "r2", userId: "u3", type: "image", value: "pepelaugh" }] }),
     ]);
     vi.mocked(boardService.createPost).mockReset().mockResolvedValue({});
+    vi.mocked(boardService.createComment).mockReset().mockResolvedValue({});
     vi.mocked(boardService.deletePost).mockReset().mockResolvedValue(undefined);
     vi.mocked(boardService.deleteComment).mockReset().mockResolvedValue(undefined);
   });
@@ -100,6 +101,44 @@ describe("AdminBoardPage", () => {
     renderAdmin(<AdminBoardPage />, "/admin/board");
     await screen.findByText("Meme of the day");
     await waitFor(() => expect(screen.queryByLabelText("Post to JSD13")).toBeNull());
+    expect(screen.queryByRole("button", { name: /Delete post/ })).toBeNull();
+  });
+
+  it("replies to a post once", async () => {
+    renderAdmin(<AdminBoardPage />, "/admin/board");
+    const p1 = (await screen.findByText("Anyone stuck on useEffect?")).closest("article")!;
+    fireEvent.click(within(p1).getByRole("button", { name: "2 replies" }));
+    fireEvent.change(within(p1).getByLabelText("Reply to this post"), { target: { value: "Try the cleanup return" } });
+    const send = within(p1).getByRole("button", { name: "Reply" });
+    fireEvent.click(send);
+    fireEvent.click(send);
+    await waitFor(() => expect(boardService.createComment).toHaveBeenCalledTimes(1));
+    expect(boardService.createComment).toHaveBeenCalledWith({ postId: "p1", content: "Try the cleanup return", zoomName: "00_Kan(Kan/กัน)" });
+  });
+
+  it("can reply to a post that has no replies yet", async () => {
+    renderAdmin(<AdminBoardPage />, "/admin/board");
+    const p2 = (await screen.findByText("Meme of the day")).closest("article")!;
+    fireEvent.click(await within(p2).findByRole("button", { name: "Write a reply" }));
+    expect(within(p2).getByLabelText("Reply to this post")).toBeInTheDocument();
+  });
+
+  it("a viewer gets no reply box", async () => {
+    me("viewer");
+    renderAdmin(<AdminBoardPage />, "/admin/board");
+    const p1 = (await screen.findByText("Anyone stuck on useEffect?")).closest("article")!;
+    fireEvent.click(within(p1).getByRole("button", { name: "2 replies" }));
+    await waitFor(() => expect(within(p1).queryByLabelText("Reply to this post")).toBeNull());
+    expect(within(p1).getByText("Me! The cleanup part")).toBeInTheDocument();
+  });
+
+  it("shows no staff tools until the role is known (or if it can't be loaded)", async () => {
+    vi.mocked(adminApi.me).mockRejectedValue(new Error("offline"));
+    renderAdmin(<AdminBoardPage />, "/admin/board");
+    const p1 = (await screen.findByText("Anyone stuck on useEffect?")).closest("article")!;
+    fireEvent.click(within(p1).getByRole("button", { name: "2 replies" }));
+    expect(within(p1).queryByLabelText("Reply to this post")).toBeNull();
+    expect(screen.queryByLabelText("Post to JSD13")).toBeNull();
     expect(screen.queryByRole("button", { name: /Delete post/ })).toBeNull();
   });
 
