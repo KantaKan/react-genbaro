@@ -34,7 +34,7 @@ const TodayPage = lazy(() => import("./learner/today/TodayPage").then((module) =
 const AttendancePage = lazy(() => import("./learner/attendance/AttendancePage").then((module) => ({ default: module.AttendancePage })));
 const ToolsPage = lazy(() => import("./pages/ToolPage"));
 const SpinWheelPage = lazy(() => import("./pages/SpinWheelPage"));
-const WeeklySummaryPage = lazy(() => import("./pages/weekly-summary-page"));
+const WeeklySummaryPage = lazy(() => import("./admin/reflections/WeeklySummaryPage").then((m) => ({ default: m.WeeklySummaryPage })));
 const AdminTodayPage = lazy(() => import("./admin/today/TodayPage").then((m) => ({ default: m.TodayPage })));
 const AdminRegisterPage = lazy(() => import("./admin/attendance/RegisterPage").then((m) => ({ default: m.RegisterPage })));
 const AdminRulesPage = lazy(() => import("./admin/cohort/RulesPage").then((m) => ({ default: m.RulesPage })));

@@ -42,7 +42,11 @@ export type SupportRow = { learner: LearnerRef; reasons: Reason[]; open_items: n
 
 const data = async <T,>(p: Promise<{ data: { data: T } }>): Promise<T> => (await p).data.data;
 
+export type RoughLearner = { learner: LearnerRef; nights: (Zone | "")[]; panic: number; overwhelmed: number; again: boolean };
+export type WeekRough = { week: string; sent: number; possible: number; zones: Record<string, number>; learners: RoughLearner[] };
+
 export const wellbeingApi = {
+  weeks: (cohort: number, n: number) => data<WeekRough[]>(api.get(`/admin/reflections/weeks?cohort=${cohort}&weeks=${n}`)),
   board: (cohort: number, range: Board["range"]) => data<Board>(api.get(`/admin/reflections/board?cohort=${cohort}&range=${range}`)),
   learners: (cohort: number) => data<LearnerRow[]>(api.get(`/admin/learners?cohort=${cohort}`)),
   overview: (id: string) => data<Overview>(api.get(`/admin/learners/${id}/overview`)),
