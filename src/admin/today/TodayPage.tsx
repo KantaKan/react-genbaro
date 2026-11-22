@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "react-query";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -9,6 +9,8 @@ import { useCohort } from "../shell/useCohort";
 import { LearnerPanel } from "../learner/LearnerPanel";
 import { useMarkWithUndo } from "../learner/useMarkWithUndo";
 import { useConfirm } from "../ui/Confirm";
+import { useSlackAvailable } from "../slack/useSlackAvailable";
+import { slackApi } from "../slack/api";
 import type { Session, TodayLearner, TodayView } from "../types";
 import { SessionCard } from "./SessionCard";
 import { LeaveMini } from "./LeaveMini";
@@ -71,6 +73,8 @@ export function TodayPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [cursor, setCursor] = useState<string | null>(null);
+  const slackOn = useSlackAvailable();
+  const pinging = useRef(false);
 
   // Timing comes from this browser's clock, not the last response, so an all-day tab keeps up.
   const today = useQuery(["admin-today", cohort], () => adminApi.today(cohort), {
@@ -91,7 +95,31 @@ export function TodayPage() {
   const canMark = !!view?.class_today;
   const learners = view?.learners ?? [];
   const dateLabel = view ? new Date(`${view.date}T12:00:00+07:00`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Bangkok" }) : "";
-  useAdminHeader({ title: "Today", context: dateLabel });
+  const notYet = canMark ? learners.filter((l) => !l[s].status) : [];
+  const ping = () =>
+    confirm.ask(`Ping the ${notYet.length} who haven't checked in?`, async () => {
+      if (pinging.current) return;
+      pinging.current = true;
+      try {
+        const r = await slackApi.ping(notYet.map((l) => l.id));
+        if (r.quiet) toast("Not sent: it's inside quiet hours (set in Slack settings).");
+        else toast.success(`Sent to ${r.sent}${r.no_slack.length ? ` · ${r.no_slack.length} have no Slack` : ""}${r.recent ? ` · ${r.recent} pinged in the last 30 min` : ""}${r.failed ? ` · ${r.failed} failed` : ""}`);
+      } catch (e) {
+        toast.error((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? "Couldn't send");
+      } finally {
+        pinging.current = false;
+      }
+    }, "Each gets a short check-in reminder on Slack.");
+  useAdminHeader({
+    title: "Today",
+    context: dateLabel,
+    actions:
+      slackOn && notYet.length > 0 ? (
+        <button type="button" onClick={ping} className="rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)] hover:bg-l-sub">
+          Ping the {notYet.length} not in yet
+        </button>
+      ) : undefined,
+  });
 
   const openLearner = useCallback(
     (id: string) => {

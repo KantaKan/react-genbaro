@@ -9,6 +9,8 @@ import { useAdminHeader } from "../shell/AdminShell";
 import { useCohort } from "../shell/useCohort";
 import { wellbeingApi } from "../wellbeing";
 import { useConfirm } from "../ui/Confirm";
+import { useSlackAvailable } from "../slack/useSlackAvailable";
+import { useStaff } from "../team/useStaff";
 
 type Audience = "everyone" | "groups" | "people";
 const field = "w-full rounded-xl bg-l-sub px-3 py-2.5 text-[13.5px] text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]";
@@ -28,6 +30,9 @@ export function AnnouncePage() {
   const [pickedPeople, setPickedPeople] = useState<Set<string>>(new Set());
   const [when, setWhen] = useState("");
   const [days, setDays] = useState(7);
+  const slackOn = useSlackAvailable();
+  const staff = useStaff();
+  const [toSlack, setToSlack] = useState(false);
   const busy = useRef(false);
   const confirm = useConfirm();
   useAdminHeader({ title: "Announcements", context: "Shown as a banner to learners" });
@@ -35,6 +40,8 @@ export function AnnouncePage() {
   // Always send explicit ids: an empty list would reach every cohort, not just this one.
   const recipients = aud === "everyone" ? active.map((l) => l.id) : aud === "groups" ? active.filter((l) => pickedGroups.has(l.genmate_group)).map((l) => l.id) : active.filter((l) => pickedPeople.has(l.id)).map((l) => l.id);
   const count = recipients.length;
+  // A note meant for a few learners must never land in a shared channel: Slack is for "everyone" only, and not for TAs.
+  const canSlack = slackOn && aud === "everyone" && staff.role !== "ta";
   const ok = title.trim() && message.trim() && count > 0;
   const toggle = (set: Set<string>, v: string, f: (s: Set<string>) => void) => {
     const n = new Set(set);
@@ -49,7 +56,7 @@ export function AnnouncePage() {
       try {
         const start = when ? new Date(when) : new Date();
         const end = new Date(start.getTime() + days * 86400e3);
-        const body: CreateNotificationRequest & { recipient_ids: string[] } = {
+        const body: CreateNotificationRequest & { recipient_ids: string[]; post_to_slack: boolean; audience: Audience } = {
           title: title.trim(),
           message: message.trim(),
           is_active: true,
@@ -57,11 +64,14 @@ export function AnnouncePage() {
           start_date: start.toISOString(),
           end_date: end.toISOString(),
           recipient_ids: recipients,
+          post_to_slack: canSlack && toSlack,
+          audience: aud,
         };
         await notificationService.createNotification(body);
         toast.success("Announcement sent");
         setTitle("");
         setMessage("");
+        setToSlack(false);
         qc.invalidateQueries(["admin-announcements"]);
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Couldn't send");
@@ -122,6 +132,12 @@ export function AnnouncePage() {
             <span className="text-xs text-l-ink3">{when ? "" : "Now ·"} shows for</span>
             <input aria-label="Days" type="number" min={1} max={60} value={days} onChange={(e) => setDays(Math.max(1, Number(e.target.value) || 1))} className="w-14 rounded-lg bg-l-sub px-2 py-1.5 text-[13px] shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
             <span className="text-xs text-l-ink3">days</span>
+            {canSlack && (
+              <label className="flex w-full items-center gap-2 pl-[74px] text-xs text-l-ink2">
+                <input type="checkbox" aria-label="Also post to Slack" checked={toSlack} onChange={(e) => setToSlack(e.target.checked)} className="accent-zinc-900" />
+                Also post to Slack
+              </label>
+            )}
             <span className="flex-1" />
             <button type="button" disabled={!ok} onClick={send} className="rounded-full bg-l-ink px-4 py-2 text-[13px] font-semibold text-l-card disabled:opacity-40">
               Send to {count} learner{count === 1 ? "" : "s"}

@@ -6,15 +6,17 @@ import { AdminShell } from "../shell/AdminShell";
 import { TodayPage } from "./TodayPage";
 import { adminApi } from "../api";
 import { wellbeingApi } from "../wellbeing";
+import { slackApi } from "../slack/api";
 import { mkLearner } from "../learner/fixtures";
 import type { TodayView } from "../types";
 
 vi.mock("@blobatar/react/gaze", () => ({ useGaze: () => ({ ref: vi.fn() }) }));
 vi.mock("@/components/mode-toggle", () => ({ ModeToggle: () => null }));
-vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn() }), Toaster: () => null }));
+vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() }), Toaster: () => null }));
 vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout: vi.fn(), userRole: "admin" }) }));
 vi.mock("@/UserDataContext", () => ({ useUserData: () => ({ userData: { _id: "me", first_name: "Kan", cohort_number: 13 }, loading: false }) }));
 vi.mock("../wellbeing", async (orig) => ({ ...(await orig<object>()), wellbeingApi: { support: vi.fn(), notes: vi.fn(), addNote: vi.fn() } }));
+vi.mock("../slack/api", () => ({ slackApi: { available: vi.fn(), ping: vi.fn() } }));
 vi.mock("../api", () => ({ adminApi: { today: vi.fn(), leaves: vi.fn(), mark: vi.fn(), bulk: vi.fn(), reviewLeave: vi.fn(), removeRecord: vi.fn(), restore: vi.fn() } }));
 
 const rules = { morning: { open_at: { h: 8, m: 30 }, late_after: { h: 9, m: 15 }, absent_after: { h: 10, m: 30 } }, afternoon: { open_at: { h: 12, m: 30 }, late_after: { h: 13, m: 15 }, absent_after: { h: 14, m: 30 } } };
@@ -50,6 +52,8 @@ describe("TodayPage", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-11-23T02:00:00Z")); // Mon 9:00 Bangkok
     vi.mocked(adminApi.today).mockResolvedValue(view());
+    vi.mocked(slackApi.available).mockResolvedValue({ connected: false });
+    vi.mocked(slackApi.ping).mockReset().mockResolvedValue({ sent: 2, no_slack: [], failed: 0, recent: 0, quiet: false });
     vi.mocked(adminApi.leaves).mockResolvedValue([]);
     vi.mocked(wellbeingApi.support).mockResolvedValue([{ learner: { id: "c", first_name: "Chanon", zoom_name: "04_Chanon(Non/นนท์)", jsd_number: "04", genmate_group: "B" }, reasons: [{ key: "leave", text: "Leave 6/8" }], open_items: 0, done_items: 0, owner: "" }]);
     vi.mocked(wellbeingApi.notes).mockResolvedValue([]);
@@ -183,5 +187,44 @@ describe("TodayPage", () => {
     renderPage();
     const row = (await screen.findByText(/เถียม · Theim/)).closest("tr")!;
     expect(within(row).getByTitle("Checked in from the same network as another learner")).toBeInTheDocument();
+  });
+
+  it("hides Ping when Slack isn't connected", async () => {
+    renderPage();
+    await screen.findByText(/นนท์ · Non/);
+    expect(screen.queryByRole("button", { name: /^Ping the/ })).toBeNull();
+  });
+
+  it("pings the ones not in yet once, after confirming", async () => {
+    vi.mocked(slackApi.available).mockResolvedValue({ connected: true });
+    renderPage();
+    const ping = await screen.findByRole("button", { name: "Ping the 2 not in yet" });
+    fireEvent.click(ping);
+    const ok = await screen.findByRole("button", { name: "Confirm" });
+    fireEvent.click(ok);
+    fireEvent.click(ok);
+    await waitFor(() => expect(slackApi.ping).toHaveBeenCalledTimes(1));
+    expect(slackApi.ping).toHaveBeenCalledWith(["c", "d"]);
+  });
+
+  it("explains quiet hours instead of claiming it sent", async () => {
+    vi.mocked(slackApi.available).mockResolvedValue({ connected: true });
+    vi.mocked(slackApi.ping).mockResolvedValue({ sent: 0, no_slack: [], failed: 0, recent: 0, quiet: true });
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Ping the 2 not in yet" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Confirm" }));
+    await waitFor(() => expect(slackApi.ping).toHaveBeenCalled());
+    const { toast } = await import("sonner");
+    await waitFor(() => expect(vi.mocked(toast).mock.calls.flat().join(" ")).toMatch(/quiet hours/i));
+  });
+
+  it("says who was skipped because they were pinged a moment ago", async () => {
+    vi.mocked(slackApi.available).mockResolvedValue({ connected: true });
+    vi.mocked(slackApi.ping).mockResolvedValue({ sent: 0, no_slack: [], failed: 0, recent: 2, quiet: false });
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Ping the 2 not in yet" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Confirm" }));
+    const { toast } = await import("sonner");
+    await waitFor(() => expect(JSON.stringify([vi.mocked(toast).mock.calls, vi.mocked(toast.success).mock.calls])).toMatch(/pinged in the last 30 min/i));
   });
 });
