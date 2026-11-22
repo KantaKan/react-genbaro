@@ -106,7 +106,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={ctx}>
       <div className="learner flex min-h-screen bg-l-bg text-l-ink">
-        <aside className="sticky top-0 hidden h-screen w-[236px] shrink-0 flex-col gap-px overflow-y-auto px-2.5 py-3.5 lg:flex">
+        <aside className="sticky top-0 hidden h-screen w-[236px] shrink-0 flex-col gap-px overflow-y-auto px-2.5 py-3.5 lg:flex print:!hidden">
           <div className="flex items-center gap-2.5 px-2 pb-3">
             <div className="grid h-[30px] w-[30px] place-items-center rounded-[9px] bg-l-ink text-[13px] font-bold text-l-card">B</div>
             <div>
@@ -178,27 +178,29 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 <button
                   type="button"
                   onClick={() => setPalette(true)}
-                  className="hidden min-w-[260px] items-center gap-2 rounded-[10px] bg-l-sub px-3 py-[7px] text-[13px] text-l-ink3 shadow-[0_0_0_1px_var(--l-hair)] md:flex"
+                  className="hidden min-w-[260px] items-center gap-2 rounded-[10px] bg-l-sub px-3 py-[7px] text-[13px] text-l-ink3 shadow-[0_0_0_1px_var(--l-hair)] md:flex print:!hidden"
                 >
                   <Search className="h-4 w-4" strokeWidth={1.5} />
                   Find a learner or run an action
                   <kbd className="ml-auto rounded-md bg-l-card px-1.5 text-[11px] text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">⌘K</kbd>
                 </button>
-                <button type="button" aria-label="Find a learner or page" onClick={() => setPalette(true)} className="grid h-9 w-9 place-items-center rounded-[10px] text-l-ink2 hover:bg-l-sub md:hidden">
+                <button type="button" aria-label="Find a learner or page" onClick={() => setPalette(true)} className="grid h-9 w-9 place-items-center rounded-[10px] text-l-ink2 hover:bg-l-sub md:hidden print:!hidden">
                   <Search className="h-[18px] w-[18px]" strokeWidth={1.5} />
                 </button>
-                <ModeToggle />
+                <span className="print:hidden">
+                  <ModeToggle />
+                </span>
               </div>
             </header>
             <div className="relative">
-              <main className="min-w-0 px-6 pb-12 pt-5 transition-[margin] duration-[550ms] ease-[cubic-bezier(.32,.72,0,1)]" style={{ marginRight: panel ? 392 : 0 }}>
+              <main className="min-w-0 px-6 pb-12 pt-5 transition-[margin] print:!mr-0 print:px-0 duration-[550ms] ease-[cubic-bezier(.32,.72,0,1)]" style={{ marginRight: panel ? 392 : 0 }}>
                 {children}
               </main>
               <aside
                 aria-label="Details"
                 aria-hidden={!panel}
                 className={cn(
-                  "fixed bottom-2.5 right-2.5 top-[70px] z-20 w-[392px] overflow-y-auto rounded-br-[20px] border-l border-l-hair bg-l-card px-[22px] py-5 transition-transform duration-[550ms] ease-[cubic-bezier(.32,.72,0,1)]",
+                  "fixed bottom-2.5 right-2.5 top-[70px] z-20 w-[392px] overflow-y-auto rounded-br-[20px] border-l border-l-hair bg-l-card px-[22px] py-5 transition-transform duration-[550ms] ease-[cubic-bezier(.32,.72,0,1)] print:!hidden",
                   panel ? "translate-x-0 shadow-[-24px_0_48px_-32px_rgba(0,0,0,.35)]" : "pointer-events-none translate-x-[calc(100%+20px)]"
                 )}
               >

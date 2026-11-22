@@ -13,7 +13,7 @@ vi.mock("../wellbeing", async (o) => ({ ...(await o<object>()), wellbeingApi: { 
 vi.mock("../api", () => ({ adminApi: { leaves: vi.fn().mockResolvedValue([]), me: vi.fn().mockResolvedValue({ id: "me", first_name: "Kan", staff_role: "owner", cohorts: [], groups: [] }) } }));
 vi.mock("./api", () => ({ slackApi: { status: vi.fn(), connect: vi.fn(), disconnect: vi.fn(), save: vi.fn(), channels: vi.fn(), test: vi.fn(), match: vi.fn(), log: vi.fn(), available: vi.fn(), ping: vi.fn() } }));
 
-const base: SlackStatus = { connected: false, team: "", bot: "", alerts: "", report: "", announce: "", alert_new_leave: false, quiet_from: "", quiet_to: "", manifest: '{"display_information":{"name":"Baro"}}' };
+const base: SlackStatus = { connected: false, team: "", bot: "", alerts: "", report: "", announce: "", alert_new_leave: false, quiet_from: "", quiet_to: "", report_auto: false, report_cohort: 0, manifest: '{"display_information":{"name":"Baro"}}' };
 const connected: SlackStatus = { ...base, connected: true, team: "Generation", bot: "baro", alerts: "C1", alert_new_leave: true, quiet_from: "21:00", quiet_to: "08:00" };
 
 describe("SlackPage", () => {
@@ -67,9 +67,19 @@ describe("SlackPage", () => {
       fireEvent.click(save);
       fireEvent.click(save);
       await waitFor(() => expect(slackApi.save).toHaveBeenCalledTimes(1));
-      expect(slackApi.save).toHaveBeenCalledWith({ alerts: "C1", report: "", announce: "C2", alert_new_leave: true, quiet_from: "22:00", quiet_to: "08:00" });
+      expect(slackApi.save).toHaveBeenCalledWith({ alerts: "C1", report: "", announce: "C2", alert_new_leave: true, quiet_from: "22:00", quiet_to: "08:00", report_auto: false, report_cohort: 0 });
       fireEvent.click(screen.getByRole("button", { name: "Send test to Admin alerts" }));
       await waitFor(() => expect(slackApi.test).toHaveBeenCalledWith("alerts"));
+    });
+
+    it("turns on the Friday weekly report for a cohort and saves it", async () => {
+      renderAdmin(<SlackPage />, "/admin/settings/slack");
+      fireEvent.change(await screen.findByLabelText("Weekly report channel"), { target: { value: "C2" } });
+      fireEvent.click(screen.getByLabelText("Send the weekly report automatically on Fridays at 17:00"));
+      expect(screen.getByLabelText("Cohort for the weekly report")).toHaveValue(13);
+      fireEvent.click(screen.getByRole("button", { name: "Save" }));
+      await waitFor(() => expect(slackApi.save).toHaveBeenCalledTimes(1));
+      expect(slackApi.save).toHaveBeenCalledWith(expect.objectContaining({ report: "C2", report_auto: true, report_cohort: 13 }));
     });
 
     it("matches learners by email and lists who wasn't found", async () => {

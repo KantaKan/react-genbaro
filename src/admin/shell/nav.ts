@@ -1,4 +1,4 @@
-import { Slack, KeyRound, HeartHandshake, CalendarOff, Download, SlidersHorizontal, UsersRound, BookOpen, CalendarCheck, CalendarDays, ClipboardCheck, Gamepad2, History, Megaphone, MessageCircle, Smile, Sprout, Sun, Trophy, Users, Wrench, type LucideIcon } from "lucide-react";
+import { FileBarChart, Slack, KeyRound, HeartHandshake, CalendarOff, Download, SlidersHorizontal, UsersRound, BookOpen, CalendarCheck, CalendarDays, ClipboardCheck, Gamepad2, History, Megaphone, MessageCircle, Smile, Sprout, Sun, Trophy, Users, Wrench, type LucideIcon } from "lucide-react";
 import type { Capability } from "../team/perm";
 
 export type AdminSection = "Daily" | "Learners" | "Engage" | "Play" | "Cohort";
@@ -20,6 +20,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { label: "Attendance", to: "/admin/attendance", icon: CalendarCheck, section: "Daily" },
   { label: "Leave requests", to: "/admin/leave", icon: ClipboardCheck, section: "Daily", badge: "leave" },
   { label: "Reflections", to: "/admin/reflections", icon: BookOpen, section: "Daily" },
+  { label: "Weekly report", to: "/admin/report", icon: FileBarChart, section: "Daily" },
   { label: "All learners", to: "/admin/learners", icon: Users, section: "Learners" },
   { label: "Needs support", to: "/admin/support", icon: HeartHandshake, section: "Learners", badge: "support" },
   { label: "GenMate groups", to: "/admin/groups", icon: UsersRound, section: "Learners", cap: "cohort_admin" },

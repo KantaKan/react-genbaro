@@ -28,7 +28,7 @@ export function SlackPage() {
 
   useEffect(() => {
     const s = status.data;
-    if (s?.connected) setForm({ alerts: s.alerts, report: s.report, announce: s.announce, alert_new_leave: s.alert_new_leave, quiet_from: s.quiet_from, quiet_to: s.quiet_to });
+    if (s?.connected) setForm({ alerts: s.alerts, report: s.report, announce: s.announce, alert_new_leave: s.alert_new_leave, quiet_from: s.quiet_from, quiet_to: s.quiet_to, report_auto: s.report_auto, report_cohort: s.report_cohort });
     else setForm(null);
   }, [status.data]);
 
@@ -161,7 +161,25 @@ export function SlackPage() {
             <h4 className="text-[13px] font-semibold">Where Baro posts</h4>
             {channelSelect("alerts", "Admin alerts", "New leave requests. Private is best.")}
             {channelSelect("announce", "Announcements", "Announcements you tick “also post to Slack”.")}
-            {channelSelect("report", "Weekly report", "Used by the weekly report.")}
+            {channelSelect("report", "Weekly report", "Where the weekly report is posted.")}
+            <div className="flex flex-wrap items-center gap-2.5 text-[13px]">
+              <label className="flex items-center gap-2.5">
+                <input
+                  type="checkbox"
+                  aria-label="Send the weekly report automatically on Fridays at 17:00"
+                  checked={form.report_auto}
+                  onChange={(e) => setForm({ ...form, report_auto: e.target.checked, report_cohort: e.target.checked && !form.report_cohort ? cohort : form.report_cohort })}
+                  className="accent-zinc-900"
+                />
+                Send the weekly report automatically on Fridays at 17:00
+              </label>
+              {form.report_auto && (
+                <label className="flex items-center gap-1.5 text-xs text-l-ink2">
+                  for JSD
+                  <input aria-label="Cohort for the weekly report" type="number" min={1} value={form.report_cohort || ""} onChange={(e) => setForm({ ...form, report_cohort: Number(e.target.value) || 0 })} className="w-16 rounded-lg bg-l-sub px-2 py-1 text-[13px] shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
+                </label>
+              )}
+            </div>
           </section>
 
           <section className={`${card} flex flex-col gap-3`}>
