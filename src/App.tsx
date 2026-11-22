@@ -37,6 +37,7 @@ const SpinWheelPage = lazy(() => import("./pages/SpinWheelPage"));
 const WeeklySummaryPage = lazy(() => import("./pages/weekly-summary-page"));
 const AdminTodayPage = lazy(() => import("./admin/today/TodayPage").then((m) => ({ default: m.TodayPage })));
 const AdminRegisterPage = lazy(() => import("./admin/attendance/RegisterPage").then((m) => ({ default: m.RegisterPage })));
+const AdminReflectionsPage = lazy(() => import("./admin/reflections/ReflectionsPage").then((m) => ({ default: m.ReflectionsPage })));
 const AdminLeavePage = lazy(() => import("./admin/leave/LeavePage").then((m) => ({ default: m.LeavePage })));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard").then((module) => ({ default: module.AdminDashboard })));
 const GenmateGardenPage = lazy(() => import("./pages/admin/GenmateGardenPage").then((module) => ({ default: module.GenmateGardenPage })));
@@ -115,6 +116,7 @@ function AppContent() {
             <Route index element={<AdminTodayPage />} />
             <Route path="overview" element={<AdminDashboard />} />
             <Route path="leave" element={<AdminLeavePage />} />
+            <Route path="reflections" element={<AdminReflectionsPage />} />
             <Route path="leave-requests" element={<Navigate to="/admin/leave" replace />} />
             <Route path="table" element={<AdminTablePage />} />
             <Route path="table/:id" element={<UserReflectionsPage />} />
