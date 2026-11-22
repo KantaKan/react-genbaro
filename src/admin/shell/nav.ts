@@ -1,4 +1,4 @@
-import { BookOpen, CalendarCheck, CalendarDays, ClipboardCheck, Gamepad2, History, Megaphone, MessageCircle, Smile, Sprout, Sun, Trophy, Users, Wrench, type LucideIcon } from "lucide-react";
+import { HeartHandshake, BookOpen, CalendarCheck, CalendarDays, ClipboardCheck, Gamepad2, History, Megaphone, MessageCircle, Smile, Sprout, Sun, Trophy, Users, Wrench, type LucideIcon } from "lucide-react";
 
 export type AdminSection = "Daily" | "Learners" | "Engage" | "Play" | "Cohort";
 export interface AdminNavItem {
@@ -7,7 +7,7 @@ export interface AdminNavItem {
   icon: LucideIcon;
   section: AdminSection;
   end?: boolean;
-  badge?: "leave";
+  badge?: "leave" | "support";
 }
 
 export const SECTIONS: AdminSection[] = ["Daily", "Learners", "Engage", "Play", "Cohort"];
@@ -18,6 +18,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { label: "Leave requests", to: "/admin/leave", icon: ClipboardCheck, section: "Daily", badge: "leave" },
   { label: "Reflections", to: "/admin/reflections", icon: BookOpen, section: "Daily" },
   { label: "All learners", to: "/admin/learners", icon: Users, section: "Learners" },
+  { label: "Needs support", to: "/admin/support", icon: HeartHandshake, section: "Learners", badge: "support" },
   { label: "GenMate Cup", to: "/admin/cup", icon: Trophy, section: "Engage" },
   { label: "Announcements", to: "/admin/notifications", icon: Megaphone, section: "Engage" },
   { label: "Talk Board", to: "/talk-board", icon: MessageCircle, section: "Engage" },
