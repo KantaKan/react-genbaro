@@ -94,7 +94,7 @@ export function CalendarPage() {
         </div>
         {wi >= sorted.length - 1 && <p className="mt-1 text-xs text-l-ink3">Later weeks appear when they're published.</p>}
 
-        <div className="mt-4 flex gap-1.5 overflow-x-auto pb-1">
+        <div className="-mx-1 mt-4 flex gap-1.5 overflow-x-auto px-1 pb-1.5 pt-1">
           {week.days.map((d) => {
             const on = d.date === selected;
             return (

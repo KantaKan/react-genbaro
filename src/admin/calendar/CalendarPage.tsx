@@ -306,7 +306,7 @@ export function CalendarPage() {
                     ) : (
                       <span className="text-xs font-semibold text-l-ink2">{w.published ? "Published" : "Hidden"}</span>
                     )}
-                    <span className="w-[88px] text-xs text-l-ink3">{w.published ? "Learners can see it" : "Hidden"}</span>
+                    {canEdit && <span className="w-[68px] text-xs font-medium text-l-ink3">{w.published ? "Published" : "Hidden"}</span>}
                   </div>
                   {open && (
                     <div className="grid gap-3 border-t border-l-hair px-4 py-3 sm:grid-cols-2">
