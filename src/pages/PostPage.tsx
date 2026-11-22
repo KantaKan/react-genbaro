@@ -276,13 +276,13 @@ const PostPage: React.FC = () => {
     },
   });
 
-  const addCommentReactionMutation = useMutation(addCommentReaction, {
+  const addCommentReactionMutation = useMutation(({ commentId, reaction }: { commentId: string; reaction: string }) => addCommentReaction({ postId: postId!, commentId, reaction }), {
     onSuccess: () => {
       queryClient.invalidateQueries(["talkBoardPost", postId]);
     },
   });
 
-  const removeCommentReactionMutation = useMutation(removeCommentReaction, {
+  const removeCommentReactionMutation = useMutation((commentId: string) => removeCommentReaction({ postId: postId!, commentId }), {
     onSuccess: () => {
       queryClient.invalidateQueries(["talkBoardPost", postId]);
     },
