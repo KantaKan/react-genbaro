@@ -59,7 +59,8 @@ function ImportDialog({ cohort, file, onClose, onSaved }: { cohort: number; file
 
   const warns = pv?.warnings.filter((w) => w.level === "warn") ?? [];
   const notes = pv?.warnings.filter((w) => w.level !== "warn") ?? [];
-  const touchesPublished = pv?.diff.some((d) => d.published && (d.status === "changed" || d.status === "removed"));
+  const touchesPublished = pv?.diff.some((d) => d.published && d.status === "changed");
+  const goneWeeks = pv?.diff.filter((d) => d.published && d.status === "removed").map((d) => d.n) ?? [];
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -116,6 +117,11 @@ function ImportDialog({ cohort, file, onClose, onSaved }: { cohort: number; file
               </details>
             )}
 
+            {goneWeeks.length > 0 && (
+              <p className="rounded-xl bg-red-50 px-4 py-3 text-[12.5px] font-semibold text-red-700 dark:bg-red-500/15 dark:text-red-300">
+                {goneWeeks.length === 1 ? `Week ${goneWeeks[0]} is` : `Weeks ${goneWeeks.join(", ")} are`} published and will disappear for learners if you save.
+              </p>
+            )}
             {touchesPublished && (
               <p className="rounded-xl bg-amber-50 px-4 py-3 text-[12.5px] font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
                 Learners can already see this week, so they will see these changes straight away.

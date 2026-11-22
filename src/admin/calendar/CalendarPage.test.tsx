@@ -106,6 +106,13 @@ describe("CalendarPage", () => {
     expect(await screen.findByText(/learners can already see this week/i)).toBeInTheDocument();
   });
 
+  it("says plainly when a published week would disappear for learners", async () => {
+    vi.mocked(calendarApi.import).mockResolvedValue(preview({ diff: [{ n: 5, name: "WEEK 5", status: "removed", published: true, added: 0, removed: 20, lines: [] }, { n: 6, name: "WEEK 6", status: "removed", published: true, added: 0, removed: 18, lines: [] }, { n: 7, name: "WEEK 7", status: "removed", published: false, added: 0, removed: 10, lines: [] }] }));
+    renderAdmin(<CalendarPage />, "/admin/calendar");
+    await choose();
+    expect(await screen.findByText("Weeks 5, 6 are published and will disappear for learners if you save.")).toBeInTheDocument();
+  });
+
   it("asks which sheet when the file has several candidates", async () => {
     vi.mocked(calendarApi.import).mockResolvedValueOnce(preview({ sheet: "", weeks: 0, sessions: 0, warnings: [], diff: [], needs_sheet: ["JSD13_Ver1", "JSD13_Ver2"] }));
     renderAdmin(<CalendarPage />, "/admin/calendar");
