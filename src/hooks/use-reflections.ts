@@ -24,6 +24,8 @@ export interface StreakData {
   eligibleProtectDate: string | null;
 }
 
+const ALREADY_TODAY = "You have already submitted a reflection today. Please try again tomorrow.";
+
 export function useReflections(userId?: string, initialReflections: Reflection[] = []) {
   const [reflections, setReflections] = useState<Reflection[]>(initialReflections);
   const [isLoading, setIsLoading] = useState(false);
@@ -70,8 +72,7 @@ export function useReflections(userId?: string, initialReflections: Reflection[]
         });
 
         if (existingReflection) {
-          toast.error("You have already submitted a reflection today.");
-          throw new Error("Reflection already exists for today");
+          throw new Error(ALREADY_TODAY);
         }
 
         // Optimistic update
@@ -88,21 +89,19 @@ export function useReflections(userId?: string, initialReflections: Reflection[]
         // Replace optimistic update with real data
         setReflections((prev) => prev.map((r) => (r._id === optimisticReflection._id ? response.data.data : r)));
 
-        toast.success("Reflection submitted successfully!");
-
+        // The form shows the success message; showing it here too made two toasts.
         return response.data.data;
       } catch (err) {
         // Revert optimistic update
         setReflections((prev) => prev.filter((r) => !r._id?.startsWith("temp-")));
 
-        if (err instanceof AxiosError && err.response?.status === 409) {
-          toast.error("You have already submitted a reflection today. Please try again tomorrow.");
-        } else if (err instanceof Error && err.message === "Reflection already exists for today") {
-          // Don't show additional error toast, already shown above
-        } else {
-          toast.error((err as Error).message || "Failed to submit reflection. Please try again later.");
+        // Throw one readable message; the form shows it (once).
+        if (err instanceof AxiosError) {
+          if (err.response?.status === 409) throw new Error(ALREADY_TODAY);
+          const msg = (err.response?.data as { message?: string } | undefined)?.message;
+          throw new Error(msg || "Failed to submit reflection. Please try again later.");
         }
-        throw err;
+        throw err instanceof Error ? err : new Error("Failed to submit reflection. Please try again later.");
       } finally {
         setIsLoading(false);
       }

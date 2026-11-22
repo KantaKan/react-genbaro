@@ -20,6 +20,7 @@ import {
   AlertTriangle 
 } from "lucide-react";
 import { toast } from "react-toastify";
+import { unansweredQuestions } from "./reflection-answers";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { useUserData } from "@/UserDataContext";
@@ -192,8 +193,9 @@ export default function FeedbackForm({ onSubmit, onSuccess, initialData, onChang
       return;
     }
 
-    if (Object.values(categoryInputs).filter(Boolean).length === 0) {
-      toast.error("Please provide at least one reflection");
+    const missing = unansweredQuestions(categoryInputs);
+    if (missing.length > 0) {
+      toast.error(`Please answer all four questions. Still empty: ${missing.join(", ")}.`);
       return;
     }
 

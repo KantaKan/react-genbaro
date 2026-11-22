@@ -6,11 +6,13 @@ export interface MedalProps {
   sub?: string;
   color?: string; // face color; rim is derived
   glyph?: string; // short text (e.g. "12") or emoji-free initial
+  emoji?: string; // a badge's emoji, drawn on the medal
+  imageUrl?: string; // a badge's picture, clipped to the medal
   locked?: boolean;
   progress?: number; // 0..1 for locked medals
 }
 
-export function Medal({ name, sub, color = "#6366f1", glyph, locked, progress = 0 }: MedalProps) {
+export function Medal({ name, sub, color = "#6366f1", glyph, emoji, imageUrl, locked, progress = 0 }: MedalProps) {
   const id = useId();
   const [spin, setSpin] = useState(0);
   const C = 2 * Math.PI * 35;
@@ -45,10 +47,23 @@ export function Medal({ name, sub, color = "#6366f1", glyph, locked, progress = 
             <ellipse cx="30" cy="20" rx="18" ry="8" fill="#fff" opacity=".22" />
           </>
         )}
-        {glyph && (
-          <text x="38" y="46" textAnchor="middle" fontSize="20" fontWeight="800" fill={locked ? "var(--l-ink3)" : "#fff"}>
-            {glyph}
+        {!locked && imageUrl ? (
+          <>
+            <clipPath id={`${id}-clip`}>
+              <circle cx="38" cy="38" r="26" />
+            </clipPath>
+            <image href={imageUrl} x="12" y="12" width="52" height="52" preserveAspectRatio="xMidYMid slice" clipPath={`url(#${id}-clip)`} />
+          </>
+        ) : !locked && emoji ? (
+          <text x="38" y="47" textAnchor="middle" fontSize="26">
+            {emoji}
           </text>
+        ) : (
+          glyph && (
+            <text x="38" y="46" textAnchor="middle" fontSize="20" fontWeight="800" fill={locked ? "var(--l-ink3)" : "#fff"}>
+              {glyph}
+            </text>
+          )
         )}
       </motion.svg>
       <span className="text-[12px] font-semibold leading-tight">{name}</span>
