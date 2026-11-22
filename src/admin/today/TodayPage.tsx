@@ -14,6 +14,10 @@ import { SessionCard } from "./SessionCard";
 import { LeaveMini } from "./LeaveMini";
 import { JustIn } from "./JustIn";
 import { Roster } from "./Roster";
+import { SupportMini } from "./SupportMini";
+import { NotesTab } from "../learner/NotesTab";
+import { wellbeingApi } from "../wellbeing";
+import { Link } from "react-router-dom";
 import { bkkMinutes, bkkToday, currentSession, liveInterval } from "./time";
 import { setPanelSession, usePanelSession } from "./sessionStore";
 
@@ -31,9 +35,29 @@ function PanelFor({ id, cohort, onMove }: { id: string; cohort: number; onMove: 
   const { data } = useQuery(["admin-today", cohort], () => adminApi.today(cohort), { staleTime: 15_000 });
   const session = usePanelSession();
   const { close } = useSidePanel();
+  const [tab, setTab] = useState<"overview" | "notes">("overview");
   const l = data?.learners.find((x) => x.id === id);
   if (!l || !data) return null;
-  return <LearnerPanel learner={l} session={session} date={data.date} live canMark={data.class_today} onChanged={() => {}} onPrev={() => onMove(-1)} onNext={() => onMove(1)} onClose={close} />;
+  return (
+    <div>
+      <LearnerPanel learner={l} session={session} date={data.date} live canMark={data.class_today} onChanged={() => {}} onPrev={() => onMove(-1)} onNext={() => onMove(1)} onClose={close} hideStats={tab === "notes"} />
+      <div role="tablist" className="mt-4 flex gap-4 border-b border-l-hair">
+        {(["overview", "notes"] as const).map((t) => (
+          <button key={t} role="tab" type="button" aria-selected={tab === t} onClick={() => setTab(t)} className={`pb-2 text-[12.5px] font-semibold capitalize ${tab === t ? "text-l-ink shadow-[inset_0_-2px_0_var(--l-ink)]" : "text-l-ink3"}`}>
+            {t === "notes" ? "Notes" : "Overview"}
+          </button>
+        ))}
+      </div>
+      {tab === "notes" && (
+        <div className="mt-3">
+          <NotesTab learnerId={l.id} />
+        </div>
+      )}
+      <Link to={`/admin/learners/${l.id}`} className="mt-4 block rounded-[11px] py-2 text-center text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
+        Full profile
+      </Link>
+    </div>
+  );
 }
 
 export function TodayPage() {
@@ -54,6 +78,8 @@ export function TodayPage() {
     refetchOnWindowFocus: true,
   });
   const leaves = useQuery(["admin-leaves", cohort, "pending"], () => adminApi.leaves({ cohort, status: "pending" }));
+  const support = useQuery(["admin-support", cohort], () => wellbeingApi.support(cohort), { staleTime: 60_000 });
+  const supportIds = new Set((support.data ?? []).map((r) => r.learner.id));
   const view = today.data;
   const s: Session = session ?? (view ? currentSession(view.rules, nowMin) : "morning");
   useEffect(() => setPanelSession(s), [s]);
@@ -131,9 +157,10 @@ export function TodayPage() {
   return (
     <div>
       <SessionCard view={view} session={s} onSession={setSession} nowMin={nowMin} />
-      <div className="mt-3.5 grid grid-cols-1 gap-3.5 lg:grid-cols-2">
+      <div className="mt-3.5 grid grid-cols-1 gap-3.5 lg:grid-cols-2 2xl:grid-cols-3">
         <LeaveMini requests={leaves.data ?? []} learners={learners} />
         <JustIn view={view} session={s} />
+        <SupportMini rows={support.data ?? []} />
       </div>
       {picked.size > 0 && (
         <div className="sticky top-[70px] z-[5] mt-4 flex items-center gap-2 rounded-xl bg-l-ink px-3 py-2 text-[12.5px] font-semibold text-l-card">
@@ -159,6 +186,7 @@ export function TodayPage() {
         onPick={(id) => setPicked((p) => (p.has(id) ? (p.delete(id), new Set(p)) : new Set(p.add(id))))}
         onQuick={quick}
         canMark={canMark}
+        supportIds={supportIds}
       />
       {confirm.node}
     </div>

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { AdminShell } from "../shell/AdminShell";
 import { TodayPage } from "./TodayPage";
 import { adminApi } from "../api";
+import { wellbeingApi } from "../wellbeing";
 import { mkLearner } from "../learner/fixtures";
 import type { TodayView } from "../types";
 
@@ -13,6 +14,7 @@ vi.mock("@/components/mode-toggle", () => ({ ModeToggle: () => null }));
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn() }), Toaster: () => null }));
 vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout: vi.fn(), userRole: "admin" }) }));
 vi.mock("@/UserDataContext", () => ({ useUserData: () => ({ userData: { _id: "me", first_name: "Kan", cohort_number: 13 }, loading: false }) }));
+vi.mock("../wellbeing", async (orig) => ({ ...(await orig<object>()), wellbeingApi: { support: vi.fn(), notes: vi.fn(), addNote: vi.fn() } }));
 vi.mock("../api", () => ({ adminApi: { today: vi.fn(), leaves: vi.fn(), mark: vi.fn(), bulk: vi.fn(), reviewLeave: vi.fn(), removeRecord: vi.fn(), restore: vi.fn() } }));
 
 const rules = { morning: { open_at: { h: 8, m: 30 }, late_after: { h: 9, m: 15 }, absent_after: { h: 10, m: 30 } }, afternoon: { open_at: { h: 12, m: 30 }, late_after: { h: 13, m: 15 }, absent_after: { h: 14, m: 30 } } };
@@ -49,6 +51,9 @@ describe("TodayPage", () => {
     vi.setSystemTime(new Date("2026-11-23T02:00:00Z")); // Mon 9:00 Bangkok
     vi.mocked(adminApi.today).mockResolvedValue(view());
     vi.mocked(adminApi.leaves).mockResolvedValue([]);
+    vi.mocked(wellbeingApi.support).mockResolvedValue([{ learner: { id: "c", first_name: "Chanon", zoom_name: "04_Chanon(Non/นนท์)", jsd_number: "04", genmate_group: "B" }, reasons: [{ key: "leave", text: "Leave 6/8" }], open_items: 0, done_items: 0, owner: "" }]);
+    vi.mocked(wellbeingApi.notes).mockResolvedValue([]);
+    vi.mocked(wellbeingApi.addNote).mockReset().mockResolvedValue({ id: "n9", text: "x" } as never);
     vi.mocked(adminApi.mark).mockReset().mockResolvedValue({ record: { _id: "n1" }, previous: null } as never);
     vi.mocked(adminApi.bulk).mockReset().mockResolvedValue(undefined);
   });
@@ -148,5 +153,26 @@ describe("TodayPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "afternoon" }));
     fireEvent.click(within(screen.getByRole("complementary", { name: "Details" })).getByRole("button", { name: "Late" }));
     await waitFor(() => expect(adminApi.mark).toHaveBeenCalledWith({ user_id: "c", date: "2026-11-23", session: "afternoon", status: "late" }));
+  });
+
+  it("shows who needs support on Today and tags them in the roster", async () => {
+    renderPage();
+    const card = await screen.findByRole("region", { name: "Needs support" });
+    expect(card).toHaveTextContent("Leave 6/8");
+    const row = (await screen.findByText(/นนท์ · Non/)).closest("tr")!;
+    expect(within(row).getByText("Support")).toBeInTheDocument();
+  });
+
+  it("adds a note from the panel's Notes tab once", async () => {
+    renderPage();
+    fireEvent.click((await screen.findByText(/นนท์ · Non/)).closest("tr")!);
+    const panel = screen.getByRole("complementary", { name: "Details" });
+    fireEvent.click(within(panel).getByRole("tab", { name: "Notes" }));
+    fireEvent.change(await within(panel).findByLabelText("New note"), { target: { value: "Called him" } });
+    const b = within(panel).getByRole("button", { name: "Add note" });
+    fireEvent.click(b);
+    fireEvent.click(b);
+    await waitFor(() => expect(wellbeingApi.addNote).toHaveBeenCalledTimes(1));
+    expect(wellbeingApi.addNote).toHaveBeenCalledWith("c", "Called him");
   });
 });

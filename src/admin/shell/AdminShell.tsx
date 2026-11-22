@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Fragment, createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { useQuery } from "react-query";
 import { Toaster } from "sonner";
@@ -13,6 +13,7 @@ import { ADMIN_NAV, SECTIONS } from "./nav";
 import { CommandPalette } from "./CommandPalette";
 import { useCohort } from "./useCohort";
 import { adminApi } from "../api";
+import { wellbeingApi } from "../wellbeing";
 
 export interface AdminHeader {
   title: string;
@@ -60,6 +61,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const { userData } = useUserData();
   const { logout } = useAuth();
   const pending = useQuery(["admin-leaves", cohort, "pending"], () => adminApi.leaves({ cohort, status: "pending" }), { staleTime: 60_000 });
+  const support = useQuery(["admin-support", cohort], () => wellbeingApi.support(cohort), { staleTime: 60_000 });
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
@@ -84,6 +86,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
               <n.icon className="h-4 w-4" strokeWidth={1.5} />
               {n.label}
               {n.badge === "leave" && pendingN > 0 && <span className="ml-auto min-w-[18px] rounded-full bg-red-600 px-1.5 text-center text-[11px] font-bold text-white">{pendingN}</span>}
+              {n.badge === "support" && (support.data?.length ?? 0) > 0 && <span className="ml-auto min-w-[18px] rounded-full bg-[color-mix(in_srgb,var(--l-ink)_8%,transparent)] px-1.5 text-center text-[11px] font-bold text-l-ink2">{support.data!.length}</span>}
             </NavLink>
           ))}
         </div>
@@ -177,7 +180,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
                     <button type="button" aria-label="Close panel" onClick={() => setPanel(null)} className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-lg text-l-ink3 hover:bg-l-sub hover:text-l-ink">
                       <X className="h-4 w-4" />
                     </button>
-                    {panel.content}
+                    {/* keyed so drafts (replies, notes) never carry over to the next learner */}
+                    <Fragment key={panel.key}>{panel.content}</Fragment>
                   </>
                 )}
               </aside>
