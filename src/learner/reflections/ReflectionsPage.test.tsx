@@ -4,16 +4,23 @@ import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "react-query";
 import type { Reflection } from "@/domain/types";
 import { ReflectionsPage } from "./ReflectionsPage";
+import { learnerApi } from "../api";
 
 const addReflection = vi.fn();
 vi.mock("@/hooks/use-reflections", () => ({ useReflections: () => ({ addReflection }) }));
 vi.mock("@/hooks/use-holiday-dates", () => ({ useHolidayDates: () => new Set<string>() }));
 vi.mock("@/UserDataContext", () => ({
-  useUserData: () => ({ userData: { _id: "u1", first_name: "Fah", cohort_number: 13 }, loading: false, refetchUserData: vi.fn() }),
+  useUserData: () => ({ userData: { _id: "u1", first_name: "Fah", cohort_number: 13 }, loading: false, refetchUserData: vi.fn().mockResolvedValue(undefined) }),
 }));
-vi.mock("@/components/teacher-gift-boxes-dialog", () => ({ TeacherGiftBoxesDialog: () => null }));
+vi.mock("@/components/teacher-gift-boxes-dialog", () => ({ TeacherGiftBoxesDialog: () => <button type="button">Gift boxes</button> }));
+vi.mock("@/components/care-energy-inventory-button", () => ({ CareEnergyInventoryButton: () => <button type="button">Care energy</button> }));
+vi.mock("@/components/plant-palette-picker", () => ({ PlantPalettePicker: () => <button type="button">Palette</button> }));
+vi.mock("@/components/plant-collection-dialog", () => ({ PlantCollectionDialog: () => <button type="button">Collection</button> }));
 vi.mock("@/application/services/giftBoxService", () => ({ giftBoxService: { reconcileMilestones: vi.fn().mockResolvedValue([]) } }));
 vi.mock("@/lib/api", () => ({ api: { get: vi.fn().mockResolvedValue({ data: { data: { _id: "u1", growth_points: 0, care_energy_log: [] } } }) } }));
+
+const toastError = vi.fn();
+vi.mock("react-toastify", () => ({ toast: { success: vi.fn(), error: (m: string) => toastError(m) } }));
 
 const r = (day: string, barometer: string, happy: string, reply = ""): Reflection => ({
   _id: `r${day.slice(8)}`,
@@ -147,5 +154,43 @@ describe("ReflectionsPage", () => {
         non_tech_sessions: { happy: "people", improve: "habits" },
       },
     });
+  });
+
+  const writeTonight = async () => {
+    await screen.findByText("Lost on async errors");
+    fireEvent.click(screen.getByRole("button", { name: "Comfort zone" }));
+    [/Tech · what went well/, /Tech · what to improve/, /Non-tech · what went well/, /Non-tech · what to improve/].forEach((l) =>
+      fireEvent.change(screen.getByLabelText(l), { target: { value: "x" } })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Send reflection" }));
+  };
+
+  it("celebrates a milestone reward after sending", async () => {
+    setBkk(19, 18);
+    addReflection.mockResolvedValue({ ...r("2026-11-19", "Comfort Zone", "a"), reward_boxes: [{ id: "b1", reward_pool: "cosmetic" }] });
+    renderPage();
+    await writeTonight();
+    expect(await screen.findByText("Your care is showing")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open reward" })).toBeInTheDocument();
+  });
+
+  it("reloads after an 'already sent' error so the card catches up", async () => {
+    setBkk(19, 18);
+    addReflection.mockRejectedValue(new Error("You have already submitted a reflection today. Please try again tomorrow."));
+    renderPage();
+    await writeTonight();
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith("You have already submitted a reflection today. Please try again tomorrow."));
+    await waitFor(() => expect(vi.mocked(learnerApi.getMyReflections).mock.calls.length).toBeGreaterThan(1));
+  });
+
+  it("keeps the garden tools: protect a night, palette, collection, gift boxes", async () => {
+    renderPage();
+    for (const name of ["Care energy", "Palette", "Collection", "Gift boxes"]) expect(await screen.findByRole("button", { name })).toBeInTheDocument();
+  });
+
+  it("tags an unread reply as New where it is shown", async () => {
+    localStorage.setItem("baro:reflections-seen:u1", JSON.stringify(["r16"]));
+    renderPage();
+    expect(await screen.findByText("New")).toBeInTheDocument();
   });
 });

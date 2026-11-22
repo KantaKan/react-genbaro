@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Reflection } from "@/domain/types";
-import { answersComplete, groupByWeek, matchesFilter, monthGrid, nightStats, readSeen, toNights, unseenReplies, weekStrip, zoneOf } from "./model";
+import { answersComplete, courseWeekOf, groupByWeek, matchesFilter, monthGrid, nightStats, readSeen, toNights, unseenReplies, weekStrip, zoneOf } from "./model";
 
 const refl = (day: string, barometer: string, reply = "", id = day): Reflection => ({
   _id: id,
@@ -31,9 +31,22 @@ describe("toNights", () => {
     expect(n.map((x) => x.day)).toEqual(["2026-11-18", "2026-11-16"]);
     expect(n[0]).toMatchObject({ zone: "panic", reply: "hang in there", techHappy: "th 2026-11-18" });
   });
-  it("falls back to the date when day is missing", () => {
+  it("falls back to the date when day is missing, read in Bangkok time", () => {
     const r = { ...refl("2026-11-10", "Comfort Zone"), day: undefined };
     expect(toNights([r])[0].day).toBe("2026-11-10");
+    const utcLate = { ...refl("x", "Comfort Zone"), day: undefined, date: "2026-11-22T17:30:00Z", _id: "u" };
+    expect(toNights([utcLate])[0].day).toBe("2026-11-23");
+  });
+  it("drops rows with a broken or zero date", () => {
+    const bad = [{ ...refl("0001-01-01", "Comfort Zone") }, { ...refl("x", "Comfort Zone"), day: "nope", date: "nope" }];
+    expect(toNights(bad)).toEqual([]);
+  });
+  it("decodes the HTML escaping the server stores", () => {
+    const r = refl("2026-11-10", "Comfort Zone", "I&#39;m &lt;proud&gt;");
+    r.reflection.tech_sessions.happy = "I&#39;m &amp; you";
+    const n = toNights([r])[0];
+    expect(n.techHappy).toBe("I'm & you");
+    expect(n.reply).toBe("I'm <proud>");
   });
 });
 
@@ -64,31 +77,55 @@ describe("weekStrip", () => {
     const s = weekStrip(nights, "2026-11-19", new Set(["2026-11-17"]));
     expect(s[1].state).toBe("off");
   });
+  it("shows a care-energy protected night as protected, not missed", () => {
+    const s = weekStrip(nights, "2026-11-19", new Set(), new Set(["2026-11-17"]));
+    expect(s[1].state).toBe("protected");
+  });
   it("today counts as written once sent", () => {
     const s = weekStrip(toNights([refl("2026-11-19", "Comfort Zone")]), "2026-11-19", new Set());
     expect(s[3].state).toBe("written");
   });
 });
 
+describe("courseWeekOf", () => {
+  // course starts Mon 2 Nov 2026, 75 class days
+  it("counts weekdays from the start, five per week", () => {
+    expect(courseWeekOf("2026-11-02", "2026-11-02", 75)).toBe(1);
+    expect(courseWeekOf("2026-11-06", "2026-11-02", 75)).toBe(1);
+    expect(courseWeekOf("2026-11-09", "2026-11-02", 75)).toBe(2);
+    expect(courseWeekOf("2026-11-08", "2026-11-02", 75)).toBe(0); // a Sunday is not a class day
+  });
+  it("follows the course, not the calendar, when it starts mid-week", () => {
+    // starts Wed 4 Nov: Wed–Fri are days 1–3, Mon–Tue days 4–5 (week 1), Wed day 6 (week 2)
+    expect(courseWeekOf("2026-11-10", "2026-11-04", 75)).toBe(1);
+    expect(courseWeekOf("2026-11-11", "2026-11-04", 75)).toBe(2);
+  });
+  it("is 0 before the start, after the last class day, or with no start", () => {
+    expect(courseWeekOf("2026-11-01", "2026-11-02", 75)).toBe(0);
+    expect(courseWeekOf("2026-11-09", "2026-11-02", 5)).toBe(0);
+    expect(courseWeekOf("2026-11-09", "", 75)).toBe(0);
+  });
+});
+
 describe("monthGrid", () => {
   const nights = toNights([refl("2026-11-02", "Comfort Zone"), refl("2026-11-04", "Panic Zone", "ok")]);
-  const g = monthGrid(2026, 10, nights, "2026-11-05", new Set(), { today: "2026-11-05", week: 9 });
-  it("lays out Mon–Fri rows that cover the month", () => {
-    expect(g[0].days.map((d) => d.date)).toEqual(["2026-10-26", "2026-10-27", "2026-10-28", "2026-10-29", "2026-10-30"]);
+  const course = { start: "2026-10-26", days: 75 };
+  const g = monthGrid(2026, 10, nights, "2026-11-05", new Set(), new Set(), course);
+  it("lays out Mon–Fri rows for the month, skipping a row that is all last month", () => {
+    // 1 Nov 2026 is a Sunday, so the first row is 2–6 Nov
+    expect(g[0].days.map((d) => d.date)).toEqual(["2026-11-02", "2026-11-03", "2026-11-04", "2026-11-05", "2026-11-06"]);
     expect(g[g.length - 1].days[4].date).toBe("2026-12-04");
-    expect(g[0].days[0].inMonth).toBe(false);
+    expect(g[g.length - 1].days[2].inMonth).toBe(false);
   });
   it("labels rows with the course week", () => {
-    expect(g[1].label).toBe("W9");
-    expect(g[0].label).toBe("W8");
+    expect(g[0].label).toBe("W2");
+    expect(g[1].label).toBe("W3");
   });
   it("only counts a day as missed from the first reflection on", () => {
-    const row = g[1].days;
-    expect(row.map((d) => d.state)).toEqual(["written", "missed", "written", "today", "future"]);
-    expect(g[0].days[4].state).toBe("none");
+    expect(g[0].days.map((d) => d.state)).toEqual(["written", "missed", "written", "today", "future"]);
   });
-  it("leaves labels off when the course week is unknown", () => {
-    expect(monthGrid(2026, 10, nights, "2026-11-05", new Set())[1].label).toBe("");
+  it("leaves labels off when the course is unknown", () => {
+    expect(monthGrid(2026, 10, nights, "2026-11-05", new Set())[0].label).toBe("");
   });
 });
 
@@ -103,7 +140,7 @@ describe("groupByWeek", () => {
 
 describe("nightStats", () => {
   it("counts written of class nights since the first one, and the zone mix", () => {
-    const s = nightStats(toNights([refl("2026-11-16", "Comfort Zone"), refl("2026-11-18", "Comfort Zone"), refl("2026-11-19", "Panic Zone")]), "2026-11-20", new Set());
+    const s = nightStats(toNights([refl("2026-11-16", "Comfort Zone"), refl("2026-11-18", "Comfort Zone"), refl("2026-11-19", "Panic Zone")]), "2026-11-20", new Set(), new Set());
     // 16,17,18,19 are class nights before today (Fri 20 still open)
     expect(s.written).toBe(3);
     expect(s.classNights).toBe(4);
@@ -112,8 +149,18 @@ describe("nightStats", () => {
     expect(s.mix.comfort).toBeCloseTo(2 / 3);
   });
   it("counts today once it is written", () => {
-    const s = nightStats(toNights([refl("2026-11-20", "Comfort Zone")]), "2026-11-20", new Set());
+    const s = nightStats(toNights([refl("2026-11-20", "Comfort Zone")]), "2026-11-20", new Set(), new Set());
     expect(s).toMatchObject({ written: 1, classNights: 1 });
+  });
+  it("never says more written than class nights: weekend and holiday writes don't count", () => {
+    const s = nightStats(toNights([refl("2026-11-16", "Comfort Zone"), refl("2026-11-21", "Comfort Zone"), refl("2026-11-17", "Comfort Zone")]), "2026-11-23", new Set(["2026-11-17"]), new Set());
+    // class nights 16, 18, 19, 20 (17 is a holiday, 21 a Saturday, 23 still open)
+    expect(s).toMatchObject({ written: 1, classNights: 4 });
+  });
+  it("does not count a protected night as missed", () => {
+    const s = nightStats(toNights([refl("2026-11-16", "Comfort Zone"), refl("2026-11-18", "Comfort Zone")]), "2026-11-19", new Set(), new Set(["2026-11-17"]));
+    expect(s.missed).toEqual([]);
+    expect(s.classNights).toBe(2);
   });
 });
 

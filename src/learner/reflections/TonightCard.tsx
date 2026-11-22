@@ -39,7 +39,7 @@ export function TonightCard({
   const step = sent ? "Done for tonight" : zone ? "Step 2 of 2 · Answer all four" : "Step 1 of 2 · Pick a mood";
 
   const send = async () => {
-    if (!zone || !ready || sending) return;
+    if (!zone || !ready || sending || !open) return;
     setSending(true);
     try {
       await onSend(zone, { th: answers.th.trim(), ti: answers.ti.trim(), sh: answers.sh.trim(), si: answers.si.trim() });
@@ -52,7 +52,8 @@ export function TonightCard({
     }
   };
 
-  const left = Math.max(0, OPENS_AT - nowSec);
+  const leftMin = Math.ceil(Math.max(0, OPENS_AT - nowSec) / 60);
+  const countdown = `in ${Math.floor(leftMin / 60)}h ${leftMin % 60}m`;
   const rough = sent?.zone === "stretch-overwhelmed" || sent?.zone === "panic";
 
   return (
@@ -100,12 +101,16 @@ export function TonightCard({
           </div>
           <div className="mt-3.5 flex flex-wrap items-center gap-3">
             <span className="flex-1 text-[12.5px] text-l-ink3" aria-live="polite">
-              {ready ? "All four answered. Ready to send." : `${filled} of 4 answered. Answer all four to send.`}
+              {!open
+                ? "Tonight's reflection has closed. It opens again at 16:45. Your answers are still here."
+                : ready
+                  ? "All four answered. Ready to send."
+                  : `${filled} of 4 answered. Answer all four to send.`}
             </span>
             <button
               type="button"
               onClick={send}
-              disabled={!ready || sending}
+              disabled={!ready || sending || !open}
               className="rounded-full bg-l-ink px-5 py-2.5 text-[14px] font-semibold text-l-card transition disabled:opacity-35"
             >
               {sending ? "Sending…" : "Send reflection"}
@@ -138,7 +143,7 @@ export function TonightCard({
           ) : (
             <div className="mt-3.5 flex items-center gap-2.5 rounded-[14px] bg-l-sub px-3.5 py-3 text-[13px] text-l-ink2">
               <Lock className="h-4 w-4" strokeWidth={1.5} />
-              <span>{`Opens at 16:45 · in ${Math.floor(left / 3600)}h ${Math.ceil((left % 3600) / 60)}m.`}</span>
+              <span>{`Opens at 16:45 · ${countdown}.`}</span>
             </div>
           )}
         </>

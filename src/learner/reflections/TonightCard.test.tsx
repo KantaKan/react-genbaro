@@ -61,4 +61,21 @@ describe("TonightCard", () => {
     expect(screen.getByText("Done for tonight")).toBeInTheDocument();
     expect(screen.getByText(/A TA will reach out/)).toBeInTheDocument();
   });
+
+  it("won't send once the night is over (form left open past midnight)", () => {
+    const { rerender } = render(<TonightCard dateLabel="Fri 20 Nov" nowSec={OPEN} onSend={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: /Comfort zone/i }));
+    for (const l of [/Tech · what went well/, /Tech · what to improve/, /Non-tech · what went well/, /Non-tech · what to improve/]) fill(l, "x");
+    rerender(<TonightCard dateLabel="Sat 21 Nov" nowSec={5 * 60} onSend={vi.fn()} />);
+    expect(screen.getByRole("button", { name: "Send reflection" })).toBeDisabled();
+    expect(screen.getByText(/opens again at 16:45/)).toBeInTheDocument();
+  });
+
+  it("counts down without ever showing 60 minutes", () => {
+    render(<TonightCard dateLabel="Fri 20 Nov" nowSec={16 * 3600 + 44 * 60 + 30} onSend={vi.fn()} />);
+    expect(screen.getByText(/in 0h 1m/)).toBeInTheDocument();
+    // 59m59s left must read 1h 0m, not 0h 60m
+    render(<TonightCard dateLabel="Fri 20 Nov" nowSec={15 * 3600 + 45 * 60 + 1} onSend={vi.fn()} />);
+    expect(screen.getByText(/in 1h 0m/)).toBeInTheDocument();
+  });
 });

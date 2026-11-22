@@ -1,5 +1,7 @@
 import type { Reflection } from "@/domain/types";
 import { reflectionZones } from "@/components/reflection-zones";
+import { decodeHtmlEntities } from "@/lib/board";
+import { bangkokNow } from "../lib/time";
 import type { ZoneId } from "../today/BarometerFace";
 
 /** One written reflection, flattened for the page. */
@@ -16,7 +18,7 @@ export interface Night {
 }
 
 export type Filter = "all" | "reply" | "rough";
-export type DayState = "written" | "missed" | "today" | "future" | "off" | "none";
+export type DayState = "written" | "missed" | "protected" | "today" | "future" | "off" | "none";
 
 export interface DayCell {
   date: string;
@@ -48,7 +50,18 @@ export function zoneOf(barometer: string): ZoneId | undefined {
   return reflectionZones.find((z) => z.label.toLowerCase() === b || z.aliases.some((a) => a === b))?.id as ZoneId | undefined;
 }
 
-export const dayOf = (r: Pick<Reflection, "day" | "date">) => (r.day || r.date || "").slice(0, 10);
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** The reflection's Bangkok date, or "" when it has none worth trusting. */
+export function dayOf(r: Pick<Reflection, "day" | "date">): string {
+  let day = r.day && DAY.test(r.day) ? r.day : "";
+  if (!day && r.date) {
+    const t = new Date(r.date);
+    if (!Number.isNaN(t.getTime())) day = bangkokNow(t).date;
+  }
+  return day && day >= "2020-01-01" ? day : "";
+}
+const text = (s: string | undefined) => decodeHtmlEntities(s ?? "");
 
 /** Newest first, one per day (the first one stored wins). */
 export function toNights(reflections: Reflection[]): Night[] {
@@ -59,13 +72,13 @@ export function toNights(reflections: Reflection[]): Night[] {
     byDay.set(day, {
       _id: r._id ?? day,
       day,
-      zone: zoneOf(r.reflection?.barometer ?? ""),
-      barometer: r.reflection?.barometer ?? "",
-      techHappy: r.reflection?.tech_sessions?.happy ?? "",
-      techImprove: r.reflection?.tech_sessions?.improve ?? "",
-      softHappy: r.reflection?.non_tech_sessions?.happy ?? "",
-      softImprove: r.reflection?.non_tech_sessions?.improve ?? "",
-      reply: (r.admin_feedback ?? "").trim(),
+      zone: zoneOf(text(r.reflection?.barometer)),
+      barometer: text(r.reflection?.barometer),
+      techHappy: text(r.reflection?.tech_sessions?.happy),
+      techImprove: text(r.reflection?.tech_sessions?.improve),
+      softHappy: text(r.reflection?.non_tech_sessions?.happy),
+      softImprove: text(r.reflection?.non_tech_sessions?.improve),
+      reply: text(r.admin_feedback).trim(),
     });
   }
   return [...byDay.values()].sort((a, b) => (a.day < b.day ? 1 : -1));
@@ -77,11 +90,12 @@ export function matchesFilter(n: Night, f: Filter): boolean {
   return true;
 }
 
-function stateOf(date: string, byDay: Map<string, Night>, today: string, holidays: Set<string>, first: string | undefined): DayState {
+function stateOf(date: string, byDay: Map<string, Night>, today: string, holidays: Set<string>, first: string | undefined, protectedDays: Set<string>): DayState {
   if (byDay.has(date)) return "written";
   if (date > today) return "future";
   if (date === today) return "today";
   if (holidays.has(date)) return "off";
+  if (protectedDays.has(date)) return "protected";
   if (!first || date < first) return "none";
   return "missed";
 }
@@ -89,48 +103,61 @@ function stateOf(date: string, byDay: Map<string, Night>, today: string, holiday
 const indexByDay = (nights: Night[]) => new Map(nights.map((n) => [n.day, n]));
 const firstDay = (nights: Night[]) => (nights.length ? nights[nights.length - 1].day : undefined);
 
-function cell(date: string, i: number, byDay: Map<string, Night>, today: string, holidays: Set<string>, first: string | undefined, month?: number): DayCell {
+function cell(date: string, i: number, byDay: Map<string, Night>, today: string, holidays: Set<string>, first: string | undefined, protectedDays: Set<string>, month?: number): DayCell {
   return {
     date,
     day: utc(date).getUTCDate(),
     label: LABELS[i],
     inMonth: month === undefined || utc(date).getUTCMonth() === month,
-    state: stateOf(date, byDay, today, holidays, first),
+    state: stateOf(date, byDay, today, holidays, first, protectedDays),
     night: byDay.get(date),
   };
 }
 
 /** Monday–Friday of this week (a weekend shows the week that just ended). */
-export function weekStrip(nights: Night[], today: string, holidays: Set<string>): DayCell[] {
+export function weekStrip(nights: Night[], today: string, holidays: Set<string>, protectedDays: Set<string> = new Set()): DayCell[] {
   const byDay = indexByDay(nights);
   const first = firstDay(nights);
   const monday = mondayOf(today);
-  return LABELS.map((_, i) => cell(addDays(monday, i), i, byDay, today, holidays, first));
+  return LABELS.map((_, i) => cell(addDays(monday, i), i, byDay, today, holidays, first, protectedDays));
 }
 
-/**
- * Mon–Fri rows covering a month (month is 0–11). With a course anchor
- * ({ today, week }) each row is labelled with its course week, e.g. "W9".
- */
-export function monthGrid(year: number, month: number, nights: Night[], today: string, holidays: Set<string>, anchor?: { today: string; week: number }) {
+export interface Course {
+  start: string; // YYYY-MM-DD
+  days: number; // class days in the course
+}
+
+/** Same rule as the server (CourseProgress): weekdays from the start are days 1..days, five to a week. 0 outside the course. */
+export function courseWeekOf(date: string, start: string, days: number): number {
+  if (!DAY.test(start) || days <= 0 || date < start || !isWeekday(date)) return 0;
+  let n = 0;
+  for (let d = start; d <= date; d = addDays(d, 1)) if (isWeekday(d)) n++;
+  return n > days ? 0 : Math.floor((n - 1) / 5) + 1;
+}
+
+/** Course week shown for a Mon–Fri row: the latest of its days that is inside the course. */
+export function rowWeek(monday: string, course?: Course): number {
+  if (!course) return 0;
+  for (let i = 4; i >= 0; i--) {
+    const w = courseWeekOf(addDays(monday, i), course.start, course.days);
+    if (w) return w;
+  }
+  return 0;
+}
+
+/** Mon–Fri rows for a month (month is 0–11); a row with no day in the month is left out. */
+export function monthGrid(year: number, month: number, nights: Night[], today: string, holidays: Set<string>, protectedDays: Set<string> = new Set(), course?: Course) {
   const byDay = indexByDay(nights);
   const first = firstDay(nights);
-  const start = mondayOf(iso(new Date(Date.UTC(year, month, 1))));
+  const firstOfMonth = iso(new Date(Date.UTC(year, month, 1)));
   const last = iso(new Date(Date.UTC(year, month + 1, 0)));
   const rows: { monday: string; label: string; days: DayCell[] }[] = [];
-  for (let monday = start; monday <= last; monday = addDays(monday, 7)) {
-    const w = courseWeek(monday, anchor);
-    const label = w ? `W${w}` : "";
-    rows.push({ monday, label, days: LABELS.map((_, i) => cell(addDays(monday, i), i, byDay, today, holidays, first, month)) });
+  for (let monday = mondayOf(firstOfMonth); monday <= last; monday = addDays(monday, 7)) {
+    if (addDays(monday, 4) < firstOfMonth) continue;
+    const w = rowWeek(monday, course);
+    rows.push({ monday, label: w ? `W${w}` : "", days: LABELS.map((_, i) => cell(addDays(monday, i), i, byDay, today, holidays, first, protectedDays, month)) });
   }
   return rows;
-}
-
-/** Course week number of the week starting on monday, given today's week; 0 when unknown or before the course. */
-export function courseWeek(monday: string, anchor?: { today: string; week: number }): number {
-  if (!anchor || anchor.week <= 0) return 0;
-  const w = anchor.week - Math.round((utc(mondayOf(anchor.today)).getTime() - utc(monday).getTime()) / (7 * 86400000));
-  return w > 0 ? w : 0;
 }
 
 export function weekRange(monday: string): string {
@@ -156,17 +183,22 @@ export function groupByWeek(nights: Night[]) {
 }
 
 /** Written nights out of class nights (weekdays, not holidays) since the first reflection. Today counts once written. */
-export function nightStats(nights: Night[], today: string, holidays: Set<string>) {
+export function nightStats(nights: Night[], today: string, holidays: Set<string>, protectedDays: Set<string> = new Set()) {
   const byDay = indexByDay(nights);
   const first = firstDay(nights);
   const missed: string[] = [];
   let classNights = 0;
+  let written = 0;
   if (first) {
     for (let d = first; d <= today; d = addDays(d, 1)) {
       if (!isWeekday(d) || holidays.has(d)) continue;
-      if (d === today && !byDay.has(d)) continue;
-      classNights++;
-      if (!byDay.has(d)) missed.push(d);
+      if (byDay.has(d)) {
+        classNights++;
+        written++;
+      } else if (d !== today && !protectedDays.has(d)) {
+        classNights++;
+        missed.push(d);
+      }
     }
   }
   const counts: Record<ZoneId, number> = { comfort: 0, "stretch-enjoying": 0, "stretch-overwhelmed": 0, panic: 0 };
@@ -178,7 +210,7 @@ export function nightStats(nights: Night[], today: string, holidays: Set<string>
   }
   const mix = Object.fromEntries(Object.entries(counts).map(([k, v]) => [k, zoned ? v / zoned : 0])) as Record<ZoneId, number>;
   const dominant = zoned ? (Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0] as ZoneId) : undefined;
-  return { written: nights.length, classNights, missed: missed.reverse(), mix, dominant, replies: nights.filter((n) => n.reply).length };
+  return { written, classNights, missed: missed.reverse(), mix, dominant, replies: nights.filter((n) => n.reply).length };
 }
 
 /** Replies the learner hasn't opened yet, newest first. */

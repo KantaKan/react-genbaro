@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "react-query";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Sprout, MessageCircle } from "lucide-react";
 import { useUserData } from "@/UserDataContext";
 import { api } from "@/lib/api";
@@ -12,6 +12,9 @@ import { getEffectivePlantDays, getNextTierProgress, getPlantTier, getPlantTierC
 import { reflectionZones } from "@/components/reflection-zones";
 import { giftBoxService } from "@/application/services/giftBoxService";
 import { TeacherGiftBoxesDialog } from "@/components/teacher-gift-boxes-dialog";
+import { CareEnergyInventoryButton } from "@/components/care-energy-inventory-button";
+import { PlantPalettePicker } from "@/components/plant-palette-picker";
+import { PlantCollectionDialog } from "@/components/plant-collection-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { Reflection, User } from "@/domain/types";
@@ -20,7 +23,7 @@ import { usePageHeader } from "../shell/LearnerShell";
 import { useClock } from "../checkin/useClock";
 import { bangkokNow } from "../lib/time";
 import { BarometerFace, ZONES, type ZoneId } from "../today/BarometerFace";
-import { nightStats, readSeen, toNights, unseenReplies, weekStrip, type Answers, type Filter, type Night } from "./model";
+import { matchesFilter, nightStats, readSeen, toNights, unseenReplies, weekStrip, type Answers, type Filter, type Night } from "./model";
 import { TonightCard } from "./TonightCard";
 import { CalendarView, JournalView, dayLabel } from "./views";
 
@@ -85,19 +88,19 @@ export function ReflectionsPage() {
   const nowSec = useClock(30_000);
   const today = bangkokNow().date;
   const course = summary.data?.course;
-  const anchor = course && course.week_number > 0 ? { today, week: course.week_number } : undefined;
+  const courseInfo = course?.start_date ? { start: course.start_date, days: course.course_days } : undefined;
   usePageHeader({ title: "Reflections", context: course && course.week_number > 0 ? `Week ${course.week_number} of ${course.total_weeks}` : undefined });
 
   const nights = useMemo(() => toNights(raw), [raw]);
   const tonight = nights.find((n) => n.day === today);
-  const stats = useMemo(() => nightStats(nights, today, holidays), [nights, today, holidays]);
-  const strip = useMemo(() => weekStrip(nights, today, holidays), [nights, today, holidays]);
-
-  // streak + plant
   const protectedDates = useMemo(
     () => new Set((meQ.data?.care_energy_log ?? []).filter((e) => e.kind === "protect" && e.relatedDate).map((e) => e.relatedDate as string)),
     [meQ.data?.care_energy_log]
   );
+  const stats = useMemo(() => nightStats(nights, today, holidays, protectedDates), [nights, today, holidays, protectedDates]);
+  const strip = useMemo(() => weekStrip(nights, today, holidays, protectedDates), [nights, today, holidays, protectedDates]);
+
+  // streak + plant
   const streak = useStreakCalculation(raw as unknown as HookReflection[], protectedDates, holidays);
   const growth = meQ.data?.growth_points ?? 0;
   const progress = getNextTierProgress(streak.currentStreak, growth);
@@ -124,51 +127,47 @@ export function ReflectionsPage() {
   };
 
   // unread TA replies
-  const [seen, setSeen] = useState<Set<string> | null>(null);
+  // seen reply ids, tagged with whose they are so a different login never inherits them
+  const [seenState, setSeenState] = useState<{ owner: string; ids: Set<string> } | null>(null);
+  const seen = seenState && seenState.owner === userId ? seenState.ids : null;
   useEffect(() => {
-    if (!userId || !reflectionsQ.isSuccess) return;
-    setSeen((s) => {
-      if (s) return s;
-      const raw = load(seenKey(userId));
-      const set = readSeen(raw, nights);
-      if (raw === null) save(seenKey(userId), [...set]);
-      return set;
-    });
-  }, [userId, reflectionsQ.isSuccess, nights]);
-  const markSeen = useCallback(
-    (n: Night) => {
-      if (!n.reply) return;
-      setSeen((s) => {
-        if (!s || s.has(n._id)) return s;
-        const next = new Set(s).add(n._id);
-        save(seenKey(userId), [...next]);
-        return next;
-      });
-    },
-    [userId]
-  );
+    if (!userId || !reflectionsQ.isSuccess || seen) return;
+    const stored = load(seenKey(userId));
+    const ids = readSeen(stored, nights);
+    if (stored === null) save(seenKey(userId), [...ids]);
+    setSeenState({ owner: userId, ids });
+  }, [userId, reflectionsQ.isSuccess, nights, seen]);
+  const markSeen = (n: Night) => {
+    if (!n.reply || !seen || seen.has(n._id)) return;
+    const ids = new Set(seen).add(n._id);
+    save(seenKey(userId), [...ids]);
+    setSeenState({ owner: userId, ids });
+  };
   const unseen = seen ? unseenReplies(nights, seen) : [];
+  const unseenIds = new Set(unseen.map((n) => n._id));
 
   // journal + calendar state
   // null = untouched: the newest night starts open
   const [openState, setOpenState] = useState<Set<string> | null>(null);
   const open = openState ?? new Set(nights[0] ? [nights[0]._id] : []);
-  const setOpen = (f: (s: Set<string>) => Set<string>) => setOpenState((s) => f(s ?? open));
+  const setOpen = (next: Set<string>) => setOpenState(next);
   const [weeksShown, setWeeksShown] = useState(3);
   const [selectedId, setSelectedId] = useState<string>();
-  const [focus, setFocus] = useState<string>();
-  const selected = nights.find((n) => n._id === selectedId) ?? nights.find((n) => n.day.slice(0, 7) === monthKey) ?? nights[0];
+  // n bumps on every "Read reply" so the journal scrolls even to the same night again
+  const [focus, setFocus] = useState<{ id: string; n: number }>();
+  const inMonth = (n: Night) => n.day.slice(0, 7) === monthKey;
+  const picked = nights.find((n) => n._id === selectedId);
+  const selected = picked && inMonth(picked) ? picked : nights.find(inMonth);
 
-  const toggle = (n: Night) =>
-    setOpen((s) => {
-      const next = new Set(s);
-      if (next.has(n._id)) next.delete(n._id);
-      else {
-        next.add(n._id);
-        markSeen(n);
-      }
-      return next;
-    });
+  const toggle = (n: Night) => {
+    const next = new Set(open);
+    if (next.has(n._id)) next.delete(n._id);
+    else {
+      next.add(n._id);
+      markSeen(n);
+    }
+    setOpen(next);
+  };
   const select = (n: Night) => {
     setSelectedId(n._id);
     markSeen(n);
@@ -180,16 +179,22 @@ export function ReflectionsPage() {
     markSeen(n);
     if (prefs.view === "calendar") select(n);
     else {
-      setOpen((s) => new Set(s).add(n._id));
+      setOpen(new Set(open).add(n._id));
       setWeeksShown(Number.MAX_SAFE_INTEGER);
-      if (prefs.filter === "rough" && n.zone !== "panic" && n.zone !== "stretch-overwhelmed") update({ filter: "all" });
-      setFocus(n._id);
+      if (prefs.filter !== "all" && !matchesFilter(n, prefs.filter)) update({ filter: "all" });
+      setFocus((f) => ({ id: n._id, n: (f?.n ?? 0) + 1 }));
     }
   };
 
   // sending + rewards
   const [celebrate, setCelebrate] = useState<{ count: number; hasEgg?: boolean; comeback?: boolean; warning?: string } | null>(null);
   const [giftsOpen, setGiftsOpen] = useState(false);
+  const [collectionOpen, setCollectionOpen] = useState(false);
+  const navigate = useNavigate();
+  const refreshPlant = () => {
+    qc.invalidateQueries(["my-user"]);
+    qc.invalidateQueries(["learnerGenmateGarden"]);
+  };
   useEffect(() => {
     if (!userId) return;
     let live = true;
@@ -219,13 +224,15 @@ export function ReflectionsPage() {
       } as HookReflection)) as unknown as Reflection;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to submit reflection. Please try again later.");
+      // e.g. already sent from another tab: reload so the card shows tonight's reflection
+      qc.invalidateQueries(["my-reflections"]);
       throw err;
     }
     toast.success("Reflection sent. Thank you!");
     qc.setQueryData<Reflection[]>(["my-reflections", userId], (old) => [created, ...(old ?? [])]);
     qc.invalidateQueries(["my-reflections"]);
-    qc.invalidateQueries(["my-user"]);
-    refetchUserData?.().catch?.(() => undefined);
+    refreshPlant();
+    Promise.resolve(refetchUserData?.()).catch(() => undefined);
     if ((created?.reward_boxes?.length ?? 0) > 0 || created?.reward_warning || comeback) {
       setCelebrate({
         count: created.reward_boxes?.length ?? 0,
@@ -277,7 +284,7 @@ export function ReflectionsPage() {
                   <span className={`block h-[30px] w-[30px] rounded-full ${c.state === "today" ? "border-2 border-dashed border-l-ink" : "border-[1.5px] border-l-hair"}`} />
                 )}
                 <span className={`text-[10.5px] ${c.date === today ? "text-l-ink" : "text-l-ink3"}`}>
-                  {c.date === today ? (c.night ? "Done" : "Today") : c.state === "missed" ? "Missed" : c.state === "off" ? "Off" : " "}
+                  {c.date === today ? (c.night ? "Done" : "Today") : c.state === "missed" ? "Missed" : c.state === "protected" ? "Protected" : c.state === "off" ? "Off" : " "}
                 </span>
               </div>
             ))}
@@ -310,7 +317,20 @@ export function ReflectionsPage() {
               <Link to="/learner/garden" className="text-[12.5px] font-semibold text-l-ink2 hover:text-l-ink">
                 Open your garden ›
               </Link>
-              <TeacherGiftBoxesDialog open={giftsOpen} onOpenChange={setGiftsOpen} onReward={() => qc.invalidateQueries(["my-user"])} />
+              {meQ.data && (
+                <>
+                  <CareEnergyInventoryButton userId={userId} balance={meQ.data.care_energy_balance ?? 0} eligibleProtectDate={streak.eligibleProtectDate} onUsed={refreshPlant} />
+                  <PlantPalettePicker userId={userId} selected={meQ.data.selected_palette} onSaved={refreshPlant} />
+                  <PlantCollectionDialog open={collectionOpen} onOpenChange={setCollectionOpen} onLoadoutChanged={refreshPlant} />
+                </>
+              )}
+              <TeacherGiftBoxesDialog
+                open={giftsOpen}
+                onOpenChange={setGiftsOpen}
+                onReward={refreshPlant}
+                onViewCollection={() => setCollectionOpen(true)}
+                onViewCharacterCollection={() => navigate("/character")}
+              />
             </div>
           </div>
         </section>
@@ -385,7 +405,7 @@ export function ReflectionsPage() {
         {reflectionsQ.isLoading ? (
           <div className="l-card h-[240px] max-w-[900px] animate-pulse" />
         ) : prefs.view === "journal" ? (
-          <JournalView nights={nights} filter={prefs.filter} open={open} onToggle={toggle} weeksShown={weeksShown} onMore={() => setWeeksShown((w) => w + 3)} anchor={anchor} focus={focus} />
+          <JournalView nights={nights} filter={prefs.filter} open={open} onToggle={toggle} weeksShown={weeksShown} onMore={() => setWeeksShown((w) => w + 3)} course={courseInfo} focus={focus} unseen={unseenIds} />
         ) : (
           <CalendarView
             nights={nights}
@@ -396,9 +416,11 @@ export function ReflectionsPage() {
             canNext={my < ty || (my === ty && mm < tm)}
             today={today}
             holidays={holidays}
-            anchor={anchor}
+            protectedDays={protectedDates}
+            course={courseInfo}
             selected={selected}
             onSelect={select}
+            unseen={unseenIds}
           />
         )}
       </div>

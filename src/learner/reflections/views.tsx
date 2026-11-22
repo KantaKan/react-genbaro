@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
 import { BarometerFace, ZONES, type ZoneId } from "../today/BarometerFace";
-import { courseWeek, groupByWeek, matchesFilter, monthGrid, type DayCell, type Filter, type Night } from "./model";
+import { groupByWeek, matchesFilter, monthGrid, rowWeek, type Course, type DayCell, type Filter, type Night } from "./model";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -49,26 +49,29 @@ function Answer({ title, good, improve }: { title: string; good: string; improve
   );
 }
 
-export function Reply({ text }: { text: string }) {
+export function Reply({ text, isNew = false }: { text: string; isNew?: boolean }) {
   return (
     <div className="mt-3 flex gap-2.5">
       <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full bg-l-indigo text-[11px] font-bold text-white">TA</span>
       <div className="rounded-[4px_16px_16px_16px] bg-indigo-50 px-3.5 py-2.5 text-[13.5px] leading-relaxed text-zinc-900 dark:bg-indigo-950/50 dark:text-zinc-100">
-        <div className="text-[12px] font-bold text-indigo-700 dark:text-indigo-300">Your TA</div>
+        <div className="text-[12px] font-bold text-indigo-700 dark:text-indigo-300">
+          Your TA
+          {isNew && <span className="ml-1.5 rounded-full bg-l-indigo px-1.5 py-px text-[10px] font-bold text-white">New</span>}
+        </div>
         <p className="whitespace-pre-line">{text}</p>
       </div>
     </div>
   );
 }
 
-export function NightAnswers({ n, grid = true }: { n: Night; grid?: boolean }) {
+export function NightAnswers({ n, grid = true, isNew = false }: { n: Night; grid?: boolean; isNew?: boolean }) {
   return (
     <>
       <div className={`mt-3.5 grid gap-3 ${grid ? "sm:grid-cols-2" : ""}`}>
         <Answer title="TECH" good={n.techHappy} improve={n.techImprove} />
         <Answer title="NON-TECH" good={n.softHappy} improve={n.softImprove} />
       </div>
-      {n.reply && <Reply text={n.reply} />}
+      {n.reply && <Reply text={n.reply} isNew={isNew} />}
     </>
   );
 }
@@ -80,8 +83,9 @@ export function JournalView({
   onToggle,
   weeksShown,
   onMore,
-  anchor,
+  course,
   focus,
+  unseen,
 }: {
   nights: Night[];
   filter: Filter;
@@ -89,11 +93,16 @@ export function JournalView({
   onToggle: (n: Night) => void;
   weeksShown: number;
   onMore: () => void;
-  anchor?: { today: string; week: number };
-  focus?: string;
+  course?: Course;
+  focus?: { id: string; n: number };
+  unseen?: Set<string>;
 }) {
   const focusRef = useRef<HTMLDivElement>(null);
+  const handled = useRef(focus?.n ?? 0);
   useEffect(() => {
+    // scroll once per "Read reply" click, not again when the view remounts
+    if (!focus || focus.n === handled.current) return;
+    handled.current = focus.n;
     focusRef.current?.scrollIntoView?.({ behavior: "smooth", block: "center" });
   }, [focus]);
 
@@ -104,7 +113,7 @@ export function JournalView({
   return (
     <div className="flex max-w-[900px] flex-col gap-2.5">
       {groups.slice(0, weeksShown).map((g) => {
-        const w = courseWeek(g.monday, anchor);
+        const w = rowWeek(g.monday, course);
         return (
           <div key={g.monday} className="flex flex-col gap-2.5">
             <div className="flex items-center gap-2.5 px-1 pb-0.5 pt-3">
@@ -114,7 +123,7 @@ export function JournalView({
             </div>
             {g.nights.map((n) =>
               open.has(n._id) ? (
-                <div key={n._id} ref={focus === n._id ? focusRef : undefined} className={`l-card flex p-[18px] pl-0 ${focus === n._id ? "ring-2 ring-l-indigo" : ""}`}>
+                <div key={n._id} ref={focus?.id === n._id ? focusRef : undefined} className={`l-card flex p-[18px] pl-0 ${focus?.id === n._id ? "ring-2 ring-l-indigo" : ""}`}>
                   <div className="w-[72px] shrink-0 text-center sm:w-[84px]">
                     <div className="text-[26px] font-semibold leading-none">{Number(n.day.slice(8))}</div>
                     <div className="mt-1 text-[12px] text-l-ink3">{dayLabel(n.day).slice(0, 3)}</div>
@@ -128,7 +137,7 @@ export function JournalView({
                         Collapse <ChevronUp className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                    <NightAnswers n={n} />
+                    <NightAnswers n={n} isNew={unseen?.has(n._id)} />
                   </div>
                 </div>
               ) : (
@@ -174,9 +183,11 @@ export function CalendarView({
   canNext,
   today,
   holidays,
-  anchor,
+  protectedDays,
+  course,
   selected,
   onSelect,
+  unseen,
 }: {
   nights: Night[];
   filter: Filter;
@@ -186,11 +197,13 @@ export function CalendarView({
   canNext: boolean;
   today: string;
   holidays: Set<string>;
-  anchor?: { today: string; week: number };
+  protectedDays?: Set<string>;
+  course?: Course;
   selected?: Night;
   onSelect: (n: Night) => void;
+  unseen?: Set<string>;
 }) {
-  const rows = monthGrid(month.y, month.m, nights, today, holidays, anchor);
+  const rows = monthGrid(month.y, month.m, nights, today, holidays, protectedDays, course);
   const showLabels = rows.some((r) => r.label);
   const cols = showLabels ? "grid-cols-[34px_repeat(5,minmax(0,1fr))] sm:grid-cols-[44px_repeat(5,minmax(0,1fr))]" : "grid-cols-5";
   const idx = selected ? nights.findIndex((n) => n._id === selected._id) : -1;
@@ -242,7 +255,7 @@ export function CalendarView({
                 <div className="text-[13px] text-l-ink3">{zoneLabel(selected.zone, selected.barometer)}</div>
               </div>
             </div>
-            <NightAnswers n={selected} grid={false} />
+            <NightAnswers n={selected} grid={false} isNew={unseen?.has(selected._id)} />
             <div className="mt-[18px] flex justify-between border-t border-l-hair pt-3.5 text-[13px] font-semibold">
               <button type="button" disabled={idx < 0 || idx >= nights.length - 1} onClick={() => onSelect(nights[idx + 1])} className="text-l-ink2 hover:text-l-ink disabled:opacity-30">
                 ‹ Earlier night
@@ -253,7 +266,7 @@ export function CalendarView({
             </div>
           </>
         ) : (
-          <p className="text-[13.5px] text-l-ink3">Pick a night on the calendar to read it here.</p>
+          <p className="text-[13.5px] text-l-ink3">No reflections this month. Use the arrows to look at another month.</p>
         )}
       </aside>
     </div>
@@ -268,7 +281,7 @@ function Row({ label, days, filter, selected, onSelect }: { label?: string; days
         const n = d.night;
         const base = "flex min-h-[64px] flex-col items-start gap-1.5 rounded-2xl p-2 text-left sm:min-h-[108px] sm:p-2.5 sm:px-3";
         const num = <b className={`text-[13px] ${d.inMonth ? "" : "text-l-ink3"}`}>{d.day}</b>;
-        if (n) {
+        if (n && d.inMonth) {
           const t = n.zone ? TINT[n.zone] : undefined;
           return (
             <button
@@ -296,8 +309,9 @@ function Row({ label, days, filter, selected, onSelect }: { label?: string; days
               {num}
               {d.state === "today" && <span className="hidden rounded-full bg-l-ink px-1.5 py-px text-[10px] font-bold text-l-card sm:inline">Today</span>}
             </span>
-            {d.state === "missed" && <span className="mt-auto text-[11.5px] text-l-ink3">Missed</span>}
-            {d.state === "off" && <span className="mt-auto text-[11.5px] text-l-ink3">Day off</span>}
+            {d.inMonth && d.state === "missed" && <span className="mt-auto text-[11.5px] text-l-ink3">Missed</span>}
+            {d.inMonth && d.state === "protected" && <span className="mt-auto text-[11.5px] text-l-green">Protected</span>}
+            {d.inMonth && d.state === "off" && <span className="mt-auto text-[11.5px] text-l-ink3">Day off</span>}
           </div>
         );
       })}
