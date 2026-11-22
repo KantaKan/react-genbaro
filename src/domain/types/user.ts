@@ -60,6 +60,8 @@ export interface ProfileComment {
 }
 
 export interface UserData extends User {
+  /** saved profile avatar (set from My profile) */
+  avatar?: import("@/learner/avatar/types").AvatarConfig | null;
   reflections: Reflection[];
   badges?: Badge[];
 }
