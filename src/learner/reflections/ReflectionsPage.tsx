@@ -23,7 +23,7 @@ import { usePageHeader } from "../shell/LearnerShell";
 import { useClock } from "../checkin/useClock";
 import { bangkokNow } from "../lib/time";
 import { BarometerFace, ZONES, type ZoneId } from "../today/BarometerFace";
-import { matchesFilter, nightStats, readSeen, toNights, unseenReplies, weekStrip, type Answers, type Filter, type Night } from "./model";
+import { matchesFilter, nightStats, repliesFrom, readSeen, toNights, unseenReplies, weekStrip, type Answers, type Filter, type Night } from "./model";
 import { TonightCard } from "./TonightCard";
 import { CalendarView, JournalView, dayLabel } from "./views";
 
@@ -340,7 +340,7 @@ export function ReflectionsPage() {
             <MessageCircle className="h-5 w-5" strokeWidth={1.8} />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="text-[16px] font-semibold">{unseen.length ? `${unseen.length} new ${unseen.length === 1 ? "reply" : "replies"} from your TAs` : "No new replies"}</div>
+            <div className="text-[16px] font-semibold">{unseen.length ? `${unseen.length} new ${unseen.length === 1 ? "reply" : "replies"} from ${repliesFrom(unseen)}` : "No new replies"}</div>
             <div className="mt-0.5 truncate text-[12.5px] text-l-ink2">
               {unseen.length ? `“${unseen[0].reply}”` : stats.replies ? `${stats.replies} ${stats.replies === 1 ? "reply" : "replies"} so far. Your TAs read every reflection.` : "Your TAs read every reflection."}
             </div>

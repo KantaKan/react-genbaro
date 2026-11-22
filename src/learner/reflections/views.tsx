@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
 import { BarometerFace, ZONES, type ZoneId } from "../today/BarometerFace";
+import { UserAvatar } from "@/components/user-avatar";
 import { groupByWeek, matchesFilter, monthGrid, rowWeek, type Course, type DayCell, type Filter, type Night } from "./model";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -49,13 +50,17 @@ function Answer({ title, good, improve }: { title: string; good: string; improve
   );
 }
 
-export function Reply({ text, isNew = false }: { text: string; isNew?: boolean }) {
+export function Reply({ text, isNew = false, by = "", name = "" }: { text: string; isNew?: boolean; by?: string; name?: string }) {
   return (
     <div className="mt-3 flex gap-2.5">
-      <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full bg-l-indigo text-[11px] font-bold text-white">TA</span>
+      {by ? (
+        <UserAvatar userId={by} name={name || "TA"} className="h-[30px] w-[30px] shrink-0" />
+      ) : (
+        <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full bg-l-indigo text-[11px] font-bold text-white">TA</span>
+      )}
       <div className="rounded-[4px_16px_16px_16px] bg-indigo-50 px-3.5 py-2.5 text-[13.5px] leading-relaxed text-zinc-900 dark:bg-indigo-950/50 dark:text-zinc-100">
         <div className="text-[12px] font-bold text-indigo-700 dark:text-indigo-300">
-          Your TA
+          <span>{name || "Your TA"}</span>
           {isNew && <span className="ml-1.5 rounded-full bg-l-indigo px-1.5 py-px text-[10px] font-bold text-white">New</span>}
         </div>
         <p className="whitespace-pre-line">{text}</p>
@@ -71,7 +76,7 @@ export function NightAnswers({ n, grid = true, isNew = false }: { n: Night; grid
         <Answer title="TECH" good={n.techHappy} improve={n.techImprove} />
         <Answer title="NON-TECH" good={n.softHappy} improve={n.softImprove} />
       </div>
-      {n.reply && <Reply text={n.reply} isNew={isNew} />}
+      {n.reply && <Reply text={n.reply} isNew={isNew} by={n.replyBy} name={n.replyName} />}
     </>
   );
 }
