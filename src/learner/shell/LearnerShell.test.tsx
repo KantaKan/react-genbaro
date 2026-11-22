@@ -4,12 +4,14 @@ import { MemoryRouter } from "react-router-dom";
 import { LearnerShell, usePageHeader } from "./LearnerShell";
 
 vi.mock("@/components/mode-toggle", () => ({ ModeToggle: () => null }));
+vi.mock("./StreakPill", () => ({ StreakPill: () => <a href="/learner/reflections">streak pill</a> }));
 const logout = vi.fn();
 let role = "learner";
 vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout, userRole: role }) }));
+let avatar: { style: string; seed: string; bg: string } | undefined;
 vi.mock("@/UserDataContext", () => ({
   useUserData: () => ({
-    userData: { _id: "u1", first_name: "Aphiradee", zoom_name: "03_Aphiradee(Black/แบล็ค)", jsd_number: "03", genmate_group: "F", cohort_number: 13 },
+    userData: { _id: "u1", first_name: "Aphiradee", zoom_name: "03_Aphiradee(Black/แบล็ค)", jsd_number: "03", genmate_group: "F", cohort_number: 13, avatar },
     loading: false,
   }),
 }));
@@ -59,5 +61,19 @@ describe("LearnerShell", () => {
     role = "admin";
     render(ui());
     expect(screen.getByRole("link", { name: /Admin panel/ })).toHaveAttribute("href", "/admin");
+  });
+
+  it("shows the learner's saved avatar in the sidebar", () => {
+    avatar = { style: "thumbs", seed: "abc", bg: "" };
+    const { container } = render(
+      <MemoryRouter initialEntries={["/learner"]}>
+        <LearnerShell>
+          <div />
+        </LearnerShell>
+      </MemoryRouter>
+    );
+    expect(container.querySelector("aside img[data-avatar='dicebear']")).toBeTruthy();
+    expect(screen.getByRole("banner")).toHaveTextContent("streak pill");
+    avatar = undefined;
   });
 });

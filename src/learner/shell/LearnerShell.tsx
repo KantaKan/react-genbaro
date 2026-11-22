@@ -7,6 +7,8 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { cn } from "@/lib/utils";
 import { NAV, TABS } from "./nav";
 import { nicknames } from "../lib/name";
+import { UserAvatar } from "@/components/user-avatar";
+import { StreakPill } from "./StreakPill";
 
 export interface PageHeader {
   title: string;
@@ -70,9 +72,7 @@ export function LearnerShell({ children }: { children: ReactNode }) {
             </Link>
           )}
           <div className={`${userRole === "admin" ? "mt-2" : "mt-auto"} flex items-center gap-2.5 rounded-xl p-2.5 shadow-[0_0_0_1px_var(--l-hair)]`}>
-            <div className="grid h-[34px] w-[34px] place-items-center rounded-full bg-emerald-500 text-[13px] font-semibold text-white">
-              {(nick.th || nick.en).slice(0, 2)}
-            </div>
+            <UserAvatar userId={userData?._id} name={nick.en} avatar={userData?.avatar} className="h-[34px] w-[34px] shrink-0" />
             <div className="min-w-0">
               <div className="truncate text-[13px] font-semibold">{nick.th ? `${nick.en} · ${nick.th}` : nick.en}</div>
               <div className="text-xs text-l-ink3">
@@ -105,6 +105,7 @@ export function LearnerShell({ children }: { children: ReactNode }) {
             )}
             <div className="ml-auto flex items-center gap-2">
               {header?.actions}
+              <StreakPill />
               <ModeToggle />
             </div>
           </header>

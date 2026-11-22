@@ -7,6 +7,7 @@ import { AuthedPageLayout } from "./AuthedPageLayout";
 const { auth } = vi.hoisted(() => ({ auth: { role: "learner" } }));
 vi.mock("@blobatar/react/gaze", () => ({ useGaze: () => ({ ref: vi.fn() }) }));
 vi.mock("@/components/mode-toggle", () => ({ ModeToggle: () => null }));
+vi.mock("@/learner/shell/StreakPill", () => ({ StreakPill: () => null }));
 vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ isAuthenticated: true, userRole: auth.role, logout: vi.fn() }) }));
 vi.mock("../../AuthContext", () => ({ useAuth: () => ({ isAuthenticated: true, userRole: auth.role, logout: vi.fn() }) }));
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() }), Toaster: () => null }));
