@@ -60,7 +60,9 @@ function Week({ w, panicOnly, current }: { w: WeekRough; panicOnly: boolean; cur
         ) : (
           <>
             <p className="mb-2 text-xs font-semibold text-l-ink2">
-              {roughNights} rough night{roughNights === 1 ? "" : "s"} · {w.learners.length} learner{w.learners.length === 1 ? "" : "s"}
+              {panicOnly
+                ? `${w.zones.panic ?? 0} panic night${(w.zones.panic ?? 0) === 1 ? "" : "s"} · ${people.length} learner${people.length === 1 ? "" : "s"}`
+                : `${roughNights} rough night${roughNights === 1 ? "" : "s"} · ${w.learners.length} learner${w.learners.length === 1 ? "" : "s"}`}
             </p>
             {people.length === 0 ? (
               <p className="text-[13px] text-l-ink3">No panic nights this week.</p>

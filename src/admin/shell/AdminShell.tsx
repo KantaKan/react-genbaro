@@ -13,14 +13,14 @@ import { ADMIN_NAV, SECTIONS } from "./nav";
 import { useStaff } from "../team/useStaff";
 import { ROLE_LABEL } from "../team/perm";
 import type { CohortInfo } from "../types";
-
-const cohortLine = (c: CohortInfo) =>
-  [c.learners > 0 ? `${c.learners} learners` : "", c.start_date ? `starts ${new Date(`${c.start_date}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}` : ""].filter(Boolean).join(" · ");
 import { CommandPalette } from "./CommandPalette";
 import { NewCohortWizard } from "../cohort/NewCohortWizard";
 import { useCohort } from "./useCohort";
 import { adminApi } from "../api";
 import { wellbeingApi } from "../wellbeing";
+
+const cohortLine = (c: CohortInfo) =>
+  [c.learners > 0 ? `${c.learners} learners` : "", c.start_date ? `starts ${new Date(`${c.start_date}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}` : ""].filter(Boolean).join(" · ");
 
 export interface AdminHeader {
   title: string;
@@ -93,6 +93,67 @@ export function AdminShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", k);
   }, [palette]);
 
+  const [goTo, setGoTo] = useState("");
+  const picker = (done: () => void) => (
+    <>
+              <div className="max-h-[320px] overflow-y-auto">
+                {cohortChoices.map((ci) => (
+                  <button
+                    key={ci.cohort}
+                    type="button"
+                    aria-label={`JSD${ci.cohort}`}
+                    aria-pressed={ci.cohort === cohort}
+                    onClick={() => {
+                      setCohort(ci.cohort);
+                      done();
+                    }}
+                    className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left ${ci.cohort === cohort ? "bg-l-sub" : "hover:bg-l-sub"}`}
+                  >
+                    <span className={`h-2 w-2 shrink-0 rounded-full ${ci.cohort === cohort ? "bg-emerald-500" : "bg-transparent"}`} />
+                    <span className="min-w-0 flex-1">
+                      <b className="block text-[13px] font-semibold">JSD{ci.cohort}</b>
+                      {(ci.learners > 0 || ci.start_date) && <small className="block truncate text-[11.5px] text-l-ink3">{cohortLine(ci)}</small>}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {me.can("create_cohort") && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    done();
+                    setWizard(true);
+                  }}
+                  className="mt-1 w-full rounded-lg border-t border-l-hair px-2.5 py-2 text-left text-[12.5px] font-semibold text-l-ink2 hover:bg-l-sub"
+                >
+                  + New cohort…
+                </button>
+              )}
+      {me.role === "owner" && (
+        <form
+          className="mt-1 flex items-center gap-1.5 border-t border-l-hair px-1.5 pt-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const n = Number(goTo);
+            if (n > 0) {
+              setCohort(n);
+              setGoTo("");
+              done();
+            }
+          }}
+        >
+          <label className="flex-1 text-[11.5px] text-l-ink3">
+            <span className="sr-only">Go to cohort number</span>
+            <input aria-label="Go to cohort number" type="number" min={1} value={goTo} onChange={(e) => setGoTo(e.target.value)} placeholder="Go to JSD…" className="w-full rounded-lg bg-l-sub px-2 py-1 text-[12.5px] text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
+          </label>
+          <button type="submit" disabled={!(Number(goTo) > 0)} className="rounded-lg bg-l-ink px-2.5 py-1 text-[12px] font-semibold text-l-card disabled:opacity-40">
+            Go
+          </button>
+        </form>
+      )}
+    </>
+  );
+
   const ctx = useMemo(() => ({ setHeader, panel, setPanel }), [panel]);
   const pendingN = pending.data?.length ?? 0;
   const navList = (
@@ -135,39 +196,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
               </button>
             </PopoverTrigger>
             <PopoverContent align="start" className="learner w-64 rounded-xl border-0 bg-l-card p-1.5 text-l-ink shadow-[0_0_0_1px_var(--l-hair),0_12px_30px_-16px_rgba(0,0,0,.35)]">
-              <div className="max-h-[320px] overflow-y-auto">
-                {cohortChoices.map((ci) => (
-                  <button
-                    key={ci.cohort}
-                    type="button"
-                    aria-label={`JSD${ci.cohort}`}
-                    aria-pressed={ci.cohort === cohort}
-                    onClick={() => {
-                      setCohort(ci.cohort);
-                      setPicking(false);
-                    }}
-                    className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left ${ci.cohort === cohort ? "bg-l-sub" : "hover:bg-l-sub"}`}
-                  >
-                    <span className={`h-2 w-2 shrink-0 rounded-full ${ci.cohort === cohort ? "bg-emerald-500" : "bg-transparent"}`} />
-                    <span className="min-w-0 flex-1">
-                      <b className="block text-[13px] font-semibold">JSD{ci.cohort}</b>
-                      {(ci.learners > 0 || ci.start_date) && <small className="block truncate text-[11.5px] text-l-ink3">{cohortLine(ci)}</small>}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              {me.can("create_cohort") && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPicking(false);
-                    setWizard(true);
-                  }}
-                  className="mt-1 w-full rounded-lg border-t border-l-hair px-2.5 py-2 text-left text-[12.5px] font-semibold text-l-ink2 hover:bg-l-sub"
-                >
-                  + New cohort…
-                </button>
-              )}
+              {picker(() => setPicking(false))}
             </PopoverContent>
           </Popover>
           {navList}
@@ -238,6 +267,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <Sheet open={menu} onOpenChange={setMenu}>
         <SheetContent side="left" className="learner w-[280px] overflow-y-auto border-0 bg-l-bg p-3 text-l-ink">
           <SheetTitle className="px-2 pb-2 pt-1 text-[13.5px] font-semibold">Baro Admin · JSD{cohort}</SheetTitle>
+          <div className="mb-2 rounded-xl bg-l-card p-1.5 shadow-[0_0_0_1px_var(--l-hair)]">
+            <div className="px-2.5 pb-1 pt-1.5 text-[11px] font-medium text-l-ink3">Cohort</div>
+            {picker(() => setMenu(false))}
+          </div>
           {navList}
         </SheetContent>
       </Sheet>
