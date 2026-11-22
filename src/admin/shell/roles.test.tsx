@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { screen, fireEvent, within } from "@testing-library/react";
+import { screen, fireEvent, within, waitFor } from "@testing-library/react";
 import { renderAdmin } from "../test-setup";
 import { adminApi } from "../api";
 import { can } from "../team/perm";
@@ -10,12 +10,15 @@ vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn(), succe
 vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout: vi.fn(), userRole: "admin" }) }));
 vi.mock("@/UserDataContext", () => ({ useUserData: () => ({ userData: { _id: "me", first_name: "Kan", cohort_number: 13 }, loading: false }) }));
 vi.mock("../wellbeing", async (o) => ({ ...(await o<object>()), wellbeingApi: { support: vi.fn().mockResolvedValue([]) } }));
-vi.mock("../api", () => ({ adminApi: { leaves: vi.fn().mockResolvedValue([]), me: vi.fn() } }));
+vi.mock("../api", () => ({ adminApi: { leaves: vi.fn().mockResolvedValue([]), me: vi.fn(), cohorts: vi.fn() } }));
 
 const me = (staff_role: string, cohorts: number[] = [13], groups: string[] = []) => vi.mocked(adminApi.me).mockResolvedValue({ id: "me", first_name: "Kan", staff_role, cohorts, groups } as never);
 
 describe("roles in the admin shell", () => {
-  beforeEach(() => vi.mocked(adminApi.me).mockReset());
+  beforeEach(() => {
+    vi.mocked(adminApi.me).mockReset();
+    vi.mocked(adminApi.cohorts).mockReset().mockRejectedValue(new Error("not mocked"));
+  });
 
   it("mirrors the backend table", () => {
     expect(can("viewer", "mark")).toBe(false);
@@ -69,6 +72,43 @@ describe("roles in the admin shell", () => {
     renderAdmin(<p>page</p>, "/admin/x");
     const nav = screen.getAllByRole("navigation", { name: "Admin" })[0];
     expect(await within(nav).findByText("Slack")).toBeInTheDocument();
+  });
+
+  it("the owner picks a cohort from a list instead of typing a number", async () => {
+    me("owner", []);
+    vi.mocked(adminApi.cohorts).mockResolvedValue([
+      { cohort: 14, learners: 40, start_date: "2027-01-04" },
+      { cohort: 13, learners: 52, start_date: "2026-06-29" },
+      { cohort: 12, learners: 48, start_date: "" },
+    ]);
+    renderAdmin(<p>page</p>, "/admin/x");
+    fireEvent.click(await screen.findByRole("button", { name: /JSD13/ }));
+    expect(await screen.findByText("52 learners · starts 29 Jun 2026")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "JSD12" }));
+    expect(await screen.findByRole("button", { name: /JSD12/ })).toBeInTheDocument();
+  });
+
+  it("if the cohort list can't load, the owner can still go to a cohort by number", async () => {
+    me("owner", []);
+    renderAdmin(<p>page</p>, "/admin/x");
+    fireEvent.click(await screen.findByRole("button", { name: /Switch/ }));
+    fireEvent.change(await screen.findByLabelText("Go to cohort number"), { target: { value: "15" } });
+    fireEvent.click(screen.getByRole("button", { name: "Go" }));
+    expect(await screen.findByRole("button", { name: /JSD15/ })).toBeInTheDocument();
+  });
+
+  it("the cohort can be switched from the mobile menu too", async () => {
+    me("owner", []);
+    vi.mocked(adminApi.cohorts).mockResolvedValue([
+      { cohort: 13, learners: 52, start_date: "2026-06-29" },
+      { cohort: 12, learners: 48, start_date: "" },
+    ]);
+    renderAdmin(<p>page</p>, "/admin/x");
+    fireEvent.click(await screen.findByRole("button", { name: "Open menu" }));
+    const sheet = await screen.findByRole("dialog");
+    fireEvent.click(await within(sheet).findByRole("button", { name: "JSD12" }));
+    await waitFor(() => expect(screen.getAllByRole("button", { name: /JSD12/ }).length).toBeGreaterThan(0));
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("a TA picks only their cohorts and can't create one", async () => {

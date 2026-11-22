@@ -13,6 +13,12 @@ export const boardService = {
     return response.data.data;
   },
 
+  /** Staff only: one cohort's posts (learners always get their own cohort from getPosts). */
+  async getCohortPosts(cohort: number): Promise<BoardPost[]> {
+    const response = await api.get(`/board/posts?cohort=${cohort}`);
+    return response.data.data;
+  },
+
   async getPost(postId: string): Promise<BoardPost> {
     const response = await api.get(`/board/posts/${postId}`);
     return response.data.data;
