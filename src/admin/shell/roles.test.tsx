@@ -42,6 +42,21 @@ describe("roles in the admin shell", () => {
     expect(await within(nav).findByText("Team & roles")).toBeInTheDocument();
   });
 
+  it("Slack settings are for the owner only", async () => {
+    me("admin", [13]);
+    renderAdmin(<p>page</p>, "/admin/x");
+    await screen.findByText("Admin");
+    const nav = screen.getAllByRole("navigation", { name: "Admin" })[0];
+    expect(within(nav).queryByText("Slack")).toBeNull();
+  });
+
+  it("the owner sees Slack settings", async () => {
+    me("owner", []);
+    renderAdmin(<p>page</p>, "/admin/x");
+    const nav = screen.getAllByRole("navigation", { name: "Admin" })[0];
+    expect(await within(nav).findByText("Slack")).toBeInTheDocument();
+  });
+
   it("a TA picks only their cohorts and can't create one", async () => {
     me("ta", [13, 14], ["B"]);
     renderAdmin(<p>page</p>, "/admin/x");

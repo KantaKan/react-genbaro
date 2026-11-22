@@ -4,6 +4,7 @@ import { renderAdmin } from "../test-setup";
 import { AnnouncePage } from "./AnnouncePage";
 import { notificationService } from "@/application/services/notificationService";
 import { wellbeingApi } from "../wellbeing";
+import { slackApi } from "../slack/api";
 
 vi.mock("@blobatar/react/gaze", () => ({ useGaze: () => ({ ref: vi.fn() }) }));
 vi.mock("@/components/mode-toggle", () => ({ ModeToggle: () => null }));
@@ -12,12 +13,14 @@ vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout:
 vi.mock("@/UserDataContext", () => ({ useUserData: () => ({ userData: { _id: "me", first_name: "Kan", cohort_number: 13 }, loading: false }) }));
 vi.mock("../api", () => ({ adminApi: { leaves: vi.fn().mockResolvedValue([]) } }));
 vi.mock("../wellbeing", async (o) => ({ ...(await o<object>()), wellbeingApi: { support: vi.fn().mockResolvedValue([]), learners: vi.fn() } }));
+vi.mock("../slack/api", () => ({ slackApi: { available: vi.fn() } }));
 vi.mock("@/application/services/notificationService", () => ({ notificationService: { getAllNotifications: vi.fn(), createNotification: vi.fn(), toggleNotificationActive: vi.fn() } }));
 
 const L = (id: string, g: string) => ({ id, first_name: id, zoom_name: id, jsd_number: "01", genmate_group: g, email: "", attendance_rate: 1, leave_used: 0, mood: [], last_seen: null, support: false });
 
 describe("AnnouncePage", () => {
   beforeEach(() => {
+    vi.mocked(slackApi.available).mockResolvedValue({ connected: false });
     vi.mocked(wellbeingApi.learners).mockResolvedValue([L("a", "B"), L("b", "C"), L("c", "D"), L("d", "B")]);
     vi.mocked(notificationService.getAllNotifications).mockResolvedValue([
       { id: "n1", title: "Holiday Wednesday", message: "m", is_active: true, priority: "important", start_date: "2026-11-20T00:00:00Z", end_date: "2026-11-27T00:00:00Z", created_at: "2026-11-20T00:00:00Z", read_by_users: ["x", "y"] } as never,
@@ -60,5 +63,23 @@ describe("AnnouncePage", () => {
     const body = vi.mocked(notificationService.createNotification).mock.calls[0][0] as unknown as { recipient_ids: string[]; priority: string };
     expect([...body.recipient_ids].sort()).toEqual(["a", "b", "c", "d"]);
     expect(body.priority).toBe("important");
+  });
+
+  it("hides 'Also post to Slack' until Slack is connected", async () => {
+    renderAdmin(<AnnouncePage />, "/admin/announce");
+    await screen.findByLabelText("Title");
+    expect(screen.queryByLabelText("Also post to Slack")).toBeNull();
+  });
+
+  it("sends post_to_slack when ticked", async () => {
+    vi.mocked(slackApi.available).mockResolvedValue({ connected: true });
+    renderAdmin(<AnnouncePage />, "/admin/announce");
+    fireEvent.change(await screen.findByLabelText("Title"), { target: { value: "Hi" } });
+    fireEvent.change(screen.getByLabelText("Message"), { target: { value: "m" } });
+    fireEvent.click(await screen.findByLabelText("Also post to Slack"));
+    fireEvent.click(await screen.findByRole("button", { name: /Send to 4 learners/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "Confirm" }));
+    await waitFor(() => expect(notificationService.createNotification).toHaveBeenCalledTimes(1));
+    expect((vi.mocked(notificationService.createNotification).mock.calls[0][0] as unknown as { post_to_slack: boolean }).post_to_slack).toBe(true);
   });
 });
