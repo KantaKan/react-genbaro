@@ -13,9 +13,11 @@ export type SlackStatus = {
   alert_new_leave: boolean;
   quiet_from: string;
   quiet_to: string;
+  report_auto: boolean;
+  report_cohort: number;
   manifest: string;
 };
-export type SlackSettings = Pick<SlackStatus, "alerts" | "report" | "announce" | "alert_new_leave" | "quiet_from" | "quiet_to">;
+export type SlackSettings = Pick<SlackStatus, "alerts" | "report" | "announce" | "alert_new_leave" | "quiet_from" | "quiet_to" | "report_auto" | "report_cohort">;
 export type SlackChannel = { id: string; name: string; private: boolean };
 export type MatchResult = { matched: number; missing: { id: string; name: string; email: string }[]; note?: string };
 export type SlackLogEntry = { at: string; kind: string; target: string; ok: boolean; error?: string };
