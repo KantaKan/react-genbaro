@@ -55,3 +55,5 @@ export type RegisterKPIs = { attendance_rate: number; lates: number; absences: n
 export type RegisterView = { week: string; dates: string[]; holidays: string[]; kpis: RegisterKPIs; previous: RegisterKPIs; learners: RegisterLearner[] };
 
 export type StaffMe = { id: string; first_name: string; staff_role: "owner" | "admin" | "ta" | "viewer"; cohorts: number[]; groups: string[] };
+
+export type CohortInfo = { cohort: number; learners: number; start_date: string };

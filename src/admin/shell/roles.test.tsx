@@ -10,12 +10,15 @@ vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn(), succe
 vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout: vi.fn(), userRole: "admin" }) }));
 vi.mock("@/UserDataContext", () => ({ useUserData: () => ({ userData: { _id: "me", first_name: "Kan", cohort_number: 13 }, loading: false }) }));
 vi.mock("../wellbeing", async (o) => ({ ...(await o<object>()), wellbeingApi: { support: vi.fn().mockResolvedValue([]) } }));
-vi.mock("../api", () => ({ adminApi: { leaves: vi.fn().mockResolvedValue([]), me: vi.fn() } }));
+vi.mock("../api", () => ({ adminApi: { leaves: vi.fn().mockResolvedValue([]), me: vi.fn(), cohorts: vi.fn() } }));
 
 const me = (staff_role: string, cohorts: number[] = [13], groups: string[] = []) => vi.mocked(adminApi.me).mockResolvedValue({ id: "me", first_name: "Kan", staff_role, cohorts, groups } as never);
 
 describe("roles in the admin shell", () => {
-  beforeEach(() => vi.mocked(adminApi.me).mockReset());
+  beforeEach(() => {
+    vi.mocked(adminApi.me).mockReset();
+    vi.mocked(adminApi.cohorts).mockReset().mockRejectedValue(new Error("not mocked"));
+  });
 
   it("mirrors the backend table", () => {
     expect(can("viewer", "mark")).toBe(false);
@@ -69,6 +72,21 @@ describe("roles in the admin shell", () => {
     renderAdmin(<p>page</p>, "/admin/x");
     const nav = screen.getAllByRole("navigation", { name: "Admin" })[0];
     expect(await within(nav).findByText("Slack")).toBeInTheDocument();
+  });
+
+  it("the owner picks a cohort from a list instead of typing a number", async () => {
+    me("owner", []);
+    vi.mocked(adminApi.cohorts).mockResolvedValue([
+      { cohort: 14, learners: 40, start_date: "2027-01-04" },
+      { cohort: 13, learners: 52, start_date: "2026-06-29" },
+      { cohort: 12, learners: 48, start_date: "" },
+    ]);
+    renderAdmin(<p>page</p>, "/admin/x");
+    fireEvent.click(await screen.findByRole("button", { name: /JSD13/ }));
+    expect(await screen.findByText("52 learners · starts 29 Jun 2026")).toBeInTheDocument();
+    expect(screen.queryByRole("spinbutton")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "JSD12" }));
+    expect(await screen.findByRole("button", { name: /JSD12/ })).toBeInTheDocument();
   });
 
   it("a TA picks only their cohorts and can't create one", async () => {

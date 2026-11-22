@@ -12,6 +12,10 @@ import { cn } from "@/lib/utils";
 import { ADMIN_NAV, SECTIONS } from "./nav";
 import { useStaff } from "../team/useStaff";
 import { ROLE_LABEL } from "../team/perm";
+import type { CohortInfo } from "../types";
+
+const cohortLine = (c: CohortInfo) =>
+  [c.learners > 0 ? `${c.learners} learners` : "", c.start_date ? `starts ${new Date(`${c.start_date}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}` : ""].filter(Boolean).join(" · ");
 import { CommandPalette } from "./CommandPalette";
 import { NewCohortWizard } from "../cohort/NewCohortWizard";
 import { useCohort } from "./useCohort";
@@ -61,8 +65,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [palette, setPalette] = useState(false);
   const [menu, setMenu] = useState(false);
   const [wizard, setWizard] = useState(false);
+  const [picking, setPicking] = useState(false);
   const [cohort, setCohort] = useCohort();
   const me = useStaff();
+  const cohortList = useQuery(["admin-cohorts"], () => adminApi.cohorts(), { staleTime: 5 * 60_000, retry: false });
+  const cohortChoices: CohortInfo[] = (() => {
+    const fromServer = cohortList.data ?? (me.role === "owner" ? [] : me.cohorts.map((c) => ({ cohort: c, learners: 0, start_date: "" })));
+    return fromServer.some((c) => c.cohort === cohort) || me.role !== "owner" ? fromServer : [{ cohort, learners: 0, start_date: "" }, ...fromServer];
+  })();
   useEffect(() => {
     // Non-owners stay inside their cohorts.
     if (me.known && me.role !== "owner" && me.cohorts.length && !me.cohorts.includes(cohort)) setCohort(me.cohorts[0]);
@@ -116,7 +126,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
               </div>
             </div>
           </div>
-          <Popover>
+          <Popover open={picking} onOpenChange={setPicking}>
             <PopoverTrigger asChild>
               <button type="button" className="mx-0.5 mb-2 flex items-center gap-2 rounded-[11px] bg-l-card px-2.5 py-2 text-[13px] font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -124,32 +134,39 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 <span className="ml-auto text-[11.5px] font-medium text-l-ink3">Switch</span>
               </button>
             </PopoverTrigger>
-            <PopoverContent className="learner w-56 rounded-xl border-0 bg-l-card p-3 text-l-ink shadow-[0_0_0_1px_var(--l-hair),0_12px_30px_-16px_rgba(0,0,0,.35)]">
+            <PopoverContent align="start" className="learner w-64 rounded-xl border-0 bg-l-card p-1.5 text-l-ink shadow-[0_0_0_1px_var(--l-hair),0_12px_30px_-16px_rgba(0,0,0,.35)]">
+              <div className="max-h-[320px] overflow-y-auto">
+                {cohortChoices.map((ci) => (
+                  <button
+                    key={ci.cohort}
+                    type="button"
+                    aria-label={`JSD${ci.cohort}`}
+                    aria-pressed={ci.cohort === cohort}
+                    onClick={() => {
+                      setCohort(ci.cohort);
+                      setPicking(false);
+                    }}
+                    className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left ${ci.cohort === cohort ? "bg-l-sub" : "hover:bg-l-sub"}`}
+                  >
+                    <span className={`h-2 w-2 shrink-0 rounded-full ${ci.cohort === cohort ? "bg-emerald-500" : "bg-transparent"}`} />
+                    <span className="min-w-0 flex-1">
+                      <b className="block text-[13px] font-semibold">JSD{ci.cohort}</b>
+                      {(ci.learners > 0 || ci.start_date) && <small className="block truncate text-[11.5px] text-l-ink3">{cohortLine(ci)}</small>}
+                    </span>
+                  </button>
+                ))}
+              </div>
               {me.can("create_cohort") && (
-                <button type="button" onClick={() => setWizard(true)} className="mb-2.5 w-full rounded-lg bg-l-sub px-2.5 py-1.5 text-left text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPicking(false);
+                    setWizard(true);
+                  }}
+                  className="mt-1 w-full rounded-lg border-t border-l-hair px-2.5 py-2 text-left text-[12.5px] font-semibold text-l-ink2 hover:bg-l-sub"
+                >
                   + New cohort…
                 </button>
-              )}
-              {me.role !== "owner" ? (
-                <div className="flex flex-col gap-1">
-                  {me.cohorts.map((c) => (
-                    <button key={c} type="button" onClick={() => setCohort(c)} className={`rounded-lg px-2.5 py-1.5 text-left text-[13px] font-semibold ${c === cohort ? "bg-l-sub shadow-[0_0_0_1px_var(--l-hair)]" : "hover:bg-l-sub"}`}>
-                      JSD{c}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-              <label className="text-xs font-semibold text-l-ink2">
-                Cohort number
-                <input
-                  type="number"
-                  min={1}
-                  defaultValue={cohort}
-                  onKeyDown={(e) => e.key === "Enter" && Number(e.currentTarget.value) > 0 && setCohort(Number(e.currentTarget.value))}
-                  onBlur={(e) => Number(e.currentTarget.value) > 0 && setCohort(Number(e.currentTarget.value))}
-                  className="mt-1.5 w-full rounded-lg bg-l-sub px-2.5 py-1.5 text-sm text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none"
-                />
-              </label>
               )}
             </PopoverContent>
           </Popover>
