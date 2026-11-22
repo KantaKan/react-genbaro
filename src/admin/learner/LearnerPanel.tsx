@@ -4,7 +4,7 @@ import { BarometerFace, ZONES } from "@/learner/today/BarometerFace";
 import { nicknames } from "@/learner/lib/name";
 import type { AttendanceStatusType } from "@/domain/types/attendance";
 import type { Session, TodayLearner } from "../types";
-import { STATUS_LABEL, hhmm, statusChip, statusTone } from "../ui/status";
+import { STATUS_LABEL, hhmm, statusSolid, statusTone } from "../ui/status";
 import { LeaveMeter, warningText } from "../ui/LeaveMeter";
 import { useMarkWithUndo } from "./useMarkWithUndo";
 
@@ -108,7 +108,7 @@ export function LearnerPanel({ learner: l, session, date, onPrev, onNext }: { le
       <div className="mt-3.5 text-[11.5px] text-l-ink3">Last 10 class days</div>
       <div className="mt-2 grid grid-cols-10 gap-[3px]">
         {Array.from({ length: 10 }, (_, i) => l.last10[l.last10.length - 10 + i]).map((d, i) => (
-          <i key={i} title={d ? `${d.date} · ${STATUS_LABEL[d.status]}` : ""} className={`block h-6 rounded-[5px] ${d ? statusChip(d.status) : "bg-l-sub"}`} />
+          <i key={i} title={d ? `${d.date} · ${STATUS_LABEL[d.status]}` : ""} className={`block h-6 rounded-[5px] ${d ? statusSolid(d.status) : "bg-l-sub"}`} />
         ))}
       </div>
     </div>

@@ -18,7 +18,7 @@ export function SessionCard({ view, session, onSession, nowMin }: { view: TodayV
   const live =
     !view.class_today ? null : phase === "before" ? `Opens at ${fmtClock(w.open_at)}` : phase === "on_time" ? `Live · ${late - nowMin} min until late` : phase === "late" ? `Late now · ${end - nowMin} min until absent` : "Closed";
   return (
-    <section className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-6 gap-y-4 rounded-[18px] bg-gradient-to-b from-l-sub to-l-card p-5 shadow-[0_0_0_1px_var(--l-hair)] xl:grid-cols-[auto_minmax(0,1fr)_250px]">
+    <section className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-6 gap-y-4 rounded-[18px] bg-gradient-to-b from-l-sub to-l-card p-5 shadow-[0_0_0_1px_var(--l-hair)] 2xl:grid-cols-[auto_minmax(0,1fr)_250px]">
       <div className="relative h-24 w-24" role="img" aria-label={`${inN} of ${c.total} checked in`}>
         <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
           <circle cx="48" cy="48" r="42" fill="none" stroke="var(--l-hair)" strokeWidth="8" />
@@ -70,7 +70,7 @@ export function SessionCard({ view, session, onSession, nowMin }: { view: TodayV
           </div>
         )}
       </div>
-      <div className="col-span-2 flex flex-col gap-2.5 xl:col-span-1">
+      <div className="col-span-2 flex flex-wrap items-start gap-x-6 gap-y-2.5 2xl:col-span-1 2xl:flex-col">
         <div className="inline-flex self-start rounded-[10px] bg-l-card p-[3px] shadow-[0_0_0_1px_var(--l-hair)]">
           {(["morning", "afternoon"] as const).map((s) => (
             <button key={s} type="button" aria-pressed={session === s} onClick={() => onSession(s)} className={`rounded-[7px] px-3 py-1 text-xs font-semibold capitalize ${session === s ? "bg-l-ink text-l-card" : "text-l-ink2"}`}>
