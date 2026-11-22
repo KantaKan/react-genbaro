@@ -32,7 +32,7 @@ describe("LearnerShell", () => {
     expect(banner).toHaveTextContent("My attendance");
     expect(banner).toHaveTextContent("Week 11 of 15");
     const nav = screen.getByRole("navigation", { name: "Learner" });
-    for (const label of ["Today", "Attendance", "My profile", "Classmates", "Talk Board"]) {
+    for (const label of ["Today", "Schedule", "Attendance", "My profile", "Classmates", "Talk Board"]) {
       expect(nav).toHaveTextContent(label);
     }
     const active = screen.getAllByRole("link", { name: /Attendance/ }).find((a) => a.getAttribute("aria-current") === "page");
