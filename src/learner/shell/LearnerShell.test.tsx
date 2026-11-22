@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { LearnerShell, usePageHeader } from "./LearnerShell";
 
 vi.mock("@/components/mode-toggle", () => ({ ModeToggle: () => null }));
+vi.mock("./StreakPill", () => ({ StreakPill: () => <a href="/learner/reflections">streak pill</a> }));
 const logout = vi.fn();
 let role = "learner";
 vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout, userRole: role }) }));
@@ -72,6 +73,7 @@ describe("LearnerShell", () => {
       </MemoryRouter>
     );
     expect(container.querySelector("aside img[data-avatar='dicebear']")).toBeTruthy();
+    expect(screen.getByRole("banner")).toHaveTextContent("streak pill");
     avatar = undefined;
   });
 });

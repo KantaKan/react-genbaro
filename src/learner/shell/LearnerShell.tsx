@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { NAV, TABS } from "./nav";
 import { nicknames } from "../lib/name";
 import { UserAvatar } from "@/components/user-avatar";
+import { StreakPill } from "./StreakPill";
 
 export interface PageHeader {
   title: string;
@@ -104,6 +105,7 @@ export function LearnerShell({ children }: { children: ReactNode }) {
             )}
             <div className="ml-auto flex items-center gap-2">
               {header?.actions}
+              <StreakPill />
               <ModeToggle />
             </div>
           </header>
