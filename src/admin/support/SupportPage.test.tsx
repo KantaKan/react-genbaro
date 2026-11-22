@@ -25,6 +25,6 @@ describe("SupportPage", () => {
     expect(await screen.findByText("Panic 3 nights in a row")).toBeInTheDocument();
     expect(screen.getByText("1/3 steps done")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Acknowledge Leave 7/8" }));
-    await waitFor(() => expect(wellbeingApi.ack).toHaveBeenCalledWith("u1", "leave"));
+    await waitFor(() => expect(wellbeingApi.ack).toHaveBeenCalledWith("u1", "leave", "Leave 7/8"));
   });
 });

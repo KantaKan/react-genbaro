@@ -82,7 +82,9 @@ export function LearnersPage() {
                     <div className="flex items-center gap-2.5">
                       <UserAvatar userId={r.id} name={n.en} avatar={r.avatar} className="h-[30px] w-[30px]" />
                       <div>
-                        <b className="whitespace-nowrap font-semibold">{n.th ? `${n.th} · ${n.en}` : n.en}</b>
+                        <Link to={`/admin/learners/${r.id}`} onClick={(e) => e.stopPropagation()} className="whitespace-nowrap font-semibold hover:underline focus:underline focus:outline-none">
+                          {n.th ? `${n.th} · ${n.en}` : n.en}
+                        </Link>
                         <small className="block text-xs text-l-ink3">
                           #{r.jsd_number}
                           {r.email ? ` · ${r.email}` : ""}

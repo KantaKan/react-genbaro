@@ -66,7 +66,7 @@ export function ProfilePage() {
                 <span key={r.key} className="inline-flex items-center gap-1.5 rounded-full bg-red-50 py-0.5 pl-2.5 pr-1 text-[11.5px] font-semibold text-red-600 dark:bg-red-500/15">
                   {r.text}
                   {r.key !== "plan" ? (
-                    <button type="button" aria-label={`Acknowledge ${r.text}`} title="Acknowledge for 7 days" onClick={() => once(() => wellbeingApi.ack(o.learner.id, r.key))} className="rounded-full bg-white/70 px-1.5 text-[10.5px] text-red-700 dark:bg-white/10">
+                    <button type="button" aria-label={`Acknowledge ${r.text}`} title="Acknowledge for 7 days" onClick={() => once(() => wellbeingApi.ack(o.learner.id, r.key, r.text))} className="rounded-full bg-white/70 px-1.5 text-[10.5px] text-red-700 dark:bg-white/15 dark:text-red-200">
                       OK
                     </button>
                   ) : (
@@ -150,7 +150,7 @@ export function ProfilePage() {
               <input type="checkbox" aria-label={s.text} checked={s.done} onChange={() => once(() => wellbeingApi.setStep(s.id, !s.done))} className="h-4 w-4 accent-zinc-900" />
               <span className={s.done ? "text-l-ink3 line-through" : ""}>{s.text}</span>
               <small className="ml-auto text-[11.5px] text-l-ink3">{s.done && s.done_at ? `done ${when(s.done_at)}` : s.author_name}</small>
-              <button type="button" aria-label={`Delete ${s.text}`} onClick={() => once(() => wellbeingApi.deleteStep(s.id))} className="text-l-ink3 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100">
+              <button type="button" aria-label={`Delete ${s.text}`} onClick={() => once(() => wellbeingApi.deleteStep(s.id))} className="text-l-ink3 opacity-0 transition-opacity hover:text-red-600 focus:opacity-100 group-hover:opacity-100">
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>

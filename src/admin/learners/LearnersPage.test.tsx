@@ -43,4 +43,9 @@ describe("LearnersPage", () => {
     fireEvent.click((await screen.findByText(/ฟ้า · Fah/)).closest("tr")!);
     expect(await screen.findByText("other page")).toBeInTheDocument();
   });
+
+  it("rows are reachable with the keyboard as links", async () => {
+    renderAdmin(<LearnersPage />, "/admin/learners");
+    expect(await screen.findByRole("link", { name: /ฟ้า · Fah/ })).toHaveAttribute("href", "/admin/learners/u2");
+  });
 });

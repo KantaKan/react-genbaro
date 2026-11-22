@@ -15,11 +15,11 @@ export function SupportPage() {
   const list = useQuery(["admin-support", cohort], () => wellbeingApi.support(cohort));
   const rows = list.data ?? [];
   useAdminHeader({ title: "Needs support", context: `${rows.length} learner${rows.length === 1 ? "" : "s"}` });
-  const ack = async (id: string, key: string) => {
+  const ack = async (id: string, key: string, text: string) => {
     if (busy.current) return;
     busy.current = true;
     try {
-      await wellbeingApi.ack(id, key);
+      await wellbeingApi.ack(id, key, text);
       qc.invalidateQueries(["admin-support"]);
       qc.invalidateQueries(["admin-learners"]);
     } catch (e) {
@@ -50,7 +50,7 @@ export function SupportPage() {
                     <span key={x.key} className="inline-flex items-center gap-1.5 rounded-full bg-red-50 py-0.5 pl-2.5 pr-1 text-[11.5px] font-semibold text-red-600 dark:bg-red-500/15">
                       {x.text}
                       {x.key !== "plan" ? (
-                        <button type="button" aria-label={`Acknowledge ${x.text}`} title="Acknowledge for 7 days" onClick={() => ack(r.learner.id, x.key)} className="rounded-full bg-white/70 px-1.5 text-[10.5px] text-red-700 dark:bg-white/10">
+                        <button type="button" aria-label={`Acknowledge ${x.text}`} title="Acknowledge for 7 days" onClick={() => ack(r.learner.id, x.key, x.text)} className="rounded-full bg-white/70 px-1.5 text-[10.5px] text-red-700 dark:bg-white/15 dark:text-red-200">
                           OK
                         </button>
                       ) : (

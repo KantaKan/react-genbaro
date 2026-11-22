@@ -64,4 +64,13 @@ describe("ReflectionsPage", () => {
     expect(screen.queryByText("Hooks clicked today")).toBeNull();
     expect(screen.getAllByText(/lost/).length).toBeGreaterThan(0);
   });
+
+  it("never carries a typed reply over to the next learner", async () => {
+    renderAdmin(<ReflectionsPage />, "/admin/reflections");
+    fireEvent.click((await screen.findAllByRole("button", { name: /มิ้นท์ · 2026-11-22/ }))[0]);
+    fireEvent.change(screen.getByLabelText("Reply to learner"), { target: { value: "Proud of you, Mint" } });
+    fireEvent.click(screen.getAllByRole("button", { name: /ฟ้า · 2026-11-22/ })[0]);
+    await waitFor(() => expect(screen.getByRole("complementary", { name: "Details" })).toHaveTextContent("Hooks clicked today"));
+    expect(screen.getByLabelText("Reply to learner")).toHaveValue("");
+  });
 });

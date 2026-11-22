@@ -56,7 +56,7 @@ describe("ProfilePage", () => {
     fireEvent.click(await screen.findByRole("checkbox", { name: "1:1 check-in" }));
     await waitFor(() => expect(wellbeingApi.setStep).toHaveBeenCalledWith("s1", true));
     fireEvent.click(screen.getByRole("button", { name: "Acknowledge Leave 7/8" }));
-    await waitFor(() => expect(wellbeingApi.ack).toHaveBeenCalledWith("u1", "leave"));
+    await waitFor(() => expect(wellbeingApi.ack).toHaveBeenCalledWith("u1", "leave", "Leave 7/8"));
     expect(screen.queryByRole("button", { name: /Acknowledge 1 support step/ })).toBeNull();
   });
 });

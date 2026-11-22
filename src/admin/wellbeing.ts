@@ -56,8 +56,9 @@ export const wellbeingApi = {
   deleteStep: async (itemId: string) => {
     await api.delete(`/admin/support/${itemId}`);
   },
-  ack: async (id: string, reasonKey: string) => {
-    await api.post(`/admin/learners/${id}/support/ack`, { reason_key: reasonKey });
+  /** Hides this exact reason for 7 days; if it changes (6/8 → 7/8) it shows again. */
+  ack: async (id: string, reasonKey: string, reasonText: string) => {
+    await api.post(`/admin/learners/${id}/support/ack`, { reason_key: reasonKey, reason_text: reasonText });
   },
   reply: async (userId: string, reflectionId: string, feedback: string) => {
     await api.put(`/admin/users/${userId}/reflections/${reflectionId}/feedback`, { user_id: userId, reflection_id: reflectionId, feedback });

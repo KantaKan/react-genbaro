@@ -145,7 +145,7 @@ function ReflectionPanel({ cohort, range, learnerId }: { cohort: number; range: 
           <button
             type="button"
             disabled={!replyText.trim()}
-            onClick={() => once(() => wellbeingApi.reply(who.id, e.reflection_id, replyText.trim()).then(() => qc.invalidateQueries(["admin-reflections"])), "Reply sent")}
+            onClick={() => once(() => wellbeingApi.reply(who.id, e.reflection_id, replyText.trim()).then(() => (setReply(null), qc.invalidateQueries(["admin-reflections"]))), "Reply sent")}
             className="justify-self-end rounded-full bg-l-ink px-4 py-1.5 text-[12.5px] font-semibold text-l-card disabled:opacity-40"
           >
             Send reply

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Fragment, createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { useQuery } from "react-query";
 import { Toaster } from "sonner";
@@ -180,7 +180,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
                     <button type="button" aria-label="Close panel" onClick={() => setPanel(null)} className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-lg text-l-ink3 hover:bg-l-sub hover:text-l-ink">
                       <X className="h-4 w-4" />
                     </button>
-                    {panel.content}
+                    {/* keyed so drafts (replies, notes) never carry over to the next learner */}
+                    <Fragment key={panel.key}>{panel.content}</Fragment>
                   </>
                 )}
               </aside>
