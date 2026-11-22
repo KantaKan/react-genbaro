@@ -93,6 +93,8 @@ export function ReportPage() {
   const q = useQuery(["admin-report", cohort, week], () => reportApi.get(cohort, week), { keepPreviousData: true });
   const r: Report | undefined = q.data;
   const sent = r?.status === "sent";
+  const stale = q.isPreviousData; // still showing the previous week while the new one loads
+  const tooOld = !sent && week < shiftWeek(thisWeek, -1); // a first send would freeze today's data as that week
   const [notes, setNotes] = useState("");
   const busy = useRef({ save: false, send: false });
   useEffect(() => setNotes(r?.notes ?? ""), [r?.week, r?.notes, r?.status]);
@@ -105,7 +107,8 @@ export function ReportPage() {
         busy.current.send = true;
         try {
           const res = await reportApi.send(cohort, week);
-          if (res.slack_error) toast.error(`Saved as sent, but Slack failed: ${res.slack_error}`);
+          if (res.already_sent) toast("This report was already sent a moment ago.");
+          else if (res.slack_error) toast.error(`Saved as sent, but Slack failed: ${res.slack_error}`);
           else if (res.sent_to_slack) toast.success("Report sent to Slack");
           else toast.success("Report saved as sent (Slack isn't set up for reports yet)");
           qc.invalidateQueries(["admin-report"]);
@@ -141,7 +144,7 @@ export function ReportPage() {
           <Printer className="h-3.5 w-3.5" /> Print / PDF
         </button>
         {me.can("cohort_admin") && r && (
-          <button type="button" onClick={send} className="rounded-full bg-l-ink px-3.5 py-1.5 text-[12.5px] font-semibold text-l-card">
+          <button type="button" onClick={send} disabled={stale || tooOld} title={tooOld ? "Only this week or last week can be sent" : undefined} className="rounded-full bg-l-ink px-3.5 py-1.5 text-[12.5px] font-semibold text-l-card disabled:opacity-40">
             {sent ? "Send again" : "Send now"}
           </button>
         )}
@@ -302,7 +305,7 @@ export function ReportPage() {
           <>
             <textarea aria-label="Notes from the team" value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} maxLength={4000} placeholder="What should the Program team know about this week?" className="w-full resize-none rounded-xl bg-l-sub px-3 py-2.5 text-[13.5px] shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]" />
             <div className="mt-2 flex justify-end print:hidden">
-              <button type="button" onClick={saveNotes} className="rounded-full bg-l-ink px-4 py-1.5 text-[12.5px] font-semibold text-l-card">
+              <button type="button" onClick={saveNotes} disabled={stale} className="rounded-full bg-l-ink px-4 py-1.5 text-[12.5px] font-semibold text-l-card disabled:opacity-40">
                 Save notes
               </button>
             </div>

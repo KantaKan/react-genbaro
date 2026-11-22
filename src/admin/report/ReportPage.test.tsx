@@ -124,4 +124,36 @@ describe("ReportPage", () => {
     expect(await screen.findByLabelText("Attendance: 0%")).toBeInTheDocument();
     expect(screen.getByText("Nobody needs support this week.")).toBeInTheDocument();
   });
+
+  it("says so when someone else already sent it, instead of claiming it posted", async () => {
+    vi.mocked(reportApi.send).mockResolvedValue({ status: "sent", sent_to_slack: false, already_sent: true });
+    renderAdmin(<ReportPage />, "/admin/report");
+    fireEvent.click(await screen.findByRole("button", { name: "Send now" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Confirm" }));
+    const { toast } = await import("sonner");
+    await waitFor(() => expect(JSON.stringify([vi.mocked(toast).mock.calls, vi.mocked(toast.success).mock.calls])).toMatch(/already (been )?sent/i));
+  });
+
+  it("an old week that was never sent can't be sent now", async () => {
+    renderAdmin(<ReportPage />, "/admin/report");
+    await screen.findByText(/Attendance 83%/);
+    fireEvent.click(screen.getByRole("button", { name: "Previous week" }));
+    await waitFor(() => expect(reportApi.get).toHaveBeenCalledWith(13, "2026-11-09"));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Send now" })).toBeEnabled()); // last week: fine
+    fireEvent.click(screen.getByRole("button", { name: "Previous week" }));
+    await waitFor(() => expect(reportApi.get).toHaveBeenCalledWith(13, "2026-11-02"));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Send now" })).toBeDisabled());
+  });
+
+  it("can't save or send against the old week's numbers while a new week loads", async () => {
+    renderAdmin(<ReportPage />, "/admin/report");
+    await screen.findByText(/Attendance 83%/);
+    let release: (r: Report) => void = () => {};
+    vi.mocked(reportApi.get).mockImplementation(() => new Promise<Report>((res) => (release = res)));
+    fireEvent.click(screen.getByRole("button", { name: "Previous week" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save notes" })).toBeDisabled());
+    expect(screen.getByRole("button", { name: "Send now" })).toBeDisabled();
+    release(report({ week: "2026-11-09" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save notes" })).toBeEnabled());
+  });
 });

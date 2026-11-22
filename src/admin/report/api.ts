@@ -20,7 +20,7 @@ export type Report = {
   status: "draft" | "sent";
   sent_at?: string;
 };
-export type SendResult = { status: string; sent_to_slack: boolean; slack_error?: string };
+export type SendResult = { status: string; sent_to_slack: boolean; slack_error?: string; already_sent?: boolean };
 
 export const reportApi = {
   get: (cohort: number, week: string) => data<Report>(api.get(`/admin/report?cohort=${cohort}&week=${week}`)),
