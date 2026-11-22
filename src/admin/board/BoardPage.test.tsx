@@ -132,6 +132,16 @@ describe("AdminBoardPage", () => {
     expect(within(p1).getByText("Me! The cleanup part")).toBeInTheDocument();
   });
 
+  it("shows no staff tools until the role is known (or if it can't be loaded)", async () => {
+    vi.mocked(adminApi.me).mockRejectedValue(new Error("offline"));
+    renderAdmin(<AdminBoardPage />, "/admin/board");
+    const p1 = (await screen.findByText("Anyone stuck on useEffect?")).closest("article")!;
+    fireEvent.click(within(p1).getByRole("button", { name: "2 replies" }));
+    expect(within(p1).queryByLabelText("Reply to this post")).toBeNull();
+    expect(screen.queryByLabelText("Post to JSD13")).toBeNull();
+    expect(screen.queryByRole("button", { name: /Delete post/ })).toBeNull();
+  });
+
   it("says so when the board is empty", async () => {
     vi.mocked(boardService.getCohortPosts).mockResolvedValue([]);
     renderAdmin(<AdminBoardPage />, "/admin/board");

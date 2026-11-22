@@ -32,7 +32,8 @@ export function AdminBoardPage() {
   const [cohort] = useCohort();
   const { userData } = useUserData();
   const me = useStaff();
-  const canModerate = me.can("care");
+  // only once /admin/me has answered: useStaff assumes Owner until then
+  const canModerate = me.known && me.can("care");
   const qc = useQueryClient();
   const confirm = useConfirm();
   const q = useQuery(["admin-board", cohort], () => boardService.getCohortPosts(cohort), { staleTime: 30_000 });
