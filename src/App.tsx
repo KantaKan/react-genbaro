@@ -37,6 +37,12 @@ const SpinWheelPage = lazy(() => import("./pages/SpinWheelPage"));
 const WeeklySummaryPage = lazy(() => import("./pages/weekly-summary-page"));
 const AdminTodayPage = lazy(() => import("./admin/today/TodayPage").then((m) => ({ default: m.TodayPage })));
 const AdminRegisterPage = lazy(() => import("./admin/attendance/RegisterPage").then((m) => ({ default: m.RegisterPage })));
+const AdminRulesPage = lazy(() => import("./admin/cohort/RulesPage").then((m) => ({ default: m.RulesPage })));
+const AdminHolidaysPage = lazy(() => import("./admin/cohort/HolidaysPage").then((m) => ({ default: m.HolidaysPage })));
+const AdminGroupsPage = lazy(() => import("./admin/cohort/GroupsPage").then((m) => ({ default: m.GroupsPage })));
+const AdminExportsPage = lazy(() => import("./admin/cohort/ExportsPage").then((m) => ({ default: m.ExportsPage })));
+const AdminActivityPage = lazy(() => import("./admin/cohort/ActivityPage").then((m) => ({ default: m.ActivityPage })));
+const AdminAnnouncePage = lazy(() => import("./admin/cohort/AnnouncePage").then((m) => ({ default: m.AnnouncePage })));
 const AdminSupportPage = lazy(() => import("./admin/support/SupportPage").then((m) => ({ default: m.SupportPage })));
 const AdminLearnersPage = lazy(() => import("./admin/learners/LearnersPage").then((m) => ({ default: m.LearnersPage })));
 const AdminProfilePage = lazy(() => import("./admin/learners/ProfilePage").then((m) => ({ default: m.ProfilePage })));
@@ -122,6 +128,12 @@ function AppContent() {
             <Route path="reflections" element={<AdminReflectionsPage />} />
             <Route path="learners" element={<AdminLearnersPage />} />
             <Route path="support" element={<AdminSupportPage />} />
+            <Route path="rules" element={<AdminRulesPage />} />
+            <Route path="holidays" element={<AdminHolidaysPage />} />
+            <Route path="groups" element={<AdminGroupsPage />} />
+            <Route path="exports" element={<AdminExportsPage />} />
+            <Route path="activity" element={<AdminActivityPage />} />
+            <Route path="announce" element={<AdminAnnouncePage />} />
             <Route path="learners/:id" element={<AdminProfilePage />} />
             <Route path="leave-requests" element={<Navigate to="/admin/leave" replace />} />
             <Route path="table" element={<AdminTablePage />} />

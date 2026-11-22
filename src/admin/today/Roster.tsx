@@ -105,6 +105,11 @@ export function Roster({
                             <i className="block h-[7px] w-[7px] rounded-full bg-current" />
                             {STATUS_LABEL[l[s].status]}
                             {l[s].checked_in_at && <small className="font-medium text-l-ink3">{hhmm(l[s].checked_in_at)}</small>}
+                            {l[s].flag === "shared_ip" && (
+                              <span title="Checked in from the same network as another learner" className="rounded-full bg-amber-50 px-1.5 text-[10.5px] font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                                Same network
+                              </span>
+                            )}
                           </span>
                         </td>
                       ))}

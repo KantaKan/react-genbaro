@@ -175,4 +175,13 @@ describe("TodayPage", () => {
     await waitFor(() => expect(wellbeingApi.addNote).toHaveBeenCalledTimes(1));
     expect(wellbeingApi.addNote).toHaveBeenCalledWith("c", "Called him");
   });
+
+  it("marks check-ins from a shared network", async () => {
+    const v = view();
+    v.learners[0].morning = { ...v.learners[0].morning, flag: "shared_ip" } as never;
+    vi.mocked(adminApi.today).mockResolvedValue(v);
+    renderPage();
+    const row = (await screen.findByText(/เถียม · Theim/)).closest("tr")!;
+    expect(within(row).getByTitle("Checked in from the same network as another learner")).toBeInTheDocument();
+  });
 });
