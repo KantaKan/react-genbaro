@@ -143,7 +143,7 @@ export function BulkRegisterDialog({ isOpen, onClose, onSuccess, defaultCohort }
   };
 
   const handleClose = () => {
-    setCohortNumber("");
+    setCohortNumber(defaultCohort ? String(defaultCohort) : "");
     setFallbackPassword("");
     setCsvText("");
     setParsed([]);

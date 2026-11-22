@@ -26,15 +26,15 @@ export function AnnouncePage() {
   const [aud, setAud] = useState<Audience>("everyone");
   const [pickedGroups, setPickedGroups] = useState<Set<string>>(new Set());
   const [pickedPeople, setPickedPeople] = useState<Set<string>>(new Set());
-  const [banner, setBanner] = useState(true);
   const [when, setWhen] = useState("");
   const [days, setDays] = useState(7);
   const busy = useRef(false);
   const confirm = useConfirm();
-  useAdminHeader({ title: "Announcements", context: "Banner on Today or the bell" });
+  useAdminHeader({ title: "Announcements", context: "Shown as a banner to learners" });
 
-  const recipients = aud === "everyone" ? [] : aud === "groups" ? active.filter((l) => pickedGroups.has(l.genmate_group)).map((l) => l.id) : [...pickedPeople];
-  const count = aud === "everyone" ? active.length : recipients.length;
+  // Always send explicit ids: an empty list would reach every cohort, not just this one.
+  const recipients = aud === "everyone" ? active.map((l) => l.id) : aud === "groups" ? active.filter((l) => pickedGroups.has(l.genmate_group)).map((l) => l.id) : active.filter((l) => pickedPeople.has(l.id)).map((l) => l.id);
+  const count = recipients.length;
   const ok = title.trim() && message.trim() && count > 0;
   const toggle = (set: Set<string>, v: string, f: (s: Set<string>) => void) => {
     const n = new Set(set);
@@ -53,7 +53,7 @@ export function AnnouncePage() {
           title: title.trim(),
           message: message.trim(),
           is_active: true,
-          priority: banner ? "important" : "normal",
+          priority: "important",
           start_date: start.toISOString(),
           end_date: end.toISOString(),
           recipient_ids: recipients,
@@ -117,17 +117,6 @@ export function AnnouncePage() {
             </div>
           )}
           <div className="mt-3 flex flex-wrap items-center gap-2.5">
-            <span className="w-16 text-xs text-l-ink3">Show as</span>
-            <div className="inline-flex rounded-[10px] bg-l-card p-[3px] shadow-[0_0_0_1px_var(--l-hair)]">
-              <button type="button" aria-pressed={banner} onClick={() => setBanner(true)} className={seg(banner)}>
-                Banner on Today
-              </button>
-              <button type="button" aria-pressed={!banner} onClick={() => setBanner(false)} className={seg(!banner)}>
-                Bell only
-              </button>
-            </div>
-          </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2.5">
             <span className="w-16 text-xs text-l-ink3">When</span>
             <input aria-label="Start time" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="rounded-xl bg-l-sub px-3 py-1.5 text-[13px] text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
             <span className="text-xs text-l-ink3">{when ? "" : "Now ·"} shows for</span>
@@ -148,7 +137,7 @@ export function AnnouncePage() {
             <div className="min-w-0">
               <b className="text-sm">{title || "Your title"}</b>
               <p className="mt-0.5 whitespace-pre-wrap text-[13px] leading-relaxed text-l-ink2">{message || "Your message shows here."}</p>
-              <small className="text-[11.5px] text-l-ink3">{banner ? "Banner on Today" : "In the bell only"}</small>
+              <small className="text-[11.5px] text-l-ink3">Banner on every page until they close it</small>
             </div>
           </div>
         </section>

@@ -48,4 +48,17 @@ describe("AnnouncePage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Stop Holiday Wednesday" }));
     await waitFor(() => expect(notificationService.toggleNotificationActive).toHaveBeenCalledWith("n1", false));
   });
+
+  it("'Everyone' means this cohort's active learners, shown as a banner", async () => {
+    renderAdmin(<AnnouncePage />, "/admin/announce");
+    fireEvent.change(await screen.findByLabelText("Title"), { target: { value: "Hi" } });
+    fireEvent.change(screen.getByLabelText("Message"), { target: { value: "m" } });
+    expect(screen.queryByRole("button", { name: "Bell only" })).toBeNull();
+    fireEvent.click(await screen.findByRole("button", { name: /Send to 4 learners/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "Confirm" }));
+    await waitFor(() => expect(notificationService.createNotification).toHaveBeenCalledTimes(1));
+    const body = vi.mocked(notificationService.createNotification).mock.calls[0][0] as unknown as { recipient_ids: string[]; priority: string };
+    expect([...body.recipient_ids].sort()).toEqual(["a", "b", "c", "d"]);
+    expect(body.priority).toBe("important");
+  });
 });
