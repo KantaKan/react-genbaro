@@ -80,6 +80,34 @@ describe("AnnouncePage", () => {
     fireEvent.click(await screen.findByRole("button", { name: /Send to 4 learners/ }));
     fireEvent.click(await screen.findByRole("button", { name: "Confirm" }));
     await waitFor(() => expect(notificationService.createNotification).toHaveBeenCalledTimes(1));
-    expect((vi.mocked(notificationService.createNotification).mock.calls[0][0] as unknown as { post_to_slack: boolean }).post_to_slack).toBe(true);
+    const body = vi.mocked(notificationService.createNotification).mock.calls[0][0] as unknown as { post_to_slack: boolean; audience: string };
+    expect(body.post_to_slack).toBe(true);
+    expect(body.audience).toBe("everyone");
+  });
+
+  it("only offers Slack for announcements to everyone, never a private one", async () => {
+    vi.mocked(slackApi.available).mockResolvedValue({ connected: true });
+    renderAdmin(<AnnouncePage />, "/admin/announce");
+    await screen.findByLabelText("Also post to Slack");
+    fireEvent.click(screen.getByRole("button", { name: "Groups" }));
+    expect(screen.queryByLabelText("Also post to Slack")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "People" }));
+    expect(screen.queryByLabelText("Also post to Slack")).toBeNull();
+  });
+
+  it("a tick for Slack doesn't survive switching to a smaller audience", async () => {
+    vi.mocked(slackApi.available).mockResolvedValue({ connected: true });
+    renderAdmin(<AnnouncePage />, "/admin/announce");
+    fireEvent.change(await screen.findByLabelText("Title"), { target: { value: "Hi" } });
+    fireEvent.change(screen.getByLabelText("Message"), { target: { value: "m" } });
+    fireEvent.click(await screen.findByLabelText("Also post to Slack"));
+    fireEvent.click(screen.getByRole("button", { name: "Groups" }));
+    fireEvent.click(await screen.findByRole("checkbox", { name: "Group B" }));
+    fireEvent.click(await screen.findByRole("button", { name: /Send to 2 learners/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "Confirm" }));
+    await waitFor(() => expect(notificationService.createNotification).toHaveBeenCalledTimes(1));
+    const body = vi.mocked(notificationService.createNotification).mock.calls[0][0] as unknown as { post_to_slack: boolean; audience: string };
+    expect(body.post_to_slack).toBe(false);
+    expect(body.audience).toBe("groups");
   });
 });

@@ -19,7 +19,7 @@ export type SlackSettings = Pick<SlackStatus, "alerts" | "report" | "announce" |
 export type SlackChannel = { id: string; name: string; private: boolean };
 export type MatchResult = { matched: number; missing: { id: string; name: string; email: string }[]; note?: string };
 export type SlackLogEntry = { at: string; kind: string; target: string; ok: boolean; error?: string };
-export type PingResult = { sent: number; no_slack: string[]; failed: number; quiet: boolean };
+export type PingResult = { sent: number; no_slack: string[]; failed: number; recent: number; quiet: boolean };
 
 export const slackApi = {
   status: () => data<SlackStatus>(api.get("/admin/settings/slack")),

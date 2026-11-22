@@ -103,7 +103,7 @@ export function TodayPage() {
       try {
         const r = await slackApi.ping(notYet.map((l) => l.id));
         if (r.quiet) toast("Not sent: it's inside quiet hours (set in Slack settings).");
-        else toast.success(`Sent to ${r.sent}${r.no_slack.length ? ` · ${r.no_slack.length} have no Slack` : ""}${r.failed ? ` · ${r.failed} failed` : ""}`);
+        else toast.success(`Sent to ${r.sent}${r.no_slack.length ? ` · ${r.no_slack.length} have no Slack` : ""}${r.recent ? ` · ${r.recent} pinged in the last 30 min` : ""}${r.failed ? ` · ${r.failed} failed` : ""}`);
       } catch (e) {
         toast.error((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? "Couldn't send");
       } finally {
