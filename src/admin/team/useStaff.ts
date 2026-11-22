@@ -7,6 +7,7 @@ export function useStaff() {
   const q = useQuery(["admin-me"], () => adminApi.me(), { staleTime: 5 * 60_000, retry: false });
   const role: StaffRole = q.data?.staff_role ?? "owner";
   return {
+    id: q.data?.id ?? "",
     role,
     known: !!q.data,
     cohorts: q.data?.cohorts ?? [],
