@@ -45,7 +45,7 @@ const renderPage = () =>
 describe("RegisterPage", () => {
   beforeEach(() => {
     vi.mocked(adminApi.register).mockResolvedValue(view);
-    vi.mocked(adminApi.mark).mockReset().mockResolvedValue({ _id: "n" });
+    vi.mocked(adminApi.mark).mockReset().mockResolvedValue({ record: { _id: "n" }, previous: null });
   });
 
   it("shows statuses, holidays and week-over-week change", async () => {

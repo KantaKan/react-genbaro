@@ -20,6 +20,7 @@ export function Roster({
   onOpen,
   onPick,
   onQuick,
+  canMark,
 }: {
   learners: TodayLearner[];
   session: Session;
@@ -28,6 +29,7 @@ export function Roster({
   onOpen: (id: string) => void;
   onPick: (id: string) => void;
   onQuick: (l: TodayLearner, status: "present" | "absent_excused") => void;
+  canMark: boolean;
 }) {
   const [filter, setFilter] = useState<Filter>("all");
   const shown = useMemo(() => learners.filter((l) => match(l, session, filter)), [learners, session, filter]);
@@ -110,7 +112,7 @@ export function Roster({
                       </td>
                       <td className="border-b border-l-hair px-2.5 py-2">{l.mood_yesterday && <BarometerFace zone={l.mood_yesterday} size={18} />}</td>
                       <td className="border-b border-l-hair px-2.5 py-2" onClick={(e) => e.stopPropagation()}>
-                        {!l[session].status && (
+                        {canMark && !l[session].status && (
                           <span className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
                             <button type="button" onClick={() => onQuick(l, "present")} className="rounded-[7px] bg-l-card px-2 py-0.5 text-[11.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
                               Present

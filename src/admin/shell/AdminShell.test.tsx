@@ -54,4 +54,10 @@ describe("AdminShell", () => {
     act(() => panel.open(<p>again</p>, "y"));
     expect(screen.queryByText("again")).toBeNull();
   });
+
+  it("has a menu for narrow screens", () => {
+    renderShell();
+    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+    expect(screen.getByRole("dialog")).toHaveTextContent("Leave requests");
+  });
 });

@@ -4,6 +4,7 @@ import type { AvatarConfig } from "@/learner/avatar/types";
 import type { ZoneId } from "@/learner/today/BarometerFace";
 
 export type Session = "morning" | "afternoon";
+export type PreviousRecord = { _id: string; status: AttendanceStatusType; marked_by: "self" | "admin"; marked_by_user: string; submitted_at: string; checkin_style: string };
 export type SessionCell = {
   status: AttendanceStatusType | "";
   checked_in_at: string | null;

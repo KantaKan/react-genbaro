@@ -14,7 +14,8 @@ import { SessionCard } from "./SessionCard";
 import { LeaveMini } from "./LeaveMini";
 import { JustIn } from "./JustIn";
 import { Roster } from "./Roster";
-import { bkkMinutes, clockMin } from "./time";
+import { bkkMinutes, bkkToday, currentSession, liveInterval } from "./time";
+import { setPanelSession, usePanelSession } from "./sessionStore";
 
 function useNowMin() {
   const [m, setM] = useState(() => bkkMinutes(new Date()));
@@ -26,12 +27,13 @@ function useNowMin() {
 }
 
 /** Panel content reads the cached board, so it updates when the board refreshes. */
-function PanelFor({ id, cohort, session, onMove }: { id: string; cohort: number; session: Session; onMove: (d: 1 | -1) => void }) {
+function PanelFor({ id, cohort, onMove }: { id: string; cohort: number; onMove: (d: 1 | -1) => void }) {
   const { data } = useQuery(["admin-today", cohort], () => adminApi.today(cohort), { staleTime: 15_000 });
+  const session = usePanelSession();
   const { close } = useSidePanel();
   const l = data?.learners.find((x) => x.id === id);
   if (!l || !data) return null;
-  return <LearnerPanel learner={l} session={session} date={data.date} onChanged={() => {}} onPrev={() => onMove(-1)} onNext={() => onMove(1)} onClose={close} />;
+  return <LearnerPanel learner={l} session={session} date={data.date} live canMark={data.class_today} onChanged={() => {}} onPrev={() => onMove(-1)} onNext={() => onMove(1)} onClose={close} />;
 }
 
 export function TodayPage() {
@@ -46,16 +48,21 @@ export function TodayPage() {
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [cursor, setCursor] = useState<string | null>(null);
 
+  // Timing comes from this browser's clock, not the last response, so an all-day tab keeps up.
   const today = useQuery(["admin-today", cohort], () => adminApi.today(cohort), {
-    refetchInterval: (d) => {
-      if (!d?.class_today) return false;
-      const s = d.rules[d.session];
-      return nowMin >= clockMin(s.open_at) && nowMin <= clockMin(s.absent_after) ? 15_000 : false;
-    },
+    refetchInterval: (d) => (d ? liveInterval(d.rules, bkkMinutes(new Date()), d.class_today) : 60_000),
+    refetchOnWindowFocus: true,
   });
   const leaves = useQuery(["admin-leaves", cohort, "pending"], () => adminApi.leaves({ cohort, status: "pending" }));
   const view = today.data;
-  const s: Session = session ?? view?.session ?? "morning";
+  const s: Session = session ?? (view ? currentSession(view.rules, nowMin) : "morning");
+  useEffect(() => setPanelSession(s), [s]);
+  const stale = !!view && view.date !== bkkToday();
+  useEffect(() => {
+    if (stale) today.refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stale, nowMin]);
+  const canMark = !!view?.class_today;
   const learners = view?.learners ?? [];
   const dateLabel = view ? new Date(`${view.date}T12:00:00+07:00`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Bangkok" }) : "";
   useAdminHeader({ title: "Today", context: dateLabel });
@@ -68,9 +75,9 @@ export function TodayPage() {
         const next = list[Math.max(0, Math.min(list.length - 1, list.indexOf(id) + d))];
         if (next && next !== id) openLearner(next);
       };
-      open(<PanelFor id={id} cohort={cohort} session={s} onMove={move} />, `learner:${id}`);
+      open(<PanelFor id={id} cohort={cohort} onMove={move} />, `learner:${id}`);
     },
-    [open, cohort, s, qc]
+    [open, cohort, qc]
   );
   const selected = openKey?.startsWith("learner:") ? openKey.slice(8) : null;
 
@@ -80,12 +87,13 @@ export function TodayPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params, learners.length]);
 
-  const quick = (l: TodayLearner, status: AttendanceStatusType) => view && mark({ learner: l, cell: l[s], session: s, date: view.date, status });
+  const quick = (l: TodayLearner, status: AttendanceStatusType) => view && canMark && mark({ learner: l, cell: l[s], session: s, date: view.date, status, live: true });
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
-      if (/INPUT|TEXTAREA|SELECT/.test(t.tagName) || e.metaKey || e.ctrlKey || !learners.length) return;
+      if (/INPUT|TEXTAREA|SELECT|BUTTON/.test(t.tagName) || e.metaKey || e.ctrlKey || !learners.length) return;
+      if (document.querySelector('[role="dialog"],[role="alertdialog"]')) return; // never act behind a dialog
       const ids = learners.map((l) => l.id);
       const cur = cursor ?? ids[0];
       const i = ids.indexOf(cur);
@@ -150,6 +158,7 @@ export function TodayPage() {
         onOpen={(id) => (selected === id ? close() : openLearner(id))}
         onPick={(id) => setPicked((p) => (p.has(id) ? (p.delete(id), new Set(p)) : new Set(p.add(id))))}
         onQuick={quick}
+        canMark={canMark}
       />
       {confirm.node}
     </div>

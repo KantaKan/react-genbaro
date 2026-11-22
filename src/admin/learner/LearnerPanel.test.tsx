@@ -8,7 +8,7 @@ import { mkLearner } from "./fixtures";
 
 vi.mock("@blobatar/react/gaze", () => ({ useGaze: () => ({ ref: vi.fn() }) }));
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn() }) }));
-vi.mock("../api", () => ({ adminApi: { mark: vi.fn(), removeRecord: vi.fn().mockResolvedValue(undefined) } }));
+vi.mock("../api", () => ({ adminApi: { mark: vi.fn(), removeRecord: vi.fn().mockResolvedValue(undefined), restore: vi.fn().mockResolvedValue(undefined) } }));
 
 const renderPanel = (l = mkLearner()) =>
   render(
@@ -20,7 +20,8 @@ const undo = () => (vi.mocked(toast).mock.calls[vi.mocked(toast).mock.calls.leng
 
 describe("LearnerPanel", () => {
   beforeEach(() => {
-    vi.mocked(adminApi.mark).mockReset().mockResolvedValue({ _id: "new1" });
+    vi.mocked(adminApi.mark).mockReset().mockResolvedValue({ record: { _id: "new1" }, previous: null } as never);
+    vi.mocked(adminApi.restore).mockClear();
     vi.mocked(adminApi.removeRecord).mockClear();
     vi.mocked(toast).mockClear();
   });
@@ -42,12 +43,14 @@ describe("LearnerPanel", () => {
     await waitFor(() => expect(adminApi.removeRecord).toHaveBeenCalledWith("new1"));
   });
 
-  it("undo restores the previous status when there was a record", async () => {
-    renderPanel(mkLearner({ morning: { status: "absent", checked_in_at: null, record_id: "r1", marked_by: "system" } }));
+  it("undo restores exactly what the server says was there (even if the board was stale)", async () => {
+    const previous = { _id: "r1", status: "present", marked_by: "self", marked_by_user: "", submitted_at: "2026-11-23T02:10:00Z", checkin_style: "cat" };
+    vi.mocked(adminApi.mark).mockResolvedValue({ record: { _id: "r1" }, previous } as never);
+    renderPanel(); // board still says "not yet"
     fireEvent.click(screen.getByRole("button", { name: "Excused" }));
     await waitFor(() => expect(toast).toHaveBeenCalled());
     undo();
-    await waitFor(() => expect(adminApi.mark).toHaveBeenLastCalledWith({ user_id: "u1", date: "2026-11-23", session: "morning", status: "absent" }));
+    await waitFor(() => expect(adminApi.restore).toHaveBeenCalledWith("r1", previous));
     expect(adminApi.removeRecord).not.toHaveBeenCalled();
   });
 

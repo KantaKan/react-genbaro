@@ -15,7 +15,7 @@ const SET: [string, AttendanceStatusType, string][] = [
   ["Absent", "absent", "bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300"],
 ];
 
-export function LearnerPanel({ learner: l, session, date, onPrev, onNext }: { learner: TodayLearner; session: Session; date: string; onChanged: () => void; onPrev: () => void; onNext: () => void; onClose: () => void }) {
+export function LearnerPanel({ learner: l, session, date, onPrev, onNext, canMark = true, live = false }: { learner: TodayLearner; session: Session; date: string; onChanged: () => void; onPrev: () => void; onNext: () => void; onClose: () => void; canMark?: boolean; live?: boolean }) {
   const n = nicknames(l.zoom_name, l.first_name);
   const cell = l[session];
   const mark = useMarkWithUndo();
@@ -62,13 +62,15 @@ export function LearnerPanel({ learner: l, session, date, onPrev, onNext }: { le
               key={st}
               type="button"
               aria-pressed={cell.status === st}
-              onClick={() => mark({ learner: l, cell, session, date, status: st })}
-              className={`rounded-[7px] py-1.5 text-xs font-semibold transition-colors ${cell.status === st ? on : "text-l-ink2 hover:bg-l-sub"}`}
+              disabled={!canMark}
+              onClick={() => mark({ learner: l, cell, session, date, status: st, live })}
+              className={`rounded-[7px] py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${cell.status === st ? on : "text-l-ink2 hover:bg-l-sub"}`}
             >
               {label}
             </button>
           ))}
         </div>
+        {!canMark && <p className="mt-2 text-[11.5px] text-l-ink3">No class today, so nothing to mark.</p>}
       </section>
 
       <div className="mt-4 flex items-center justify-between text-[13px] text-l-ink2">

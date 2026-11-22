@@ -2,7 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { NavLink } from "react-router-dom";
 import { useQuery } from "react-query";
 import { Toaster } from "sonner";
-import { LogOut, Search, X } from "lucide-react";
+import { LogOut, Menu, Search, X } from "lucide-react";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/application/contexts/AuthContext";
 import { useUserData } from "@/UserDataContext";
 import { ModeToggle } from "@/components/mode-toggle";
@@ -54,6 +55,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [header, setHeader] = useState<AdminHeader | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
   const [palette, setPalette] = useState(false);
+  const [menu, setMenu] = useState(false);
   const [cohort, setCohort] = useCohort();
   const { userData } = useUserData();
   const { logout } = useAuth();
@@ -72,6 +74,22 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   const ctx = useMemo(() => ({ setHeader, panel, setPanel }), [panel]);
   const pendingN = pending.data?.length ?? 0;
+  const navList = (
+    <nav aria-label="Admin" className="flex flex-col gap-px">
+      {SECTIONS.map((sec) => (
+        <div key={sec}>
+          <div className="px-2.5 pb-1 pt-3 text-[11px] font-medium text-l-ink3">{sec}</div>
+          {ADMIN_NAV.filter((n) => n.section === sec).map((n) => (
+            <NavLink key={n.to} to={n.to} end={n.end} className={linkCls} onClick={() => setMenu(false)}>
+              <n.icon className="h-4 w-4" strokeWidth={1.5} />
+              {n.label}
+              {n.badge === "leave" && pendingN > 0 && <span className="ml-auto min-w-[18px] rounded-full bg-red-600 px-1.5 text-center text-[11px] font-bold text-white">{pendingN}</span>}
+            </NavLink>
+          ))}
+        </div>
+      ))}
+    </nav>
+  );
 
   return (
     <Ctx.Provider value={ctx}>
@@ -106,20 +124,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
               </label>
             </PopoverContent>
           </Popover>
-          <nav aria-label="Admin" className="flex flex-col gap-px">
-            {SECTIONS.map((sec) => (
-              <div key={sec}>
-                <div className="px-2.5 pb-1 pt-3 text-[11px] font-medium text-l-ink3">{sec}</div>
-                {ADMIN_NAV.filter((n) => n.section === sec).map((n) => (
-                  <NavLink key={n.to} to={n.to} end={n.end} className={linkCls}>
-                    <n.icon className="h-4 w-4" strokeWidth={1.5} />
-                    {n.label}
-                    {n.badge === "leave" && pendingN > 0 && <span className="ml-auto min-w-[18px] rounded-full bg-red-600 px-1.5 text-center text-[11px] font-bold text-white">{pendingN}</span>}
-                  </NavLink>
-                ))}
-              </div>
-            ))}
-          </nav>
+          {navList}
           <button type="button" onClick={logout} className="mt-auto flex items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-[13px] font-medium text-l-ink2 hover:text-l-ink">
             <LogOut className="h-4 w-4" strokeWidth={1.5} />
             Log out
@@ -128,7 +133,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
         <div className="min-w-0 flex-1 py-2.5 pr-2.5 max-lg:p-0">
           <div className="relative min-h-[calc(100vh-20px)] overflow-clip rounded-[20px] bg-l-card shadow-[0_0_0_1px_var(--l-hair),0_10px_28px_-18px_rgba(24,24,27,.14)] max-lg:rounded-none">
-            <header role="banner" className="sticky top-0 z-10 flex h-[60px] items-center gap-3 border-b border-l-hair bg-[color-mix(in_srgb,var(--l-card)_88%,transparent)] px-6 backdrop-blur-md">
+            <header role="banner" className="sticky top-0 z-10 flex h-[60px] items-center gap-3 border-b border-l-hair bg-[color-mix(in_srgb,var(--l-card)_88%,transparent)] px-4 backdrop-blur-md md:px-6">
+              <button type="button" aria-label="Open menu" onClick={() => setMenu(true)} className="-ml-1 grid h-9 w-9 place-items-center rounded-[10px] text-l-ink2 hover:bg-l-sub lg:hidden">
+                <Menu className="h-5 w-5" strokeWidth={1.5} />
+              </button>
               {header && (
                 <div className="flex min-w-0 items-baseline gap-2.5">
                   <span className="whitespace-nowrap text-base font-semibold tracking-tight">{header.title}</span>
@@ -145,6 +153,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   <Search className="h-4 w-4" strokeWidth={1.5} />
                   Find a learner or run an action
                   <kbd className="ml-auto rounded-md bg-l-card px-1.5 text-[11px] text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">⌘K</kbd>
+                </button>
+                <button type="button" aria-label="Find a learner or page" onClick={() => setPalette(true)} className="grid h-9 w-9 place-items-center rounded-[10px] text-l-ink2 hover:bg-l-sub md:hidden">
+                  <Search className="h-[18px] w-[18px]" strokeWidth={1.5} />
                 </button>
                 <ModeToggle />
               </div>
@@ -174,6 +185,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </div>
+      <Sheet open={menu} onOpenChange={setMenu}>
+        <SheetContent side="left" className="learner w-[280px] overflow-y-auto border-0 bg-l-bg p-3 text-l-ink">
+          <SheetTitle className="px-2 pb-2 pt-1 text-[13.5px] font-semibold">Baro Admin · JSD{cohort}</SheetTitle>
+          {navList}
+        </SheetContent>
+      </Sheet>
       <CommandPalette open={palette} onOpenChange={setPalette} cohort={cohort} />
       <Toaster position="bottom-center" />
     </Ctx.Provider>
