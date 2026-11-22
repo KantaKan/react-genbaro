@@ -10,6 +10,8 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { ADMIN_NAV, SECTIONS } from "./nav";
+import { useStaff } from "../team/useStaff";
+import { ROLE_LABEL } from "../team/perm";
 import { CommandPalette } from "./CommandPalette";
 import { NewCohortWizard } from "../cohort/NewCohortWizard";
 import { useCohort } from "./useCohort";
@@ -60,6 +62,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [menu, setMenu] = useState(false);
   const [wizard, setWizard] = useState(false);
   const [cohort, setCohort] = useCohort();
+  const me = useStaff();
+  useEffect(() => {
+    // Non-owners stay inside their cohorts.
+    if (me.known && me.role !== "owner" && me.cohorts.length && !me.cohorts.includes(cohort)) setCohort(me.cohorts[0]);
+  }, [me.known, me.role, me.cohorts, cohort, setCohort]);
   const { userData } = useUserData();
   const { logout } = useAuth();
   const pending = useQuery(["admin-leaves", cohort, "pending"], () => adminApi.leaves({ cohort, status: "pending" }), { staleTime: 60_000 });
@@ -83,7 +90,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       {SECTIONS.map((sec) => (
         <div key={sec}>
           <div className="px-2.5 pb-1 pt-3 text-[11px] font-medium text-l-ink3">{sec}</div>
-          {ADMIN_NAV.filter((n) => n.section === sec).map((n) => (
+          {ADMIN_NAV.filter((n) => n.section === sec && me.can(n.cap ?? "view")).map((n) => (
             <NavLink key={n.to} to={n.to} end={n.end} className={linkCls} onClick={() => setMenu(false)}>
               <n.icon className="h-4 w-4" strokeWidth={1.5} />
               {n.label}
@@ -104,7 +111,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <div className="grid h-[30px] w-[30px] place-items-center rounded-[9px] bg-l-ink text-[13px] font-bold text-l-card">B</div>
             <div>
               <div className="text-[13.5px] font-semibold">Baro Admin</div>
-              <div className="text-[11.5px] text-l-ink3">{userData?.first_name ?? "Admin"}</div>
+              <div className="text-[11.5px] text-l-ink3">
+                {userData?.first_name ?? "Admin"} · <span>{ROLE_LABEL[me.role]}</span>
+              </div>
             </div>
           </div>
           <Popover>
@@ -116,9 +125,20 @@ export function AdminShell({ children }: { children: ReactNode }) {
               </button>
             </PopoverTrigger>
             <PopoverContent className="learner w-56 rounded-xl border-0 bg-l-card p-3 text-l-ink shadow-[0_0_0_1px_var(--l-hair),0_12px_30px_-16px_rgba(0,0,0,.35)]">
-              <button type="button" onClick={() => setWizard(true)} className="mb-2.5 w-full rounded-lg bg-l-sub px-2.5 py-1.5 text-left text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
-                + New cohort…
-              </button>
+              {me.can("create_cohort") && (
+                <button type="button" onClick={() => setWizard(true)} className="mb-2.5 w-full rounded-lg bg-l-sub px-2.5 py-1.5 text-left text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
+                  + New cohort…
+                </button>
+              )}
+              {me.role !== "owner" ? (
+                <div className="flex flex-col gap-1">
+                  {me.cohorts.map((c) => (
+                    <button key={c} type="button" onClick={() => setCohort(c)} className={`rounded-lg px-2.5 py-1.5 text-left text-[13px] font-semibold ${c === cohort ? "bg-l-sub shadow-[0_0_0_1px_var(--l-hair)]" : "hover:bg-l-sub"}`}>
+                      JSD{c}
+                    </button>
+                  ))}
+                </div>
+              ) : (
               <label className="text-xs font-semibold text-l-ink2">
                 Cohort number
                 <input
@@ -130,6 +150,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   className="mt-1.5 w-full rounded-lg bg-l-sub px-2.5 py-1.5 text-sm text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none"
                 />
               </label>
+              )}
             </PopoverContent>
           </Popover>
           {navList}
@@ -151,6 +172,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   {header.context && <span className="truncate text-[13px] text-l-ink3">{header.context}</span>}
                 </div>
               )}
+              {me.role === "viewer" && <span className="rounded-full bg-l-sub px-2 py-0.5 text-[11px] font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">Read only</span>}
               <div className="ml-auto flex items-center gap-2">
                 {header?.actions}
                 <button
