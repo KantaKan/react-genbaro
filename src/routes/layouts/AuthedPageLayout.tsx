@@ -1,3 +1,4 @@
+import { PageErrorBoundary } from "@/components/PageErrorBoundary";
 import { Outlet, useLocation } from "react-router-dom";
 import { ProtectedRoute } from "../ProtectedRoute";
 import { useAuth } from "../../AuthContext";
@@ -44,12 +45,12 @@ export function AuthedPageLayout({ allowedRoles }: AuthedPageLayoutProps) {
       {userRole === "learner" ? (
         <LearnerShell>
           <RouteTitle />
-          <Outlet />
+          <PageErrorBoundary><Outlet /></PageErrorBoundary>
         </LearnerShell>
       ) : (
         <AdminShell>
           <AdminRouteTitle />
-          <Outlet />
+          <PageErrorBoundary><Outlet /></PageErrorBoundary>
         </AdminShell>
       )}
     </ProtectedRoute>

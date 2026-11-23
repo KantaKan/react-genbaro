@@ -7,7 +7,7 @@ export type Zone = ZoneId | "";
 export type LearnerRef = { id: string; first_name: string; zoom_name: string; jsd_number: string; genmate_group: string; avatar?: AvatarConfig | null };
 export type Pattern = { key: string; title: string; detail: string };
 export type Reason = { key: string; text: string };
-export type Entry = { learner: LearnerRef; reflection_id: string; day: string; zone: Zone; tech_happy: string; tech_improve: string; nontech_happy: string; nontech_improve: string; admin_feedback: string; admin_feedback_name?: string; admin_feedback_at?: string; words: string[] };
+export type Entry = { learner: LearnerRef; reflection_id: string; day: string; zone: Zone; tech_happy: string; tech_improve: string; nontech_happy: string; nontech_improve: string; admin_feedback: string; admin_feedback_name?: string; admin_feedback_at?: string; words: string[] | null };
 export type Board = {
   date: string;
   range: "night" | "week" | "4w";

@@ -25,7 +25,7 @@ const board: Board = {
   dates: ["2026-11-19", "2026-11-20", "2026-11-22"],
   entries: [
     { learner: mint, reflection_id: "r1", day: "2026-11-22", zone: "panic", tech_happy: "I feel lost in React state", tech_improve: "Need help", nontech_happy: "", nontech_improve: "", admin_feedback: "", words: ["lost"] },
-    { learner: fah, reflection_id: "r2", day: "2026-11-22", zone: "comfort", tech_happy: "Hooks clicked today", tech_improve: "", nontech_happy: "", nontech_improve: "", admin_feedback: "", words: [] },
+    { learner: fah, reflection_id: "r2", day: "2026-11-22", zone: "comfort", tech_happy: "Hooks clicked today", tech_improve: "", nontech_happy: "", nontech_improve: "", admin_feedback: "", words: null },
   ],
 };
 
