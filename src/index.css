@@ -6,26 +6,26 @@
 
 @layer base {
   :root {
-    --background: 40 15% 96%;
-    --foreground: 40 30% 15%;
-    --card: 40 10% 98%;
-    --card-foreground: 40 30% 15%;
-    --popover: 40 10% 98%;
-    --popover-foreground: 40 30% 15%;
-    --primary: 38 65% 45%;
-    --primary-foreground: 40 20% 98%;
-    --secondary: 40 15% 92%;
-    --secondary-foreground: 40 30% 15%;
-    --muted: 40 10% 90%;
-    --muted-foreground: 40 10% 40%;
-    --accent: 25 70% 55%;
-    --accent-foreground: 40 20% 98%;
+    --background: 240 9% 97%;
+    --foreground: 240 6% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 6% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 6% 10%;
+    --primary: 240 6% 10%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 98%;
+    --secondary-foreground: 240 6% 10%;
+    --muted: 0 0% 98%;
+    --muted-foreground: 240 5% 34%;
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 6% 10%;
     --destructive: 0 60% 45%;
     --destructive-foreground: 0 0% 98%;
-    --border: 40 15% 80%;
-    --input: 40 15% 80%;
-    --ring: 38 65% 45%;
-    --radius: 0.5rem;
+    --border: 240 6% 92%;
+    --input: 240 6% 90%;
+    --ring: 240 6% 10%;
+    --radius: 0.75rem;
     
     /* Cozy additional tokens */
     --reactions-bg: 38 30% 95%;
@@ -59,25 +59,25 @@
   }
   
   .dark {
-    --background: 40 15% 8%;
-    --foreground: 40 20% 95%;
-    --card: 40 12% 12%;
-    --card-foreground: 40 20% 95%;
-    --popover: 40 12% 12%;
-    --popover-foreground: 40 20% 95%;
-    --primary: 38 75% 55%;
-    --primary-foreground: 40 15% 8%;
-    --secondary: 40 10% 18%;
-    --secondary-foreground: 40 20% 95%;
-    --muted: 40 10% 18%;
-    --muted-foreground: 40 10% 60%;
-    --accent: 25 70% 55%;
-    --accent-foreground: 40 20% 95%;
+    --background: 240 8% 5%;
+    --foreground: 240 5% 96%;
+    --card: 240 7% 9%;
+    --card-foreground: 240 5% 96%;
+    --popover: 240 7% 9%;
+    --popover-foreground: 240 5% 96%;
+    --primary: 240 5% 96%;
+    --primary-foreground: 240 8% 5%;
+    --secondary: 240 7% 12%;
+    --secondary-foreground: 240 5% 96%;
+    --muted: 240 7% 12%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 240 7% 14%;
+    --accent-foreground: 240 5% 96%;
     --destructive: 0 60% 40%;
     --destructive-foreground: 0 0% 98%;
-    --border: 40 10% 22%;
-    --input: 40 10% 22%;
-    --ring: 38 75% 55%;
+    --border: 240 5% 16%;
+    --input: 240 5% 18%;
+    --ring: 240 5% 84%;
     
     /* Cozy additional tokens - dark */
     --reactions-bg: 40 10% 20%;

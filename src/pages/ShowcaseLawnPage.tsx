@@ -69,7 +69,7 @@ export default function ShowcaseLawnPage() {
   const shownEvent = replay ?? events.data?.find((item) => item.active);
   const visitors = base.data?.filter((entry) => !entry.hidden).length ?? 0;
 
-  return <><main className="relative isolate -m-4 h-[calc(100dvh-4rem)] min-h-[440px] overflow-hidden bg-[#bfe3ee] font-register-body text-foreground">
+  return <><main className="relative isolate h-[calc(100dvh-7.5rem)] min-h-[440px] overflow-hidden rounded-[20px] shadow-[0_0_0_1px_var(--l-hair)] bg-[#bfe3ee] font-register-body text-foreground">
     <LawnGodEvent event={shownEvent} replay={Boolean(replay)} entries={plan.placements.map((placement) => placement.entry)} motion={motion} onCloseReplay={() => setReplayId(null)}>
       {plan.placements.length > 0 && <LawnYard plan={plan} scene={scene} userId={userId} lite={lite} cardActions={cardActions} />}
     </LawnGodEvent>

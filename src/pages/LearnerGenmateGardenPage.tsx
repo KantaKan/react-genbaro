@@ -1,4 +1,5 @@
 import React, { Suspense, useMemo, useState } from "react";
+import { usePageHeader } from "@/learner/shell/LearnerShell";
 import { useQuery } from "react-query";
 import { Link } from "react-router-dom";
 import { Sprout, ArrowRight } from "lucide-react";
@@ -23,6 +24,7 @@ const GenmateField = React.lazy(() =>
 type ViewMode = "grid" | "farm";
 
 const LearnerGenmateGardenPage: React.FC = () => {
+  usePageHeader({ title: "Genmate Garden", context: "Your group" });
   const { data, isLoading, isError, refetch } = useQuery(
     ["learnerGenmateGarden"],
     getMyGenmateGarden
@@ -46,12 +48,9 @@ const LearnerGenmateGardenPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto py-10 space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Sprout className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
-          <h1 className="text-3xl font-bold">Genmate Garden</h1>
-        </div>
+    <div className="mx-auto max-w-[1100px] space-y-5">
+      <h1 className="sr-only">Genmate Garden</h1>
+      <div className="flex flex-wrap items-center justify-end gap-3">
         {!isLoading && !isError && members.length > 0 && (
           <Tabs value={view} onValueChange={(v) => setView(v as ViewMode)}>
             <TabsList>
@@ -78,7 +77,7 @@ const LearnerGenmateGardenPage: React.FC = () => {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-muted-foreground max-w-2xl">
+        <p className="max-w-2xl text-body text-l-ink2">
           Your genmate group, grown through reflection streaks. Cheer your genmates on as their plants grow! 🔥
         </p>
         <Button asChild variant="ghost" size="sm" className="gap-1">

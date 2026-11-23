@@ -147,8 +147,8 @@ const SpinWheelPage = () => {
   // --- Learner mode (mock fetch, ภายหลังเป็น API) ---
 
   return (
-    <div className="container mx-auto py-6 flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">Spin Wheel</h1>
+    <div className="mx-auto flex max-w-[1100px] flex-col gap-6">
+      <h1 className="sr-only">Spin Wheel</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,380px)_auto] gap-4 lg:gap-6 items-start">
         {/* ซ้าย: แถบเครื่องมือ */}
