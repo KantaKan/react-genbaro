@@ -16,6 +16,8 @@ const QUICK = ["Great pair partner", "Always helps", "Clean code"];
 export function ClassmatePanel({ person, isMe, onClose, onEditAvatar }: { person: Person | null; isMe: boolean; onClose: () => void; onEditAvatar: () => void }) {
   const [text, setText] = useState("");
   const sending = useRef(false);
+  const { byId } = usePeople();
+  const { isChampion } = useChampion();
   if (!person) return null;
   const n = nicknames(person.zoom_name, person.first_name);
   const send = async () => {
@@ -35,8 +37,6 @@ export function ClassmatePanel({ person, isMe, onClose, onEditAvatar }: { person
   const recs = (person.profile_comments ?? []).filter((c) => !c.parentId).slice(0, 3);
   const raw = person.social_links ?? {};
   const links = { github: safeUrl(raw.github), linkedin: safeUrl(raw.linkedin), instagram: safeUrl(raw.instagram) };
-  const { byId } = usePeople();
-  const { isChampion } = useChampion();
   return (
     <Sheet open onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="learner flex w-full flex-col gap-0 border-l-0 bg-l-card p-0 text-l-ink sm:max-w-[440px] [&>button]:hidden">

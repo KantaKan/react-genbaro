@@ -1,7 +1,6 @@
 import { Fragment, createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { useQuery } from "react-query";
-import { Toaster } from "sonner";
 import { LogOut, Menu, Search, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/application/contexts/AuthContext";
@@ -276,7 +275,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
       </Sheet>
       <NewCohortWizard open={wizard} onOpenChange={setWizard} onDone={setCohort} />
       <CommandPalette open={palette} onOpenChange={setPalette} cohort={cohort} />
-      <Toaster position="bottom-center" />
     </Ctx.Provider>
   );
 }

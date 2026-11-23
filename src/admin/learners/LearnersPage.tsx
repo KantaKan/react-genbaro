@@ -112,7 +112,8 @@ export function LearnersPage() {
           </tbody>
         </table>
         {list.isLoading && <div className="h-32 animate-pulse bg-l-sub" />}
-        {!list.isLoading && shown.length === 0 && <p className="px-4 py-8 text-center text-[13px] text-l-ink3">No one matches.</p>}
+        {list.isError && <p className="px-4 py-8 text-center text-[13px] text-red-600">Couldn't load learners. Refresh to try again.</p>}
+        {list.isSuccess && shown.length === 0 && <p className="px-4 py-8 text-center text-[13px] text-l-ink3">No one matches.</p>}
       </div>
     </div>
   );

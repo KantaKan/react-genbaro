@@ -5,6 +5,7 @@ import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { QueryClientProvider } from "react-query";
 import { queryClient } from "./lib/queryClient";
+import { Toaster as SonnerToaster } from "sonner";
 import { ThemeProvider } from "./components/theme-provider";
 import { ToastContainer } from "react-toastify";
 import { Login } from "./components/auth/login";
@@ -207,6 +208,7 @@ function AppContent() {
         </Suspense>
 
         <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+        <SonnerToaster position="bottom-center" />
       </ThemeProvider>
     </QueryClientProvider>
   );
