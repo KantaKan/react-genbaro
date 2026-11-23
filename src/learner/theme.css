@@ -1,12 +1,12 @@
 /* Learner area tokens. Scoped to .learner so admin pages keep their current look. */
 .learner {
-  --l-bg: #f7f7f8;
+  --l-bg: #f0f0f2;
   --l-card: #ffffff;
-  --l-sub: #fafafa;
+  --l-sub: #f4f4f5;
   --l-ink: #18181b;
   --l-ink2: #52525b;
-  --l-ink3: #a1a1aa;
-  --l-hair: rgba(24, 24, 27, 0.07);
+  --l-ink3: #71717a;
+  --l-hair: rgba(24, 24, 27, 0.12);
   --l-green: #22c55e;
   --l-amber: #f59e0b;
   --l-red: #ef4444;
