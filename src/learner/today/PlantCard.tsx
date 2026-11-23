@@ -19,8 +19,9 @@ export function PlantCard({ plant }: { plant: ReturnType<typeof useMyPlant> }) {
   return (
     <section className="l-card overflow-hidden p-0">
       <div className="flex items-stretch gap-4 p-[22px] pb-4">
-        <div className="grid h-[104px] w-[104px] shrink-0 place-items-center rounded-2xl bg-gradient-to-b from-green-50 to-l-sub dark:from-green-950/30">
-          {appearance && <SeedlingPlant appearance={appearance} showParticles={nights > 0} className="h-[92px] w-[92px]" />}
+        <div className="relative grid h-[104px] w-[104px] shrink-0 place-items-end justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-sky-100 to-emerald-50 dark:from-sky-300/15 dark:to-emerald-300/10">
+          <i aria-hidden className="absolute inset-x-0 bottom-0 h-5 bg-emerald-200/60 dark:bg-emerald-400/15" />
+          {appearance && <SeedlingPlant appearance={appearance} showParticles={nights > 0} className="relative h-[104px] w-[104px]" />}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
