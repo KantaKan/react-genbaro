@@ -56,14 +56,14 @@ describe("TodayPage", () => {
   beforeEach(() => vi.useFakeTimers({ shouldAdvanceTime: true }));
   afterEach(() => vi.useRealTimers());
 
-  it("shows badges right under the daily reflection", async () => {
+  it("leads with your plant, then the daily reflection, then badges", async () => {
     setBkk(10, 0);
     vi.mocked(learnerApi.getSummary).mockResolvedValue(base);
     renderPage();
     const reflection = (await screen.findByText("Daily reflection")).closest("section")!;
     const column = reflection.parentElement!;
-    expect(within(column).getByText("Streak & badges")).toBeInTheDocument();
-    expect(reflection.nextElementSibling).toBe(within(column).getByText("Streak & badges").closest("section"));
+    expect(reflection.nextElementSibling).toBe(within(column).getByText("Badges").closest("section"));
+    expect(within(column).getByText("Your plant").closest("section")?.nextElementSibling).toBe(reflection);
   });
 
   it("hides course progress when no start date is set", async () => {
