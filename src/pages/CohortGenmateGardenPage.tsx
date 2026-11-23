@@ -1,4 +1,5 @@
 import React, { Suspense, useMemo, useState } from "react";
+import { usePageHeader } from "@/learner/shell/LearnerShell";
 import { useQuery } from "react-query";
 import { Sprout } from "lucide-react";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ type ViewMode = "grid" | "farm";
  * lose anyone past the 9th tile.
  */
 const CohortGenmateGardenPage: React.FC = () => {
+  usePageHeader({ title: "Cohort Garden", context: "Everyone in your cohort" });
   const { userData } = useUserData();
   const cohortNumber = userData?.cohort_number ?? 0;
 
@@ -59,13 +61,9 @@ const CohortGenmateGardenPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto py-10 space-y-6">
-      <div className="flex items-center gap-3">
-        <Sprout className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
-        <h1 className="text-3xl font-bold">Cohort Garden</h1>
-      </div>
-
-      <p className="text-muted-foreground max-w-2xl">
+    <div className="mx-auto max-w-[1100px] space-y-5">
+      <h1 className="sr-only">Cohort Garden</h1>
+      <p className="max-w-2xl text-body text-l-ink2">
         Every learner in your cohort, standing together, grown through reflection streaks — a
         shared memory that keeps growing until the cohort wraps up. 🔥
       </p>

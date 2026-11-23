@@ -1,26 +1,17 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { Flame, Sparkles, Stamp, Users } from "lucide-react";
 import { useQuery } from "react-query";
 import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/application/contexts/UserDataContext";
 import { PageError, PageLoading } from "@/components/page-state";
-import { usePersistedState } from "@/hooks/use-persisted-state";
 import { ClearStamps } from "@/components/stamp/clear-stamps";
 import { CohortBoard } from "@/components/stamp/cohort-board";
 import { useCohort } from "@/admin/shell/useCohort";
 import { PosterExport } from "@/components/stamp/poster-export";
 import { StampDefs } from "@/components/stamp/stamp-defs";
 import { UploadStampButton } from "@/components/stamp/upload-stamp-button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { getCohortInfo, getCohortStamps, listCohorts } from "@/lib/api";
 
-const STAMP_COHORT_KEY = "baro:stamp-board:cohort";
 
 export default function StampBoardPage() {
   const { userRole, userId } = useAuth();
@@ -41,17 +32,7 @@ export default function StampBoardPage() {
     return first ? first.cohortNumber : undefined;
   }, [isAdmin, adminCohort, userData, cohortsQuery.data]);
 
-  const [selectedCohort, setSelectedCohort] = usePersistedState<number | undefined>(
-    STAMP_COHORT_KEY,
-    undefined
-  );
-  const cohortNumber = selectedCohort ?? defaultCohort;
-
-  useEffect(() => {
-    if (isAdmin && selectedCohort && cohortsQuery.data && !cohortsQuery.data.some((item) => item.cohortNumber === selectedCohort)) {
-      setSelectedCohort(undefined);
-    }
-  }, [isAdmin, cohortsQuery.data, selectedCohort, setSelectedCohort]);
+  const cohortNumber = defaultCohort;
 
   const cohortQuery = useQuery(
     ["stampCohort", cohortNumber],
@@ -106,12 +87,12 @@ export default function StampBoardPage() {
   const milestoneProgress = ((stamps.length % 10) / 10) * 100;
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="mx-auto max-w-[1200px]">
       <StampDefs />
-      <div className="flex flex-wrap justify-between items-end mb-4 gap-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-handwriting text-5xl text-foreground leading-none">Stamp Board</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="sr-only">Stamp Board</h1>
+          <p className="text-body text-l-ink2">
             {isLocked
               ? "This board is closed — here's everything you stamped together."
               : "Paste a stamp onto your cohort's shared canvas."}
@@ -119,24 +100,6 @@ export default function StampBoardPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {isAdmin && (
-            <Select
-              value={String(cohortNumber)}
-              onValueChange={(value) => setSelectedCohort(Number(value))}
-            >
-              <SelectTrigger className="w-[150px] cursor-pointer" aria-label="Select cohort">
-                <SelectValue placeholder="Select Cohort" />
-              </SelectTrigger>
-              <SelectContent>
-                {(cohortsQuery.data ?? []).map((item) => (
-                  <SelectItem key={item.cohortNumber} value={String(item.cohortNumber)}>
-                    Cohort {item.cohortNumber}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-
           {!isLocked && (
             <UploadStampButton cohortNumber={cohortNumber} hasStampedToday={stampedTodayByUser} />
           )}

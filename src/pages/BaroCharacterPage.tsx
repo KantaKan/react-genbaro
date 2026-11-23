@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import { Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Fingerprint, Heart, RotateCw, Sparkles } from "lucide-react";
+import { ArrowRight, Fingerprint, Heart, RotateCw, Sparkles } from "lucide-react";
 import { baroCharacterService, type BaroCharacter, type CharacterGrowthSnapshot } from "@/application/services/baroCharacterService";
 import { BaroCharacterArt } from "@/components/character/BaroCharacterArt";
 import { useAuth } from "@/application/contexts/AuthContext";
@@ -106,10 +105,9 @@ export default function BaroCharacterPage() {
     ? previewItem.preview_value
     : cosmetics.data?.items.find((item) => item.slot === slot && item.equipped)?.preview_value;
 
-  return <main className="min-h-[calc(100vh-5rem)] bg-background px-4 py-8 font-register-body text-foreground transition-colors sm:px-8 lg:py-12">
+  return <main className="font-register-body text-foreground">
     <div className="mx-auto max-w-6xl">
-      <Link to="/" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-card-foreground shadow-sm transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ArrowLeft className="h-4 w-4" /> กลับหน้าแรก</Link>
-      <div className="mt-7 grid items-center gap-12 lg:grid-cols-[1.08fr_.92fr]">
+      <div className="mt-2 grid items-center gap-12 lg:grid-cols-[1.08fr_.92fr]">
         <div className="order-2 lg:order-1">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-bold uppercase tracking-[.18em] text-primary-foreground"><Sparkles className="h-4 w-4" /> Your little companion</div>
           <h1 className="mt-5 max-w-[15ch] font-register-heading text-4xl leading-[1.08] sm:text-5xl">เพื่อนตัวจิ๋ว<br />ที่เป็นคุณคนเดียว</h1>
