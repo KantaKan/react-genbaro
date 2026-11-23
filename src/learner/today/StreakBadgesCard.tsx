@@ -4,6 +4,15 @@ import { Medal } from "./Medal";
 
 const MAX = 7; // plus the streak medal = two rows of four
 
+/** The on-time streak; a zero stays quiet instead of a big orange 0. */
+export function StreakMedal({ streak }: { streak: number }) {
+  return streak > 0 ? (
+    <Medal name={`${streak}-day streak`} sub="On time" color="#ea580c" glyph={String(streak)} />
+  ) : (
+    <Medal name="On-time streak" sub="Next check-in" locked progress={0} />
+  );
+}
+
 export function StreakBadgesCard({ streak, badges, perfectWeek, weekOnTime }: { streak: number; badges: Badge[]; perfectWeek: boolean; weekOnTime: number }) {
   const newest = [...badges].sort((a, b) => (b.awardedAt > a.awardedAt ? 1 : b.awardedAt < a.awardedAt ? -1 : 0));
   const shown = newest.slice(0, MAX);
@@ -18,10 +27,10 @@ export function StreakBadgesCard({ streak, badges, perfectWeek, weekOnTime }: { 
         )}
       </div>
       <p className="mt-0.5 text-[12.5px] text-l-ink3">
-        On time {streak} {streak === 1 ? "day" : "days"} in a row · {badges.length} {badges.length === 1 ? "badge" : "badges"}
+        {streak > 0 ? `On time ${streak} ${streak === 1 ? "day" : "days"} in a row` : "A fresh start at your next check-in"} · {badges.length} {badges.length === 1 ? "badge" : "badges"}
       </p>
       <div className="mt-[18px] grid grid-cols-4 gap-x-1.5 gap-y-4">
-        <Medal name={`${streak}-day streak`} sub="On time" color="#ea580c" glyph={String(streak)} />
+        <StreakMedal streak={streak} />
         {shown.map((b) => (
           <Medal
             key={b._id ?? `${b.name}-${b.awardedAt}`}

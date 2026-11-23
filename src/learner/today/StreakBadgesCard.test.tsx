@@ -15,6 +15,16 @@ const renderCard = (badges: Badge[]) =>
   );
 
 describe("StreakBadgesCard", () => {
+  it("a zero on-time streak is a quiet fresh start, not a big 0", () => {
+    render(
+      <MemoryRouter>
+        <StreakBadgesCard streak={0} badges={[]} perfectWeek={false} weekOnTime={0} />
+      </MemoryRouter>
+    );
+    expect(screen.queryByText("0-day streak")).not.toBeInTheDocument();
+    expect(screen.getByText(/A fresh start at your next check-in/)).toBeInTheDocument();
+  });
+
   it("shows the real badges, newest first, with their emoji or picture", () => {
     renderCard([
       badge("First week", "2026-07-03T00:00:00Z", { emoji: "🌱" }),

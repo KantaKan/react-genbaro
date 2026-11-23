@@ -11,23 +11,24 @@ describe("fun styles A", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  it("runaway: on time, one click checks in", () => {
+  it("runaway: late, one click checks in with a kind word, no teasing", () => {
     const done = vi.fn();
-    render(<RunawayControl {...base} tone="on_time" onComplete={done} />);
+    render(<RunawayControl {...base} tone="late" onComplete={done} />);
+    expect(screen.getByText("No rush. Glad you made it.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Check in/ }));
     expect(done).toHaveBeenCalledTimes(1);
   });
 
-  it("runaway: late, it dodges three times before it can be clicked", () => {
+  it("runaway: on time, it plays catch-me for three dodges before it can be clicked", () => {
     const done = vi.fn();
-    render(<RunawayControl {...base} tone="late" onComplete={done} />);
+    render(<RunawayControl {...base} tone="on_time" onComplete={done} />);
     const b = screen.getByRole("button", { name: /Check in/ });
     fireEvent.click(b);
     expect(done).not.toHaveBeenCalled();
     fireEvent.pointerEnter(b);
     fireEvent.pointerEnter(b);
     fireEvent.pointerEnter(b);
-    expect(screen.getByText("Fine. You win.")).toBeInTheDocument();
+    expect(screen.getByText("Okay, you got me.")).toBeInTheDocument();
     fireEvent.click(b);
     expect(done).toHaveBeenCalledTimes(1);
   });

@@ -12,6 +12,7 @@ import { usePageHeader } from "../shell/LearnerShell";
 import { nicknames } from "../lib/name";
 import type { Person } from "../lib/people";
 import { Medal } from "../today/Medal";
+import { StreakMedal } from "../today/StreakBadgesCard";
 import { AvatarEditor } from "../avatar/AvatarEditor";
 import { StylePicker } from "../checkin/StylePicker";
 import { styleById } from "../checkin/styles/registry";
@@ -79,7 +80,7 @@ export function MyProfilePage() {
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
           {[
-            ["On-time streak", s ? `${s.streak} days` : "–", "text-orange-600"],
+            ["On-time streak", s ? (s.streak > 0 ? `${s.streak} days` : "Fresh start") : "–", s?.streak ? "text-orange-600" : ""],
             ["Attendance", s ? `${(s.attendance_rate * 100).toFixed(1)}%` : "–", ""],
             ["Reflections", `${reflections.data?.length ?? 0}`, ""],
             ["Badges", `${me.badges?.length ?? 0}`, ""],
@@ -138,7 +139,7 @@ export function MyProfilePage() {
           <section className="l-card p-[22px]">
             <h3 className="text-[15px] font-semibold">Badges</h3>
             <div className="mt-4 grid grid-cols-4 gap-x-2 gap-y-3.5">
-              <Medal name={`${s?.streak ?? 0}-day streak`} sub="On time" color="#ea580c" glyph={String(s?.streak ?? 0)} />
+              <StreakMedal streak={s?.streak ?? 0} />
               {(me.badges ?? []).map((b) => (
                 <Medal key={b._id ?? b.name} name={b.name} color={b.color || "#6366f1"} glyph={b.name.slice(0, 1).toUpperCase()} />
               ))}
