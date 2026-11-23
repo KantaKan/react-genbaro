@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, Users, Check, Clock, XCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { getThailandDateISO } from "@/utils/date-utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface BulkAttendanceDialogProps {
@@ -41,7 +42,7 @@ export function BulkAttendanceDialog({ isOpen, onClose, userIds, onSuccess }: Bu
     setIsSubmitting(true);
     setProgress({ current: 0, total: 1 });
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = getThailandDateISO();
 
     try {
       const response = await api.post("/admin/attendance/bulk", {

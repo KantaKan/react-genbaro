@@ -48,8 +48,14 @@ export function CommandPalette({ open, onOpenChange, cohort }: { open: boolean; 
             value={q}
             onChange={(e) => (setQ(e.target.value), setI(0))}
             onKeyDown={(e) => {
-              if (e.key === "ArrowDown") (e.preventDefault(), setI((v) => Math.min(items.length - 1, v + 1)));
-              if (e.key === "ArrowUp") (e.preventDefault(), setI((v) => Math.max(0, v - 1)));
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setI((v) => Math.min(items.length - 1, v + 1));
+              }
+              if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setI((v) => Math.max(0, v - 1));
+              }
               if (e.key === "Enter") pick(items[i]);
             }}
             placeholder="Find a learner or a page…"

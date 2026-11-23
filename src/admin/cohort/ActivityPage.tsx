@@ -37,6 +37,7 @@ function Page({ page, filter, onMore }: { page: number; filter: string; onMore?:
         </div>
       ))}
       {q.isLoading && <div className="my-2 h-10 animate-pulse rounded-lg bg-l-sub" />}
+      {q.isError && <p className="py-6 text-center text-[13px] text-red-600">Couldn't load the activity log. Refresh to try again.</p>}
       {onMore && more && (
         <button type="button" onClick={onMore} className="my-2.5 w-full rounded-xl py-2 text-[12.5px] font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
           Load more
