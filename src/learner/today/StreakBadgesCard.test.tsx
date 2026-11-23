@@ -10,19 +10,19 @@ const badge = (name: string, awardedAt: string, o: Partial<Badge> = {}): Badge =
 const renderCard = (badges: Badge[]) =>
   render(
     <MemoryRouter>
-      <StreakBadgesCard streak={4} badges={badges} perfectWeek={false} weekOnTime={3} />
+      <StreakBadgesCard badges={badges} perfectWeek={false} weekOnTime={3} />
     </MemoryRouter>
   );
 
 describe("StreakBadgesCard", () => {
-  it("a zero on-time streak is a quiet fresh start, not a big 0", () => {
+  it("is just badges: the streak lives in the plant card", () => {
     render(
       <MemoryRouter>
-        <StreakBadgesCard streak={0} badges={[]} perfectWeek={false} weekOnTime={0} />
+        <StreakBadgesCard badges={[]} perfectWeek={false} weekOnTime={0} />
       </MemoryRouter>
     );
-    expect(screen.queryByText("0-day streak")).not.toBeInTheDocument();
-    expect(screen.getByText(/A fresh start at your next check-in/)).toBeInTheDocument();
+    expect(screen.queryByText(/day streak/)).not.toBeInTheDocument();
+    expect(screen.getByText("Badges you earn show up here.")).toBeInTheDocument();
   });
 
   it("shows the real badges, newest first, with their emoji or picture", () => {
@@ -32,7 +32,7 @@ describe("StreakBadgesCard", () => {
       badge("Demo star", "2026-09-01T00:00:00Z", { emoji: "", imageUrl: "https://example.com/star.png", style: "image" }),
     ]);
     const names = screen.getAllByRole("button").map((b) => b.getAttribute("aria-label"));
-    expect(names.slice(1, 4)).toEqual(["Demo star", "Bug hunter", "First week"]);
+    expect(names.slice(0, 3)).toEqual(["Demo star", "Bug hunter", "First week"]);
     expect(screen.getByText("🐛")).toBeInTheDocument();
     expect(document.querySelector('image[href="https://example.com/star.png"]')).not.toBeNull();
   });

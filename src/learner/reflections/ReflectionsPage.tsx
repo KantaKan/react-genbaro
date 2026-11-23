@@ -25,6 +25,8 @@ import { bangkokNow } from "../lib/time";
 import { BarometerFace, ZONES, type ZoneId } from "../today/BarometerFace";
 import { matchesFilter, nightStats, repliesFrom, readSeen, toNights, unseenReplies, weekStrip, type Answers, type Filter, type Night } from "./model";
 import { TonightCard } from "./TonightCard";
+import { useMyPlant } from "../lib/useMyPlant";
+import { SeedlingPlant } from "@/components/streak-components";
 import { CalendarView, JournalView, dayLabel } from "./views";
 
 type View = "journal" | "calendar";
@@ -101,6 +103,7 @@ export function ReflectionsPage() {
   const strip = useMemo(() => weekStrip(nights, today, holidays, protectedDates), [nights, today, holidays, protectedDates]);
 
   // streak + plant
+  const plant = useMyPlant();
   const streak = useStreakCalculation(raw as unknown as HookReflection[], protectedDates, holidays);
   const growth = meQ.data?.growth_points ?? 0;
   const progress = getNextTierProgress(streak.currentStreak, growth);
@@ -296,8 +299,8 @@ export function ReflectionsPage() {
       {/* Row 2: how am I doing */}
       <div className="mt-3.5 grid grid-cols-1 gap-3.5 md:grid-cols-3">
         <section className="l-card flex items-start gap-3.5 p-[18px] px-5">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-green-50 text-l-green dark:bg-green-950/40">
-            <Sprout className="h-5 w-5" strokeWidth={1.8} />
+          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-green-50 text-l-green dark:bg-green-950/40">
+            {plant.appearance ? <SeedlingPlant appearance={plant.appearance} showParticles={false} className="h-12 w-12" /> : <Sprout className="h-5 w-5" strokeWidth={1.8} />}
           </span>
           <div className="min-w-0 flex-1">
             <div className="text-heading font-semibold">{displayStreak > 0 ? `${displayStreak} ${displayStreak === 1 ? "night" : "nights"} in a row` : "Start a streak tonight"}</div>

@@ -1,17 +1,10 @@
-import { useMemo } from "react";
-import { useQuery } from "react-query";
 import { Link } from "react-router-dom";
 import { Sprout } from "lucide-react";
-import { useUserData } from "@/UserDataContext";
-import { useHolidayDates } from "@/hooks/use-holiday-dates";
-import { useStreakCalculation } from "@/hooks/use-streak-calculation";
-import type { Reflection as HookReflection } from "@/hooks/use-reflections";
-import { learnerApi } from "../api";
+import { SeedlingPlant } from "@/components/streak-components";
 import { useClock } from "../checkin/useClock";
-import { bangkokNow } from "../lib/time";
+import { useMyPlant } from "../lib/useMyPlant";
 
 const OPENS = 16 * 3600 + 45 * 60;
-const NONE = new Set<string>();
 
 export type PillTone = "done" | "due" | "calm";
 
@@ -29,33 +22,21 @@ const TONE: Record<PillTone, string> = {
   calm: "bg-l-card text-l-ink ring-l-hair",
 };
 
-/** Reflection streak, always visible in the learner top bar. Opens the Reflections page. */
+/** Reflection streak, always visible in the learner top bar: your plant and its nights. Opens Reflections. */
 export function StreakPill() {
-  const { userData } = useUserData();
-  const id = userData?._id;
-  const reflections = useQuery(["my-reflections", id], () => learnerApi.getMyReflections(id!), { enabled: !!id });
-  const holidays = useHolidayDates() ?? NONE;
-  const protectedDates = useMemo(
-    () => new Set((userData?.care_energy_log ?? []).filter((e) => e.kind === "protect" && e.relatedDate).map((e) => e.relatedDate as string)),
-    [userData?.care_energy_log]
-  );
-  const list = useMemo(() => (reflections.data ?? []) as unknown as HookReflection[], [reflections.data]);
-  const s = useStreakCalculation(list, protectedDates, holidays);
+  const plant = useMyPlant();
   const now = useClock(60_000);
-  if (!id || !reflections.isSuccess) return null;
-
-  const today = bangkokNow().date;
-  const writtenToday = list.some((r) => (r.day || r.date || "").slice(0, 10) === today);
-  const pill = streakPill({ streak: s.hasCurrentStreak ? s.currentStreak : 0, writtenToday, open: now >= OPENS });
+  if (!plant.ready) return null;
+  const pill = streakPill({ streak: plant.nights, writtenToday: plant.writtenToday, open: now >= OPENS });
 
   return (
     <Link
       to="/learner/reflections"
       title={pill.text}
       aria-label={`Reflection streak: ${pill.text}`}
-      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-body font-semibold ring-1 transition hover:-translate-y-px ${TONE[pill.tone]}`}
+      className={`flex items-center gap-1.5 rounded-full py-1 pl-1.5 pr-3 text-body font-semibold ring-1 transition hover:-translate-y-px ${TONE[pill.tone]}`}
     >
-      <Sprout className="h-4 w-4" strokeWidth={2} />
+      {plant.appearance ? <SeedlingPlant appearance={plant.appearance} showParticles={false} className="h-6 w-6" /> : <Sprout className="h-4 w-4" strokeWidth={2} />}
       <span className="tabular-nums">{pill.count}</span>
       <span className="hidden font-medium sm:inline">{pill.count > 0 ? (pill.tone === "due" ? "· write tonight to keep it" : pill.count === 1 ? "night" : "nights") : "· start tonight"}</span>
       {pill.tone === "due" && <span className="h-1.5 w-1.5 rounded-full bg-amber-500 sm:hidden" />}

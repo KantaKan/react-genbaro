@@ -51,8 +51,8 @@ const renderPage = () =>
 describe("MyProfilePage", () => {
   it("shows my own stats", async () => {
     renderPage();
-    expect(await screen.findByText("12 days")).toBeInTheDocument();
-    expect(screen.getByText("97.1%")).toBeInTheDocument();
+    expect(await screen.findByText("97.1%")).toBeInTheDocument();
+    expect(screen.getByText("Plant streak")).toBeInTheDocument();
   });
 
   it("draws one barometer bar per reflection and can narrow to the last 4 weeks", async () => {

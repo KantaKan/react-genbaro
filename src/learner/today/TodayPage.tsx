@@ -1,4 +1,6 @@
 import { useQuery, useQueryClient } from "react-query";
+import { PlantCard } from "./PlantCard";
+import { useMyPlant } from "../lib/useMyPlant";
 import { useUserData } from "@/UserDataContext";
 import { learnerApi } from "../api";
 import { usePageHeader } from "../shell/LearnerShell";
@@ -28,6 +30,7 @@ export function TodayPage() {
   const reflections = useQuery(["my-reflections", userData?._id], () => learnerApi.getMyReflections(userData!._id), { enabled: !!userData?._id });
   const now = useClock(30_000);
   const today = bangkokNow().date;
+  const plant = useMyPlant();
   const dateLabel = new Date(`${today}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
   usePageHeader({ title: "Today", context: dateLabel });
 
@@ -74,10 +77,11 @@ export function TodayPage() {
           <BoardLatestCard />
         </div>
         <div className="flex flex-col gap-4 lg:col-span-5">
+          {plant.ready && <PlantCard plant={plant} />}
           {userData?._id && (
             <ReflectionCard userId={userData._id} reflections={reflections.data ?? []} nowSec={now} today={today} onSubmitted={() => qc.invalidateQueries(["my-reflections"])} />
           )}
-          {s && <StreakBadgesCard streak={s.streak} badges={userData?.badges ?? []} perfectWeek={s.perfect_week} weekOnTime={weekOnTime} />}
+          {s && <StreakBadgesCard badges={userData?.badges ?? []} perfectWeek={s.perfect_week} weekOnTime={weekOnTime} />}
           {s && <LeaveCard used={s.leave_used} allowance={s.leave_allowance} rate={s.attendance_rate} />}
         </div>
         {cup.data && (

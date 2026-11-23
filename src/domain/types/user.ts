@@ -26,6 +26,12 @@ export interface User {
   social_links?: SocialLinks;
   pinned_badge_ids?: string[];
   selected_palette?: string;
+  selected_species?: string;
+  selected_pot?: string;
+  selected_leaf?: string;
+  selected_flower?: string;
+  selected_stem?: string;
+  equipped_cosmetics?: Partial<Record<"palette" | "pot" | "aura" | "particle" | "accessory" | "mutation", string>>;
   care_energy_balance?: number;
   growth_points?: number;
   care_energy_log?: CareEnergyLogEntry[];
