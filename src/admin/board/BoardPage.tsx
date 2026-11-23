@@ -96,7 +96,7 @@ export function AdminBoardPage() {
   const myName = display(userData?.zoom_name ?? userData?.first_name ?? "");
 
   return (
-    <div className="flex max-w-[760px] flex-col gap-3.5">
+    <div className="mx-auto flex max-w-[760px] flex-col gap-3.5">
       {canModerate && (
         <section className={card}>
           <div className="flex items-start gap-3">

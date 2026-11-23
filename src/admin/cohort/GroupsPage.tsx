@@ -27,7 +27,7 @@ export function GroupsPage() {
   const learners = useMemo(() => (q.data ?? []).filter((l) => l.attendance_status !== "dropout" && l.attendance_status !== "dismissed"), [q.data]);
   const [moves, setMoves] = useState<Record<string, string>>({});
   const [drag, setDrag] = useState<string | null>(null);
-  const [shuffleN, setShuffleN] = useState(6);
+  const [pickedN, setShuffleN] = useState<number | null>(null);
   const busy = useRef(false);
   const confirm = useConfirm();
   useAdminHeader({ title: "GenMate groups", context: `${learners.length} learners` });
@@ -37,6 +37,7 @@ export function GroupsPage() {
     return [...set].sort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [learners, moves]);
+  const shuffleN = pickedN ?? Math.max(2, groups.length || 4);
   const changed = learners.filter((l) => moves[l.id] !== undefined && moves[l.id] !== (l.genmate_group ?? ""));
   const move = (id: string, g: string) => setMoves((m) => ({ ...m, [id]: g }));
   const save = async () => {
@@ -118,11 +119,12 @@ export function GroupsPage() {
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs text-l-ink3">Drag learners between groups, or use the menu on each name. Nothing saves until you press Save.</span>
         <span className="flex-1" />
-        <label className="flex items-center gap-1.5 text-xs text-l-ink2">
-          Groups
+        <label className="flex items-center gap-1.5 whitespace-nowrap text-xs text-l-ink2">
+          Shuffle into
           <input type="number" min={2} max={26} value={shuffleN} onChange={(e) => setShuffleN(Math.max(2, Math.min(26, Number(e.target.value) || 2)))} className="w-14 rounded-lg bg-l-sub px-2 py-1 text-body shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
+          groups
         </label>
-        <button type="button" onClick={doShuffle} className="inline-flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
+        <button type="button" onClick={doShuffle} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-[10px] px-3 py-1.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
           <Shuffle className="h-3.5 w-3.5" /> Shuffle…
         </button>
         {changed.length > 0 && (
