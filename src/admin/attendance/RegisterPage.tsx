@@ -160,8 +160,8 @@ export function RegisterPage() {
                 {v.learners.map((l) => {
                   const n = nicknames(l.zoom_name, l.first_name);
                   return (
-                    <tr key={l.id} className="hover:bg-l-sub">
-                      <td className="sticky left-0 z-[1] border-b border-l-hair bg-l-card px-3 py-1.5">
+                    <tr key={l.id} className="group hover:bg-l-sub">
+                      <td className="sticky left-0 z-[1] border-b border-l-hair bg-l-card px-3 py-1.5 group-hover:bg-l-sub">
                         <div className="flex items-center gap-2.5">
                           <UserAvatar userId={l.id} name={n.en} avatar={l.avatar} className="h-[30px] w-[30px]" />
                           <div>

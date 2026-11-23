@@ -40,3 +40,43 @@
   font-family: inherit;
   letter-spacing: -0.02em;
 }
+
+/* One checkbox for the app shell: clear border, ink fill and a white tick when checked. */
+.learner input[type="checkbox"] {
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border-radius: 5px;
+  border: 1.5px solid #a1a1aa;
+  background: var(--l-card);
+  cursor: pointer;
+  transition: background-color 0.12s, border-color 0.12s;
+}
+.learner input[type="checkbox"]:hover {
+  border-color: var(--l-ink2);
+}
+.learner input[type="checkbox"]:checked {
+  border-color: var(--l-ink);
+  background: var(--l-ink)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E")
+    center / 12px no-repeat;
+}
+.dark .learner input[type="checkbox"] {
+  border-color: #52525b;
+}
+.dark .learner input[type="checkbox"]:checked {
+  border-color: var(--l-ink);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2318181b' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
+}
+.learner input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--l-indigo);
+  outline-offset: 2px;
+}
+.learner input[type="checkbox"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
