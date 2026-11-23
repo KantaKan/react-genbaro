@@ -98,7 +98,7 @@ export default function CupAwardsPage() {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>This week{data.data ? ` · from ${data.data.week}` : ""}</CardTitle>
+          <CardTitle>This week{data.data ? ` · from ${new Date(`${data.data.week}T12:00:00+07:00`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Bangkok" })}` : ""}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 text-sm">
           {groups.map((g, i) => (

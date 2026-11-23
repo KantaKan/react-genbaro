@@ -1,8 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "react-query";
-import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { MessageCircle } from "lucide-react";
 import { useUserData } from "@/UserDataContext";
 import { boardService } from "@/application/services/boardService";
 import { UserAvatar } from "@/components/user-avatar";
@@ -11,6 +9,7 @@ import { usePageHeader } from "../shell/LearnerShell";
 import { nicknames } from "../lib/name";
 import { usePeople } from "../lib/usePeople";
 import type { Person } from "../lib/people";
+import { PostThread } from "./PostThread";
 
 export function rankPosts(list: BoardPost[], mode: "latest" | "popular"): BoardPost[] {
   const score = (p: BoardPost) => (p.reactions?.length ?? 0) + (p.comments?.length ?? 0);
@@ -33,6 +32,7 @@ export function BoardPage() {
   const [mode, setMode] = useState<"latest" | "popular">("latest");
   const [text, setText] = useState("");
   const [bump, setBump] = useState<string | null>(null);
+  const [open, setOpen] = useState<Record<string, boolean>>({});
   const posting = useRef(false);
   const tabs = useMemo(
     () => (
@@ -123,12 +123,22 @@ export function BoardPage() {
                     {r.n > 0 && r.n}
                   </button>
                 ))}
-                <span className="flex-1" />
-                <Link to={`/talk-board/${p.id}`} className="inline-flex items-center gap-1 text-small text-l-ink3 hover:text-l-ink">
-                  <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  {p.comments?.length ?? 0} {(p.comments?.length ?? 0) === 1 ? "reply" : "replies"}
-                </Link>
               </div>
+              <PostThread
+                comments={p.comments ?? []}
+                open={!!open[p.id]}
+                onToggle={() => setOpen((o) => ({ ...o, [p.id]: !o[p.id] }))}
+                avatarFor={(c) => <UserAvatar userId={c.userId} name={c.zoomName} avatar={byId.get(c.userId)?.avatar} className="h-7 w-7" />}
+                me={userData && <UserAvatar userId={userData._id} name={me.en} avatar={(userData as Person).avatar} className="h-7 w-7" />}
+                onSend={
+                  userData
+                    ? async (content) => {
+                        await boardService.createComment({ postId: p.id, content, zoomName: userData.zoom_name ?? userData.first_name });
+                        qc.invalidateQueries(["board-posts"]);
+                      }
+                    : undefined
+                }
+              />
             </article>
           );
         })}

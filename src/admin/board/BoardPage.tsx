@@ -1,11 +1,12 @@
 import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "react-query";
 import { toast } from "sonner";
-import { MessageCircle, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useUserData } from "@/UserDataContext";
 import { boardService } from "@/application/services/boardService";
 import { UserAvatar } from "@/components/user-avatar";
 import { BOARD_REACTIONS, decodeHtmlEntities, type BoardPost } from "@/lib/board";
+import { PostThread } from "@/learner/board/PostThread";
 import { nicknames } from "@/learner/lib/name";
 import { rankPosts } from "@/learner/board/BoardPage";
 import { useAdminHeader } from "../shell/AdminShell";
@@ -154,103 +155,40 @@ export function AdminBoardPage() {
                   {r.n}
                 </span>
               ))}
-              <span className="flex-1" />
-              {replies.length > 0 ? (
-                <button type="button" aria-expanded={isOpen} onClick={() => setOpen((o) => ({ ...o, [p.id]: !isOpen }))} className="inline-flex items-center gap-1 text-small text-l-ink3 hover:text-l-ink">
-                  <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  {replies.length} {replies.length === 1 ? "reply" : "replies"}
-                </button>
-              ) : canModerate ? (
-                <button type="button" aria-expanded={isOpen} onClick={() => setOpen((o) => ({ ...o, [p.id]: !isOpen }))} className="inline-flex items-center gap-1 text-small text-l-ink3 hover:text-l-ink">
-                  <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  Write a reply
-                </button>
-              ) : (
-                <span className="text-small text-l-ink3">No replies</span>
-              )}
             </div>
-            {isOpen && (
-              <ul className="mt-3 flex flex-col gap-2 border-t border-l-hair pt-3">
-                {replies.map((c) => {
-                  const cw = display(c.zoomName);
-                  return (
-                    <li key={c.id} className="flex items-start gap-2.5">
-                      <UserAvatar userId={c.userId} name={cw.en} className="h-7 w-7" />
-                      <div className="min-w-0 flex-1 rounded-xl bg-l-sub px-3 py-2">
-                        <div className="flex items-baseline gap-2">
-                          <b className="text-small font-semibold">{cw.th}</b>
-                          <small className="text-micro text-l-ink3">{ago(c.createdAt)}</small>
-                        </div>
-                        <p className="whitespace-pre-wrap break-words text-body leading-relaxed">{decodeHtmlEntities(c.content)}</p>
-                      </div>
-                      {canModerate && (
-                        <button
-                          type="button"
-                          aria-label={`Delete reply by ${cw.th}`}
-                          onClick={() => remove(`Delete this reply by ${cw.th}?`, () => boardService.deleteComment(p.id, c.id), "It's removed for everyone.")}
-                          className="mt-1 grid h-7 w-7 place-items-center rounded-lg text-l-ink3 hover:bg-l-sub hover:text-red-600"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" strokeWidth={1.6} />
-                        </button>
-                      )}
-                    </li>
-                  );
-                })}
-                {canModerate && userData && (
-                  <li>
-                    <ReplyBox
-                      avatar={<UserAvatar userId={userData._id} name={myName.en} className="h-7 w-7" />}
-                      onSend={async (content) => {
-                        await boardService.createComment({ postId: p.id, content, zoomName: userData.zoom_name ?? userData.first_name });
-                        refresh();
-                      }}
-                    />
-                  </li>
-                )}
-              </ul>
-            )}
+            <PostThread
+              comments={replies}
+              open={isOpen}
+              onToggle={() => setOpen((o) => ({ ...o, [p.id]: !isOpen }))}
+              avatarFor={(c) => <UserAvatar userId={c.userId} name={display(c.zoomName).en} className="h-7 w-7" />}
+              actionsFor={
+                canModerate
+                  ? (c) => (
+                      <button
+                        type="button"
+                        aria-label={`Delete reply by ${display(c.zoomName).th}`}
+                        onClick={() => remove(`Delete this reply by ${display(c.zoomName).th}?`, () => boardService.deleteComment(p.id, c.id), "It's removed for everyone.")}
+                        className="mt-1 grid h-7 w-7 place-items-center rounded-lg text-l-ink3 hover:bg-l-sub hover:text-red-600"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" strokeWidth={1.6} />
+                      </button>
+                    )
+                  : undefined
+              }
+              me={userData && <UserAvatar userId={userData._id} name={myName.en} className="h-7 w-7" />}
+              onSend={
+                canModerate && userData
+                  ? async (content) => {
+                      await boardService.createComment({ postId: p.id, content, zoomName: userData.zoom_name ?? userData.first_name });
+                      refresh();
+                    }
+                  : undefined
+              }
+            />
           </article>
         );
       })}
       {confirm.node}
-    </div>
-  );
-}
-
-/** Staff reply under a post. Sends once per click; keeps the text if sending fails. */
-function ReplyBox({ avatar, onSend }: { avatar: React.ReactNode; onSend: (content: string) => Promise<void> }) {
-  const [text, setText] = useState("");
-  const sending = useRef(false);
-  const send = async () => {
-    const content = text.trim();
-    if (!content || sending.current) return;
-    sending.current = true;
-    try {
-      await onSend(content);
-      setText("");
-    } catch (e) {
-      toast.error(errMsg(e));
-    } finally {
-      sending.current = false;
-    }
-  };
-  return (
-    <div className="flex items-start gap-2.5">
-      {avatar}
-      <textarea
-        aria-label="Reply to this post"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send();
-        }}
-        placeholder="Write a reply…"
-        rows={1}
-        className="min-h-[38px] flex-1 resize-none rounded-xl bg-l-sub px-3 py-2 text-body shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:bg-l-card focus:shadow-[0_0_0_1.5px_var(--l-ink)]"
-      />
-      <button type="button" onClick={send} disabled={!text.trim()} className="mt-0.5 rounded-full bg-l-ink px-3.5 py-1.5 text-small font-semibold text-l-card disabled:opacity-40">
-        Reply
-      </button>
     </div>
   );
 }

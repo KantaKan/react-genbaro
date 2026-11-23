@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "react-query";
+
+import { factLine, forWhom } from "./activity";
 import { useAdminHeader } from "../shell/AdminShell";
 import { cohortApi, type Activity } from "./api";
 
@@ -22,15 +24,17 @@ export function ActivityPage() {
 
 function Page({ page, filter, onMore }: { page: number; filter: string; onMore?: () => void }) {
   const q = useQuery(["admin-activity", page], () => cohortApi.activity(page), { staleTime: 30_000 });
-  const items: Activity[] = (q.data?.items ?? []).filter((i) => !filter || `${i.actor_name} ${i.action}`.toLowerCase().includes(filter));
+  const items: Activity[] = (q.data?.items ?? []).filter((i) => !filter || `${i.actor_name} ${i.action} ${(i.targets ?? []).join(" ")}`.toLowerCase().includes(filter));
   const more = !!q.data && page * 40 < q.data.total;
   return (
     <>
       {items.map((i) => (
         <div key={i.id} className="flex items-center gap-3 border-b border-l-hair py-2.5 text-body last:border-0">
           <b className="w-24 truncate font-semibold">{i.actor_name}</b>
-          <span className="flex-1">
+          <span className="min-w-0 flex-1">
             {i.action}
+            {!!i.targets?.length && <b className="font-semibold"> · {forWhom(i.targets)}</b>}
+            {factLine(i.facts) && <span className="text-l-ink2"> · {factLine(i.facts)}</span>}
             {i.status >= 400 && <span className="ml-2 text-micro font-semibold text-red-600">failed</span>}
           </span>
           <span className="whitespace-nowrap text-xs tabular-nums text-l-ink3">{new Date(i.at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" })}</span>

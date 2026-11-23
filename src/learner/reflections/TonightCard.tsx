@@ -23,10 +23,12 @@ export function TonightCard({
   nowSec,
   sent,
   onSend,
+  paused,
 }: {
   dateLabel: string;
   nowSec: number;
   sent?: Night;
+  paused?: "weekend" | "holiday" | null;
   onSend: (zone: ZoneId, answers: Answers) => Promise<void>;
 }) {
   const [zone, setZone] = useState<ZoneId | null>(null);
@@ -62,6 +64,11 @@ export function TonightCard({
         <span className="rounded-full bg-l-ink px-2.5 py-1 text-small font-semibold text-l-card">Tonight · {dateLabel}</span>
         <span className={`text-small font-semibold ${sent ? "text-l-green" : "text-l-ink3"}`}>{step}</span>
       </div>
+      {paused && (
+        <p className="mb-3.5 rounded-xl bg-l-sub px-3.5 py-2.5 text-small text-l-ink2">
+          {paused === "weekend" ? "It's the weekend." : "It's a holiday."} You can still write if you like. Your streak only counts class days, so tonight won't grow it or break it.
+        </p>
+      )}
 
       {sent ? (
         <div className="flex items-center gap-3.5">
