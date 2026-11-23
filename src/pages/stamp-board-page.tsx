@@ -7,6 +7,7 @@ import { PageError, PageLoading } from "@/components/page-state";
 import { usePersistedState } from "@/hooks/use-persisted-state";
 import { ClearStamps } from "@/components/stamp/clear-stamps";
 import { CohortBoard } from "@/components/stamp/cohort-board";
+import { useCohort } from "@/admin/shell/useCohort";
 import { PosterExport } from "@/components/stamp/poster-export";
 import { StampDefs } from "@/components/stamp/stamp-defs";
 import { UploadStampButton } from "@/components/stamp/upload-stamp-button";
@@ -30,13 +31,15 @@ export default function StampBoardPage() {
     enabled: isAdmin,
   });
 
+  const [adminCohort] = useCohort();
   const defaultCohort = useMemo(() => {
+    if (isAdmin && adminCohort > 0) return adminCohort;
     if (userData?.cohort_number && userData.cohort_number > 0) {
       return userData.cohort_number;
     }
     const first = cohortsQuery.data?.[0];
     return first ? first.cohortNumber : undefined;
-  }, [userData, cohortsQuery.data]);
+  }, [isAdmin, adminCohort, userData, cohortsQuery.data]);
 
   const [selectedCohort, setSelectedCohort] = usePersistedState<number | undefined>(
     STAMP_COHORT_KEY,

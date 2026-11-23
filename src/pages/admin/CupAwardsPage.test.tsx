@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import CupAwardsPage from "./CupAwardsPage";
 import { adminCupApi } from "@/learner/cup/api";
 
+vi.mock("@/admin/shell/AdminShell", () => ({ useAdminHeader: () => {} }));
+vi.mock("@/admin/shell/useCohort", () => ({ useCohort: () => [13, () => {}] }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/learner/cup/api", () => ({
   adminCupApi: {
@@ -24,7 +26,6 @@ describe("CupAwardsPage", () => {
 
   it("awards points once with the form values", async () => {
     renderPage();
-    fireEvent.change(screen.getByLabelText("Cohort"), { target: { value: "13" } });
     fireEvent.click(await screen.findByRole("button", { name: "Group B" }));
     fireEvent.click(screen.getByRole("button", { name: "Soft skills" }));
     fireEvent.change(screen.getByLabelText("Points"), { target: { value: "15" } });
@@ -38,7 +39,6 @@ describe("CupAwardsPage", () => {
 
   it("undoes an award", async () => {
     renderPage();
-    fireEvent.change(screen.getByLabelText("Cohort"), { target: { value: "13" } });
     fireEvent.click(await screen.findByRole("button", { name: "Undo Demo" }));
     await waitFor(() => expect(adminCupApi.remove).toHaveBeenCalledWith("x1"));
   });

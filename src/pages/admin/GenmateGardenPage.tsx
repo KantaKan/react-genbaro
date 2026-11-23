@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { GenmateGarden } from "@/components/genmate-garden";
+import { useCohort } from "@/admin/shell/useCohort";
 import {
   Select,
   SelectContent,
@@ -9,12 +10,13 @@ import {
 } from "@/components/ui/select";
 
 export function GenmateGardenPage() {
-  const [selectedCohort, setSelectedCohort] = useState<string | undefined>(
-    () => {
-      const saved = localStorage.getItem("selectedCohort");
-      return saved ? (saved === "all" ? undefined : saved) : undefined;
-    }
-  );
+  const [adminCohort] = useCohort();
+  // null = not chosen here yet: follow the cohort picked in the sidebar.
+  const [picked, setSelectedCohort] = useState<string | undefined | null>(() => {
+    const saved = localStorage.getItem("selectedCohort");
+    return saved ? (saved === "all" ? undefined : saved) : null;
+  });
+  const selectedCohort = picked === null ? (adminCohort > 0 ? String(adminCohort) : undefined) : picked;
 
   const handleCohortChange = (value: string) => {
     const cohortValue = value === "all" ? undefined : value;

@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { GenmateGardenPage } from "@/pages/admin/GenmateGardenPage";
 
+vi.mock("@/admin/shell/useCohort", () => ({ useCohort: () => [0, () => {}] }));
 vi.mock("@/lib/api", () => ({
   api: { get: vi.fn() },
 }));
