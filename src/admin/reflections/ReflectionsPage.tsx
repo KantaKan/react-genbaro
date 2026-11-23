@@ -137,6 +137,9 @@ function ReflectionPanel({ cohort, range, learnerId }: { cohort: number; range: 
               <p className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed">{t ? <Marked text={t} words={e.words} /> : <span className="text-l-ink3">—</span>}</p>
             </section>
           ))}
+          {e.admin_feedback && (
+            <p className="mt-1 text-[12px] text-l-ink3">{repliedBy(e)}</p>
+          )}
           <label className="mt-1 text-[11.5px] font-semibold text-l-ink2">
             Reply to learner
             <span className="ml-1 font-normal text-l-ink3">(they see this on their reflection)</span>
@@ -381,4 +384,18 @@ export function ReflectionsPage() {
       </div>
     </div>
   );
+}
+
+/** "Replied by Neeti · 2h ago", so two TAs don't both answer the same night. */
+function repliedBy(e: Entry): string {
+  const raw = e.admin_feedback_name ?? "";
+  const who = raw ? (raw.includes("(") ? nicknames(raw, raw.replace(/^\d+_/, "")).en : raw.replace(/^\d+_/, "")) : "";
+  const at = e.admin_feedback_at ? new Date(e.admin_feedback_at).getTime() : NaN;
+  let when = "";
+  if (!Number.isNaN(at)) {
+    const m = Math.max(0, Math.round((Date.now() - at) / 60000));
+    when = m < 1 ? "just now" : m < 60 ? `${m}m ago` : m < 1440 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago`;
+  }
+  if (!who) return when ? `Already replied · ${when}` : "Already replied";
+  return when ? `Replied by ${who} · ${when}` : `Replied by ${who}`;
 }

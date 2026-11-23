@@ -201,6 +201,11 @@ describe("reply author", () => {
     expect(toNights([withAuthor("2026-11-18", "r1", "ta2", "Neeti")])[0].replyName).toBe("Neeti");
     expect(toNights([withAuthor("2026-11-18", "r1")])[0]).toMatchObject({ replyBy: "", replyName: "" });
   });
+  it("keeps the TA's chosen avatar for the reply", () => {
+    const avatar = { style: "thumbs" as const, seed: "k", bg: "" };
+    const [n] = toNights([{ ...withAuthor("2026-11-18", "r1", "ta1", "00_Kan(Kan/กัน)"), admin_feedback_avatar: avatar }]);
+    expect(n.replyAvatar).toEqual(avatar);
+  });
   it("says who new replies are from", () => {
     const n = toNights([
       withAuthor("2026-11-19", "a", "ta1", "00_Kan(Kan/กัน)"),
