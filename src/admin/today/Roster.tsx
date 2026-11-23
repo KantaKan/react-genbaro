@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { zoneLabel } from "../ui/zones";
 import { UserAvatar } from "@/components/user-avatar";
 import { BarometerFace } from "@/learner/today/BarometerFace";
 import { nicknames } from "@/learner/lib/name";
@@ -117,7 +118,11 @@ export function Roster({
                       <td className="whitespace-nowrap border-b border-l-hair px-2.5 py-2">
                         <LeaveMeter used={l.leave_used} /> <span className="ml-1 tabular-nums text-l-ink2">{l.leave_used}</span>
                       </td>
-                      <td className="border-b border-l-hair px-2.5 py-2">{l.mood_yesterday && <BarometerFace zone={l.mood_yesterday} size={18} />}</td>
+                      <td className="border-b border-l-hair px-2.5 py-2">{l.mood_yesterday && (
+                        <span role="img" aria-label={zoneLabel(l.mood_yesterday)} title={zoneLabel(l.mood_yesterday)} className="inline-flex">
+                          <BarometerFace zone={l.mood_yesterday} size={18} />
+                        </span>
+                      )}</td>
                       <td className="border-b border-l-hair px-2.5 py-2" onClick={(e) => e.stopPropagation()}>
                         {supportIds?.has(l.id) && <span className="mr-1.5 rounded-full bg-red-50 px-2 py-0.5 text-micro font-semibold text-red-600 dark:bg-red-500/15">Support</span>}
                         {canMark && !l[session].status && (

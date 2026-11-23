@@ -68,7 +68,7 @@ export function MonthCalendar({
             >
               <span className="text-small font-semibold">
                 {c.day}
-                {c.isToday && <span className="ml-1 text-micro font-medium text-l-ink3">Today</span>}
+                {c.isToday && <span className="sr-only ml-1 text-micro font-medium text-l-ink3 sm:not-sr-only">Today</span>}
               </span>
               {c.am === "none" && <span className="text-micro text-l-ink3">No class</span>}
               <span className="mt-auto flex gap-[3px]">

@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -88,9 +87,7 @@ export function Login({ onLogin }: LoginProps) {
               <label className="text-sm font-medium text-white" htmlFor="password">
                 Password
               </label>
-              <Link to="/forgot-password" className="text-sm text-zinc-400 hover:text-white">
-                Forgot your password?
-              </Link>
+              <span className="text-sm text-zinc-400">Forgot it? Ask your TA to reset it.</span>
             </div>
             <Input id="password" type="password" disabled={isLoading} className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-400" {...form.register("password")} />
             {form.formState.errors.password && <p className="text-sm text-red-500">{form.formState.errors.password.message}</p>}
@@ -105,28 +102,6 @@ export function Login({ onLogin }: LoginProps) {
             Login
           </Button>
         </form>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-zinc-800" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-black px-2 text-zinc-400">Or continue with</span>
-          </div>
-        </div>
-
-        {/* Social login buttons */}
-        <div className="grid grid-cols-3 gap-3">
-          <Button variant="outline" type="button" disabled={true} className="bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800 hover:text-white">
-            <Icons.apple className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" type="button" disabled={true} className="bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800 hover:text-white">
-            <Icons.google className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" type="button" disabled={true} className="bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800 hover:text-white">
-            <Icons.gitHub className="h-4 w-4" />
-          </Button>
-        </div>
 
         {/* Links for Sign Up */}
       </div>

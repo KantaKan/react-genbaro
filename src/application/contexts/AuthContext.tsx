@@ -46,7 +46,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setIsAuthenticated(false);
           setUserRoleState(null);
           setUserIdState(null);
-          setError(message);
         } finally {
           setLoading(false);
         }

@@ -7,9 +7,10 @@ import { BarometerFace, ZONES, type ZoneId } from "@/learner/today/BarometerFace
 import { nicknames } from "@/learner/lib/name";
 import { useAdminHeader, useSidePanel } from "../shell/AdminShell";
 import { useCohort } from "../shell/useCohort";
-import { wellbeingApi, type Board, type Entry, type LearnerRef } from "../wellbeing";
+import { wellbeingApi, type Board, type Entry, type LearnerRef, type Zone } from "../wellbeing";
 
 import { ZONE_BG, zoneLabel } from "../ui/zones";
+import { getThailandDateISO } from "@/utils/date-utils";
 const nick = (l: Pick<LearnerRef, "zoom_name" | "first_name">) => nicknames(l.zoom_name, l.first_name);
 const shortDay = (d: string) => new Date(`${d}T12:00:00+07:00`).toLocaleDateString("en-GB", { weekday: "narrow", day: "numeric", timeZone: "Asia/Bangkok" });
 
@@ -119,7 +120,7 @@ function ReflectionPanel({ cohort, range, learnerId }: { cohort: number; range: 
         {row && (
           <div className="mt-2.5 flex gap-[3px]">
             {row.nights.map((z, i) => (
-              <i key={i} className="block h-2 flex-1 rounded-[3px]" style={{ background: z ? ZONE_BG[z] : "var(--l-hair)" }} />
+              <i key={i} title={zoneLabel(z)} className="block h-2 flex-1 rounded-[3px]" style={{ background: z ? ZONE_BG[z] : "var(--l-hair)" }} />
             ))}
           </div>
         )}
@@ -212,7 +213,7 @@ export function ReflectionsPage() {
   return (
     <div>
       <div className="inline-flex rounded-[10px] bg-l-card p-[3px] shadow-[0_0_0_1px_var(--l-hair)]">
-        {([["night", "Last night"], ["week", "This week"], ["4w", "Last 4 weeks"]] as const).map(([k, t]) => (
+        {([["night", "Latest night"], ["week", "This week"], ["4w", "Last 4 weeks"]] as const).map(([k, t]) => (
           <button key={k} type="button" aria-pressed={range === k} onClick={() => setRange(k)} className={`rounded-[7px] px-3 py-1 text-xs font-semibold ${range === k ? "bg-l-ink text-l-card" : "text-l-ink2"}`}>
             {t}
           </button>
@@ -222,7 +223,7 @@ export function ReflectionsPage() {
       <div className="mt-3.5 grid gap-3.5 xl:grid-cols-[1.6fr_1fr]">
         <section className="rounded-2xl p-4 shadow-[0_0_0_1px_var(--l-hair)]">
           <h4 className="flex text-body font-semibold">
-            How the cohort felt {range === "night" ? "last night" : range === "week" ? "this week" : "the last 4 weeks"}
+            How the cohort felt {range === "night" ? (b.date === getThailandDateISO() ? "tonight" : "last night") : range === "week" ? "this week" : "the last 4 weeks"}
             <span className="ml-auto text-xs font-medium text-l-ink3">{night}</span>
           </h4>
           <Tiles b={b} />
@@ -284,7 +285,7 @@ export function ReflectionsPage() {
                     {w.quote && <p className="mt-0.5 text-small leading-snug text-l-ink2">“{w.quote}”</p>}
                     <div className="mt-2 flex gap-0.5">
                       {w.strip.map((z, i) => (
-                        <i key={i} className="block h-1.5 w-3.5 rounded-sm" style={{ background: z ? ZONE_BG[z] : "var(--l-hair)" }} />
+                        <i key={i} title={zoneLabel(z)} className="block h-1.5 w-3.5 rounded-sm" style={{ background: z ? ZONE_BG[z] : "var(--l-hair)" }} />
                       ))}
                     </div>
                   </div>
@@ -298,6 +299,14 @@ export function ReflectionsPage() {
       <div className="mb-2.5 mt-6 flex flex-wrap items-center gap-2">
         <h3 className="text-title font-semibold">Mood map</h3>
         <span className="text-xs text-l-ink3">One square per night · click to read it</span>
+        <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-micro text-l-ink2">
+          {Object.entries(ZONE_BG).map(([z, c]) => (
+            <span key={z} className="inline-flex items-center gap-1">
+              <i aria-hidden className="block h-2.5 w-2.5 rounded-sm" style={{ background: c }} />
+              {zoneLabel(z as Zone)}
+            </span>
+          ))}
+        </span>
         <span className="flex-1" />
         {([["worst", "Worst first"], ["group", "By group"], ["az", "A–Z"]] as const).map(([k, t]) => (
           <button key={k} type="button" aria-pressed={sort === k} onClick={() => setSort(k)} className={`rounded-[9px] px-2.5 py-1 text-small font-semibold ${sort === k ? "bg-l-sub text-l-ink shadow-[0_0_0_1px_var(--l-hair)]" : "text-l-ink2"}`}>
@@ -325,6 +334,7 @@ export function ReflectionsPage() {
                   key={`${r.learner.id}-${i}`}
                   type="button"
                   aria-label={`${n.th || n.en} · ${b.dates[i]} · ${zoneLabel(z)}`}
+                  title={`${b.dates[i]} · ${zoneLabel(z)}`}
                   onClick={() => openL(r.learner.id)}
                   className={`h-6 rounded-md transition-transform hover:scale-110 ${z ? "" : "shadow-[inset_0_0_0_1.5px_var(--l-hair)]"}`}
                   style={z ? { background: ZONE_BG[z] } : undefined}
