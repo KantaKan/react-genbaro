@@ -12,7 +12,7 @@ import { ROLE_LABEL, type StaffRole } from "./perm";
 import { inviteLink, teamApi, type InviteInput, type Member } from "./api";
 
 const LETTERS = "ABCDEFGHIJ".split("");
-const field = "w-full rounded-xl bg-l-sub px-3 py-2 text-[13.5px] text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]";
+const field = "w-full rounded-xl bg-l-sub px-3 py-2 text-body text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]";
 const seg = (on: boolean) => `rounded-[7px] px-3 py-1 text-xs font-semibold ${on ? "bg-l-ink text-l-card" : "text-l-ink2"}`;
 const chip = "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold shadow-[0_0_0_1px_var(--l-hair)]";
 const errMsg = (e: unknown) => (e as { response?: { data?: { message?: string } } }).response?.data?.message ?? "Something went wrong";
@@ -27,7 +27,7 @@ function LinkBox({ token, note }: { token: string; note: string }) {
     <div className="rounded-2xl bg-l-sub p-3 shadow-[0_0_0_1px_var(--l-hair)]">
       <div className="flex items-center gap-2">
         <Link2 className="h-4 w-4 shrink-0 text-l-ink3" />
-        <input aria-label="Invite link" readOnly value={link} onFocus={(e) => e.currentTarget.select()} className="min-w-0 flex-1 bg-transparent text-[12.5px] outline-none" />
+        <input aria-label="Invite link" readOnly value={link} onFocus={(e) => e.currentTarget.select()} className="min-w-0 flex-1 bg-transparent text-small outline-none" />
         <button
           type="button"
           onClick={async () => {
@@ -43,7 +43,7 @@ function LinkBox({ token, note }: { token: string; note: string }) {
           <Copy className="h-3.5 w-3.5" /> Copy
         </button>
       </div>
-      <p className="mt-1.5 text-[11.5px] text-l-ink3">{note}</p>
+      <p className="mt-1.5 text-small text-l-ink3">{note}</p>
     </div>
   );
 }
@@ -84,9 +84,9 @@ function InviteDialog({ open, onOpenChange, cohortChoices, defaultCohort }: { op
         <DialogTitle>{token ? "Send this link" : "Invite someone"}</DialogTitle>
         {token ? (
           <div className="grid gap-3">
-            <p className="text-[13px] text-l-ink2">Send it to {email.trim()} on Slack or chat. They set their own password.</p>
+            <p className="text-body text-l-ink2">Send it to {email.trim()} on Slack or chat. They set their own password.</p>
             <LinkBox token={token} note="Works once. Expires in 7 days." />
-            <button type="button" onClick={() => close(false)} className="rounded-full bg-l-ink py-2.5 text-[13.5px] font-semibold text-l-card">
+            <button type="button" onClick={() => close(false)} className="rounded-full bg-l-ink py-2.5 text-body font-semibold text-l-card">
               Done
             </button>
           </div>
@@ -127,7 +127,7 @@ function InviteDialog({ open, onOpenChange, cohortChoices, defaultCohort }: { op
               </div>
             )}
             <p className="text-xs text-l-ink3">{ROLE_HINT[role]}</p>
-            <button type="button" disabled={!ok} onClick={create} className="rounded-full bg-l-ink py-2.5 text-[13.5px] font-semibold text-l-card disabled:opacity-40">
+            <button type="button" disabled={!ok} onClick={create} className="rounded-full bg-l-ink py-2.5 text-body font-semibold text-l-card disabled:opacity-40">
               Create invite link
             </button>
           </div>
@@ -163,7 +163,7 @@ export function TeamPage() {
   const [renewed, setRenewed] = useState<Record<string, string>>({});
   const confirm = useConfirm();
   useAdminHeader({ title: "Team & roles", context: `${q.data?.members.length ?? 0} people`, actions: (
-    <button type="button" onClick={() => setInviting(true)} className="rounded-full bg-l-ink px-3.5 py-1.5 text-[12.5px] font-semibold text-l-card">
+    <button type="button" onClick={() => setInviting(true)} className="rounded-full bg-l-ink px-3.5 py-1.5 text-small font-semibold text-l-card">
       Invite someone
     </button>
   ) });
@@ -185,9 +185,9 @@ export function TeamPage() {
   return (
     <div className="flex max-w-[980px] flex-col gap-4">
       <section className="overflow-x-auto rounded-2xl shadow-[0_0_0_1px_var(--l-hair)]">
-        <table className="w-full min-w-[640px] text-[13px]">
+        <table className="w-full min-w-[640px] text-body">
           <thead>
-            <tr className="text-left text-[11.5px] text-l-ink3">
+            <tr className="text-left text-small text-l-ink3">
               <th className="px-4 py-2.5 font-medium">Person</th>
               <th className="px-2 py-2.5 font-medium">Role</th>
               <th className="px-2 py-2.5 font-medium">Cohorts</th>
@@ -206,7 +206,7 @@ export function TeamPage() {
                       <div className="min-w-0">
                         <b className="block font-semibold">
                           {m.first_name} {m.last_name}
-                          {mine && <span className="ml-1.5 text-[11px] font-medium text-l-ink3">you</span>}
+                          {mine && <span className="ml-1.5 text-micro font-medium text-l-ink3">you</span>}
                         </b>
                         <span className="text-xs text-l-ink3">{m.email}</span>
                       </div>
@@ -216,7 +216,7 @@ export function TeamPage() {
                     {mine ? (
                       <span className="font-semibold">{ROLE_LABEL[m.staff_role]}</span>
                     ) : (
-                      <select aria-label={`Role for ${m.first_name}`} value={m.staff_role} onChange={(e) => change(m, e.target.value as StaffRole)} className="rounded-lg bg-l-sub px-2 py-1 text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)] outline-none">
+                      <select aria-label={`Role for ${m.first_name}`} value={m.staff_role} onChange={(e) => change(m, e.target.value as StaffRole)} className="rounded-lg bg-l-sub px-2 py-1 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)] outline-none">
                         {(["owner", "admin", "ta", "viewer"] as const).map((r) => (
                           <option key={r} value={r}>
                             {ROLE_LABEL[r]}
@@ -258,13 +258,13 @@ export function TeamPage() {
 
       {(q.data?.invites.length ?? 0) > 0 && (
         <section>
-          <h3 className="mb-2 text-[15px] font-semibold">Waiting to join</h3>
+          <h3 className="mb-2 text-title font-semibold">Waiting to join</h3>
           <div className="flex flex-col gap-2 rounded-2xl p-3 shadow-[0_0_0_1px_var(--l-hair)]">
             {q.data!.invites.map((i) => {
               const left = days(i.expires_at);
               return (
                 <div key={i.id} className="flex flex-col gap-2">
-                  <div className="flex flex-wrap items-center gap-3 px-1 text-[13px]">
+                  <div className="flex flex-wrap items-center gap-3 px-1 text-body">
                     <b className="min-w-0 flex-1 truncate font-semibold">{i.email}</b>
                     <span className="text-l-ink2">{ROLE_LABEL[i.role]}</span>
                     <span className={`text-xs ${left > 0 ? "text-l-ink3" : "font-semibold text-amber-700"}`}>{left > 0 ? `expires in ${left} day${left === 1 ? "" : "s"}` : "expired"}</span>
@@ -303,11 +303,11 @@ export function TeamPage() {
       )}
 
       <section>
-        <h3 className="mb-2 text-[15px] font-semibold">What each role can do</h3>
+        <h3 className="mb-2 text-title font-semibold">What each role can do</h3>
         <div className="overflow-x-auto rounded-2xl shadow-[0_0_0_1px_var(--l-hair)]">
-          <table className="w-full min-w-[560px] text-[12.5px]">
+          <table className="w-full min-w-[560px] text-small">
             <thead>
-              <tr className="text-left text-[11.5px] text-l-ink3">
+              <tr className="text-left text-small text-l-ink3">
                 <th className="px-4 py-2 font-medium" />
                 {["Owner", "Admin", "TA", "Viewer"].map((r) => (
                   <th key={r} className="px-2 py-2 text-center font-medium">

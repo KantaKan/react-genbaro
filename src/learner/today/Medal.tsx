@@ -66,8 +66,8 @@ export function Medal({ name, sub, color = "#6366f1", glyph, emoji, imageUrl, lo
           )
         )}
       </motion.svg>
-      <span className="text-[12px] font-semibold leading-tight">{name}</span>
-      {sub && <span className="text-[11px] text-l-ink3">{sub}</span>}
+      <span className="text-small font-semibold leading-tight">{name}</span>
+      {sub && <span className="text-micro text-l-ink3">{sub}</span>}
     </button>
   );
 }

@@ -10,14 +10,14 @@ export function StreakBadgesCard({ streak, badges, perfectWeek, weekOnTime }: { 
   return (
     <section className="l-card p-[22px]">
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="text-[15px] font-semibold">Streak &amp; badges</h3>
+        <h3 className="text-title font-semibold">Streak &amp; badges</h3>
         {badges.length > MAX && (
-          <Link to="/learner/my-profile" className="text-[12.5px] font-medium text-l-ink2 hover:text-l-ink">
+          <Link to="/learner/my-profile" className="text-small font-medium text-l-ink2 hover:text-l-ink">
             See all {badges.length} badges
           </Link>
         )}
       </div>
-      <p className="mt-0.5 text-[12.5px] text-l-ink3">
+      <p className="mt-0.5 text-small text-l-ink3">
         On time {streak} {streak === 1 ? "day" : "days"} in a row · {badges.length} {badges.length === 1 ? "badge" : "badges"}
       </p>
       <div className="mt-[18px] grid grid-cols-4 gap-x-1.5 gap-y-4">
@@ -35,7 +35,7 @@ export function StreakBadgesCard({ streak, badges, perfectWeek, weekOnTime }: { 
         ))}
         {!perfectWeek && shown.length < MAX && <Medal name="Perfect week" sub={`${weekOnTime} of 5 days`} locked progress={Math.min(1, weekOnTime / 5)} />}
       </div>
-      {badges.length === 0 && <p className="mt-3 text-[12.5px] text-l-ink3">Badges you earn show up here.</p>}
+      {badges.length === 0 && <p className="mt-3 text-small text-l-ink3">Badges you earn show up here.</p>}
     </section>
   );
 }

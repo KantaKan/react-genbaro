@@ -27,7 +27,7 @@ export function SessionCard({ view, session, onSession, nowMin }: { view: TodayV
           {arc(c.leave, onT + lt, "#4f46e5")}
         </svg>
         <b className="absolute inset-0 grid place-items-center pb-3 text-[26px] font-bold tabular-nums tracking-tight">{inN}</b>
-        <small className="absolute inset-x-0 bottom-5 text-center text-[10.5px] text-l-ink3">of {c.total}</small>
+        <small className="absolute inset-x-0 bottom-5 text-center text-micro text-l-ink3">of {c.total}</small>
       </div>
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -39,7 +39,7 @@ export function SessionCard({ view, session, onSession, nowMin }: { view: TodayV
             </span>
           )}
         </div>
-        <div className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1 text-[12.5px] text-l-ink2">
+        <div className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1 text-small text-l-ink2">
           {[
             [c.on_time, "on time"],
             [c.late, "late"],
@@ -48,7 +48,7 @@ export function SessionCard({ view, session, onSession, nowMin }: { view: TodayV
             [c.not_yet, "not yet"],
           ].map(([n, t]) => (
             <span key={t as string}>
-              <b className="mr-1 text-[15px] tabular-nums text-l-ink">{n}</b>
+              <b className="mr-1 text-title tabular-nums text-l-ink">{n}</b>
               {t}
             </span>
           ))}
@@ -59,14 +59,14 @@ export function SessionCard({ view, session, onSession, nowMin }: { view: TodayV
             {view.learners.map((l) => l[session].checked_in_at && <i key={l.id} className="absolute top-1 block h-[13px] w-[2px] rounded bg-emerald-600 opacity-60" style={{ left: `${pos(bkkMinutes(new Date(l[session].checked_in_at!)))}%` }} />)}
             {phase !== "before" && phase !== "closed" && (
               <span className="absolute top-0.5 h-[17px] w-[2px] rounded bg-l-ink" style={{ left: `${pos(nowMin)}%` }}>
-                <small className="absolute -top-4 left-1/2 -translate-x-1/2 text-[10.5px] font-bold">{`${Math.floor(nowMin / 60)}:${String(nowMin % 60).padStart(2, "0")}`}</small>
+                <small className="absolute -top-4 left-1/2 -translate-x-1/2 text-micro font-bold">{`${Math.floor(nowMin / 60)}:${String(nowMin % 60).padStart(2, "0")}`}</small>
               </span>
             )}
-            <small className="absolute top-[19px] text-[10.5px] text-l-ink3">{fmtClock(w.open_at)}</small>
-            <small className="absolute top-[19px] -translate-x-1/2 text-[10.5px] text-l-ink3" style={{ left: `${pos(late)}%` }}>
+            <small className="absolute top-[19px] text-micro text-l-ink3">{fmtClock(w.open_at)}</small>
+            <small className="absolute top-[19px] -translate-x-1/2 text-micro text-l-ink3" style={{ left: `${pos(late)}%` }}>
               {fmtClock(w.late_after)} late
             </small>
-            <small className="absolute right-0 top-[19px] text-[10.5px] text-l-ink3">{fmtClock(w.absent_after)} absent</small>
+            <small className="absolute right-0 top-[19px] text-micro text-l-ink3">{fmtClock(w.absent_after)} absent</small>
           </div>
         )}
       </div>
@@ -90,7 +90,7 @@ export function SessionCard({ view, session, onSession, nowMin }: { view: TodayV
                   </span>
                 );
               })}
-              {notYet.length > 8 && <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-l-sub text-[11px] font-bold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">+{notYet.length - 8}</span>}
+              {notYet.length > 8 && <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-l-sub text-micro font-bold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">+{notYet.length - 8}</span>}
             </div>
           </div>
         )}

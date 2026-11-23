@@ -46,7 +46,7 @@ export function AttendancePage() {
 
   const actions = useMemo(
     () => (
-      <button type="button" onClick={() => openSheet()} className="inline-flex items-center gap-1.5 rounded-full bg-l-ink px-3.5 py-1.5 text-[13px] font-medium text-l-card">
+      <button type="button" onClick={() => openSheet()} className="inline-flex items-center gap-1.5 rounded-full bg-l-ink px-3.5 py-1.5 text-body font-medium text-l-card">
         <Plus className="h-4 w-4" strokeWidth={1.75} />
         Request leave
       </button>
@@ -74,7 +74,7 @@ export function AttendancePage() {
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
       <section className="l-card p-[22px] lg:col-span-8">
         <MonthCalendar title={`${MONTHS[ym.m]} ${ym.y}`} cells={cells} selected={sel?.date ?? null} onSelect={setSel} onPrev={() => shift(-1)} onNext={() => shift(1)} />
-        <div data-testid="day-detail" className="mt-3.5 min-h-[84px] rounded-[14px] bg-l-sub p-3.5 text-[13px] leading-relaxed text-l-ink2">
+        <div data-testid="day-detail" className="mt-3.5 min-h-[84px] rounded-[14px] bg-l-sub p-3.5 text-body leading-relaxed text-l-ink2">
           {!sel ? (
             "Pick a day to see its check-ins and any notes."
           ) : sel.future ? (
@@ -82,7 +82,7 @@ export function AttendancePage() {
               <span>
                 <b className="text-l-ink">{MONTHS[ym.m]} {sel.day}</b> is coming up.
               </span>
-              <button type="button" onClick={() => openSheet(sel.date!)} className="rounded-full bg-l-ink px-3 py-1 text-[12.5px] font-medium text-l-card">
+              <button type="button" onClick={() => openSheet(sel.date!)} className="rounded-full bg-l-ink px-3 py-1 text-small font-medium text-l-card">
                 Request leave
               </button>
             </div>
@@ -100,10 +100,10 @@ export function AttendancePage() {
 
       <div className="flex flex-col gap-4 lg:col-span-4">
         <section className="l-card p-[22px]">
-          <h3 className="text-[15px] font-semibold">Attendance rate</h3>
+          <h3 className="text-title font-semibold">Attendance rate</h3>
           <div className="mt-3.5 flex items-center gap-5">
             <RateRing rate={s?.attendance_rate ?? 0} />
-            <div className="flex-1 text-[13px] text-l-ink2">
+            <div className="flex-1 text-body text-l-ink2">
               {(["present", "late", "absent_excused", "absent"] as AttendanceStatusType[]).map((k, i) => (
                 <div key={k} className={`flex justify-between py-2 ${i ? "border-t border-l-hair" : ""}`}>
                   <span>{LABEL[k]}</span>
@@ -115,8 +115,8 @@ export function AttendancePage() {
         </section>
 
         <section className="l-card p-[22px]">
-          <h3 className="text-[15px] font-semibold">Leave &amp; lates</h3>
-          <p className="mt-0.5 text-[12.5px] text-l-ink3">Up to {s?.leave_allowance ?? 8} days across the whole course</p>
+          <h3 className="text-title font-semibold">Leave &amp; lates</h3>
+          <p className="mt-0.5 text-small text-l-ink3">Up to {s?.leave_allowance ?? 8} days across the whole course</p>
           <div className="mt-3.5 flex items-baseline gap-1.5">
             <b className="text-4xl font-semibold tabular-nums tracking-tighter">{s?.leave_used ?? 0}</b>
             <span className="text-l-ink3">
@@ -128,7 +128,7 @@ export function AttendancePage() {
               <i key={i} className="block h-3 flex-1 rounded" style={{ background: i < (s?.leave_used ?? 0) ? "var(--l-indigo)" : "var(--l-sub)" }} />
             ))}
           </div>
-          <div className="relative mt-1.5 h-8 text-[10.5px] text-l-ink3">
+          <div className="relative mt-1.5 h-8 text-micro text-l-ink3">
             {[[4, "1st warning"], [6, "2nd"], [7, "3rd"]].map(([n, l]) => (
               <span key={l} className="absolute -translate-x-1/2 text-center leading-tight" style={{ left: `${((n as number) / (s?.leave_allowance ?? 8)) * 100}%` }}>
                 {l}
@@ -140,9 +140,9 @@ export function AttendancePage() {
         </section>
 
         <section className="l-card p-[22px]">
-          <h3 className="text-[15px] font-semibold">My requests</h3>
+          <h3 className="text-title font-semibold">My requests</h3>
           <div className="mt-2.5">
-            {(leaves.data ?? []).length === 0 && <p className="text-[13px] text-l-ink3">No requests yet.</p>}
+            {(leaves.data ?? []).length === 0 && <p className="text-body text-l-ink3">No requests yet.</p>}
             {(leaves.data ?? [])
               .slice()
               .sort((a, b) => (b.date > a.date ? 1 : -1))
@@ -166,8 +166,8 @@ function RequestRow({ l }: { l: LeaveRequest }) {
   return (
     <div className="flex items-center gap-3 border-t border-l-hair py-3 first:border-t-0">
       <div className="w-[46px] shrink-0 rounded-[10px] bg-l-sub py-1 text-center shadow-[0_0_0_1px_var(--l-hair)]">
-        <small className="block text-[10px] uppercase tracking-wider text-l-ink3">{d.toLocaleDateString("en-GB", { weekday: "short" })}</small>
-        <b className="text-[15px] font-semibold">{d.getUTCDate()}</b>
+        <small className="block text-micro uppercase tracking-wider text-l-ink3">{d.toLocaleDateString("en-GB", { weekday: "short" })}</small>
+        <b className="text-title font-semibold">{d.getUTCDate()}</b>
       </div>
       <div className="min-w-0 flex-1">
         <b className="block truncate font-semibold">{l.reason}</b>

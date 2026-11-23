@@ -86,11 +86,11 @@ export function AvatarEditor({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="learner grid max-h-[92vh] w-full max-w-[880px] grid-cols-1 gap-0 overflow-hidden rounded-[26px] border-0 bg-l-card p-0 text-l-ink md:grid-cols-[300px_1fr]">
         <div className="flex flex-col items-center gap-3.5 border-b border-l-hair bg-l-sub p-6 md:border-b-0 md:border-r">
-          <DialogTitle className="self-start text-[17px] font-semibold">Your avatar</DialogTitle>
+          <DialogTitle className="self-start text-heading font-semibold">Your avatar</DialogTitle>
           <div className="grid h-[200px] w-[200px] place-items-center overflow-hidden rounded-full shadow-[0_0_0_6px_var(--l-card),0_24px_44px_-20px_rgba(0,0,0,.35)]" style={{ background: draft.bg ? `#${draft.bg}` : undefined }}>
             <UserAvatar userId={draft.seed} name={name} avatar={draft} className="h-full w-full" />
           </div>
-          <button type="button" onClick={shuffle} className="inline-flex items-center gap-1.5 rounded-full bg-l-card px-3.5 py-2 text-[13px] font-medium shadow-[0_0_0_1px_var(--l-hair)]">
+          <button type="button" onClick={shuffle} className="inline-flex items-center gap-1.5 rounded-full bg-l-card px-3.5 py-2 text-body font-medium shadow-[0_0_0_1px_var(--l-hair)]">
             <Shuffle className="h-4 w-4" strokeWidth={1.5} />
             Shuffle
           </button>
@@ -114,7 +114,7 @@ export function AvatarEditor({
         <div className="flex min-h-0 flex-col">
           <div role="tablist" className="flex shrink-0 gap-1 overflow-x-auto px-4 pt-4">
             {tabs.map((t) => (
-              <button key={t.tab} role="tab" type="button" aria-selected={t.tab === active.tab} onClick={() => setTab(t.tab)} className={`whitespace-nowrap rounded-[10px] px-3 py-2 text-[13px] font-semibold ${t.tab === active.tab ? "bg-l-sub text-l-ink" : "text-l-ink2"}`}>
+              <button key={t.tab} role="tab" type="button" aria-selected={t.tab === active.tab} onClick={() => setTab(t.tab)} className={`whitespace-nowrap rounded-[10px] px-3 py-2 text-body font-semibold ${t.tab === active.tab ? "bg-l-sub text-l-ink" : "text-l-ink2"}`}>
                 {t.tab}
               </button>
             ))}
@@ -122,14 +122,14 @@ export function AvatarEditor({
           <div className="min-h-0 flex-1 overflow-y-auto p-4" style={{ maxHeight: "60vh" }}>
             {!active.rows ? (
               <>
-                <h5 className="mb-2.5 text-[12px] font-semibold uppercase tracking-[.08em] text-l-ink3">Background</h5>
+                <h5 className="mb-2.5 text-small font-semibold uppercase tracking-[.08em] text-l-ink3">Background</h5>
                 <div className="flex flex-wrap gap-2.5">
                   {BGS.map((c) => (
                     <button key={c} type="button" aria-label={`background ${c}`} onClick={() => setDraft((d) => ({ ...d, bg: c }))} className={`h-10 w-10 rounded-full ${draft.bg === c ? "shadow-[0_0_0_3px_var(--l-card),0_0_0_5px_var(--l-ink)]" : "shadow-[inset_0_0_0_1px_rgba(0,0,0,.06)]"}`} style={{ background: `#${c}` }} />
                   ))}
                 </div>
-                {draft.style === "blobatar" && <p className="mt-4 text-[12.5px] text-l-ink3">Blobatar is the animated blob. Shuffle for a new one, or pick another style for full control.</p>}
-                <h5 className="mb-2.5 mt-6 text-[12px] font-semibold uppercase tracking-[.08em] text-l-ink3">Preview in the app</h5>
+                {draft.style === "blobatar" && <p className="mt-4 text-small text-l-ink3">Blobatar is the animated blob. Shuffle for a new one, or pick another style for full control.</p>}
+                <h5 className="mb-2.5 mt-6 text-small font-semibold uppercase tracking-[.08em] text-l-ink3">Preview in the app</h5>
                 <div className="flex items-center gap-3.5">
                   {[64, 44, 30].map((sz) => (
                     <span key={sz} className="grid place-items-center overflow-hidden rounded-full" style={{ width: sz, height: sz, background: draft.bg ? `#${draft.bg}` : undefined }}>
@@ -141,7 +141,7 @@ export function AvatarEditor({
             ) : (
               active.rows.map((r) => (
                 <div key={r.key} className="mb-4">
-                  <h5 className="mb-2.5 text-[12px] font-semibold uppercase tracking-[.08em] text-l-ink3">
+                  <h5 className="mb-2.5 text-small font-semibold uppercase tracking-[.08em] text-l-ink3">
                     {LABEL[r.key] ?? r.key}
                     {r.kind === "part" ? ` · ${r.values.length}` : ""}
                   </h5>
@@ -166,7 +166,7 @@ export function AvatarEditor({
                             onClick={() => !locked && setPart(r.key, v)}
                             className={`relative aspect-square overflow-hidden rounded-2xl bg-l-sub transition hover:-translate-y-0.5 ${on ? "bg-l-card shadow-[0_0_0_2px_var(--l-ink)]" : "shadow-[0_0_0_1px_var(--l-hair)]"} ${locked ? "opacity-60" : ""}`}
                           >
-                            {v === null ? <span className="text-[12px] font-semibold text-l-ink3">None</span> : <img alt="" loading="lazy" src={avatarDataUri(draft, { [r.key]: v })} className="h-full w-full" />}
+                            {v === null ? <span className="text-small font-semibold text-l-ink3">None</span> : <img alt="" loading="lazy" src={avatarDataUri(draft, { [r.key]: v })} className="h-full w-full" />}
                             {locked && (
                               <span className="absolute inset-x-1 bottom-1 flex items-center justify-center gap-0.5 rounded-full bg-l-ink px-1 text-[9.5px] font-bold text-l-card">
                                 <Lock className="h-2.5 w-2.5" />
@@ -184,10 +184,10 @@ export function AvatarEditor({
           </div>
           <div className="flex shrink-0 items-center justify-end gap-2 border-t border-l-hair p-4">
             <span className="flex-1 text-xs text-l-ink3">{draft.style === "blobatar" ? "Animated blob avatar" : "Edits are kept per style"}</span>
-            <button type="button" onClick={() => onOpenChange(false)} className="rounded-full px-4 py-2 text-[13.5px] font-medium shadow-[0_0_0_1px_var(--l-hair)]">
+            <button type="button" onClick={() => onOpenChange(false)} className="rounded-full px-4 py-2 text-body font-medium shadow-[0_0_0_1px_var(--l-hair)]">
               Cancel
             </button>
-            <button type="button" onClick={save} disabled={saving} className="rounded-full bg-l-ink px-4 py-2 text-[13.5px] font-medium text-l-card disabled:opacity-60">
+            <button type="button" onClick={save} disabled={saving} className="rounded-full bg-l-ink px-4 py-2 text-body font-medium text-l-card disabled:opacity-60">
               Save avatar
             </button>
           </div>

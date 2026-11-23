@@ -41,7 +41,7 @@ function Kpi({ label, k, text, delta, lowerIsBetter }: { label: string; k: KPI; 
       <div className={`mt-1.5 text-xs font-medium ${diff === 0 ? "text-l-ink3" : good ? "text-emerald-600" : "text-red-600"}`}>{delta}</div>
       <div className="mt-2.5">
         <Sparkline values={k.trend} good={good} />
-        <div className="mt-0.5 text-[10.5px] text-l-ink3">Last 8 weeks</div>
+        <div className="mt-0.5 text-micro text-l-ink3">Last 8 weeks</div>
       </div>
     </div>
   );
@@ -75,7 +75,7 @@ function Section({ title, hint, children, label }: { title: string; hint?: strin
   return (
     <section aria-label={label} className={card}>
       <div className="mb-3 flex items-baseline gap-2">
-        <h4 className="text-[13px] font-semibold">{title}</h4>
+        <h4 className="text-body font-semibold">{title}</h4>
         {hint && <small className="text-xs text-l-ink3">{hint}</small>}
       </div>
       {children}
@@ -140,11 +140,11 @@ export function ReportPage() {
     context: `JSD${cohort} · ${weekLabel(week)}`,
     actions: (
       <div className="flex items-center gap-2 print:hidden">
-        <button type="button" onClick={() => window.print()} className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)] hover:bg-l-sub">
+        <button type="button" onClick={() => window.print()} className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)] hover:bg-l-sub">
           <Printer className="h-3.5 w-3.5" /> Print / PDF
         </button>
         {me.can("cohort_admin") && r && (
-          <button type="button" onClick={send} disabled={stale || tooOld} title={tooOld ? "Only this week or last week can be sent" : undefined} className="rounded-full bg-l-ink px-3.5 py-1.5 text-[12.5px] font-semibold text-l-card disabled:opacity-40">
+          <button type="button" onClick={send} disabled={stale || tooOld} title={tooOld ? "Only this week or last week can be sent" : undefined} className="rounded-full bg-l-ink px-3.5 py-1.5 text-small font-semibold text-l-card disabled:opacity-40">
             {sent ? "Send again" : "Send now"}
           </button>
         )}
@@ -174,13 +174,13 @@ export function ReportPage() {
       <div className="mb-3 last:mb-0">
         <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-l-ink2">
           {label}
-          <span className="rounded-full bg-l-sub px-1.5 text-[11px] text-l-ink3">{rows.length}</span>
+          <span className="rounded-full bg-l-sub px-1.5 text-micro text-l-ink3">{rows.length}</span>
         </div>
         <ul className="grid gap-1 sm:grid-cols-2">
           {rows.map((s) => {
             const n = nicknames(s.learner.zoom_name, s.learner.first_name);
             return (
-              <li key={s.learner.id} className="rounded-lg bg-l-sub px-2.5 py-1.5 text-[12.5px]">
+              <li key={s.learner.id} className="rounded-lg bg-l-sub px-2.5 py-1.5 text-small">
                 <Link to={`/admin/learners/${s.learner.id}`} className="font-semibold hover:underline">
                   {n.th || n.en}
                 </Link>
@@ -197,12 +197,12 @@ export function ReportPage() {
     <div className="flex max-w-[980px] flex-col gap-3.5">
       <div className="flex flex-wrap items-center gap-3">
         {nav}
-        <span className={`rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)] ${sent ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" : "bg-l-sub text-l-ink2"}`}>
+        <span className={`rounded-full px-2.5 py-0.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)] ${sent ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" : "bg-l-sub text-l-ink2"}`}>
           {sent ? `Sent ${r.sent_at ? new Date(r.sent_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Asia/Bangkok" }) : ""}`.trim() : "Draft · sends Fri 17:00"}
         </span>
       </div>
 
-      <p className="rounded-2xl bg-l-sub px-5 py-4 text-[14px] leading-relaxed">{r.summary}</p>
+      <p className="rounded-2xl bg-l-sub px-5 py-4 text-title leading-relaxed">{r.summary}</p>
 
       <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi label="Attendance" k={k.attendance} text={`${pct(k.attendance.value)}%`} delta={pts(k.attendance.value, k.attendance.prev)} />
@@ -225,8 +225,8 @@ export function ReportPage() {
               const label = m.holiday ? `${DAY(m.day)}: holiday` : `${DAY(m.day)}: ${m.comfort} comfort, ${m.enjoying} enjoying, ${m.overwhelmed} overwhelmed, ${m.panic} panic, ${m.none} not written`;
               return (
                 <div key={m.day} className="flex flex-1 flex-col items-center gap-1.5">
-                  {m.holiday ? <div role="img" aria-label={label} className="grid h-24 w-5 place-items-center text-[10px] text-l-ink3">–</div> : <Stack parts={parts} label={label} />}
-                  <span className="text-[11px] text-l-ink3">{DAY(m.day)}</span>
+                  {m.holiday ? <div role="img" aria-label={label} className="grid h-24 w-5 place-items-center text-micro text-l-ink3">–</div> : <Stack parts={parts} label={label} />}
+                  <span className="text-micro text-l-ink3">{DAY(m.day)}</span>
                 </div>
               );
             })}
@@ -238,7 +238,7 @@ export function ReportPage() {
             {r.by_day.map((d) => (
               <div key={d.day} className="flex flex-1 flex-col items-center gap-1.5">
                 {d.holiday ? (
-                  <div className="grid h-24 place-items-center text-[10px] text-l-ink3">holiday</div>
+                  <div className="grid h-24 place-items-center text-micro text-l-ink3">holiday</div>
                 ) : (
                   <div className="flex gap-1">
                     {([["AM", d.am], ["PM", d.pm]] as const).map(([s, t]) => (
@@ -246,11 +246,11 @@ export function ReportPage() {
                     ))}
                   </div>
                 )}
-                <span className="text-[11px] text-l-ink3">{DAY(d.day)}</span>
+                <span className="text-micro text-l-ink3">{DAY(d.day)}</span>
               </div>
             ))}
           </div>
-          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-l-ink3">
+          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-micro text-l-ink3">
             {ATT_COLORS.map(([, color, name]) => (
               <span key={name} className="inline-flex items-center gap-1">
                 <i className="h-2 w-2 rounded-sm" style={{ background: color }} />
@@ -263,7 +263,7 @@ export function ReportPage() {
 
       <Section title="Needs support" hint="New, still and better since last week's report" label="Needs support">
         {r.support.length === 0 ? (
-          <p className="text-[13px] text-l-ink3">Nobody needs support this week.</p>
+          <p className="text-body text-l-ink3">Nobody needs support this week.</p>
         ) : (
           <>
             {people("new", "New")}
@@ -275,11 +275,11 @@ export function ReportPage() {
 
       <Section title="Groups" label="Groups">
         {r.groups.length === 0 ? (
-          <p className="text-[13px] text-l-ink3">No GenMate groups yet.</p>
+          <p className="text-body text-l-ink3">No GenMate groups yet.</p>
         ) : (
-          <table className="w-full text-[13px]">
+          <table className="w-full text-body">
             <thead>
-              <tr className="text-left text-[11.5px] text-l-ink3">
+              <tr className="text-left text-small text-l-ink3">
                 <th className="py-1.5 font-medium">Group</th>
                 <th className="py-1.5 font-medium">Attendance</th>
                 <th className="py-1.5 font-medium">Overwhelmed or panic</th>
@@ -303,15 +303,15 @@ export function ReportPage() {
       <Section title="Notes from the team" hint={sent ? "Locked: the report was sent" : "Included as written"}>
         {!sent && me.can("report_notes") ? (
           <>
-            <textarea aria-label="Notes from the team" value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} maxLength={4000} placeholder="What should the Program team know about this week?" className="w-full resize-none rounded-xl bg-l-sub px-3 py-2.5 text-[13.5px] shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]" />
+            <textarea aria-label="Notes from the team" value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} maxLength={4000} placeholder="What should the Program team know about this week?" className="w-full resize-none rounded-xl bg-l-sub px-3 py-2.5 text-body shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]" />
             <div className="mt-2 flex justify-end print:hidden">
-              <button type="button" onClick={saveNotes} disabled={stale} className="rounded-full bg-l-ink px-4 py-1.5 text-[12.5px] font-semibold text-l-card disabled:opacity-40">
+              <button type="button" onClick={saveNotes} disabled={stale} className="rounded-full bg-l-ink px-4 py-1.5 text-small font-semibold text-l-card disabled:opacity-40">
                 Save notes
               </button>
             </div>
           </>
         ) : (
-          <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed">{r.notes || <span className="text-l-ink3">No notes this week.</span>}</p>
+          <p className="whitespace-pre-wrap text-body leading-relaxed">{r.notes || <span className="text-l-ink3">No notes this week.</span>}</p>
         )}
       </Section>
       {confirm.node}

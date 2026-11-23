@@ -75,9 +75,9 @@ export default function ScratchCardControl({ tone, disabled, busy, onComplete }:
         style={{ width: W, maxWidth: "100%", aspectRatio: `${W}/${H}` }}
       >
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-zinc-900">
-          <small className="text-[10px] font-bold tracking-[.2em] text-amber-800">BARO DAILY TICKET</small>
+          <small className="text-micro font-bold tracking-[.2em] text-amber-800">BARO DAILY TICKET</small>
           <div className={`-rotate-6 rounded-[10px] border-[3px] border-current px-3.5 text-[34px] font-extrabold tracking-wide ${late ? "text-amber-700" : "text-green-700"}`}>{late ? "LATE" : "PRESENT"}</div>
-          <small className="text-[10px] tracking-widest text-amber-800">{late ? "still counts, see you tomorrow" : "you win: a normal day of class"}</small>
+          <small className="text-micro tracking-widest text-amber-800">{late ? "still counts, see you tomorrow" : "you win: a normal day of class"}</small>
         </div>
         {canvasOk && (
           <canvas
@@ -96,9 +96,9 @@ export default function ScratchCardControl({ tone, disabled, busy, onComplete }:
         )}
       </div>
       {canvasOk ? (
-        <p className="text-[13px] font-medium text-l-ink2">Scratch the silver with your finger or mouse</p>
+        <p className="text-body font-medium text-l-ink2">Scratch the silver with your finger or mouse</p>
       ) : (
-        <button type="button" onClick={finish} className="rounded-full bg-l-ink px-4 py-2 text-[13px] font-semibold text-l-card">
+        <button type="button" onClick={finish} className="rounded-full bg-l-ink px-4 py-2 text-body font-semibold text-l-card">
           Reveal
         </button>
       )}

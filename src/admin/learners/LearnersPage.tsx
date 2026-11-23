@@ -32,7 +32,7 @@ export function LearnersPage() {
     title: "All learners",
     context: `${rows.filter((r) => !dropped(r)).length} in JSD${cohort}`,
     actions: (
-      <Link to="/admin/users" className="hidden text-[12.5px] font-medium text-l-ink2 hover:text-l-ink sm:inline">
+      <Link to="/admin/users" className="hidden text-small font-medium text-l-ink2 hover:text-l-ink sm:inline">
         Manage accounts ›
       </Link>
     ),
@@ -54,18 +54,18 @@ export function LearnersPage() {
       <div className="flex flex-wrap items-center gap-2">
         <label className="flex min-w-[260px] items-center gap-2 rounded-[10px] bg-l-sub px-3 py-1.5 text-l-ink3 shadow-[0_0_0_1px_var(--l-hair)]">
           <Search className="h-4 w-4" strokeWidth={1.5} />
-          <input aria-label="Search learners" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name, nickname, number, email…" className="w-full bg-transparent text-[13px] text-l-ink outline-none" />
+          <input aria-label="Search learners" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name, nickname, number, email…" className="w-full bg-transparent text-body text-l-ink outline-none" />
         </label>
         {([["active", "Active"], ["support", "Needs support"], ["dropped", "Dropped"]] as const).map(([k, t]) => (
-          <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(k)} className={`rounded-[9px] px-2.5 py-1 text-[12.5px] font-semibold ${filter === k ? "bg-l-sub text-l-ink shadow-[0_0_0_1px_var(--l-hair)]" : "text-l-ink2"}`}>
-            {t} <em className="text-[11px] not-italic text-l-ink3">{counts[k]}</em>
+          <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(k)} className={`rounded-[9px] px-2.5 py-1 text-small font-semibold ${filter === k ? "bg-l-sub text-l-ink shadow-[0_0_0_1px_var(--l-hair)]" : "text-l-ink2"}`}>
+            {t} <em className="text-micro not-italic text-l-ink3">{counts[k]}</em>
           </button>
         ))}
       </div>
       <div className="mt-3 overflow-x-auto rounded-2xl shadow-[0_0_0_1px_var(--l-hair)]">
-        <table className="w-full border-separate border-spacing-0 text-[13px]">
+        <table className="w-full border-separate border-spacing-0 text-body">
           <thead>
-            <tr className="text-left text-[11.5px] text-l-ink3">
+            <tr className="text-left text-small text-l-ink3">
               {["Learner", "Group", "Attendance", "Leave", "Mood · 10 nights", "Last seen", ""].map((h) => (
                 <th key={h} className="border-b border-l-hair px-3 py-2 font-medium">
                   {h}
@@ -105,15 +105,15 @@ export function LearnersPage() {
                     </span>
                   </td>
                   <td className="whitespace-nowrap border-b border-l-hair px-3 py-2 text-l-ink2">{seen(r.last_seen)}</td>
-                  <td className="border-b border-l-hair px-3 py-2">{r.support && <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600 dark:bg-red-500/15">Support</span>}</td>
+                  <td className="border-b border-l-hair px-3 py-2">{r.support && <span className="rounded-full bg-red-50 px-2 py-0.5 text-micro font-semibold text-red-600 dark:bg-red-500/15">Support</span>}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
         {list.isLoading && <div className="h-32 animate-pulse bg-l-sub" />}
-        {list.isError && <p className="px-4 py-8 text-center text-[13px] text-red-600">Couldn't load learners. Refresh to try again.</p>}
-        {list.isSuccess && shown.length === 0 && <p className="px-4 py-8 text-center text-[13px] text-l-ink3">No one matches.</p>}
+        {list.isError && <p className="px-4 py-8 text-center text-body text-red-600">Couldn't load learners. Refresh to try again.</p>}
+        {list.isSuccess && shown.length === 0 && <p className="px-4 py-8 text-center text-body text-l-ink3">No one matches.</p>}
       </div>
     </div>
   );

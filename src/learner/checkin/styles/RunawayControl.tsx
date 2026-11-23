@@ -20,7 +20,7 @@ export default function RunawayControl({ tone, disabled, busy, onComplete }: Che
   return (
     <div className="relative h-[220px] overflow-hidden rounded-2xl bg-l-sub">
       <span
-        className="absolute -translate-x-1/2 -translate-y-[210%] whitespace-nowrap rounded-xl bg-l-card px-2.5 py-1 text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)] transition-all duration-300"
+        className="absolute -translate-x-1/2 -translate-y-[210%] whitespace-nowrap rounded-xl bg-l-card px-2.5 py-1 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)] transition-all duration-300"
         style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
       >
         {say}
@@ -30,7 +30,7 @@ export default function RunawayControl({ tone, disabled, busy, onComplete }: Che
         disabled={disabled || busy}
         onPointerEnter={dodge}
         onClick={() => (late && n < 3 ? dodge() : onComplete())}
-        className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-gradient-to-b from-zinc-700 to-zinc-900 px-7 py-3.5 text-[15px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.15),0_12px_24px_-10px_rgba(0,0,0,.45)]"
+        className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-gradient-to-b from-zinc-700 to-zinc-900 px-7 py-3.5 text-title font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.15),0_12px_24px_-10px_rgba(0,0,0,.45)]"
         style={{ left: `${pos.x}%`, top: `${pos.y}%`, transition: "left .38s cubic-bezier(.34,1.56,.64,1), top .38s cubic-bezier(.34,1.56,.64,1)" }}
       >
         Check in

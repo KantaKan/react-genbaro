@@ -77,7 +77,7 @@ export default function DjDeckControl({ disabled, busy, onComplete }: CheckInCon
           </div>
         </div>
       </div>
-      <p className="text-[13px] font-medium text-l-ink2">{dropped ? "DROP THE BEAT" : "Scratch the record in circles to drop the beat"}</p>
+      <p className="text-body font-medium text-l-ink2">{dropped ? "DROP THE BEAT" : "Scratch the record in circles to drop the beat"}</p>
     </div>
   );
 }

@@ -47,7 +47,7 @@ export function AdminBoardPage() {
     () => (
       <div className="inline-flex rounded-[10px] bg-l-sub p-[3px]">
         {(["latest", "popular"] as const).map((m) => (
-          <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)} className={`rounded-lg px-3 py-1 text-[12.5px] font-semibold ${mode === m ? "bg-l-card text-l-ink shadow-sm" : "text-l-ink2"}`}>
+          <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)} className={`rounded-lg px-3 py-1 text-small font-semibold ${mode === m ? "bg-l-card text-l-ink shadow-sm" : "text-l-ink2"}`}>
             {m === "latest" ? "Latest" : "Popular"}
           </button>
         ))}
@@ -106,11 +106,11 @@ export function AdminBoardPage() {
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder={`Write to JSD${cohort} as ${userData?.first_name ?? "staff"}…`}
-              className="h-[46px] flex-1 resize-none rounded-[14px] bg-l-sub px-3.5 py-3 text-[13.5px] shadow-[0_0_0_1px_var(--l-hair)] outline-none transition-[height] duration-300 focus:h-24 focus:bg-l-card focus:shadow-[0_0_0_1.5px_var(--l-ink)]"
+              className="h-[46px] flex-1 resize-none rounded-[14px] bg-l-sub px-3.5 py-3 text-body shadow-[0_0_0_1px_var(--l-hair)] outline-none transition-[height] duration-300 focus:h-24 focus:bg-l-card focus:shadow-[0_0_0_1.5px_var(--l-ink)]"
             />
           </div>
           <div className="mt-2.5 flex justify-end">
-            <button type="button" onClick={post} disabled={!text.trim()} className="rounded-full bg-l-ink px-4 py-1.5 text-[13px] font-semibold text-l-card disabled:opacity-40">
+            <button type="button" onClick={post} disabled={!text.trim()} className="rounded-full bg-l-ink px-4 py-1.5 text-body font-semibold text-l-card disabled:opacity-40">
               Post
             </button>
           </div>
@@ -119,7 +119,7 @@ export function AdminBoardPage() {
 
       {q.isLoading && <div className="h-40 animate-pulse rounded-2xl bg-l-sub" />}
       {q.isError && <p className="text-sm text-l-ink3">Couldn't load the board. Try again in a moment.</p>}
-      {q.data && posts.length === 0 && <div className={`${card} text-center text-[13.5px] text-l-ink3`}>No posts in JSD{cohort} yet.</div>}
+      {q.data && posts.length === 0 && <div className={`${card} text-center text-body text-l-ink3`}>No posts in JSD{cohort} yet.</div>}
 
       {posts.map((p) => {
         const who = display(p.zoomName);
@@ -131,7 +131,7 @@ export function AdminBoardPage() {
             <div className="flex items-center gap-2.5">
               <UserAvatar userId={p.userId} name={who.en} className="h-9 w-9" />
               <div className="min-w-0 flex-1">
-                <b className="text-[14px] font-semibold">{who.th}</b>
+                <b className="text-title font-semibold">{who.th}</b>
                 {who.en && who.en !== who.th && <span className="ml-1.5 text-xs text-l-ink3">{who.en}</span>}
                 <small className="block text-xs text-l-ink3">{ago(p.createdAt)}</small>
               </div>
@@ -146,27 +146,27 @@ export function AdminBoardPage() {
                 </button>
               )}
             </div>
-            <p className="mt-3 whitespace-pre-wrap break-words text-[14px] leading-relaxed">{decodeHtmlEntities(p.content)}</p>
+            <p className="mt-3 whitespace-pre-wrap break-words text-title leading-relaxed">{decodeHtmlEntities(p.content)}</p>
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
               {counts.map((r) => (
-                <span key={r.name} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] tabular-nums shadow-[0_0_0_1px_var(--l-hair)]">
+                <span key={r.name} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-small tabular-nums shadow-[0_0_0_1px_var(--l-hair)]">
                   <img src={r.url} alt={r.name} className="h-4 w-4" />
                   {r.n}
                 </span>
               ))}
               <span className="flex-1" />
               {replies.length > 0 ? (
-                <button type="button" aria-expanded={isOpen} onClick={() => setOpen((o) => ({ ...o, [p.id]: !isOpen }))} className="inline-flex items-center gap-1 text-[12.5px] text-l-ink3 hover:text-l-ink">
+                <button type="button" aria-expanded={isOpen} onClick={() => setOpen((o) => ({ ...o, [p.id]: !isOpen }))} className="inline-flex items-center gap-1 text-small text-l-ink3 hover:text-l-ink">
                   <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
                   {replies.length} {replies.length === 1 ? "reply" : "replies"}
                 </button>
               ) : canModerate ? (
-                <button type="button" aria-expanded={isOpen} onClick={() => setOpen((o) => ({ ...o, [p.id]: !isOpen }))} className="inline-flex items-center gap-1 text-[12.5px] text-l-ink3 hover:text-l-ink">
+                <button type="button" aria-expanded={isOpen} onClick={() => setOpen((o) => ({ ...o, [p.id]: !isOpen }))} className="inline-flex items-center gap-1 text-small text-l-ink3 hover:text-l-ink">
                   <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
                   Write a reply
                 </button>
               ) : (
-                <span className="text-[12.5px] text-l-ink3">No replies</span>
+                <span className="text-small text-l-ink3">No replies</span>
               )}
             </div>
             {isOpen && (
@@ -178,10 +178,10 @@ export function AdminBoardPage() {
                       <UserAvatar userId={c.userId} name={cw.en} className="h-7 w-7" />
                       <div className="min-w-0 flex-1 rounded-xl bg-l-sub px-3 py-2">
                         <div className="flex items-baseline gap-2">
-                          <b className="text-[12.5px] font-semibold">{cw.th}</b>
-                          <small className="text-[11px] text-l-ink3">{ago(c.createdAt)}</small>
+                          <b className="text-small font-semibold">{cw.th}</b>
+                          <small className="text-micro text-l-ink3">{ago(c.createdAt)}</small>
                         </div>
-                        <p className="whitespace-pre-wrap break-words text-[13px] leading-relaxed">{decodeHtmlEntities(c.content)}</p>
+                        <p className="whitespace-pre-wrap break-words text-body leading-relaxed">{decodeHtmlEntities(c.content)}</p>
                       </div>
                       {canModerate && (
                         <button
@@ -246,9 +246,9 @@ function ReplyBox({ avatar, onSend }: { avatar: React.ReactNode; onSend: (conten
         }}
         placeholder="Write a reply…"
         rows={1}
-        className="min-h-[38px] flex-1 resize-none rounded-xl bg-l-sub px-3 py-2 text-[13px] shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:bg-l-card focus:shadow-[0_0_0_1.5px_var(--l-ink)]"
+        className="min-h-[38px] flex-1 resize-none rounded-xl bg-l-sub px-3 py-2 text-body shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:bg-l-card focus:shadow-[0_0_0_1.5px_var(--l-ink)]"
       />
-      <button type="button" onClick={send} disabled={!text.trim()} className="mt-0.5 rounded-full bg-l-ink px-3.5 py-1.5 text-[12.5px] font-semibold text-l-card disabled:opacity-40">
+      <button type="button" onClick={send} disabled={!text.trim()} className="mt-0.5 rounded-full bg-l-ink px-3.5 py-1.5 text-small font-semibold text-l-card disabled:opacity-40">
         Reply
       </button>
     </div>

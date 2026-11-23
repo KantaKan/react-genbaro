@@ -70,7 +70,7 @@ export default function AlarmClockControl({ disabled, busy, onComplete }: CheckI
           )}
         </svg>
       </button>
-      <p className="text-[13px] font-medium text-l-ink2">{MSGS[Math.min(hits, 3)]}</p>
+      <p className="text-body font-medium text-l-ink2">{MSGS[Math.min(hits, 3)]}</p>
     </div>
   );
 }

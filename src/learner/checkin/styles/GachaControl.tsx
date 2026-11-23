@@ -93,11 +93,11 @@ export default function GachaControl({ disabled, busy, onComplete }: CheckInCont
             <div className="text-[26px] font-black tracking-wider" style={{ color: card[1] }} aria-hidden>
               {card[0]}
             </div>
-            <div className="text-[12px] font-semibold">{card[2]}</div>
+            <div className="text-small font-semibold">{card[2]}</div>
           </div>
         )}
       </div>
-      <p className="text-[13px] font-medium text-l-ink2">{stage === "idle" ? "Turn the knob" : stage === "capsule" ? "A capsule! Tap to open it." : stage === "card" ? "Nice pull." : "…"}</p>
+      <p className="text-body font-medium text-l-ink2">{stage === "idle" ? "Turn the knob" : stage === "capsule" ? "A capsule! Tap to open it." : stage === "card" ? "Nice pull." : "…"}</p>
       <style>{`@keyframes l-jig{0%,100%{transform:translateY(0)}33%{transform:translateY(-4px)}66%{transform:translateY(3px)}}`}</style>
     </div>
   );

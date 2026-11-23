@@ -20,7 +20,7 @@ export default function BubbleWrapControl({ disabled, busy, onComplete }: CheckI
   };
   return (
     <div className="relative flex flex-col items-center gap-3">
-      <span className="absolute right-0 top-0 rounded-full bg-l-card px-2.5 py-1 text-[12px] font-semibold shadow-[0_0_0_1px_var(--l-hair)]">{left ? `${left} left` : "All popped!"}</span>
+      <span className="absolute right-0 top-0 rounded-full bg-l-card px-2.5 py-1 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)]">{left ? `${left} left` : "All popped!"}</span>
       <div className="mt-6 grid -rotate-2 grid-cols-4 gap-2.5 rounded-[18px] bg-gradient-to-br from-white/70 to-slate-200/50 p-4 shadow-[0_0_0_1px_rgba(148,163,184,.3),0_20px_40px_-24px_rgba(0,0,0,.35)] dark:from-white/10 dark:to-slate-500/10">
         {popped.map((p, i) => (
           <button
@@ -40,7 +40,7 @@ export default function BubbleWrapControl({ disabled, busy, onComplete }: CheckI
           />
         ))}
       </div>
-      <p className="text-[13px] font-medium text-l-ink2">Pop every bubble to check in</p>
+      <p className="text-body font-medium text-l-ink2">Pop every bubble to check in</p>
     </div>
   );
 }

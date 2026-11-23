@@ -81,7 +81,7 @@ export default function VictoryLapControl({ disabled, busy, onComplete }: CheckI
         onPointerLeave={stop}
         onPointerCancel={stop}
         style={{ touchAction: "none" }}
-        className="relative mt-4 grid h-[58px] w-full select-none place-items-center overflow-hidden rounded-2xl bg-gradient-to-b from-amber-300 to-amber-500 text-[15px] font-semibold text-amber-950 shadow-[inset_0_1px_0_rgba(255,255,255,.6)] transition-transform duration-300 active:scale-[.98]"
+        className="relative mt-4 grid h-[58px] w-full select-none place-items-center overflow-hidden rounded-2xl bg-gradient-to-b from-amber-300 to-amber-500 text-title font-semibold text-amber-950 shadow-[inset_0_1px_0_rgba(255,255,255,.6)] transition-transform duration-300 active:scale-[.98]"
       >
         <span aria-hidden className="absolute inset-y-0 left-0 bg-white/40" style={{ width: holding ? "100%" : "0%", transition: holding ? `width ${MS}ms linear` : "width .3s" }} />
         <span className="relative">{won ? "Champions are in" : busy ? "Checking you in…" : "Hold for your victory lap"}</span>

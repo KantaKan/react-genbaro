@@ -11,7 +11,7 @@ import { weekLabel } from "../report/week";
 import { calendarApi, type ImportPreview, type WeekDiff } from "./api";
 
 const card = "rounded-2xl p-5 shadow-[0_0_0_1px_var(--l-hair)]";
-const field = "w-full rounded-xl bg-l-sub px-3 py-2.5 text-[13.5px] text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]";
+const field = "w-full rounded-xl bg-l-sub px-3 py-2.5 text-body text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]";
 const errMsg = (e: unknown) => (e as { response?: { data?: { message?: string } } }).response?.data?.message ?? "Something went wrong";
 const dayName = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 const countSessions = (w: CalWeek) => w.days.reduce((n, d) => n + d.sessions.filter((s) => s.kind !== "break").length, 0);
@@ -69,7 +69,7 @@ function ImportDialog({ cohort, file, onClose, onSaved }: { cohort: number; file
         <p className="-mt-1 truncate text-xs text-l-ink3">{file.name}</p>
 
         {!pv && !err && <div className="h-32 animate-pulse rounded-xl bg-l-sub" />}
-        {err && <p className="rounded-xl bg-red-50 px-4 py-3 text-[13px] font-medium text-red-700 dark:bg-red-500/15 dark:text-red-300">{err}</p>}
+        {err && <p className="rounded-xl bg-red-50 px-4 py-3 text-body font-medium text-red-700 dark:bg-red-500/15 dark:text-red-300">{err}</p>}
 
         {pv?.needs_sheet && pv.needs_sheet.length > 0 && (
           <label className="block text-xs font-semibold text-l-ink2">
@@ -88,7 +88,7 @@ function ImportDialog({ cohort, file, onClose, onSaved }: { cohort: number; file
         {pv && pv.sheet && (
           <>
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <b className="text-[15px] font-semibold">
+              <b className="text-title font-semibold">
                 {pv.weeks} weeks · {pv.sessions} sessions
               </b>
               <span className="text-xs text-l-ink3">from sheet {pv.sheet}</span>
@@ -99,7 +99,7 @@ function ImportDialog({ cohort, file, onClose, onSaved }: { cohort: number; file
                 <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300">
                   <AlertTriangle className="h-3.5 w-3.5" /> {warns.length} thing{warns.length === 1 ? "" : "s"} to check in the file
                 </div>
-                <ul className="space-y-1 text-[12.5px] text-amber-900 dark:text-amber-200">
+                <ul className="space-y-1 text-small text-amber-900 dark:text-amber-200">
                   {warns.map((w, i) => (
                     <li key={i}>{w.message}</li>
                   ))}
@@ -118,25 +118,25 @@ function ImportDialog({ cohort, file, onClose, onSaved }: { cohort: number; file
             )}
 
             {goneWeeks.length > 0 && (
-              <p className="rounded-xl bg-red-50 px-4 py-3 text-[12.5px] font-semibold text-red-700 dark:bg-red-500/15 dark:text-red-300">
+              <p className="rounded-xl bg-red-50 px-4 py-3 text-small font-semibold text-red-700 dark:bg-red-500/15 dark:text-red-300">
                 {goneWeeks.length === 1 ? `Week ${goneWeeks[0]} is` : `Weeks ${goneWeeks.join(", ")} are`} published and will disappear for learners if you save.
               </p>
             )}
             {touchesPublished && (
-              <p className="rounded-xl bg-amber-50 px-4 py-3 text-[12.5px] font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
+              <p className="rounded-xl bg-amber-50 px-4 py-3 text-small font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
                 Learners can already see this week, so they will see these changes straight away.
               </p>
             )}
 
             <div>
-              <h4 className="mb-1.5 text-[13px] font-semibold">{pv.has_existing ? "What changes" : "Weeks in this file"}</h4>
+              <h4 className="mb-1.5 text-body font-semibold">{pv.has_existing ? "What changes" : "Weeks in this file"}</h4>
               <ul className="divide-y divide-[var(--l-hair)] rounded-xl shadow-[0_0_0_1px_var(--l-hair)]">
                 {pv.diff.map((d) => (
-                  <li key={d.n} className="px-3.5 py-2.5 text-[13px]">
+                  <li key={d.n} className="px-3.5 py-2.5 text-body">
                     <div className="flex items-center gap-2.5">
                       <b className="font-semibold">Week {d.n}</b>
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${CHIP[d.status]}`}>{CHIP_LABEL[d.status]}</span>
-                      {d.published && <span className="text-[11px] font-medium text-l-ink3">published</span>}
+                      <span className={`rounded-full px-2 py-0.5 text-micro font-semibold ${CHIP[d.status]}`}>{CHIP_LABEL[d.status]}</span>
+                      {d.published && <span className="text-micro font-medium text-l-ink3">published</span>}
                       <span className="ml-auto text-xs text-l-ink3">
                         {d.status === "new" ? `${d.added} sessions` : d.status === "changed" ? `${d.added} added · ${d.removed} removed` : d.status === "removed" ? `${d.removed} sessions` : ""}
                       </span>
@@ -156,11 +156,11 @@ function ImportDialog({ cohort, file, onClose, onSaved }: { cohort: number; file
         )}
 
         <div className="flex justify-end gap-2 pt-1">
-          <button type="button" onClick={onClose} className="rounded-full px-4 py-2 text-[13px] font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
+          <button type="button" onClick={onClose} className="rounded-full px-4 py-2 text-body font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
             Cancel
           </button>
           {pv?.sheet && !err && (
-            <button type="button" onClick={save} className="rounded-full bg-l-ink px-5 py-2 text-[13px] font-semibold text-l-card">
+            <button type="button" onClick={save} className="rounded-full bg-l-ink px-5 py-2 text-body font-semibold text-l-card">
               Save calendar
             </button>
           )}
@@ -202,7 +202,7 @@ export function CalendarPage() {
     context: `JSD${cohort}`,
     actions:
       canEdit && cal?.imported ? (
-        <button type="button" onClick={() => input.current?.click()} className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)] hover:bg-l-sub">
+        <button type="button" onClick={() => input.current?.click()} className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)] hover:bg-l-sub">
           <Upload className="h-3.5 w-3.5" /> Import from spreadsheet
         </button>
       ) : undefined,
@@ -232,12 +232,12 @@ export function CalendarPage() {
       {!cal.imported ? (
         <section className={`${card} text-center`}>
           <CalendarDays className="mx-auto h-7 w-7 text-l-ink3" strokeWidth={1.4} />
-          <h4 className="mt-2 text-[15px] font-semibold">Import the program calendar</h4>
-          <p className="mx-auto mt-1 max-w-[460px] text-[13px] leading-relaxed text-l-ink2">
+          <h4 className="mt-2 text-title font-semibold">Import the program calendar</h4>
+          <p className="mx-auto mt-1 max-w-[460px] text-body leading-relaxed text-l-ink2">
             Upload the spreadsheet the program team sends. Baro finds JSD{cohort}'s sheet, reads every week, and keeps a clean copy. Learners only see a week after you publish it.
           </p>
           {canEdit ? (
-            <button type="button" onClick={() => input.current?.click()} className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-l-ink px-5 py-2 text-[13px] font-semibold text-l-card">
+            <button type="button" onClick={() => input.current?.click()} className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-l-ink px-5 py-2 text-body font-semibold text-l-card">
               <Upload className="h-3.5 w-3.5" /> Import from spreadsheet
             </button>
           ) : (
@@ -266,7 +266,7 @@ export function CalendarPage() {
                         refresh();
                       })
                     }
-                    className="shrink-0 rounded-full bg-l-ink px-4 text-[12.5px] font-semibold text-l-card"
+                    className="shrink-0 rounded-full bg-l-ink px-4 text-small font-semibold text-l-card"
                   >
                     Save link
                   </button>
@@ -284,8 +284,8 @@ export function CalendarPage() {
                 <li key={w.n} className={`${card} !p-0`}>
                   <div className="flex flex-wrap items-center gap-3 px-4 py-3">
                     <div className="min-w-0 flex-1">
-                      <b className="text-[14px] font-semibold">Week {w.n}</b>
-                      <span className="ml-2 text-[13px] text-l-ink2">{weekLabel(w.monday)}</span>
+                      <b className="text-title font-semibold">Week {w.n}</b>
+                      <span className="ml-2 text-body text-l-ink2">{weekLabel(w.monday)}</span>
                       <small className="ml-2 text-xs text-l-ink3">
                         {countSessions(w)} sessions{holidays > 0 ? ` · ${holidays} holiday${holidays === 1 ? "" : "s"}` : ""}
                       </small>
@@ -323,7 +323,7 @@ export function CalendarPage() {
                           </div>
                           <ul className="space-y-1">
                             {d.sessions.map((s, i) => (
-                              <li key={i} className="flex gap-2 text-[12.5px]">
+                              <li key={i} className="flex gap-2 text-small">
                                 <span className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: TYPE_DOT[s.type] ?? TYPE_DOT.other }} title={TYPE_LABEL[s.type]} />
                                 <span className="w-[84px] shrink-0 tabular-nums text-l-ink3">
                                   {s.start}–{s.end}

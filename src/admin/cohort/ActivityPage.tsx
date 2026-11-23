@@ -10,7 +10,7 @@ export function ActivityPage() {
   const queries = Array.from({ length: pages }, (_, i) => i + 1);
   return (
     <div className="max-w-[900px]">
-      <input aria-label="Filter by person or action" value={who} onChange={(e) => setWho(e.target.value)} placeholder="Filter by person or action…" className="w-72 rounded-[10px] bg-l-sub px-3 py-1.5 text-[13px] text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
+      <input aria-label="Filter by person or action" value={who} onChange={(e) => setWho(e.target.value)} placeholder="Filter by person or action…" className="w-72 rounded-[10px] bg-l-sub px-3 py-1.5 text-body text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
       <section className="mt-3 rounded-2xl px-4 py-1 shadow-[0_0_0_1px_var(--l-hair)]">
         {queries.map((p) => (
           <Page key={p} page={p} filter={who.trim().toLowerCase()} onMore={p === pages ? () => setPages(p + 1) : undefined} />
@@ -27,19 +27,19 @@ function Page({ page, filter, onMore }: { page: number; filter: string; onMore?:
   return (
     <>
       {items.map((i) => (
-        <div key={i.id} className="flex items-center gap-3 border-b border-l-hair py-2.5 text-[13px] last:border-0">
+        <div key={i.id} className="flex items-center gap-3 border-b border-l-hair py-2.5 text-body last:border-0">
           <b className="w-24 truncate font-semibold">{i.actor_name}</b>
           <span className="flex-1">
             {i.action}
-            {i.status >= 400 && <span className="ml-2 text-[11px] font-semibold text-red-600">failed</span>}
+            {i.status >= 400 && <span className="ml-2 text-micro font-semibold text-red-600">failed</span>}
           </span>
           <span className="whitespace-nowrap text-xs tabular-nums text-l-ink3">{new Date(i.at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" })}</span>
         </div>
       ))}
       {q.isLoading && <div className="my-2 h-10 animate-pulse rounded-lg bg-l-sub" />}
-      {q.isError && <p className="py-6 text-center text-[13px] text-red-600">Couldn't load the activity log. Refresh to try again.</p>}
+      {q.isError && <p className="py-6 text-center text-body text-red-600">Couldn't load the activity log. Refresh to try again.</p>}
       {onMore && more && (
-        <button type="button" onClick={onMore} className="my-2.5 w-full rounded-xl py-2 text-[12.5px] font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
+        <button type="button" onClick={onMore} className="my-2.5 w-full rounded-xl py-2 text-small font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
           Load more
         </button>
       )}

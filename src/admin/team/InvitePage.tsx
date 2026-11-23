@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { ROLE_LABEL } from "./perm";
 import { inviteApi } from "./api";
 
-const field = "w-full rounded-xl bg-l-sub px-3 py-2.5 text-[14px] text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]";
+const field = "w-full rounded-xl bg-l-sub px-3 py-2.5 text-title text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]";
 
 /** Public page an invite link opens: create a staff account, or upgrade an existing one. */
 export function InvitePage() {
@@ -49,13 +49,13 @@ export function InvitePage() {
         {q.isError && (
           <>
             <h1 className="text-lg font-semibold">This link doesn't work</h1>
-            <p className="mt-1.5 text-[13.5px] text-l-ink2">It has expired or was already used. Ask whoever invited you for a new one.</p>
+            <p className="mt-1.5 text-body text-l-ink2">It has expired or was already used. Ask whoever invited you for a new one.</p>
           </>
         )}
         {inv && (
           <>
             <h1 className="text-lg font-semibold">You're invited to Baro</h1>
-            <p className="mt-1 text-[13.5px] text-l-ink2">
+            <p className="mt-1 text-body text-l-ink2">
               as {ROLE_LABEL[inv.role]}
               {inv.cohorts.length > 0 && ` · ${inv.cohorts.map((c) => `JSD${c}`).join(", ")}`}
             </p>
@@ -69,7 +69,7 @@ export function InvitePage() {
             >
               {inv.existing ? (
                 <>
-                  <p className="text-[13px] text-l-ink2">You already have a Baro account. Sign in with it to accept.</p>
+                  <p className="text-body text-l-ink2">You already have a Baro account. Sign in with it to accept.</p>
                   {label("Your current password", <input aria-label="Your current password" type="password" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} className={field} />)}
                 </>
               ) : (
@@ -83,7 +83,7 @@ export function InvitePage() {
                   <p className={`text-xs ${pw2 && pw !== pw2 ? "font-semibold text-red-600" : "text-l-ink3"}`}>{pw2 && pw !== pw2 ? "Passwords don't match." : "At least 8 characters."}</p>
                 </>
               )}
-              <button type="submit" disabled={!ok || busy} className="mt-1 rounded-full bg-l-ink py-2.5 text-[14px] font-semibold text-l-card disabled:opacity-40">
+              <button type="submit" disabled={!ok || busy} className="mt-1 rounded-full bg-l-ink py-2.5 text-title font-semibold text-l-card disabled:opacity-40">
                 {inv.existing ? "Accept invite" : "Join Baro"}
               </button>
             </form>

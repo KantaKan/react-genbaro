@@ -11,7 +11,7 @@ export function useConfirm() {
       <AlertDialogContent className="learner rounded-[20px] border-0 bg-l-card text-l-ink">
         <AlertDialogTitle>{state?.title}</AlertDialogTitle>
         <AlertDialogDescription asChild>
-          <div className="text-[13.5px] text-l-ink2">{state?.body}</div>
+          <div className="text-body text-l-ink2">{state?.body}</div>
         </AlertDialogDescription>
         <AlertDialogFooter>
           <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>

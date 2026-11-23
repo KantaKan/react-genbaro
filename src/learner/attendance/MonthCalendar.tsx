@@ -30,8 +30,8 @@ export function MonthCalendar({
     <div>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-[15px] font-semibold">{title}</h3>
-          <p className="mt-0.5 text-[12.5px] text-l-ink3">Tap a day for details · left half morning, right half afternoon</p>
+          <h3 className="text-title font-semibold">{title}</h3>
+          <p className="mt-0.5 text-small text-l-ink3">Tap a day for details · left half morning, right half afternoon</p>
         </div>
         <div className="flex gap-1.5">
           <button type="button" aria-label="Previous month" onClick={onPrev} className="grid h-8 w-8 place-items-center rounded-full shadow-[0_0_0_1px_var(--l-hair)]">
@@ -44,7 +44,7 @@ export function MonthCalendar({
       </div>
       <div className="mt-4 grid grid-cols-7 gap-1.5">
         {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-          <div key={d} className="pb-0.5 text-center text-[11.5px] text-l-ink3">
+          <div key={d} className="pb-0.5 text-center text-small text-l-ink3">
             {d}
           </div>
         ))}
@@ -52,7 +52,7 @@ export function MonthCalendar({
           !c.date ? (
             <div key={`b${i}`} />
           ) : c.weekend ? (
-            <div key={c.date} className="min-h-[64px] rounded-xl bg-l-sub p-2 text-[12.5px] font-semibold text-l-ink3">
+            <div key={c.date} className="min-h-[64px] rounded-xl bg-l-sub p-2 text-small font-semibold text-l-ink3">
               {c.day}
             </div>
           ) : (
@@ -66,11 +66,11 @@ export function MonthCalendar({
                 selected === c.date ? "shadow-[0_0_0_2px_var(--l-indigo)]" : c.isToday ? "shadow-[0_0_0_1.5px_var(--l-ink)]" : "shadow-[0_0_0_1px_var(--l-hair)]"
               }`}
             >
-              <span className="text-[12.5px] font-semibold">
+              <span className="text-small font-semibold">
                 {c.day}
-                {c.isToday && <span className="ml-1 text-[10px] font-medium text-l-ink3">Today</span>}
+                {c.isToday && <span className="ml-1 text-micro font-medium text-l-ink3">Today</span>}
               </span>
-              {c.am === "none" && <span className="text-[10px] text-l-ink3">No class</span>}
+              {c.am === "none" && <span className="text-micro text-l-ink3">No class</span>}
               <span className="mt-auto flex gap-[3px]">
                 <i className="block h-2 flex-1 rounded-[3px]" style={{ background: bar(c.am) }} />
                 <i className="block h-2 flex-1 rounded-[3px]" style={{ background: bar(c.pm) }} />

@@ -54,7 +54,7 @@ export function useSidePanel() {
 
 const linkCls = ({ isActive }: { isActive: boolean }) =>
   cn(
-    "flex items-center gap-2.5 rounded-[9px] px-2.5 py-[7px] text-[13.5px] font-medium transition-colors duration-300",
+    "flex items-center gap-2.5 rounded-[9px] px-2.5 py-[7px] text-body font-medium transition-colors duration-300",
     isActive ? "bg-l-card text-l-ink shadow-[0_0_0_1px_var(--l-hair),0_6px_16px_-12px_rgba(0,0,0,.3)]" : "text-l-ink2 hover:bg-[color-mix(in_srgb,var(--l-ink)_5%,transparent)] hover:text-l-ink"
   );
 
@@ -110,8 +110,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   >
                     <span className={`h-2 w-2 shrink-0 rounded-full ${ci.cohort === cohort ? "bg-emerald-500" : "bg-transparent"}`} />
                     <span className="min-w-0 flex-1">
-                      <b className="block text-[13px] font-semibold">JSD{ci.cohort}</b>
-                      {(ci.learners > 0 || ci.start_date) && <small className="block truncate text-[11.5px] text-l-ink3">{cohortLine(ci)}</small>}
+                      <b className="block text-body font-semibold">JSD{ci.cohort}</b>
+                      {(ci.learners > 0 || ci.start_date) && <small className="block truncate text-small text-l-ink3">{cohortLine(ci)}</small>}
                     </span>
                   </button>
                 ))}
@@ -123,7 +123,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                     done();
                     setWizard(true);
                   }}
-                  className="mt-1 w-full rounded-lg border-t border-l-hair px-2.5 py-2 text-left text-[12.5px] font-semibold text-l-ink2 hover:bg-l-sub"
+                  className="mt-1 w-full rounded-lg border-t border-l-hair px-2.5 py-2 text-left text-small font-semibold text-l-ink2 hover:bg-l-sub"
                 >
                   + New cohort…
                 </button>
@@ -141,11 +141,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
             }
           }}
         >
-          <label className="flex-1 text-[11.5px] text-l-ink3">
+          <label className="flex-1 text-small text-l-ink3">
             <span className="sr-only">Go to cohort number</span>
-            <input aria-label="Go to cohort number" type="number" min={1} value={goTo} onChange={(e) => setGoTo(e.target.value)} placeholder="Go to JSD…" className="w-full rounded-lg bg-l-sub px-2 py-1 text-[12.5px] text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
+            <input aria-label="Go to cohort number" type="number" min={1} value={goTo} onChange={(e) => setGoTo(e.target.value)} placeholder="Go to JSD…" className="w-full rounded-lg bg-l-sub px-2 py-1 text-small text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
           </label>
-          <button type="submit" disabled={!(Number(goTo) > 0)} className="rounded-lg bg-l-ink px-2.5 py-1 text-[12px] font-semibold text-l-card disabled:opacity-40">
+          <button type="submit" disabled={!(Number(goTo) > 0)} className="rounded-lg bg-l-ink px-2.5 py-1 text-small font-semibold text-l-card disabled:opacity-40">
             Go
           </button>
         </form>
@@ -159,13 +159,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <nav aria-label="Admin" className="flex flex-col gap-px">
       {SECTIONS.map((sec) => (
         <div key={sec}>
-          <div className="px-2.5 pb-1 pt-3 text-[11px] font-medium text-l-ink3">{sec}</div>
+          <div className="px-2.5 pb-1 pt-3 text-micro font-medium text-l-ink3">{sec}</div>
           {ADMIN_NAV.filter((n) => n.section === sec && me.can(n.cap ?? "view")).map((n) => (
             <NavLink key={n.to} to={n.to} end={n.end} className={linkCls} onClick={() => setMenu(false)}>
               <n.icon className="h-4 w-4" strokeWidth={1.5} />
               {n.label}
-              {n.badge === "leave" && pendingN > 0 && <span className="ml-auto min-w-[18px] rounded-full bg-red-600 px-1.5 text-center text-[11px] font-bold text-white">{pendingN}</span>}
-              {n.badge === "support" && (support.data?.length ?? 0) > 0 && <span className="ml-auto min-w-[18px] rounded-full bg-[color-mix(in_srgb,var(--l-ink)_8%,transparent)] px-1.5 text-center text-[11px] font-bold text-l-ink2">{support.data!.length}</span>}
+              {n.badge === "leave" && pendingN > 0 && <span className="ml-auto min-w-[18px] rounded-full bg-red-600 px-1.5 text-center text-micro font-bold text-white">{pendingN}</span>}
+              {n.badge === "support" && (support.data?.length ?? 0) > 0 && <span className="ml-auto min-w-[18px] rounded-full bg-[color-mix(in_srgb,var(--l-ink)_8%,transparent)] px-1.5 text-center text-micro font-bold text-l-ink2">{support.data!.length}</span>}
             </NavLink>
           ))}
         </div>
@@ -178,20 +178,20 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <div className="learner flex min-h-screen bg-l-bg text-l-ink">
         <aside className="sticky top-0 hidden h-screen w-[236px] shrink-0 flex-col gap-px overflow-y-auto px-2.5 py-3.5 lg:flex print:!hidden">
           <div className="flex items-center gap-2.5 px-2 pb-3">
-            <div className="grid h-[30px] w-[30px] place-items-center rounded-[9px] bg-l-ink text-[13px] font-bold text-l-card">B</div>
+            <div className="grid h-[30px] w-[30px] place-items-center rounded-[9px] bg-l-ink text-body font-bold text-l-card">B</div>
             <div>
-              <div className="text-[13.5px] font-semibold">Baro Admin</div>
-              <div className="text-[11.5px] text-l-ink3">
+              <div className="text-body font-semibold">Baro Admin</div>
+              <div className="text-small text-l-ink3">
                 {userData?.first_name ?? "Admin"} · <span>{ROLE_LABEL[me.role]}</span>
               </div>
             </div>
           </div>
           <Popover open={picking} onOpenChange={setPicking}>
             <PopoverTrigger asChild>
-              <button type="button" className="mx-0.5 mb-2 flex items-center gap-2 rounded-[11px] bg-l-card px-2.5 py-2 text-[13px] font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
+              <button type="button" className="mx-0.5 mb-2 flex items-center gap-2 rounded-[11px] bg-l-card px-2.5 py-2 text-body font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
                 JSD{cohort}
-                <span className="ml-auto text-[11.5px] font-medium text-l-ink3">Switch</span>
+                <span className="ml-auto text-small font-medium text-l-ink3">Switch</span>
               </button>
             </PopoverTrigger>
             <PopoverContent align="start" className="learner w-64 rounded-xl border-0 bg-l-card p-1.5 text-l-ink shadow-[0_0_0_1px_var(--l-hair),0_12px_30px_-16px_rgba(0,0,0,.35)]">
@@ -199,7 +199,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </PopoverContent>
           </Popover>
           {navList}
-          <button type="button" onClick={logout} className="mt-auto flex items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-[13px] font-medium text-l-ink2 hover:text-l-ink">
+          <button type="button" onClick={logout} className="mt-auto flex items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-body font-medium text-l-ink2 hover:text-l-ink">
             <LogOut className="h-4 w-4" strokeWidth={1.5} />
             Log out
           </button>
@@ -214,20 +214,20 @@ export function AdminShell({ children }: { children: ReactNode }) {
               {header && (
                 <div className="flex min-w-0 items-baseline gap-2.5">
                   <span className="whitespace-nowrap text-base font-semibold tracking-tight">{header.title}</span>
-                  {header.context && <span className="truncate text-[13px] text-l-ink3">{header.context}</span>}
+                  {header.context && <span className="truncate text-body text-l-ink3">{header.context}</span>}
                 </div>
               )}
-              {me.role === "viewer" && <span className="rounded-full bg-l-sub px-2 py-0.5 text-[11px] font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">Read only</span>}
+              {me.role === "viewer" && <span className="rounded-full bg-l-sub px-2 py-0.5 text-micro font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">Read only</span>}
               <div className="ml-auto flex items-center gap-2">
                 {header?.actions}
                 <button
                   type="button"
                   onClick={() => setPalette(true)}
-                  className="hidden min-w-[260px] items-center gap-2 rounded-[10px] bg-l-sub px-3 py-[7px] text-[13px] text-l-ink3 shadow-[0_0_0_1px_var(--l-hair)] md:flex print:!hidden"
+                  className="hidden min-w-[260px] items-center gap-2 rounded-[10px] bg-l-sub px-3 py-[7px] text-body text-l-ink3 shadow-[0_0_0_1px_var(--l-hair)] md:flex print:!hidden"
                 >
                   <Search className="h-4 w-4" strokeWidth={1.5} />
                   Find a learner or run an action
-                  <kbd className="ml-auto rounded-md bg-l-card px-1.5 text-[11px] text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">⌘K</kbd>
+                  <kbd className="ml-auto rounded-md bg-l-card px-1.5 text-micro text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">⌘K</kbd>
                 </button>
                 <button type="button" aria-label="Find a learner or page" onClick={() => setPalette(true)} className="grid h-9 w-9 place-items-center rounded-[10px] text-l-ink2 hover:bg-l-sub md:hidden print:!hidden">
                   <Search className="h-[18px] w-[18px]" strokeWidth={1.5} />
@@ -265,9 +265,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
       </div>
       <Sheet open={menu} onOpenChange={setMenu}>
         <SheetContent side="left" className="learner w-[280px] overflow-y-auto border-0 bg-l-bg p-3 text-l-ink">
-          <SheetTitle className="px-2 pb-2 pt-1 text-[13.5px] font-semibold">Baro Admin · JSD{cohort}</SheetTitle>
+          <SheetTitle className="px-2 pb-2 pt-1 text-body font-semibold">Baro Admin · JSD{cohort}</SheetTitle>
           <div className="mb-2 rounded-xl bg-l-card p-1.5 shadow-[0_0_0_1px_var(--l-hair)]">
-            <div className="px-2.5 pb-1 pt-1.5 text-[11px] font-medium text-l-ink3">Cohort</div>
+            <div className="px-2.5 pb-1 pt-1.5 text-micro font-medium text-l-ink3">Cohort</div>
             {picker(() => setMenu(false))}
           </div>
           {navList}
