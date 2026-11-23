@@ -27,14 +27,14 @@ export function LeaveMini({ requests, learners }: { requests: LeaveRequest[]; le
     });
   return (
     <section className="rounded-2xl p-4 shadow-[0_0_0_1px_var(--l-hair)]">
-      <h4 className="flex items-center gap-2 text-[13px] font-semibold">
+      <h4 className="flex items-center gap-2 text-body font-semibold">
         Leave requests
-        {requests.length > 0 && <span className="rounded-full bg-red-50 px-1.5 text-[11px] font-bold text-red-600 dark:bg-red-500/15">{requests.length}</span>}
+        {requests.length > 0 && <span className="rounded-full bg-red-50 px-1.5 text-micro font-bold text-red-600 dark:bg-red-500/15">{requests.length}</span>}
         <Link to="/admin/leave" className="ml-auto text-xs font-medium text-l-ink3 hover:text-l-ink">
           All ›
         </Link>
       </h4>
-      {requests.length === 0 && <p className="mt-3 text-[12.5px] text-l-ink3">Nothing waiting.</p>}
+      {requests.length === 0 && <p className="mt-3 text-small text-l-ink3">Nothing waiting.</p>}
       {requests.slice(0, 3).map((r) => {
         const l = byId.get(r.user_id);
         const n = nicknames(l?.zoom_name, r.first_name);
@@ -42,7 +42,7 @@ export function LeaveMini({ requests, learners }: { requests: LeaveRequest[]; le
         return (
           <div key={r._id} className="flex items-start gap-2.5 border-t border-l-hair py-2.5 first-of-type:mt-1.5 first-of-type:border-t-0">
             <UserAvatar userId={r.user_id} name={n.en} avatar={l?.avatar} className="mt-0.5 h-7 w-7" />
-            <div className="min-w-0 flex-1 text-[12.5px]">
+            <div className="min-w-0 flex-1 text-small">
               <b className="font-semibold">{n.th ? `${n.th} · ${n.en}` : n.en}</b>
               <p className="mt-0.5 leading-snug text-l-ink3">
                 {whenLine(r)} · {r.reason} · would be{" "}

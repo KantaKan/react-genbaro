@@ -30,7 +30,7 @@ export function SupportPage() {
   };
   return (
     <div>
-      <p className="max-w-[680px] text-[13px] text-l-ink2">
+      <p className="max-w-[680px] text-body text-l-ink2">
         Learners whose leave, lateness or reflections show a pattern, or who have open support steps. Acknowledge a reason to hide it for 7 days; steps clear when they're ticked off.
       </p>
       <div className="mt-3.5 grid gap-3">
@@ -41,16 +41,16 @@ export function SupportPage() {
             <article key={r.learner.id} className="grid grid-cols-[auto_minmax(0,1fr)] gap-4 rounded-[18px] px-[18px] py-4 shadow-[0_0_0_1px_var(--l-hair)] md:grid-cols-[auto_minmax(0,1fr)_auto]">
               <UserAvatar userId={r.learner.id} name={n.en} avatar={r.learner.avatar} className="h-11 w-11" />
               <div className="min-w-0">
-                <b className="text-[14.5px] font-semibold">{n.th ? `${n.th} · ${n.en}` : n.en}</b>
+                <b className="text-title font-semibold">{n.th ? `${n.th} · ${n.en}` : n.en}</b>
                 <span className="ml-2 text-xs text-l-ink3">
                   #{r.learner.jsd_number} · Group {r.learner.genmate_group || "–"}
                 </span>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {r.reasons.map((x) => (
-                    <span key={x.key} className="inline-flex items-center gap-1.5 rounded-full bg-red-50 py-0.5 pl-2.5 pr-1 text-[11.5px] font-semibold text-red-600 dark:bg-red-500/15">
+                    <span key={x.key} className="inline-flex items-center gap-1.5 rounded-full bg-red-50 py-0.5 pl-2.5 pr-1 text-small font-semibold text-red-600 dark:bg-red-500/15">
                       {x.text}
                       {x.key !== "plan" ? (
-                        <button type="button" aria-label={`Acknowledge ${x.text}`} title="Acknowledge for 7 days" onClick={() => ack(r.learner.id, x.key, x.text)} className="rounded-full bg-white/70 px-1.5 text-[10.5px] text-red-700 dark:bg-white/15 dark:text-red-200">
+                        <button type="button" aria-label={`Acknowledge ${x.text}`} title="Acknowledge for 7 days" onClick={() => ack(r.learner.id, x.key, x.text)} className="rounded-full bg-white/70 px-1.5 text-micro text-red-700 dark:bg-white/15 dark:text-red-200">
                           OK
                         </button>
                       ) : (
@@ -68,14 +68,14 @@ export function SupportPage() {
                   </div>
                 )}
               </div>
-              <Link to={`/admin/learners/${r.learner.id}`} className="col-span-2 self-center justify-self-start rounded-[11px] px-4 py-2 text-[13px] font-semibold shadow-[0_0_0_1px_var(--l-hair)] md:col-span-1">
+              <Link to={`/admin/learners/${r.learner.id}`} className="col-span-2 self-center justify-self-start rounded-[11px] px-4 py-2 text-body font-semibold shadow-[0_0_0_1px_var(--l-hair)] md:col-span-1">
                 Open profile
               </Link>
             </article>
           );
         })}
         {list.isLoading && <div className="h-28 animate-pulse rounded-[18px] bg-l-sub" />}
-        {!list.isLoading && rows.length === 0 && <p className="rounded-2xl bg-l-sub px-4 py-8 text-center text-[13px] text-l-ink3">Nobody needs extra support right now.</p>}
+        {!list.isLoading && rows.length === 0 && <p className="rounded-2xl bg-l-sub px-4 py-8 text-center text-body text-l-ink3">Nobody needs extra support right now.</p>}
       </div>
     </div>
   );

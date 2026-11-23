@@ -45,23 +45,23 @@ export function Roster({
   return (
     <div>
       <div className="mb-2.5 mt-6 flex flex-wrap items-center gap-2">
-        <h3 className="mr-1.5 text-[15px] font-semibold">Roster</h3>
+        <h3 className="mr-1.5 text-title font-semibold">Roster</h3>
         {chips.map(([k, t]) => (
           <button
             key={k}
             type="button"
             aria-pressed={filter === k}
             onClick={() => setFilter(k)}
-            className={`rounded-[9px] px-2.5 py-1 text-[12.5px] font-semibold ${filter === k ? "bg-l-sub text-l-ink shadow-[0_0_0_1px_var(--l-hair)]" : "text-l-ink2 hover:bg-l-sub"}`}
+            className={`rounded-[9px] px-2.5 py-1 text-small font-semibold ${filter === k ? "bg-l-sub text-l-ink shadow-[0_0_0_1px_var(--l-hair)]" : "text-l-ink2 hover:bg-l-sub"}`}
           >
-            {t} <em className="not-italic text-[11px] text-l-ink3">{learners.filter((l) => match(l, session, k)).length}</em>
+            {t} <em className="not-italic text-micro text-l-ink3">{learners.filter((l) => match(l, session, k)).length}</em>
           </button>
         ))}
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full border-separate border-spacing-0 text-[13px]">
+        <table className="w-full border-separate border-spacing-0 text-body">
           <thead>
-            <tr className="text-left text-[11.5px] text-l-ink3">
+            <tr className="text-left text-small text-l-ink3">
               <th className="w-8 border-b border-l-hair px-2.5 py-2 font-medium" />
               <th className="border-b border-l-hair px-2.5 py-2 font-medium">Learner</th>
               <th className="border-b border-l-hair px-2.5 py-2 font-medium">Morning</th>
@@ -78,7 +78,7 @@ export function Roster({
               const all = learners.filter((l) => (l.genmate_group || "–") === g);
               return [
                 <tr key={`g-${g}`}>
-                  <td colSpan={8} className="border-b border-l-hair bg-l-sub px-2.5 py-1.5 text-[11.5px] font-semibold text-l-ink3">
+                  <td colSpan={8} className="border-b border-l-hair bg-l-sub px-2.5 py-1.5 text-small font-semibold text-l-ink3">
                     Group {g} · {all.filter((l) => l[session].status).length}/{all.length} in
                   </td>
                 </tr>,
@@ -106,7 +106,7 @@ export function Roster({
                             {STATUS_LABEL[l[s].status]}
                             {l[s].checked_in_at && <small className="font-medium text-l-ink3">{hhmm(l[s].checked_in_at)}</small>}
                             {l[s].flag === "shared_ip" && (
-                              <span title="Checked in from the same network as another learner" className="rounded-full bg-amber-50 px-1.5 text-[10.5px] font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                              <span title="Checked in from the same network as another learner" className="rounded-full bg-amber-50 px-1.5 text-micro font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
                                 Same network
                               </span>
                             )}
@@ -119,13 +119,13 @@ export function Roster({
                       </td>
                       <td className="border-b border-l-hair px-2.5 py-2">{l.mood_yesterday && <BarometerFace zone={l.mood_yesterday} size={18} />}</td>
                       <td className="border-b border-l-hair px-2.5 py-2" onClick={(e) => e.stopPropagation()}>
-                        {supportIds?.has(l.id) && <span className="mr-1.5 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600 dark:bg-red-500/15">Support</span>}
+                        {supportIds?.has(l.id) && <span className="mr-1.5 rounded-full bg-red-50 px-2 py-0.5 text-micro font-semibold text-red-600 dark:bg-red-500/15">Support</span>}
                         {canMark && !l[session].status && (
                           <span className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-                            <button type="button" onClick={() => onQuick(l, "present")} className="rounded-[7px] bg-l-card px-2 py-0.5 text-[11.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
+                            <button type="button" onClick={() => onQuick(l, "present")} className="rounded-[7px] bg-l-card px-2 py-0.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
                               Present
                             </button>
-                            <button type="button" onClick={() => onQuick(l, "absent_excused")} className="rounded-[7px] bg-l-card px-2 py-0.5 text-[11.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
+                            <button type="button" onClick={() => onQuick(l, "absent_excused")} className="rounded-[7px] bg-l-card px-2 py-0.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
                               Excuse
                             </button>
                           </span>
@@ -139,10 +139,10 @@ export function Roster({
           </tbody>
         </table>
       </div>
-      <div className="mt-2.5 flex flex-wrap gap-3.5 text-[11.5px] text-l-ink3">
+      <div className="mt-2.5 flex flex-wrap gap-3.5 text-small text-l-ink3">
         {[["J K", "move"], ["↵", "open"], ["Esc", "close"], ["P", "present"], ["L", "late"], ["E", "excuse"], ["X", "select"]].map(([k, t]) => (
           <span key={t}>
-            <kbd className="mr-1 rounded-md px-1.5 text-[11px] text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">{k}</kbd>
+            <kbd className="mr-1 rounded-md px-1.5 text-micro text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">{k}</kbd>
             {t}
           </span>
         ))}

@@ -62,7 +62,7 @@ export default function RedButtonControl({ disabled, busy, onComplete }: CheckIn
         <button type="button" aria-label="Press the button" onClick={press} className="absolute rounded-full" style={{ left: 90, top: 92, width: 100, height: 52 }} />
         {!open && <button type="button" aria-label="Lift the safety cover" onClick={() => (setOpen(true), play("thud"))} className="absolute rounded-xl" style={{ left: 80, top: 84, width: 120, height: 70 }} />}
       </div>
-      <p className="text-[13px] font-medium text-l-ink2">{open ? (pressed ? "Boom." : "Cover open. There is no going back.") : "Lift the safety cover first"}</p>
+      <p className="text-body font-medium text-l-ink2">{open ? (pressed ? "Boom." : "Cover open. There is no going back.") : "Lift the safety cover first"}</p>
     </div>
   );
 }

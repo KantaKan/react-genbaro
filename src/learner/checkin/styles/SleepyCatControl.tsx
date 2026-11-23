@@ -76,7 +76,7 @@ export default function SleepyCatControl({ disabled, busy, onComplete }: CheckIn
         <button type="button" aria-label="Poke the cat" onClick={poke} className="absolute rounded-full" style={{ left: 30, top: 50, width: 130, height: 140 }} />
         {awake && <button type="button" aria-label="High five" onClick={five} className="absolute rounded-2xl" style={{ left: 162, top: 84, width: 60, height: 90 }} />}
       </div>
-      <p className="text-[13px] font-medium text-l-ink2">{msg}</p>
+      <p className="text-body font-medium text-l-ink2">{msg}</p>
     </div>
   );
 }

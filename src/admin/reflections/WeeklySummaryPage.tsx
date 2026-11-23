@@ -34,8 +34,8 @@ function Week({ w, panicOnly, current }: { w: WeekRough; panicOnly: boolean; cur
   return (
     <section aria-label={label} className={card}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <h3 className="text-[15px] font-semibold">{label}</h3>
-        {current && <span className="rounded-full bg-l-sub px-2 py-0.5 text-[11px] font-semibold text-l-ink2">This week</span>}
+        <h3 className="text-title font-semibold">{label}</h3>
+        {current && <span className="rounded-full bg-l-sub px-2 py-0.5 text-micro font-semibold text-l-ink2">This week</span>}
         <span className="flex-1" />
         {w.possible > 0 && <span className="text-xs text-l-ink3">{Math.round((w.sent / w.possible) * 100)}% sent</span>}
       </div>
@@ -45,7 +45,7 @@ function Week({ w, panicOnly, current }: { w: WeekRough; panicOnly: boolean; cur
           {ZONES.map((z) => (
             <div key={z.id} className="flex items-center gap-1.5" title={`${z.a} ${z.b}`}>
               <BarometerFace zone={z.id as ZoneId} size={26} />
-              <b className="text-[14px] font-semibold tabular-nums">{w.zones[z.id] ?? 0}</b>
+              <b className="text-title font-semibold tabular-nums">{w.zones[z.id] ?? 0}</b>
             </div>
           ))}
         </div>
@@ -56,7 +56,7 @@ function Week({ w, panicOnly, current }: { w: WeekRough; panicOnly: boolean; cur
 
       <div className="mt-4 border-t border-l-hair pt-3">
         {w.learners.length === 0 ? (
-          <p className="text-[13px] text-l-ink3">Nobody had a rough night this week.</p>
+          <p className="text-body text-l-ink3">Nobody had a rough night this week.</p>
         ) : (
           <>
             <p className="mb-2 text-xs font-semibold text-l-ink2">
@@ -65,7 +65,7 @@ function Week({ w, panicOnly, current }: { w: WeekRough; panicOnly: boolean; cur
                 : `${roughNights} rough night${roughNights === 1 ? "" : "s"} · ${w.learners.length} learner${w.learners.length === 1 ? "" : "s"}`}
             </p>
             {people.length === 0 ? (
-              <p className="text-[13px] text-l-ink3">No panic nights this week.</p>
+              <p className="text-body text-l-ink3">No panic nights this week.</p>
             ) : (
               <ul className="flex flex-col">
                 {people.map((l) => {
@@ -76,11 +76,11 @@ function Week({ w, panicOnly, current }: { w: WeekRough; panicOnly: boolean; cur
                       <Link to={`/admin/learners/${l.learner.id}`} className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-l-sub">
                         <UserAvatar userId={l.learner.id} name={n.en} avatar={l.learner.avatar} className="h-8 w-8" />
                         <span className="min-w-0 flex-1">
-                          <b className="text-[13.5px] font-semibold">{n.th || n.en}</b>
+                          <b className="text-body font-semibold">{n.th || n.en}</b>
                           {n.th && n.en && <span className="ml-1.5 text-xs text-l-ink3">{n.en}</span>}
                           <small className="block text-xs text-l-ink3">{counts}</small>
                         </span>
-                        {l.again && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">Again</span>}
+                        {l.again && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-micro font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">Again</span>}
                         <Strip nights={l.nights} />
                       </Link>
                     </li>
@@ -106,7 +106,7 @@ export function WeeklySummaryPage() {
     () => (
       <div className="inline-flex rounded-[10px] bg-l-sub p-[3px]">
         {([false, true] as const).map((p) => (
-          <button key={String(p)} type="button" aria-pressed={panicOnly === p} onClick={() => setPanicOnly(p)} className={`rounded-lg px-3 py-1 text-[12.5px] font-semibold ${panicOnly === p ? "bg-l-card text-l-ink shadow-sm" : "text-l-ink2"}`}>
+          <button key={String(p)} type="button" aria-pressed={panicOnly === p} onClick={() => setPanicOnly(p)} className={`rounded-lg px-3 py-1 text-small font-semibold ${panicOnly === p ? "bg-l-card text-l-ink shadow-sm" : "text-l-ink2"}`}>
             {p ? "Panic only" : "All rough nights"}
           </button>
         ))}
@@ -126,7 +126,7 @@ export function WeeklySummaryPage() {
         <Week key={w.week} w={w} panicOnly={panicOnly} current={w.week === thisWeek} />
       ))}
       {n < 20 && (
-        <button type="button" onClick={() => setN((x) => Math.min(20, x + 6))} disabled={q.isFetching} className="self-center rounded-full px-4 py-2 text-[13px] font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)] hover:bg-l-sub disabled:opacity-50">
+        <button type="button" onClick={() => setN((x) => Math.min(20, x + 6))} disabled={q.isFetching} className="self-center rounded-full px-4 py-2 text-body font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)] hover:bg-l-sub disabled:opacity-50">
           Show earlier weeks
         </button>
       )}

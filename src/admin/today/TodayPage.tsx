@@ -45,7 +45,7 @@ function PanelFor({ id, cohort, onMove }: { id: string; cohort: number; onMove: 
       <LearnerPanel learner={l} session={session} date={data.date} live canMark={data.class_today} onChanged={() => {}} onPrev={() => onMove(-1)} onNext={() => onMove(1)} onClose={close} hideStats={tab === "notes"} />
       <div role="tablist" className="mt-4 flex gap-4 border-b border-l-hair">
         {(["overview", "notes"] as const).map((t) => (
-          <button key={t} role="tab" type="button" aria-selected={tab === t} onClick={() => setTab(t)} className={`pb-2 text-[12.5px] font-semibold capitalize ${tab === t ? "text-l-ink shadow-[inset_0_-2px_0_var(--l-ink)]" : "text-l-ink3"}`}>
+          <button key={t} role="tab" type="button" aria-selected={tab === t} onClick={() => setTab(t)} className={`pb-2 text-small font-semibold capitalize ${tab === t ? "text-l-ink shadow-[inset_0_-2px_0_var(--l-ink)]" : "text-l-ink3"}`}>
             {t === "notes" ? "Notes" : "Overview"}
           </button>
         ))}
@@ -55,7 +55,7 @@ function PanelFor({ id, cohort, onMove }: { id: string; cohort: number; onMove: 
           <NotesTab learnerId={l.id} />
         </div>
       )}
-      <Link to={`/admin/learners/${l.id}`} className="mt-4 block rounded-[11px] py-2 text-center text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
+      <Link to={`/admin/learners/${l.id}`} className="mt-4 block rounded-[11px] py-2 text-center text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
         Full profile
       </Link>
     </div>
@@ -115,7 +115,7 @@ export function TodayPage() {
     context: dateLabel,
     actions:
       slackOn && notYet.length > 0 ? (
-        <button type="button" onClick={ping} className="rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)] hover:bg-l-sub">
+        <button type="button" onClick={ping} className="rounded-full px-3.5 py-1.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)] hover:bg-l-sub">
           Ping the {notYet.length} not in yet
         </button>
       ) : undefined,
@@ -191,7 +191,7 @@ export function TodayPage() {
         <SupportMini rows={support.data ?? []} />
       </div>
       {picked.size > 0 && (
-        <div className="sticky top-[70px] z-[5] mt-4 flex items-center gap-2 rounded-xl bg-l-ink px-3 py-2 text-[12.5px] font-semibold text-l-card">
+        <div className="sticky top-[70px] z-[5] mt-4 flex items-center gap-2 rounded-xl bg-l-ink px-3 py-2 text-small font-semibold text-l-card">
           {picked.size} selected
           <span className="flex-1" />
           <button type="button" onClick={() => bulk("present", "Mark present")} className="rounded-lg bg-white/15 px-2.5 py-1">

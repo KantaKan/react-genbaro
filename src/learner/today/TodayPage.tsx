@@ -54,7 +54,7 @@ export function TodayPage() {
         </div>
         {s && s.course.day_number > 0 && (
           <div className="min-w-[280px]">
-            <div className="mb-2 flex justify-between text-[12.5px] text-l-ink2">
+            <div className="mb-2 flex justify-between text-small text-l-ink2">
               <span>Course progress</span>
               <b className="font-semibold text-l-ink">{`Week ${s.course.week_number} of ${s.course.total_weeks}`}</b>
             </div>

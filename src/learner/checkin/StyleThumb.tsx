@@ -28,7 +28,7 @@ export function StyleThumb({ id }: { id: StyleId }) {
         </svg>
       );
     case "run":
-      return <span className="-rotate-6 rounded-full bg-zinc-900 px-3 py-1.5 text-[11px] font-semibold text-white shadow-[-12px_4px_0_-2px_rgba(24,24,27,.15)]">Check in ••</span>;
+      return <span className="-rotate-6 rounded-full bg-zinc-900 px-3 py-1.5 text-micro font-semibold text-white shadow-[-12px_4px_0_-2px_rgba(24,24,27,.15)]">Check in ••</span>;
     case "coffee":
       return (
         <svg viewBox="0 0 60 50" width="52">
@@ -65,7 +65,7 @@ export function StyleThumb({ id }: { id: StyleId }) {
     case "scratch":
       return (
         <div className="relative h-11 w-[86px] overflow-hidden rounded-md bg-gradient-to-br from-amber-100 to-pink-200">
-          <b className="absolute left-2 top-3.5 text-[10px] text-green-700">PRES</b>
+          <b className="absolute left-2 top-3.5 text-micro text-green-700">PRES</b>
           <i className="absolute inset-0 bg-gradient-to-br from-zinc-300 via-zinc-400 to-zinc-200 [clip-path:polygon(40%_0,100%_0,100%_100%,20%_100%,55%_50%)]" />
         </div>
       );
@@ -83,7 +83,7 @@ export function StyleThumb({ id }: { id: StyleId }) {
       return (
         <div className="flex gap-0.5 rounded-lg bg-gradient-to-b from-violet-600 to-violet-900 p-1.5">
           {[0, 1, 2].map((i) => (
-            <i key={i} className="grid h-6 w-5 place-items-center rounded bg-white text-[12px] font-bold not-italic text-zinc-900">7</i>
+            <i key={i} className="grid h-6 w-5 place-items-center rounded bg-white text-small font-bold not-italic text-zinc-900">7</i>
           ))}
         </div>
       );

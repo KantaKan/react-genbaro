@@ -51,7 +51,7 @@ export function ClassmatesPage() {
       <label className="hidden items-center gap-2 rounded-xl bg-l-card px-3 py-2 text-l-ink3 shadow-[0_0_0_1px_var(--l-hair)] focus-within:shadow-[0_0_0_1.5px_var(--l-ink)] sm:flex">
         <Search className="h-4 w-4" strokeWidth={1.5} />
         <input ref={search} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name, nickname or skill…" aria-label="Search classmates" className="w-48 bg-transparent text-sm text-l-ink outline-none" />
-        <kbd className="rounded px-1 text-[11px] shadow-[0_0_0_1px_var(--l-hair)]">/</kbd>
+        <kbd className="rounded px-1 text-micro shadow-[0_0_0_1px_var(--l-hair)]">/</kbd>
       </label>
     ),
     [q]
@@ -69,9 +69,9 @@ export function ClassmatesPage() {
     <div>
       {myGroup.length > 0 && (
         <section aria-label="Your GenMate group" className={`l-card p-[22px] ${isChampion(userData?.genmate_group) ? "bg-[radial-gradient(70%_140%_at_0%_0%,rgba(253,230,138,.55),transparent_60%),radial-gradient(60%_140%_at_100%_100%,rgba(245,158,11,.22),transparent_60%)]" : "bg-[radial-gradient(70%_140%_at_0%_0%,rgba(129,140,248,.18),transparent_60%),radial-gradient(60%_140%_at_100%_100%,rgba(244,114,182,.14),transparent_60%)]"}`}>
-          <b className="text-[17px] font-semibold tracking-tight">Your GenMate group · {userData?.genmate_group}</b>
-          {isChampion(userData?.genmate_group) && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">Cup champions this week</span>}
-          <p className="mt-0.5 text-[12.5px] text-l-ink2">The people you'll see most. Say hi, pair up, cheer each other on.</p>
+          <b className="text-heading font-semibold tracking-tight">Your GenMate group · {userData?.genmate_group}</b>
+          {isChampion(userData?.genmate_group) && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-micro font-semibold text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">Cup champions this week</span>}
+          <p className="mt-0.5 text-small text-l-ink2">The people you'll see most. Say hi, pair up, cheer each other on.</p>
           <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
             {myGroup.map((p) => {
               const n = nicknames(p.zoom_name, p.first_name);
@@ -94,7 +94,7 @@ export function ClassmatesPage() {
                   <small className="block text-xs text-l-ink3">
                     {n.en} · #{p.jsd_number ?? "–"}
                   </small>
-                  {self ? <span className="mt-1.5 inline-block rounded-full bg-indigo-50 px-2 text-[10.5px] font-semibold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">You · edit</span> : <small className="mt-1.5 block text-xs text-l-ink2">{p.skills?.[0] ?? ""}</small>}
+                  {self ? <span className="mt-1.5 inline-block rounded-full bg-indigo-50 px-2 text-micro font-semibold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">You · edit</span> : <small className="mt-1.5 block text-xs text-l-ink2">{p.skills?.[0] ?? ""}</small>}
                 </button>
               );
             })}
@@ -103,20 +103,20 @@ export function ClassmatesPage() {
       )}
 
       <div className="mb-4 mt-7 flex flex-wrap items-center gap-2.5">
-        <h2 className="mr-1.5 text-[17px] font-semibold tracking-tight">Everyone</h2>
+        <h2 className="mr-1.5 text-heading font-semibold tracking-tight">Everyone</h2>
         <label className="flex flex-1 items-center gap-2 rounded-xl bg-l-card px-3 py-2 text-l-ink3 shadow-[0_0_0_1px_var(--l-hair)] sm:hidden">
           <Search className="h-4 w-4" strokeWidth={1.5} />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" aria-label="Search classmates (mobile)" className="w-full bg-transparent text-sm text-l-ink outline-none" />
         </label>
         <div className="flex gap-1 overflow-x-auto rounded-xl bg-l-card p-[3px] shadow-[0_0_0_1px_var(--l-hair)]">
           {GROUPS.map((g) => (
-            <button key={g} type="button" aria-pressed={group === g} onClick={() => setGroup(g)} className={`rounded-[9px] px-2.5 py-1 text-[12.5px] font-semibold ${group === g ? "bg-l-ink text-l-card" : "text-l-ink2"}`}>
+            <button key={g} type="button" aria-pressed={group === g} onClick={() => setGroup(g)} className={`rounded-[9px] px-2.5 py-1 text-small font-semibold ${group === g ? "bg-l-ink text-l-card" : "text-l-ink2"}`}>
               {g}
             </button>
           ))}
         </div>
         <span className="flex-1" />
-        <button type="button" onClick={() => setSort(SORTS[(SORTS.findIndex((s) => s.id === sort) + 1) % SORTS.length].id)} className="text-[12.5px] text-l-ink2">
+        <button type="button" onClick={() => setSort(SORTS[(SORTS.findIndex((s) => s.id === sort) + 1) % SORTS.length].id)} className="text-small text-l-ink2">
           Sort <b className="font-semibold text-l-ink">{SORTS.find((s) => s.id === sort)!.label}</b>
         </button>
         <div className="flex rounded-xl bg-l-card p-[3px] shadow-[0_0_0_1px_var(--l-hair)]">
@@ -141,21 +141,21 @@ export function ClassmatesPage() {
                 <span className="flex items-center gap-3">
                   <UserAvatar userId={p._id} name={n.en} avatar={p.avatar} champion={isChampion(p.genmate_group)} className="h-[52px] w-[52px]" />
                   <span className="min-w-0">
-                    <b className="block text-[15px] font-semibold">{n.th || n.en}</b>
-                    <small className="text-[12.5px] text-l-ink3">
+                    <b className="block text-title font-semibold">{n.th || n.en}</b>
+                    <small className="text-small text-l-ink3">
                       {n.en} · #{p.jsd_number ?? "–"}
                     </small>
                   </span>
-                  <span className="ml-auto self-start rounded-lg bg-l-sub px-1.5 text-[11.5px] font-bold text-l-ink2">{p.genmate_group ?? "–"}</span>
+                  <span className="ml-auto self-start rounded-lg bg-l-sub px-1.5 text-small font-bold text-l-ink2">{p.genmate_group ?? "–"}</span>
                 </span>
-                <span className="line-clamp-2 min-h-[39px] text-[13px] leading-normal text-l-ink2">{p.bio || "No bio yet."}</span>
+                <span className="line-clamp-2 min-h-[39px] text-body leading-normal text-l-ink2">{p.bio || "No bio yet."}</span>
                 <span className="mt-auto flex flex-wrap items-center gap-1.5">
                   {(p.skills ?? []).slice(0, 3).map((s) => (
-                    <span key={s} className="rounded-lg bg-l-sub px-2 py-0.5 text-[11.5px] font-medium text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
+                    <span key={s} className="rounded-lg bg-l-sub px-2 py-0.5 text-small font-medium text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
                       {s}
                     </span>
                   ))}
-                  {!!p.badges?.length && <span className="ml-auto text-[11.5px] text-l-ink3">{p.badges.length} badges</span>}
+                  {!!p.badges?.length && <span className="ml-auto text-small text-l-ink3">{p.badges.length} badges</span>}
                 </span>
               </button>
             );
@@ -169,10 +169,10 @@ export function ClassmatesPage() {
               <button key={p._id} type="button" aria-label={`Open ${n.th || n.en}`} onClick={() => setOpen(p)} className="grid w-full grid-cols-[40px_1fr_50px] items-center gap-3.5 border-t border-l-hair px-4 py-3 text-left first:border-t-0 hover:bg-l-sub sm:grid-cols-[40px_1.3fr_50px_2fr]">
                 <UserAvatar userId={p._id} name={n.en} avatar={p.avatar} champion={isChampion(p.genmate_group)} className="h-10 w-10" />
                 <span>
-                  <b className="font-semibold">{n.th || n.en}</b> <span className="text-[12.5px] text-l-ink3">{n.en} · #{p.jsd_number ?? "–"}</span>
+                  <b className="font-semibold">{n.th || n.en}</b> <span className="text-small text-l-ink3">{n.en} · #{p.jsd_number ?? "–"}</span>
                 </span>
-                <span className="justify-self-start rounded-lg bg-l-sub px-1.5 text-[11.5px] font-bold text-l-ink2">{p.genmate_group ?? "–"}</span>
-                <span className="hidden truncate text-[13px] text-l-ink2 sm:block">{p.bio}</span>
+                <span className="justify-self-start rounded-lg bg-l-sub px-1.5 text-small font-bold text-l-ink2">{p.genmate_group ?? "–"}</span>
+                <span className="hidden truncate text-body text-l-ink2 sm:block">{p.bio}</span>
               </button>
             );
           })}
