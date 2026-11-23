@@ -91,7 +91,7 @@ describe("ReportPage", () => {
     expect(await screen.findByText(/^Sent/)).toBeInTheDocument();
     expect(screen.getByText("Locked note")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Save notes" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Send again" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Send again" })).toBeInTheDocument();
   });
 
   it("a viewer can read but not edit or send", async () => {

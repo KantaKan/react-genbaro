@@ -106,8 +106,8 @@ export function WeeklySummaryPage() {
     () => (
       <div className="inline-flex rounded-[10px] bg-l-sub p-[3px]">
         {([false, true] as const).map((p) => (
-          <button key={String(p)} type="button" aria-pressed={panicOnly === p} onClick={() => setPanicOnly(p)} className={`rounded-lg px-3 py-1 text-small font-semibold ${panicOnly === p ? "bg-l-card text-l-ink shadow-sm" : "text-l-ink2"}`}>
-            {p ? "Panic only" : "All rough nights"}
+          <button key={String(p)} type="button" aria-pressed={panicOnly === p} onClick={() => setPanicOnly(p)} className={`whitespace-nowrap rounded-lg px-3 py-1 text-small font-semibold ${panicOnly === p ? "bg-l-card text-l-ink shadow-sm" : "text-l-ink2"}`}>
+            {p ? "Panic only" : "All hard nights"}
           </button>
         ))}
       </div>
