@@ -20,9 +20,9 @@ export default function RingControl({ tone, disabled, busy, onComplete, minutesL
       </svg>
       <span className="absolute inset-[17px] flex flex-col items-center justify-center rounded-full bg-l-card shadow-[0_0_0_1px_var(--l-hair),0_14px_30px_-14px_rgba(24,24,27,.25)]">
         <span className="text-[32px] font-semibold leading-none tracking-tighter">{minutesLeft}</span>
-        <span className="text-[12px] text-l-ink3">min</span>
-        <span className="mt-0.5 text-[12px] text-l-ink3">until {deadline}</span>
-        <span className="mt-2 rounded-full px-3 py-1 text-[12px] font-semibold text-white" style={{ background: color }}>
+        <span className="text-small text-l-ink3">min</span>
+        <span className="mt-0.5 text-small text-l-ink3">until {deadline}</span>
+        <span className="mt-2 rounded-full px-3 py-1 text-small font-semibold text-white" style={{ background: color }}>
           {busy ? "Checking…" : "Tap to check in"}
         </span>
       </span>

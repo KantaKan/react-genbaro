@@ -20,7 +20,7 @@ export function RateRing({ rate, need = 0.9 }: { rate: number; need?: number }) 
       <div className="absolute inset-0 grid place-items-center text-center">
         <div>
           <b className="block text-2xl font-semibold tracking-tight">{(rate * 100).toFixed(1)}%</b>
-          <span className="text-[11px] text-l-ink3">need {Math.round(need * 100)}%</span>
+          <span className="text-micro text-l-ink3">need {Math.round(need * 100)}%</span>
         </div>
       </div>
     </div>

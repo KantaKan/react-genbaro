@@ -8,7 +8,7 @@ import { useConfirm } from "../ui/Confirm";
 import { slackApi, type MatchResult, type SlackSettings } from "./api";
 
 const card = "rounded-2xl p-5 shadow-[0_0_0_1px_var(--l-hair)]";
-const field = "w-full rounded-xl bg-l-sub px-3 py-2.5 text-[13.5px] text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]";
+const field = "w-full rounded-xl bg-l-sub px-3 py-2.5 text-body text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]";
 const errMsg = (e: unknown) => (e as { response?: { data?: { message?: string } } }).response?.data?.message ?? "Something went wrong";
 const KIND: Record<string, string> = { new_leave: "New leave alert", announcement: "Announcement", ping: "Check-in ping", test: "Test message" };
 
@@ -79,7 +79,7 @@ export function SlackPage() {
   const channelSelect = (key: "alerts" | "report" | "announce", label: string, hint: string) => (
     <div className="grid items-center gap-2 sm:grid-cols-[170px_1fr_auto]">
       <div>
-        <b className="block text-[13px] font-semibold">{label}</b>
+        <b className="block text-body font-semibold">{label}</b>
         <small className="text-xs text-l-ink3">{hint}</small>
       </div>
       <select aria-label={`${label} channel`} value={form?.[key] ?? ""} onChange={(e) => setForm((f) => (f ? { ...f, [key]: e.target.value } : f))} className={field}>
@@ -101,8 +101,8 @@ export function SlackPage() {
     <div className="flex max-w-[860px] flex-col gap-3.5">
       {!connected && (
         <section className={card}>
-          <h4 className="text-[13px] font-semibold">Connect your Slack workspace</h4>
-          <ol className="mt-3 list-decimal space-y-2 pl-5 text-[13px] leading-relaxed text-l-ink2">
+          <h4 className="text-body font-semibold">Connect your Slack workspace</h4>
+          <ol className="mt-3 list-decimal space-y-2 pl-5 text-body leading-relaxed text-l-ink2">
             <li>
               In Slack go to <b>api.slack.com/apps</b> → Create New App → <b>From a manifest</b>, pick your workspace, and paste this manifest.
               <button
@@ -127,7 +127,7 @@ export function SlackPage() {
           </ol>
           <div className="mt-4 flex gap-2">
             <input aria-label="Bot token" type="password" autoComplete="off" value={token} onChange={(e) => setToken(e.target.value)} placeholder="xoxb-…" className={field} />
-            <button type="button" disabled={!token.trim()} onClick={connect} className="rounded-full bg-l-ink px-5 text-[13px] font-semibold text-l-card disabled:opacity-40">
+            <button type="button" disabled={!token.trim()} onClick={connect} className="rounded-full bg-l-ink px-5 text-body font-semibold text-l-card disabled:opacity-40">
               Connect
             </button>
           </div>
@@ -139,7 +139,7 @@ export function SlackPage() {
           <section className={`${card} flex flex-wrap items-center gap-3`}>
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
             <div className="min-w-0 flex-1">
-              <b className="text-[13.5px] font-semibold">Connected to {s!.team}</b>
+              <b className="text-body font-semibold">Connected to {s!.team}</b>
               <small className="block text-xs text-l-ink3">as {s!.bot}</small>
             </div>
             <button
@@ -158,11 +158,11 @@ export function SlackPage() {
           </section>
 
           <section className={`${card} flex flex-col gap-4`}>
-            <h4 className="text-[13px] font-semibold">Where Baro posts</h4>
+            <h4 className="text-body font-semibold">Where Baro posts</h4>
             {channelSelect("alerts", "Admin alerts", "New leave requests. Private is best.")}
             {channelSelect("announce", "Announcements", "Announcements you tick “also post to Slack”.")}
             {channelSelect("report", "Weekly report", "Where the weekly report is posted.")}
-            <div className="flex flex-wrap items-center gap-2.5 text-[13px]">
+            <div className="flex flex-wrap items-center gap-2.5 text-body">
               <label className="flex items-center gap-2.5">
                 <input
                   type="checkbox"
@@ -176,19 +176,19 @@ export function SlackPage() {
               {form.report_auto && (
                 <label className="flex items-center gap-1.5 text-xs text-l-ink2">
                   for JSD
-                  <input aria-label="Cohort for the weekly report" type="number" min={1} value={form.report_cohort || ""} onChange={(e) => setForm({ ...form, report_cohort: Number(e.target.value) || 0 })} className="w-16 rounded-lg bg-l-sub px-2 py-1 text-[13px] shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
+                  <input aria-label="Cohort for the weekly report" type="number" min={1} value={form.report_cohort || ""} onChange={(e) => setForm({ ...form, report_cohort: Number(e.target.value) || 0 })} className="w-16 rounded-lg bg-l-sub px-2 py-1 text-body shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
                 </label>
               )}
             </div>
           </section>
 
           <section className={`${card} flex flex-col gap-3`}>
-            <h4 className="text-[13px] font-semibold">Alerts and quiet hours</h4>
-            <label className="flex items-center gap-2.5 text-[13px]">
+            <h4 className="text-body font-semibold">Alerts and quiet hours</h4>
+            <label className="flex items-center gap-2.5 text-body">
               <input type="checkbox" checked={form.alert_new_leave} onChange={(e) => setForm({ ...form, alert_new_leave: e.target.checked })} className="accent-zinc-900" />
               Post to Admin alerts when a learner asks for leave
             </label>
-            <div className="flex flex-wrap items-center gap-2 text-[13px]">
+            <div className="flex flex-wrap items-center gap-2 text-body">
               <span className="text-l-ink2">No DMs to learners between</span>
               <input aria-label="Quiet from" type="time" value={form.quiet_from} onChange={(e) => setForm({ ...form, quiet_from: e.target.value })} className="rounded-lg bg-l-sub px-2 py-1 shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
               <span className="text-l-ink2">and</span>
@@ -196,7 +196,7 @@ export function SlackPage() {
               <small className="text-xs text-l-ink3">Bangkok time. Empty = 21:00 to 08:00.</small>
             </div>
             <div className="flex justify-end">
-              <button type="button" onClick={save} className="rounded-full bg-l-ink px-5 py-2 text-[13px] font-semibold text-l-card">
+              <button type="button" onClick={save} className="rounded-full bg-l-ink px-5 py-2 text-body font-semibold text-l-card">
                 Save
               </button>
             </div>
@@ -205,15 +205,15 @@ export function SlackPage() {
           <section className={card}>
             <div className="flex flex-wrap items-center gap-3">
               <div className="min-w-0 flex-1">
-                <h4 className="text-[13px] font-semibold">Learners on Slack · JSD{cohort}</h4>
+                <h4 className="text-body font-semibold">Learners on Slack · JSD{cohort}</h4>
                 <small className="text-xs text-l-ink3">Baro finds each learner by their email so it can DM them.</small>
               </div>
-              <button type="button" onClick={runMatch} className="rounded-full px-4 py-1.5 text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
+              <button type="button" onClick={runMatch} className="rounded-full px-4 py-1.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
                 Match by email
               </button>
             </div>
             {match && (
-              <div className="mt-3 text-[13px]">
+              <div className="mt-3 text-body">
                 <b>{match.matched} matched</b>
                 {match.missing.length > 0 && <span className="text-l-ink2"> · {match.missing.length} not found</span>}
                 {match.note && <p className="mt-1 text-xs font-semibold text-amber-700">{match.note}</p>}
@@ -231,11 +231,11 @@ export function SlackPage() {
           </section>
 
           <section className={card}>
-            <h4 className="text-[13px] font-semibold">Recent sends</h4>
+            <h4 className="text-body font-semibold">Recent sends</h4>
             {(log.data ?? []).length === 0 && <p className="mt-2 text-xs text-l-ink3">Nothing sent yet.</p>}
             <div className="mt-2 flex flex-col">
               {(log.data ?? []).map((e, i) => (
-                <div key={i} className="flex items-center gap-3 border-b border-l-hair py-2 text-[12.5px] last:border-0">
+                <div key={i} className="flex items-center gap-3 border-b border-l-hair py-2 text-small last:border-0">
                   <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${e.ok ? "bg-emerald-500" : "bg-red-500"}`} />
                   <span className="w-36 shrink-0 font-semibold">{KIND[e.kind] ?? e.kind}</span>
                   <span className="min-w-0 flex-1 truncate text-l-ink3">{e.ok ? "Sent" : e.error}</span>

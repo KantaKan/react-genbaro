@@ -47,7 +47,7 @@ export function ExportsPage() {
         <Download className="h-4 w-4" />
       </span>
       <span>
-        <b className="block text-[13.5px] font-semibold">{busy === kind ? "Preparing…" : title}</b>
+        <b className="block text-body font-semibold">{busy === kind ? "Preparing…" : title}</b>
         <small className="text-xs text-l-ink3">{sub}</small>
       </span>
     </button>
@@ -58,7 +58,7 @@ export function ExportsPage() {
         {([["From", from, setFrom], ["To", to, setTo]] as const).map(([t, v, set]) => (
           <label key={t} className="flex flex-col gap-1.5 text-xs font-semibold text-l-ink2">
             {t}
-            <input aria-label={t} type="date" value={v} onChange={(e) => set(e.target.value)} className="rounded-xl bg-l-sub px-3 py-2 text-[13.5px] font-normal text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
+            <input aria-label={t} type="date" value={v} onChange={(e) => set(e.target.value)} className="rounded-xl bg-l-sub px-3 py-2 text-body font-normal text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
           </label>
         ))}
       </section>

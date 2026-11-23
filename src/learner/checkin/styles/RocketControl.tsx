@@ -68,7 +68,7 @@ export default function RocketControl({ disabled, busy, onComplete }: CheckInCon
           </g>
         </svg>
       </button>
-      <p className="pointer-events-none absolute inset-x-0 top-3 text-center text-[13px] font-medium text-indigo-200">{msg}</p>
+      <p className="pointer-events-none absolute inset-x-0 top-3 text-center text-body font-medium text-indigo-200">{msg}</p>
     </div>
   );
 }

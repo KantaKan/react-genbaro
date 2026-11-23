@@ -50,9 +50,9 @@ function Tiles({ b }: { b: Board }) {
                 {z.b !== "zone" && <br />}
                 {z.b !== "zone" ? z.b : ""}
               </span>
-              <span className="text-[11px] tabular-nums text-l-ink3">{Math.round((n / total) * 100)}%</span>
+              <span className="text-micro tabular-nums text-l-ink3">{Math.round((n / total) * 100)}%</span>
               {b.range === "night" && (
-                <span className={`mt-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold ${d === 0 ? "bg-l-card text-l-ink3 shadow-[0_0_0_1px_var(--l-hair)]" : worse ? "bg-red-50 text-red-600 dark:bg-red-500/15" : "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15"}`}>
+                <span className={`mt-1.5 rounded-full px-2 py-0.5 text-micro font-semibold ${d === 0 ? "bg-l-card text-l-ink3 shadow-[0_0_0_1px_var(--l-hair)]" : worse ? "bg-red-50 text-red-600 dark:bg-red-500/15" : "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15"}`}>
                   {d === 0 ? "same as last week" : `${d > 0 ? "+" : ""}${d} vs last week`}
                 </span>
               )}
@@ -104,15 +104,15 @@ function ReflectionPanel({ cohort, range, learnerId }: { cohort: number; range: 
       <div className="flex items-center gap-3 pr-10">
         <UserAvatar userId={who.id} name={n.en} avatar={who.avatar} className="h-[52px] w-[52px]" />
         <div>
-          <b className="block text-[16.5px] font-semibold">{n.th ? `${n.th} · ${n.en}` : n.en}</b>
-          <small className="text-[12.5px] text-l-ink3">
+          <b className="block text-heading font-semibold">{n.th ? `${n.th} · ${n.en}` : n.en}</b>
+          <small className="text-small text-l-ink3">
             Group {who.genmate_group || "–"} · {data?.date}
           </small>
         </div>
       </div>
       <section className="mt-3.5 rounded-[14px] bg-l-sub p-3.5 shadow-[0_0_0_1px_var(--l-hair)]">
-        <div className="text-[11.5px] text-l-ink3">Barometer</div>
-        <div className="mt-1 flex items-center gap-2 text-[15px] font-semibold">
+        <div className="text-small text-l-ink3">Barometer</div>
+        <div className="mt-1 flex items-center gap-2 text-title font-semibold">
           {e?.zone ? <BarometerFace zone={e.zone as ZoneId} size={28} /> : null}
           {zoneLabel(e?.zone ?? "")}
         </div>
@@ -133,31 +133,31 @@ function ReflectionPanel({ cohort, range, learnerId }: { cohort: number; range: 
             ["Non-tech · to improve", e.nontech_improve],
           ].map(([h, t]) => (
             <section key={h} className="rounded-xl bg-l-sub px-3.5 py-3">
-              <h5 className="text-[10.5px] font-bold uppercase tracking-[.06em] text-l-ink3">{h}</h5>
-              <p className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed">{t ? <Marked text={t} words={e.words} /> : <span className="text-l-ink3">—</span>}</p>
+              <h5 className="text-micro font-bold uppercase tracking-[.06em] text-l-ink3">{h}</h5>
+              <p className="mt-1 whitespace-pre-wrap text-body leading-relaxed">{t ? <Marked text={t} words={e.words} /> : <span className="text-l-ink3">—</span>}</p>
             </section>
           ))}
           {e.admin_feedback && (
-            <p className="mt-1 text-[12px] text-l-ink3">{repliedBy(e)}</p>
+            <p className="mt-1 text-small text-l-ink3">{repliedBy(e)}</p>
           )}
-          <label className="mt-1 text-[11.5px] font-semibold text-l-ink2">
+          <label className="mt-1 text-small font-semibold text-l-ink2">
             Reply to learner
             <span className="ml-1 font-normal text-l-ink3">(they see this on their reflection)</span>
-            <textarea aria-label="Reply to learner" value={replyText} onChange={(ev) => setReply(ev.target.value)} className="mt-1.5 h-[70px] w-full resize-none rounded-xl bg-l-sub px-3 py-2.5 text-[13px] font-normal text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]" />
+            <textarea aria-label="Reply to learner" value={replyText} onChange={(ev) => setReply(ev.target.value)} className="mt-1.5 h-[70px] w-full resize-none rounded-xl bg-l-sub px-3 py-2.5 text-body font-normal text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]" />
           </label>
           <button
             type="button"
             disabled={!replyText.trim()}
             onClick={() => once(() => wellbeingApi.reply(who.id, e.reflection_id, replyText.trim()).then(() => (setReply(null), qc.invalidateQueries(["admin-reflections"]))), "Reply sent")}
-            className="justify-self-end rounded-full bg-l-ink px-4 py-1.5 text-[12.5px] font-semibold text-l-card disabled:opacity-40"
+            className="justify-self-end rounded-full bg-l-ink px-4 py-1.5 text-small font-semibold text-l-card disabled:opacity-40"
           >
             Send reply
           </button>
         </div>
       ) : (
-        <p className="mt-3.5 rounded-xl bg-l-sub px-3.5 py-3 text-[13px] text-l-ink3">No reflection for this night.</p>
+        <p className="mt-3.5 rounded-xl bg-l-sub px-3.5 py-3 text-body text-l-ink3">No reflection for this night.</p>
       )}
-      <div className="mt-4 text-[11.5px] text-l-ink3">Add to their support plan</div>
+      <div className="mt-4 text-small text-l-ink3">Add to their support plan</div>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {["Check in tomorrow", "Pair with a buddy", "Talk about workload"].map((t) => (
           <button key={t} type="button" onClick={() => once(() => wellbeingApi.addStep(who.id, t), `Added: ${t}`)} className="rounded-full px-3 py-1.5 text-xs font-semibold shadow-[0_0_0_1px_var(--l-hair)] hover:bg-l-sub">
@@ -165,11 +165,11 @@ function ReflectionPanel({ cohort, range, learnerId }: { cohort: number; range: 
           </button>
         ))}
       </div>
-      <label className="mt-4 text-[11.5px] text-l-ink3">
+      <label className="mt-4 text-small text-l-ink3">
         Private note (only admins see this)
-        <textarea value={note} onChange={(ev) => setNote(ev.target.value)} className="mt-1.5 h-[64px] w-full resize-none rounded-xl bg-l-sub px-3 py-2.5 text-[13px] text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]" />
+        <textarea value={note} onChange={(ev) => setNote(ev.target.value)} className="mt-1.5 h-[64px] w-full resize-none rounded-xl bg-l-sub px-3 py-2.5 text-body text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]" />
       </label>
-      <button type="button" disabled={!note.trim()} onClick={() => once(() => wellbeingApi.addNote(who.id, note.trim()).then(() => setNote("")), "Note saved")} className="mt-2 self-end rounded-full px-4 py-1.5 text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)] disabled:opacity-40">
+      <button type="button" disabled={!note.trim()} onClick={() => once(() => wellbeingApi.addNote(who.id, note.trim()).then(() => setNote("")), "Note saved")} className="mt-2 self-end rounded-full px-4 py-1.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)] disabled:opacity-40">
         Save note
       </button>
     </div>
@@ -221,15 +221,15 @@ export function ReflectionsPage() {
 
       <div className="mt-3.5 grid gap-3.5 xl:grid-cols-[1.6fr_1fr]">
         <section className="rounded-2xl p-4 shadow-[0_0_0_1px_var(--l-hair)]">
-          <h4 className="flex text-[13px] font-semibold">
+          <h4 className="flex text-body font-semibold">
             How the cohort felt {range === "night" ? "last night" : range === "week" ? "this week" : "the last 4 weeks"}
             <span className="ml-auto text-xs font-medium text-l-ink3">{night}</span>
           </h4>
           <Tiles b={b} />
-          <p className="mt-3 rounded-xl bg-l-sub px-3 py-2.5 text-[13px] text-l-ink2">{summary(b)}</p>
+          <p className="mt-3 rounded-xl bg-l-sub px-3 py-2.5 text-body text-l-ink2">{summary(b)}</p>
         </section>
         <section className="rounded-2xl p-4 shadow-[0_0_0_1px_var(--l-hair)]">
-          <h4 className="flex items-center gap-2 text-[13px] font-semibold">
+          <h4 className="flex items-center gap-2 text-body font-semibold">
             Sent <span className="tabular-nums">{`${b.sent} / ${b.total}`}</span>
           </h4>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-l-sub shadow-[inset_0_0_0_1px_var(--l-hair)]">
@@ -244,7 +244,7 @@ export function ReflectionsPage() {
                     <UserAvatar userId={l.id} name={nick(l).en} avatar={l.avatar} className="h-[30px] w-[30px]" />
                   </span>
                 ))}
-                {b.missing.length > 10 && <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-l-sub text-[11px] font-bold text-l-ink2">+{b.missing.length - 10}</span>}
+                {b.missing.length > 10 && <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-l-sub text-micro font-bold text-l-ink2">+{b.missing.length - 10}</span>}
               </div>
             </>
           )}
@@ -267,8 +267,8 @@ export function ReflectionsPage() {
 
       {b.worth.length > 0 && (
         <section className="mt-3.5 rounded-2xl p-4 shadow-[0_0_0_1px_var(--l-hair)]">
-          <h4 className="flex items-center gap-2 text-[13px] font-semibold">
-            Worth a look <span className="rounded-full bg-red-50 px-1.5 text-[11px] font-bold text-red-600 dark:bg-red-500/15">{b.worth.length}</span>
+          <h4 className="flex items-center gap-2 text-body font-semibold">
+            Worth a look <span className="rounded-full bg-red-50 px-1.5 text-micro font-bold text-red-600 dark:bg-red-500/15">{b.worth.length}</span>
             <span className="text-xs font-medium text-l-ink3">Patterns, not single bad days</span>
           </h4>
           <div className="mt-2.5 grid gap-2.5 md:grid-cols-2">
@@ -278,10 +278,10 @@ export function ReflectionsPage() {
                 <button key={w.learner.id} type="button" onClick={() => openL(w.learner.id)} className="flex items-start gap-3 rounded-[14px] bg-l-sub p-3 text-left shadow-[0_0_0_1px_var(--l-hair)] transition-transform duration-300 hover:-translate-y-0.5">
                   <UserAvatar userId={w.learner.id} name={n.en} avatar={w.learner.avatar} className="h-[34px] w-[34px]" />
                   <div className="min-w-0">
-                    <b className="text-[13px] font-semibold">
+                    <b className="text-body font-semibold">
                       {n.th || n.en} · {w.patterns.map((p) => p.title).join(" · ")}
                     </b>
-                    {w.quote && <p className="mt-0.5 text-[12.5px] leading-snug text-l-ink2">“{w.quote}”</p>}
+                    {w.quote && <p className="mt-0.5 text-small leading-snug text-l-ink2">“{w.quote}”</p>}
                     <div className="mt-2 flex gap-0.5">
                       {w.strip.map((z, i) => (
                         <i key={i} className="block h-1.5 w-3.5 rounded-sm" style={{ background: z ? ZONE_BG[z] : "var(--l-hair)" }} />
@@ -296,11 +296,11 @@ export function ReflectionsPage() {
       )}
 
       <div className="mb-2.5 mt-6 flex flex-wrap items-center gap-2">
-        <h3 className="text-[15px] font-semibold">Mood map</h3>
+        <h3 className="text-title font-semibold">Mood map</h3>
         <span className="text-xs text-l-ink3">One square per night · click to read it</span>
         <span className="flex-1" />
         {([["worst", "Worst first"], ["group", "By group"], ["az", "A–Z"]] as const).map(([k, t]) => (
-          <button key={k} type="button" aria-pressed={sort === k} onClick={() => setSort(k)} className={`rounded-[9px] px-2.5 py-1 text-[12.5px] font-semibold ${sort === k ? "bg-l-sub text-l-ink shadow-[0_0_0_1px_var(--l-hair)]" : "text-l-ink2"}`}>
+          <button key={k} type="button" aria-pressed={sort === k} onClick={() => setSort(k)} className={`rounded-[9px] px-2.5 py-1 text-small font-semibold ${sort === k ? "bg-l-sub text-l-ink shadow-[0_0_0_1px_var(--l-hair)]" : "text-l-ink2"}`}>
             {t}
           </button>
         ))}
@@ -309,7 +309,7 @@ export function ReflectionsPage() {
         <div className="grid min-w-[640px] items-center gap-[3px] text-xs" style={{ gridTemplateColumns: `150px repeat(${b.dates.length}, minmax(0,1fr))` }}>
           <span />
           {b.dates.map((d) => (
-            <span key={d} className="pb-1 text-center text-[10.5px] text-l-ink3">
+            <span key={d} className="pb-1 text-center text-micro text-l-ink3">
               {shortDay(d)}
             </span>
           ))}
@@ -336,17 +336,17 @@ export function ReflectionsPage() {
       </section>
 
       <div className="mb-2.5 mt-6 flex flex-wrap items-center gap-2">
-        <h3 className="text-[15px] font-semibold">What they wrote</h3>
+        <h3 className="text-title font-semibold">What they wrote</h3>
         <span className="text-xs text-l-ink3">{night}</span>
         <span className="flex-1" />
         {([["all", "All"], ["panic", "Panic"], ["over", "Overwhelmed"]] as const).map(([k, t]) => (
-          <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(k)} className={`rounded-[9px] px-2.5 py-1 text-[12.5px] font-semibold ${filter === k ? "bg-l-sub text-l-ink shadow-[0_0_0_1px_var(--l-hair)]" : "text-l-ink2"}`}>
+          <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(k)} className={`rounded-[9px] px-2.5 py-1 text-small font-semibold ${filter === k ? "bg-l-sub text-l-ink shadow-[0_0_0_1px_var(--l-hair)]" : "text-l-ink2"}`}>
             {t}
           </button>
         ))}
         <label className="flex items-center gap-2 rounded-[10px] bg-l-sub px-3 py-1.5 text-l-ink3 shadow-[0_0_0_1px_var(--l-hair)]">
           <Search className="h-3.5 w-3.5" />
-          <input aria-label="Search reflections" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Words like “lost”, “React”…" className="w-44 bg-transparent text-[12.5px] text-l-ink outline-none" />
+          <input aria-label="Search reflections" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Words like “lost”, “React”…" className="w-44 bg-transparent text-small text-l-ink outline-none" />
         </label>
       </div>
       <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(300px,1fr))]">
@@ -357,30 +357,30 @@ export function ReflectionsPage() {
               <div className="flex items-center gap-2.5">
                 <UserAvatar userId={e.learner.id} name={n.en} avatar={e.learner.avatar} className="h-[30px] w-[30px]" />
                 <div className="min-w-0">
-                  <b className="text-[13px] font-semibold">{n.th ? `${n.th} · ${n.en}` : n.en}</b>
-                  <small className="block text-[11.5px] text-l-ink3">Group {e.learner.genmate_group || "–"}</small>
+                  <b className="text-body font-semibold">{n.th ? `${n.th} · ${n.en}` : n.en}</b>
+                  <small className="block text-small text-l-ink3">Group {e.learner.genmate_group || "–"}</small>
                 </div>
                 {e.zone && (
-                  <span className="ml-auto inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-l-sub py-0.5 pl-1 pr-2.5 text-[11.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
+                  <span className="ml-auto inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-l-sub py-0.5 pl-1 pr-2.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
                     <BarometerFace zone={e.zone as ZoneId} size={18} />
                     {zoneLabel(e.zone)}
                   </span>
                 )}
               </div>
-              <div className="mt-2.5 grid gap-2 text-[12.5px] leading-relaxed">
+              <div className="mt-2.5 grid gap-2 text-small leading-relaxed">
                 <div>
-                  <small className="block text-[10.5px] font-bold uppercase tracking-[.06em] text-l-ink3">Tech · went well</small>
+                  <small className="block text-micro font-bold uppercase tracking-[.06em] text-l-ink3">Tech · went well</small>
                   <Marked text={e.tech_happy || "—"} words={e.words} />
                 </div>
                 <div>
-                  <small className="block text-[10.5px] font-bold uppercase tracking-[.06em] text-l-ink3">Tech · to improve</small>
+                  <small className="block text-micro font-bold uppercase tracking-[.06em] text-l-ink3">Tech · to improve</small>
                   <Marked text={e.tech_improve || "—"} words={e.words} />
                 </div>
               </div>
             </button>
           );
         })}
-        {entries.length === 0 && <p className="rounded-2xl bg-l-sub px-4 py-8 text-center text-[13px] text-l-ink3">Nothing matches.</p>}
+        {entries.length === 0 && <p className="rounded-2xl bg-l-sub px-4 py-8 text-center text-body text-l-ink3">Nothing matches.</p>}
       </div>
     </div>
   );

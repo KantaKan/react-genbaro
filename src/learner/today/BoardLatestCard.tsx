@@ -29,13 +29,13 @@ export function BoardLatestCard() {
   return (
     <section className="l-card p-[22px]">
       <div className="flex items-start justify-between">
-        <h3 className="text-[15px] font-semibold">From the Talk Board</h3>
-        <Link to="/learner/board" className="-m-2 rounded-lg p-2 text-[13px] font-medium text-l-ink2 hover:bg-l-sub">
+        <h3 className="text-title font-semibold">From the Talk Board</h3>
+        <Link to="/learner/board" className="-m-2 rounded-lg p-2 text-body font-medium text-l-ink2 hover:bg-l-sub">
           Open board ›
         </Link>
       </div>
       {posts.length === 0 ? (
-        <p className="mt-4 text-[13px] text-l-ink3">Nothing new yet.</p>
+        <p className="mt-4 text-body text-l-ink3">Nothing new yet.</p>
       ) : (
         <ul className="mt-2">
           {posts.map((p) => {
@@ -47,18 +47,18 @@ export function BoardLatestCard() {
                   <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-full bg-indigo-500 text-xs font-semibold text-white">{name.slice(0, 2)}</span>
                   <span className="min-w-0 flex-1">
                     <span className="line-clamp-1 font-medium">{decodeHtmlEntities(p.content)}</span>
-                    <span className="text-[12.5px] text-l-ink3">
+                    <span className="text-small text-l-ink3">
                       {name} · {p.comments?.length ?? 0} {(p.comments?.length ?? 0) === 1 ? "reply" : "replies"} · {ago(p.createdAt)}
                     </span>
                     {f && (
                       <span className="mt-2 flex gap-2 rounded-[12px] bg-l-sub px-3 py-2">
                         <span className="min-w-0 flex-1">
-                          <span className="flex items-baseline gap-1.5 text-[11.5px]">
+                          <span className="flex items-baseline gap-1.5 text-small">
                             <b className="font-semibold text-l-ink2">{who(f.reply.zoomName)}</b>
                             <span className={f.top ? "font-semibold text-indigo-600 dark:text-indigo-300" : "text-l-ink3"}>{f.top ? "Top reply" : "Latest reply"}</span>
                             {f.top && <span className="text-l-ink3">· {f.reply.reactions.length} {f.reply.reactions.length === 1 ? "reaction" : "reactions"}</span>}
                           </span>
-                          <span className="line-clamp-2 text-[13px] leading-snug text-l-ink">{decodeHtmlEntities(f.reply.content)}</span>
+                          <span className="line-clamp-2 text-body leading-snug text-l-ink">{decodeHtmlEntities(f.reply.content)}</span>
                         </span>
                       </span>
                     )}

@@ -26,7 +26,7 @@ export default function LuckySlotControl({ tone, disabled, busy, onComplete }: C
   return (
     <div className="flex flex-col items-center gap-2">
       <div className="relative w-[300px] max-w-full rounded-[26px_26px_18px_18px] bg-gradient-to-b from-violet-600 to-violet-900 px-3.5 pb-4 pt-3 shadow-[inset_0_2px_0_rgba(255,255,255,.25),inset_0_-6px_0_rgba(0,0,0,.25),0_24px_40px_-22px_rgba(76,29,149,.8)]">
-        <div className="rounded-2xl bg-gradient-to-b from-indigo-950 to-indigo-800 p-2 text-center text-[13px] font-extrabold tracking-[.14em] text-amber-200 [text-shadow:0_0_8px_#f59e0b]">
+        <div className="rounded-2xl bg-gradient-to-b from-indigo-950 to-indigo-800 p-2 text-center text-body font-extrabold tracking-[.14em] text-amber-200 [text-shadow:0_0_8px_#f59e0b]">
           BARO SLOTS
           <div className="mx-1 mt-1.5 flex justify-between">
             {Array.from({ length: 12 }, (_, i) => (
@@ -62,7 +62,7 @@ export default function LuckySlotControl({ tone, disabled, busy, onComplete }: C
           </span>
         </button>
       </div>
-      <p className="text-[13px] font-medium text-l-ink2">{stopped ? (tone === "late" ? "Late, but still a win" : "JACKPOT: Present!") : "Pull the lever"}</p>
+      <p className="text-body font-medium text-l-ink2">{stopped ? (tone === "late" ? "Late, but still a win" : "JACKPOT: Present!") : "Pull the lever"}</p>
       <style>{`@keyframes l-blink{50%{opacity:.25}}`}</style>
     </div>
   );

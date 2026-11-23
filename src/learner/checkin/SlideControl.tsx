@@ -42,7 +42,7 @@ export function SlideControl({ tone, disabled, busy, onComplete, skin }: CheckIn
       style={{ touchAction: "none" }}
     >
       <div className="absolute inset-y-0 left-0 rounded-full opacity-[.14]" style={{ width: KNOB + PAD * 2 + dx, background: color }} />
-      <div className={`absolute inset-0 grid place-items-center pl-11 text-[15px] font-semibold ${gold ? "text-amber-300" : "text-l-ink2"}`} style={{ opacity: 1 - dx / (max() || 1) }}>
+      <div className={`absolute inset-0 grid place-items-center pl-11 text-title font-semibold ${gold ? "text-amber-300" : "text-l-ink2"}`} style={{ opacity: 1 - dx / (max() || 1) }}>
         {busy ? "Checking you in…" : tone === "late" ? "Slide to check in · late" : "Slide to check in"}
       </div>
       <div

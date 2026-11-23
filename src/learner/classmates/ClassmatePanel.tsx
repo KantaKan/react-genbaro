@@ -52,13 +52,13 @@ export function ClassmatePanel({ person, isMe, onClose, onEditAvatar }: { person
             </span>
             <div className="pb-1">
               <SheetTitle className="text-[21px] font-semibold text-l-ink">{n.th ? `${n.th} · ${n.en}` : n.en}</SheetTitle>
-              <span className="text-[13px] text-l-ink2">
+              <span className="text-body text-l-ink2">
                 {person.first_name} · #{person.jsd_number ?? "–"} · Group {person.genmate_group ?? "–"}
               </span>
             </div>
           </div>
           {isMe && (
-            <button type="button" onClick={onEditAvatar} className="mt-3.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium shadow-[0_0_0_1px_var(--l-hair)]">
+            <button type="button" onClick={onEditAvatar} className="mt-3.5 rounded-full px-3.5 py-1.5 text-body font-medium shadow-[0_0_0_1px_var(--l-hair)]">
               Customize avatar
             </button>
           )}
@@ -66,7 +66,7 @@ export function ClassmatePanel({ person, isMe, onClose, onEditAvatar }: { person
           {!!person.skills?.length && (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {person.skills.map((s) => (
-                <span key={s} className="rounded-lg bg-l-sub px-2 py-0.5 text-[11.5px] font-medium text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
+                <span key={s} className="rounded-lg bg-l-sub px-2 py-0.5 text-small font-medium text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
                   {s}
                 </span>
               ))}
@@ -76,14 +76,14 @@ export function ClassmatePanel({ person, isMe, onClose, onEditAvatar }: { person
             <div className="mt-3.5 flex gap-1.5">
               {(["github", "linkedin", "instagram"] as const).map((k) =>
                 links[k] ? (
-                  <a key={k} href={links[k]} target="_blank" rel="noreferrer" className="rounded-[10px] px-2.5 py-1.5 text-[12.5px] font-medium capitalize shadow-[0_0_0_1px_var(--l-hair)]">
+                  <a key={k} href={links[k]} target="_blank" rel="noreferrer" className="rounded-[10px] px-2.5 py-1.5 text-small font-medium capitalize shadow-[0_0_0_1px_var(--l-hair)]">
                     {k === "github" ? "GitHub" : k === "linkedin" ? "LinkedIn" : "Instagram"}
                   </a>
                 ) : null
               )}
             </div>
           )}
-          <h4 className="mb-2.5 mt-[22px] text-[12px] font-semibold uppercase tracking-[.08em] text-l-ink3">Badges{person.badges?.length ? ` · ${person.badges.length}` : ""}</h4>
+          <h4 className="mb-2.5 mt-[22px] text-small font-semibold uppercase tracking-[.08em] text-l-ink3">Badges{person.badges?.length ? ` · ${person.badges.length}` : ""}</h4>
           {person.badges?.length ? (
             <div className="flex flex-wrap gap-2.5">
               {person.badges.slice(0, 6).map((b) => (
@@ -91,36 +91,36 @@ export function ClassmatePanel({ person, isMe, onClose, onEditAvatar }: { person
               ))}
             </div>
           ) : (
-            <p className="text-[13px] text-l-ink3">No badges yet.</p>
+            <p className="text-body text-l-ink3">No badges yet.</p>
           )}
-          <h4 className="mb-1 mt-[22px] text-[12px] font-semibold uppercase tracking-[.08em] text-l-ink3">Recommendations · {person.profile_comments?.length ?? 0}</h4>
-          {recs.length === 0 && <p className="text-[13px] text-l-ink3">No recommendations yet.</p>}
+          <h4 className="mb-1 mt-[22px] text-small font-semibold uppercase tracking-[.08em] text-l-ink3">Recommendations · {person.profile_comments?.length ?? 0}</h4>
+          {recs.length === 0 && <p className="text-body text-l-ink3">No recommendations yet.</p>}
           {recs.map((c) => (
             <div key={c.id ?? c._id} className="flex gap-2.5 border-t border-l-hair py-2.5 first:border-t-0">
               <UserAvatar userId={c.userId} name={c.zoomName} avatar={byId.get(c.userId)?.avatar} className="h-[30px] w-[30px]" />
               <div>
-                <q className="block text-[13px] leading-relaxed">{c.content}</q>
-                <small className="text-[11.5px] text-l-ink3">{nicknames(c.zoomName, c.zoomName).th || nicknames(c.zoomName, c.zoomName).en}</small>
+                <q className="block text-body leading-relaxed">{c.content}</q>
+                <small className="text-small text-l-ink3">{nicknames(c.zoomName, c.zoomName).th || nicknames(c.zoomName, c.zoomName).en}</small>
               </div>
             </div>
           ))}
           {!isMe && (
             <div className="mt-3 rounded-2xl p-3 shadow-[0_0_0_1px_var(--l-hair)] focus-within:shadow-[0_0_0_1.5px_var(--l-ink)]">
-              <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={`What's great about working with ${n.en}?`} className="h-[60px] w-full resize-none bg-transparent text-[13.5px] outline-none" />
+              <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={`What's great about working with ${n.en}?`} className="h-[60px] w-full resize-none bg-transparent text-body outline-none" />
               <div className="flex flex-wrap items-center gap-1.5">
                 {QUICK.map((qq) => (
-                  <button key={qq} type="button" onClick={() => setText((t) => `${t ? `${t} ` : ""}${qq}.`)} className="rounded-full bg-l-sub px-2.5 py-1 text-[12px] shadow-[0_0_0_1px_var(--l-hair)]">
+                  <button key={qq} type="button" onClick={() => setText((t) => `${t ? `${t} ` : ""}${qq}.`)} className="rounded-full bg-l-sub px-2.5 py-1 text-small shadow-[0_0_0_1px_var(--l-hair)]">
                     {qq}
                   </button>
                 ))}
                 <span className="flex-1" />
-                <button type="button" onClick={send} className="rounded-full bg-l-ink px-3.5 py-1.5 text-[13px] font-medium text-l-card">
+                <button type="button" onClick={send} className="rounded-full bg-l-ink px-3.5 py-1.5 text-body font-medium text-l-card">
                   Recommend
                 </button>
               </div>
             </div>
           )}
-          <div className="mt-[22px] flex items-start gap-2.5 rounded-[14px] bg-l-sub px-3.5 py-3 text-[12.5px] leading-relaxed text-l-ink2">
+          <div className="mt-[22px] flex items-start gap-2.5 rounded-[14px] bg-l-sub px-3.5 py-3 text-small leading-relaxed text-l-ink2">
             <Lock className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.5} />
             <span>{isMe ? "This is what classmates see. Attendance, leave and reflections are private: only you and TAs can see them." : `Attendance, leave and reflections are private. Only ${n.en} and TAs can see them.`}</span>
           </div>

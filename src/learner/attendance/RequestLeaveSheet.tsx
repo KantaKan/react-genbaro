@@ -17,7 +17,7 @@ function Chips<T extends string>({ value, options, onChange, label }: { value: T
           role="radio"
           aria-checked={value === v}
           onClick={() => onChange(v)}
-          className={`rounded-full px-3.5 py-1.5 text-[13px] font-medium transition duration-200 ${value === v ? "bg-l-ink text-l-card" : "shadow-[0_0_0_1px_var(--l-hair)]"}`}
+          className={`rounded-full px-3.5 py-1.5 text-body font-medium transition duration-200 ${value === v ? "bg-l-ink text-l-card" : "shadow-[0_0_0_1px_var(--l-hair)]"}`}
         >
           {l}
         </button>
@@ -87,13 +87,13 @@ export function RequestLeaveSheet({ open, onOpenChange, defaultDate, used }: { o
           <Field label="Note for the TA (optional)">
             <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Anything they should know…" className="h-[84px] w-full resize-none rounded-xl bg-l-card px-3 py-2.5 shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]" />
           </Field>
-          <p className="rounded-[14px] bg-amber-50 px-3.5 py-3 text-[13px] leading-relaxed text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">{leaveImpact(kind, part, used)}</p>
+          <p className="rounded-[14px] bg-amber-50 px-3.5 py-3 text-body leading-relaxed text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">{leaveImpact(kind, part, used)}</p>
         </div>
         <div className="flex justify-end gap-2 border-t border-l-hair p-4">
-          <button type="button" onClick={() => onOpenChange(false)} className="rounded-full px-4 py-2 text-[13.5px] font-medium shadow-[0_0_0_1px_var(--l-hair)]">
+          <button type="button" onClick={() => onOpenChange(false)} className="rounded-full px-4 py-2 text-body font-medium shadow-[0_0_0_1px_var(--l-hair)]">
             Cancel
           </button>
-          <button type="button" onClick={send} disabled={m.isLoading} className="rounded-full bg-l-ink px-4 py-2 text-[13.5px] font-medium text-l-card disabled:opacity-60">
+          <button type="button" onClick={send} disabled={m.isLoading} className="rounded-full bg-l-ink px-4 py-2 text-body font-medium text-l-card disabled:opacity-60">
             Send request
           </button>
         </div>
@@ -105,7 +105,7 @@ export function RequestLeaveSheet({ open, onOpenChange, defaultDate, used }: { o
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="mb-2 text-[12.5px] font-semibold text-l-ink2">{label}</div>
+      <div className="mb-2 text-small font-semibold text-l-ink2">{label}</div>
       {children}
     </div>
   );

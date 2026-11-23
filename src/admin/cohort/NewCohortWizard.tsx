@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { BulkRegisterDialog } from "@/components/bulk-register-dialog";
 import { cohortApi } from "./api";
 
-const field = "w-full rounded-xl bg-l-sub px-3 py-2 text-[13.5px] text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]";
+const field = "w-full rounded-xl bg-l-sub px-3 py-2 text-body text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]";
 
 /** Create a cohort (default check-in rules), optionally import learners, then switch to it. */
 export function NewCohortWizard({ open, onOpenChange, onDone }: { open: boolean; onOpenChange: (o: boolean) => void; onDone: (cohort: number) => void }) {
@@ -59,19 +59,19 @@ export function NewCohortWizard({ open, onOpenChange, onDone }: { open: boolean;
                 </label>
               </div>
               <p className="text-xs text-l-ink3">Check-in starts with the usual times (9:15 late, 10:30 absent; 13:15 / 14:30). You can change them in Check-in rules.</p>
-              <button type="button" disabled={!valid} onClick={create} className="mt-1 rounded-full bg-l-ink py-2.5 text-[13.5px] font-semibold text-l-card disabled:opacity-40">
+              <button type="button" disabled={!valid} onClick={create} className="mt-1 rounded-full bg-l-ink py-2.5 text-body font-semibold text-l-card disabled:opacity-40">
                 {num > 0 ? `Create JSD${num}` : "Create cohort"}
               </button>
             </div>
           ) : (
             <div className="grid gap-2.5">
-              <p className="flex items-center gap-2 text-[13px] text-l-ink2">
+              <p className="flex items-center gap-2 text-body text-l-ink2">
                 <Check className="h-4 w-4 text-emerald-600" /> Cohort created with default check-in rules.
               </p>
               <button type="button" aria-label="Import learners from CSV" onClick={() => setImporting(true)} className="flex items-center gap-3 rounded-2xl p-3.5 text-left shadow-[0_0_0_1px_var(--l-hair)] hover:bg-l-sub">
                 <Upload className="h-4 w-4" />
                 <span>
-                  <b className="block text-[13.5px] font-semibold">Import learners from CSV</b>
+                  <b className="block text-body font-semibold">Import learners from CSV</b>
                   <small className="text-xs text-l-ink3">{imported ? "Imported. You can import more." : "first_name, last_name, email, jsd_number, project_group, genmate_group, zoom_name"}</small>
                 </span>
               </button>
@@ -81,7 +81,7 @@ export function NewCohortWizard({ open, onOpenChange, onDone }: { open: boolean;
                   onDone(created);
                   close(false);
                 }}
-                className="mt-1 rounded-full bg-l-ink py-2.5 text-[13.5px] font-semibold text-l-card"
+                className="mt-1 rounded-full bg-l-ink py-2.5 text-body font-semibold text-l-card"
               >
                 Go to JSD{created}
               </button>

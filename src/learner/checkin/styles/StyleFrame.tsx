@@ -12,7 +12,7 @@ export function StyleFrame({ children, disabled, busy, onComplete }: { children:
   return (
     <div className="relative">
       {children}
-      <button type="button" className="sr-only focus:not-sr-only focus:mt-3 focus:inline-block focus:rounded-full focus:bg-l-ink focus:px-4 focus:py-2 focus:text-[13px] focus:font-semibold focus:text-l-card" onClick={fire} aria-disabled={disabled || busy}>
+      <button type="button" className="sr-only focus:not-sr-only focus:mt-3 focus:inline-block focus:rounded-full focus:bg-l-ink focus:px-4 focus:py-2 focus:text-body focus:font-semibold focus:text-l-card" onClick={fire} aria-disabled={disabled || busy}>
         Check in now
       </button>
     </div>

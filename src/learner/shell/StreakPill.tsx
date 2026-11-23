@@ -53,7 +53,7 @@ export function StreakPill() {
       to="/learner/reflections"
       title={pill.text}
       aria-label={`Reflection streak: ${pill.text}`}
-      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold ring-1 transition hover:-translate-y-px ${TONE[pill.tone]}`}
+      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-body font-semibold ring-1 transition hover:-translate-y-px ${TONE[pill.tone]}`}
     >
       <Sprout className="h-4 w-4" strokeWidth={2} />
       <span className="tabular-nums">{pill.count}</span>

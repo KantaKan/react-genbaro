@@ -4,6 +4,13 @@ export default {
     content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
   	extend: {
+  		fontSize: {
+  			micro: '11px',
+  			small: '12.5px',
+  			body: '13.5px',
+  			title: '15px',
+  			heading: '17px'
+  		},
   		keyframes: {
   			'rainbow-shimmer': {
   				'0%': { backgroundPosition: '0% 50%' },

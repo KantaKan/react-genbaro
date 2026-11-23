@@ -263,7 +263,7 @@ export function ReflectionsPage() {
     <div>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-[28px] font-semibold tracking-tight">Your reflections</h2>
-        {course && course.week_number > 0 && <span className="text-[13px] text-l-ink3">{`Week ${course.week_number} of ${course.total_weeks}`}</span>}
+        {course && course.week_number > 0 && <span className="text-body text-l-ink3">{`Week ${course.week_number} of ${course.total_weeks}`}</span>}
       </div>
 
       {/* Row 1: tonight + this week */}
@@ -271,25 +271,25 @@ export function ReflectionsPage() {
         <TonightCard dateLabel={dateLabel} nowSec={nowSec} sent={tonight} onSend={send} />
         <section aria-label="This week" className="border-t border-l-hair bg-l-sub/50 p-6 lg:border-l lg:border-t-0">
           <div className="flex items-baseline justify-between">
-            <b className="text-[14px]">This week</b>
-            <span className="text-[12px] text-l-ink3">{weekSoFar ? `${weekWritten} of ${weekSoFar + (todayInWeek ? 0 : 0)} nights so far` : ""}</span>
+            <b className="text-title">This week</b>
+            <span className="text-small text-l-ink3">{weekSoFar ? `${weekWritten} of ${weekSoFar + (todayInWeek ? 0 : 0)} nights so far` : ""}</span>
           </div>
           <div className="mt-3.5 grid grid-cols-5 gap-1.5">
             {strip.map((c) => (
               <div key={c.date} className={`flex flex-col items-center gap-1.5 rounded-[14px] py-2 ${c.state === "today" || c.date === today ? "bg-l-card" : ""}`}>
-                <span className={`text-[11.5px] font-semibold ${c.date === today ? "text-l-ink" : "text-l-ink3"}`}>{c.label}</span>
+                <span className={`text-small font-semibold ${c.date === today ? "text-l-ink" : "text-l-ink3"}`}>{c.label}</span>
                 {c.night?.zone ? (
                   <BarometerFace zone={c.night.zone} size={30} />
                 ) : (
                   <span className={`block h-[30px] w-[30px] rounded-full ${c.state === "today" ? "border-2 border-dashed border-l-ink" : "border-[1.5px] border-l-hair"}`} />
                 )}
-                <span className={`text-[10.5px] ${c.date === today ? "text-l-ink" : "text-l-ink3"}`}>
+                <span className={`text-micro ${c.date === today ? "text-l-ink" : "text-l-ink3"}`}>
                   {c.date === today ? (c.night ? "Done" : "Today") : c.state === "missed" ? "Missed" : c.state === "protected" ? "Protected" : c.state === "off" ? "Off" : " "}
                 </span>
               </div>
             ))}
           </div>
-          <p className="mt-3.5 text-[12.5px] leading-relaxed text-l-ink2">{weekSentence}</p>
+          <p className="mt-3.5 text-small leading-relaxed text-l-ink2">{weekSentence}</p>
         </section>
       </div>
 
@@ -300,8 +300,8 @@ export function ReflectionsPage() {
             <Sprout className="h-5 w-5" strokeWidth={1.8} />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="text-[16px] font-semibold">{displayStreak > 0 ? `${displayStreak} ${displayStreak === 1 ? "night" : "nights"} in a row` : "Start a streak tonight"}</div>
-            <div className="mt-0.5 text-[12.5px] text-l-ink2">
+            <div className="text-heading font-semibold">{displayStreak > 0 ? `${displayStreak} ${displayStreak === 1 ? "night" : "nights"} in a row` : "Start a streak tonight"}</div>
+            <div className="mt-0.5 text-small text-l-ink2">
               {progress.isMaxTier
                 ? "Your plant is fully grown."
                 : displayStreak > 0
@@ -314,7 +314,7 @@ export function ReflectionsPage() {
               <div className="h-full rounded-full bg-l-green" style={{ width: `${progress.isMaxTier ? 100 : Math.round((progress.current / Math.max(1, progress.max)) * 100)}%` }} />
             </div>
             <div className="mt-2.5 flex flex-wrap items-center gap-3">
-              <Link to="/learner/garden" className="text-[12.5px] font-semibold text-l-ink2 hover:text-l-ink">
+              <Link to="/learner/garden" className="text-small font-semibold text-l-ink2 hover:text-l-ink">
                 Open your garden ›
               </Link>
               {meQ.data && (
@@ -340,12 +340,12 @@ export function ReflectionsPage() {
             <MessageCircle className="h-5 w-5" strokeWidth={1.8} />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="text-[16px] font-semibold">{unseen.length ? `${unseen.length} new ${unseen.length === 1 ? "reply" : "replies"} from ${repliesFrom(unseen)}` : "No new replies"}</div>
-            <div className="mt-0.5 truncate text-[12.5px] text-l-ink2">
+            <div className="text-heading font-semibold">{unseen.length ? `${unseen.length} new ${unseen.length === 1 ? "reply" : "replies"} from ${repliesFrom(unseen)}` : "No new replies"}</div>
+            <div className="mt-0.5 truncate text-small text-l-ink2">
               {unseen.length ? `“${unseen[0].reply}”` : stats.replies ? `${stats.replies} ${stats.replies === 1 ? "reply" : "replies"} so far. Your TAs read every reflection.` : "Your TAs read every reflection."}
             </div>
             {unseen.length > 0 && (
-              <button type="button" onClick={readReply} className="mt-2.5 rounded-full bg-l-indigo px-3.5 py-1.5 text-[12.5px] font-semibold text-white">
+              <button type="button" onClick={readReply} className="mt-2.5 rounded-full bg-l-indigo px-3.5 py-1.5 text-small font-semibold text-white">
                 Read reply
               </button>
             )}
@@ -355,8 +355,8 @@ export function ReflectionsPage() {
         <section className="l-card flex items-start gap-3.5 p-[18px] px-5">
           <span className="shrink-0">{stats.dominant ? <BarometerFace zone={stats.dominant} size={40} /> : <span className="block h-10 w-10 rounded-full bg-l-sub" />}</span>
           <div className="min-w-0 flex-1">
-            <div className="text-[16px] font-semibold">{stats.dominant ? MOOD[stats.dominant] : "Your moods show up here"}</div>
-            <div className="mt-0.5 text-[12.5px] text-l-ink2">{stats.classNights ? `${stats.written} of ${stats.classNights} class nights written` : "Write your first reflection tonight"}</div>
+            <div className="text-heading font-semibold">{stats.dominant ? MOOD[stats.dominant] : "Your moods show up here"}</div>
+            <div className="mt-0.5 text-small text-l-ink2">{stats.classNights ? `${stats.written} of ${stats.classNights} class nights written` : "Write your first reflection tonight"}</div>
             <div className="mt-2.5 flex h-[5px] overflow-hidden rounded-full bg-l-hair">
               {ZONES.map((z) => (
                 <div key={z.id} style={{ width: `${stats.mix[z.id] * 100}%`, background: z.c1 }} />
@@ -375,7 +375,7 @@ export function ReflectionsPage() {
               type="button"
               aria-pressed={prefs.view === v}
               onClick={() => update({ view: v })}
-              className={`rounded-[9px] px-4 py-2 text-[13.5px] font-semibold transition ${prefs.view === v ? "bg-l-ink text-l-card" : "text-l-ink2 hover:text-l-ink"}`}
+              className={`rounded-[9px] px-4 py-2 text-body font-semibold transition ${prefs.view === v ? "bg-l-ink text-l-card" : "text-l-ink2 hover:text-l-ink"}`}
             >
               {cap(v)}
             </button>
@@ -394,7 +394,7 @@ export function ReflectionsPage() {
             type="button"
             aria-pressed={prefs.filter === f}
             onClick={() => update({ filter: f })}
-            className={`rounded-full px-3.5 py-2 text-[13px] font-semibold ring-1 ring-l-hair transition ${prefs.filter === f ? "bg-l-ink text-l-card ring-l-ink" : "bg-l-card text-l-ink2 hover:text-l-ink"}`}
+            className={`rounded-full px-3.5 py-2 text-body font-semibold ring-1 ring-l-hair transition ${prefs.filter === f ? "bg-l-ink text-l-card ring-l-ink" : "bg-l-card text-l-ink2 hover:text-l-ink"}`}
           >
             {label}
           </button>

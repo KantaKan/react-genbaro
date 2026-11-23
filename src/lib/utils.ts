@@ -1,5 +1,8 @@
 import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
+
+// The type ramp tokens in tailwind.config.js; without this, twMerge reads text-micro as a colour and drops it.
+const twMerge = extendTailwindMerge({ extend: { classGroups: { "font-size": [{ text: ["micro", "small", "body", "title", "heading"] }] } } });
 
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
