@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { BadgeRenderer } from "@/components/badge-renderer";
 import { useAuth } from "@/AuthContext";
+import { safeUrl } from "@/learner/lib/usePeople";
 import { useUserData } from "@/application/contexts/UserDataContext";
 import { getUserById, addProfileComment, addProfileReaction, updateUserPersonalDetails, deleteProfileComment, updateUser } from "@/application/services/userService";
 import { toast } from "react-toastify";
@@ -256,18 +257,18 @@ const UserProfilePage: React.FC = () => {
                 
                 {/* Social Icons */}
                 <div className="flex gap-3 mt-4">
-                  {user.social_links?.instagram && (
-                    <a href={user.social_links.instagram} target="_blank" rel="noreferrer" className="text-pink-500 hover:scale-110 transition-transform">
+                  {safeUrl(user.social_links?.instagram) && (
+                    <a href={safeUrl(user.social_links?.instagram)} aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:scale-110 transition-transform">
                       <Instagram className="w-6 h-6" />
                     </a>
                   )}
-                  {user.social_links?.linkedin && (
-                    <a href={user.social_links.linkedin} target="_blank" rel="noreferrer" className="text-blue-600 hover:scale-110 transition-transform">
+                  {safeUrl(user.social_links?.linkedin) && (
+                    <a href={safeUrl(user.social_links?.linkedin)} aria-label="LinkedIn" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:scale-110 transition-transform">
                       <Linkedin className="w-6 h-6" />
                     </a>
                   )}
-                  {user.social_links?.github && (
-                    <a href={user.social_links.github} target="_blank" rel="noreferrer" className="text-foreground hover:scale-110 transition-transform">
+                  {safeUrl(user.social_links?.github) && (
+                    <a href={safeUrl(user.social_links?.github)} aria-label="GitHub" target="_blank" rel="noopener noreferrer" className="text-foreground hover:scale-110 transition-transform">
                       <Github className="w-6 h-6" />
                     </a>
                   )}
