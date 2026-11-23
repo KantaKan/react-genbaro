@@ -9,19 +9,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { adminCupApi, type AwardInput } from "@/learner/cup/api";
 import { CATEGORY_LABEL } from "@/learner/cup/lib";
+import { useAdminHeader } from "@/admin/shell/AdminShell";
+import { useCohort } from "@/admin/shell/useCohort";
 
 const CATS: AwardInput["category"][] = ["coding", "soft", "helping"];
 
 /** v1 TA tool: award GenMate Cup points and undo mistakes. Showing up is added by the server. */
 export default function CupAwardsPage() {
   const qc = useQueryClient();
-  const [cohort, setCohort] = useState("");
+  const [n] = useCohort();
   const [group, setGroup] = useState("");
   const [category, setCategory] = useState<AwardInput["category"]>("coding");
   const [points, setPoints] = useState("10");
   const [reason, setReason] = useState("");
   const sending = useRef(false);
-  const n = Number(cohort);
+  useAdminHeader({ title: "GenMate Cup", context: `Award points · JSD${n}` });
   const data = useQuery(["admin-cup", n], () => adminCupApi.standings(n), { enabled: n > 0 });
   const pts = Number(points);
   const ok = n > 0 && !!group && pts >= 1 && pts <= 100 && reason.trim().length > 0 && reason.trim().length <= 140;
@@ -60,10 +62,6 @@ export default function CupAwardsPage() {
           <CardDescription>Award Coding, Soft skills or Helping points. The server adds +15 Showing up when a whole group is on time.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <div className="grid gap-1.5">
-            <Label htmlFor="cup-cohort">Cohort</Label>
-            <Input id="cup-cohort" inputMode="numeric" value={cohort} onChange={(e) => setCohort(e.target.value)} placeholder="13" className="w-32" />
-          </div>
           <div className="grid gap-1.5">
             <Label>Group</Label>
             <div className="flex flex-wrap gap-1.5">
