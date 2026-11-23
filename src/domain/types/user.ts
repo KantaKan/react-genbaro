@@ -159,6 +159,7 @@ export interface Reflection {
   admin_feedback_by?: string;
   admin_feedback_name?: string;
   admin_feedback_at?: string;
+  admin_feedback_avatar?: import("@/learner/avatar/types").AvatarConfig | null;
   reward_boxes?: import("./gift-box").TeacherGiftBox[];
   reward_warning?: string;
 }

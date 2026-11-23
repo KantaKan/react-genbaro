@@ -57,6 +57,18 @@ describe("ReflectionsPage", () => {
     expect(wellbeingApi.reply).toHaveBeenCalledWith("u1", "r1", "Let's pair tomorrow");
   });
 
+  it("says who already replied, so two TAs don't both answer", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date("2026-11-22T14:00:00Z"));
+    const replied = { ...board, entries: [{ ...board.entries[0], admin_feedback: "Let's pair at 9:30", admin_feedback_name: "05_Neeti(Neeti/นีติ)", admin_feedback_at: "2026-11-22T12:00:00Z" }, board.entries[1]] };
+    vi.mocked(wellbeingApi.board).mockResolvedValue(replied);
+    renderAdmin(<ReflectionsPage />, "/admin/reflections");
+    fireEvent.click((await screen.findAllByRole("button", { name: /มิ้นท์ · 2026-11-22/ }))[0]);
+    const panel = screen.getByRole("complementary", { name: "Details" });
+    expect(within(panel).getByText("Replied by Neeti · 2h ago")).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
   it("filters what they wrote by search", async () => {
     renderAdmin(<ReflectionsPage />, "/admin/reflections");
     await screen.findByText("Hooks clicked today");

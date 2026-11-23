@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { AdminCharacterDialog } from "./AdminCharacterDialog";
 
 const starter = {
@@ -43,9 +43,17 @@ const server = setupServer(
   }),
 );
 
-beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+beforeAll(() => {
+  // Node 26 shadows jsdom's localStorage, and the API client reads the login token from it.
+  const m = new Map<string, string>();
+  vi.stubGlobal("localStorage", { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v), removeItem: (k: string) => void m.delete(k), clear: () => m.clear() });
+  server.listen({ onUnhandledRequest: "error" });
+});
 afterEach(() => { server.resetHandlers(); collection = [starter]; selection = { equipped_id: starter.id, pinned_id: "" }; grants = 0; cosmeticItems = [prop]; exactGrants = 0; });
-afterAll(() => server.close());
+afterAll(() => {
+  server.close();
+  vi.unstubAllGlobals();
+});
 
 describe("AdminCharacterDialog", () => {
   it("grants a distinct character and overrides equipment without moving the lawn pin", async () => {

@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
 import { BarometerFace, ZONES, type ZoneId } from "../today/BarometerFace";
 import { UserAvatar } from "@/components/user-avatar";
+import type { AvatarConfig } from "../avatar/types";
 import { groupByWeek, matchesFilter, monthGrid, rowWeek, type Course, type DayCell, type Filter, type Night } from "./model";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -50,11 +51,11 @@ function Answer({ title, good, improve }: { title: string; good: string; improve
   );
 }
 
-export function Reply({ text, isNew = false, by = "", name = "" }: { text: string; isNew?: boolean; by?: string; name?: string }) {
+export function Reply({ text, isNew = false, by = "", name = "", avatar }: { text: string; isNew?: boolean; by?: string; name?: string; avatar?: AvatarConfig | null }) {
   return (
     <div className="mt-3 flex gap-2.5">
       {by ? (
-        <UserAvatar userId={by} name={name || "TA"} className="h-[30px] w-[30px] shrink-0" />
+        <UserAvatar userId={by} name={name || "TA"} avatar={avatar} className="h-[30px] w-[30px] shrink-0" />
       ) : (
         <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full bg-l-indigo text-[11px] font-bold text-white">TA</span>
       )}
@@ -76,7 +77,7 @@ export function NightAnswers({ n, grid = true, isNew = false }: { n: Night; grid
         <Answer title="TECH" good={n.techHappy} improve={n.techImprove} />
         <Answer title="NON-TECH" good={n.softHappy} improve={n.softImprove} />
       </div>
-      {n.reply && <Reply text={n.reply} isNew={isNew} by={n.replyBy} name={n.replyName} />}
+      {n.reply && <Reply text={n.reply} isNew={isNew} by={n.replyBy} name={n.replyName} avatar={n.replyAvatar} />}
     </>
   );
 }

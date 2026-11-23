@@ -3,6 +3,7 @@ import { reflectionZones } from "@/components/reflection-zones";
 import { decodeHtmlEntities } from "@/lib/board";
 import { bangkokNow } from "../lib/time";
 import { nicknames } from "../lib/name";
+import type { AvatarConfig } from "../avatar/types";
 import type { ZoneId } from "../today/BarometerFace";
 
 /** One written reflection, flattened for the page. */
@@ -18,6 +19,7 @@ export interface Night {
   reply: string;
   replyBy: string; // staff user id, "" for older replies
   replyName: string; // their nickname, "" when unknown
+  replyAvatar?: AvatarConfig | null; // the avatar they had when replying
 }
 
 export type Filter = "all" | "reply" | "rough";
@@ -84,6 +86,7 @@ export function toNights(reflections: Reflection[]): Night[] {
       reply: text(r.admin_feedback).trim(),
       replyBy: r.admin_feedback_by ?? "",
       replyName: replierName(r.admin_feedback_name),
+      replyAvatar: r.admin_feedback_avatar ?? null,
     });
   }
   return [...byDay.values()].sort((a, b) => (a.day < b.day ? 1 : -1));
