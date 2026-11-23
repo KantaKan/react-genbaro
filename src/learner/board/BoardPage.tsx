@@ -86,7 +86,7 @@ export function BoardPage() {
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Share something with your cohort…"
-              className="h-[46px] flex-1 resize-none rounded-[14px] bg-l-sub px-3.5 py-3 shadow-[0_0_0_1px_var(--l-hair)] outline-none transition-[height] duration-500 focus:h-24 focus:bg-l-card focus:shadow-[0_0_0_1.5px_var(--l-ink)]"
+              className="h-[68px] flex-1 resize-none rounded-[14px] bg-l-sub px-3.5 py-3 text-body sm:h-[46px] shadow-[0_0_0_1px_var(--l-hair)] outline-none transition-[height] duration-500 focus:h-24 focus:bg-l-card focus:shadow-[0_0_0_1.5px_var(--l-ink)]"
             />
           </div>
           <div className="mt-2.5 flex justify-end">

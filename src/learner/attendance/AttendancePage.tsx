@@ -46,9 +46,10 @@ export function AttendancePage() {
 
   const actions = useMemo(
     () => (
-      <button type="button" onClick={() => openSheet()} className="inline-flex items-center gap-1.5 rounded-full bg-l-ink px-3.5 py-1.5 text-body font-medium text-l-card">
+      <button type="button" onClick={() => openSheet()} aria-label="Request leave" className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-l-ink px-3.5 py-1.5 text-body font-medium text-l-card">
         <Plus className="h-4 w-4" strokeWidth={1.75} />
-        Request leave
+        <span className="sm:hidden">Leave</span>
+        <span className="hidden sm:inline">Request leave</span>
       </button>
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps

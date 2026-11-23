@@ -72,7 +72,7 @@ export function ClassmatesPage() {
           <b className="text-heading font-semibold tracking-tight">Your GenMate group · {userData?.genmate_group}</b>
           {isChampion(userData?.genmate_group) && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-micro font-semibold text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">Cup champions this week</span>}
           <p className="mt-0.5 text-small text-l-ink2">The people you'll see most. Say hi, pair up, cheer each other on.</p>
-          <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+          <div className="mt-4 flex gap-3 overflow-x-auto pb-1 [scrollbar-color:var(--l-hair)_transparent] [scrollbar-width:thin]">
             {myGroup.map((p) => {
               const n = nicknames(p.zoom_name, p.first_name);
               const self = p._id === userData?._id;
@@ -108,7 +108,7 @@ export function ClassmatesPage() {
           <Search className="h-4 w-4" strokeWidth={1.5} />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" aria-label="Search classmates (mobile)" className="w-full bg-transparent text-sm text-l-ink outline-none" />
         </label>
-        <div className="flex gap-1 overflow-x-auto rounded-xl bg-l-card p-[3px] shadow-[0_0_0_1px_var(--l-hair)]">
+        <div className="flex gap-1 overflow-x-auto rounded-xl bg-l-card p-[3px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden shadow-[0_0_0_1px_var(--l-hair)]">
           {GROUPS.map((g) => (
             <button key={g} type="button" aria-pressed={group === g} onClick={() => setGroup(g)} className={`rounded-[9px] px-2.5 py-1 text-small font-semibold ${group === g ? "bg-l-ink text-l-card" : "text-l-ink2"}`}>
               {g}

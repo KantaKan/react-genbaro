@@ -7,7 +7,7 @@ const C = 2 * Math.PI * 42;
 
 export function SessionCard({ view, session, onSession, nowMin }: { view: TodayView; session: Session; onSession: (s: Session) => void; nowMin: number }) {
   const c = view.counts[session];
-  const inN = c.total - c.not_yet;
+  const inN = c.on_time + c.late;
   const w = view.rules[session];
   const start = clockMin(w.open_at), end = clockMin(w.absent_after), late = clockMin(w.late_after);
   const pos = (m: number) => Math.max(0, Math.min(100, ((m - start) / (end - start)) * 100));
