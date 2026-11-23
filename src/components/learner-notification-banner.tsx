@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { safeUrl } from "@/learner/lib/usePeople";
 import { notificationService } from "../application/services/notificationService";
 import type { Notification } from "../domain/types/notification";
 import { Button } from "./ui/button";
@@ -115,9 +116,9 @@ export function LearnerNotificationBanner({ className }: LearnerNotificationBann
               <>
                 <p className="text-sm opacity-90 mb-2">{currentNotification.message}</p>
                 
-                {currentNotification.link && (
+                {safeUrl(currentNotification.link) && (
                   <a
-                    href={currentNotification.link}
+                    href={safeUrl(currentNotification.link)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-sm font-medium hover:underline"
