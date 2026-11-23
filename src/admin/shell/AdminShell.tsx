@@ -79,8 +79,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }, [me.known, me.role, me.cohorts, cohort, setCohort]);
   const { userData } = useUserData();
   const { logout } = useAuth();
-  const pending = useQuery(["admin-leaves", cohort, "pending"], () => adminApi.leaves({ cohort, status: "pending" }), { staleTime: 60_000 });
-  const support = useQuery(["admin-support", cohort], () => wellbeingApi.support(cohort), { staleTime: 60_000 });
+  const pending = useQuery(["admin-leaves", cohort, "pending"], () => adminApi.leaves({ cohort, status: "pending" }), { staleTime: 60_000, enabled: cohort > 0 });
+  const support = useQuery(["admin-support", cohort], () => wellbeingApi.support(cohort), { staleTime: 60_000, enabled: cohort > 0 });
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
