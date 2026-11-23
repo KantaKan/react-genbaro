@@ -11,7 +11,7 @@ export type CohortSettings = {
   checkin_region?: "anywhere" | "thailand";
   flag_unusual?: boolean;
 };
-export type Activity = { id: string; actor_name: string; actor_role: string; action: string; detail: string; status: number; at: string };
+export type Activity = { id: string; actor_name: string; actor_role: string; action: string; detail: string; status: number; at: string; targets?: string[]; facts?: Record<string, string> };
 
 const data = async <T,>(p: Promise<{ data: { data: T } }>): Promise<T> => (await p).data.data;
 

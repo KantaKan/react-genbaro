@@ -78,4 +78,14 @@ describe("TonightCard", () => {
     render(<TonightCard dateLabel="Fri 20 Nov" nowSec={15 * 3600 + 45 * 60 + 1} onSend={vi.fn()} />);
     expect(screen.getByText(/in 1h 0m/)).toBeInTheDocument();
   });
+  it("on a weekend it says the streak is paused, and writing still works", () => {
+    render(<TonightCard dateLabel="Sat 21 Nov" nowSec={OPEN} onSend={vi.fn()} paused="weekend" />);
+    expect(screen.getByText(/It's the weekend\. You can still write/)).toBeInTheDocument();
+    expect(screen.getByText(/won't grow it or break it/)).toBeInTheDocument();
+  });
+
+  it("on a class night it says nothing about pausing", () => {
+    render(<TonightCard dateLabel="Fri 20 Nov" nowSec={OPEN} onSend={vi.fn()} />);
+    expect(screen.queryByText(/streak only counts class days/)).toBeNull();
+  });
 });

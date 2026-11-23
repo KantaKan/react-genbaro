@@ -29,13 +29,14 @@ const getDeterministicGradient = (str: string) => {
     return char.charCodeAt(0) + ((acc << 5) - acc);
   }, 0);
 
+  // soft pastels, same family as the classmate panel cover
   const colors = [
-    ["#6366f1", "#a855f7", "#ec4899"], // Indigo -> Purple -> Pink
-    ["#3b82f6", "#2dd4bf", "#10b981"], // Blue -> Teal -> Green
-    ["#f59e0b", "#ef4444", "#8b5cf6"], // Amber -> Red -> Violet
-    ["#06b6d4", "#3b82f6", "#6366f1"], // Cyan -> Blue -> Indigo
-    ["#8b5cf6", "#d946ef", "#f43f5e"], // Violet -> Fuchsia -> Rose
-    ["#14b8a6", "#0ea5e9", "#6366f1"], // Teal -> Sky -> Indigo
+    ["#e0e7ff", "#fdf2f8", "#d1fae5"],
+    ["#dbeafe", "#ccfbf1", "#ecfccb"],
+    ["#fef3c7", "#ffe4e6", "#ede9fe"],
+    ["#cffafe", "#e0e7ff", "#fce7f3"],
+    ["#ede9fe", "#fae8ff", "#ffedd5"],
+    ["#ccfbf1", "#e0f2fe", "#fef9c3"],
   ];
 
   const paletteIndex = Math.abs(hash) % colors.length;
@@ -204,11 +205,11 @@ const UserProfilePage: React.FC = () => {
   const coverGradient = getDeterministicGradient(user._id);
 
   return (
-    <div className="container mx-auto py-10 space-y-8">
+    <div className="mx-auto max-w-[1100px] space-y-6">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="overflow-hidden border-none shadow-xl bg-card/50 backdrop-blur-sm">
           <div 
-            className="h-48 relative transition-all duration-700"
+            className="relative h-40 transition-all duration-700 dark:opacity-30"
             style={{ background: coverGradient }}
           >
              {(isOwnProfile || isAdmin) && (
@@ -235,7 +236,7 @@ const UserProfilePage: React.FC = () => {
             <div className="ml-52 pt-4 flex justify-between items-start">
               <div>
                 <div className="flex items-center gap-3">
-                  <CardTitle className="text-4xl font-black tracking-tight italic uppercase">
+                  <CardTitle className="text-[28px] font-semibold tracking-tight">
                     {user.first_name} {user.last_name}
                   </CardTitle>
                   {isAdmin && !isOwnProfile && (
@@ -299,7 +300,7 @@ const UserProfilePage: React.FC = () => {
           <CardContent className="mt-12 space-y-8">
             {/* Bio Section */}
             <div className="max-w-3xl">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">About Me</h3>
+              <h3 className="text-micro font-semibold uppercase tracking-[.06em] text-muted-foreground mb-2">About Me</h3>
               {isEditing ? (
                 <Textarea 
                   value={editBio} 
@@ -318,7 +319,7 @@ const UserProfilePage: React.FC = () => {
             {/* Pinned Badges Section */}
             {(pinnedBadges.length > 0 || isEditing) && (
               <div className="pt-6 border-t border-white/5">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-2">
+                <h3 className="text-micro font-semibold uppercase tracking-[.06em] text-muted-foreground mb-4 flex items-center gap-2">
                   <Pin className="w-4 h-4" /> Pinned Badges {isEditing && "(Select up to 3)"}
                 </h3>
                 <div className="flex flex-wrap gap-6">
@@ -343,7 +344,7 @@ const UserProfilePage: React.FC = () => {
               <div className="pt-6 border-t border-white/5 space-y-4">
                 {isAdmin && (
                   <>
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">Learner Information (Admin Only)</h3>
+                    <h3 className="text-micro font-semibold uppercase tracking-[.06em] text-muted-foreground mb-4">Learner Information (Admin Only)</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label className="text-xs font-bold">First Name</label>
@@ -381,7 +382,7 @@ const UserProfilePage: React.FC = () => {
                     <div className="h-px bg-white/5 my-6" />
                   </>
                 )}
-                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">Social Links</h3>
+                <h3 className="text-micro font-semibold uppercase tracking-[.06em] text-muted-foreground mb-4">Social Links</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1">
                     <label className="text-xs font-bold">Instagram URL</label>
@@ -420,13 +421,13 @@ const UserProfilePage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <div className="flex justify-between items-end">
-            <h3 className="text-3xl font-black italic uppercase tracking-tighter flex items-center gap-3">
+            <h3 className="text-heading font-semibold flex items-center gap-3">
               <MessageSquare className="w-8 h-8 text-primary" />
               The Wall
             </h3>
           </div>
 
-          <Card className="bg-card/30 border-dashed border-2">
+          <Card>
             <CardHeader>
               <CardTitle className="text-lg">Leave a recommendation</CardTitle>
             </CardHeader>
@@ -462,8 +463,8 @@ const UserProfilePage: React.FC = () => {
                         <CardHeader className="flex flex-row items-center gap-3 py-4">
                           <UserAvatar userId={comment.userId} name={comment.zoomName} className="w-10 h-10 ring-2 ring-primary/20" />
                           <div>
-                            <p className="font-black text-sm uppercase italic">{comment.zoomName}</p>
-                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+                            <p className="text-body font-semibold">{comment.zoomName}</p>
+                            <p className="text-micro text-muted-foreground">
                               {new Date(comment.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                             </p>
                           </div>
@@ -520,7 +521,7 @@ const UserProfilePage: React.FC = () => {
                         </CardContent>
                         {comment.replies && comment.replies.map(reply => (
                           <div key={reply.id || reply._id} className="ml-12 border-l-2 border-primary/20 pl-4 py-2 mb-2">
-                             <p className="text-sm font-bold uppercase italic">{reply.zoomName}</p>
+                             <p className="text-body font-semibold">{reply.zoomName}</p>
                              <p className="text-sm leading-snug">"{reply.content}"</p>
                           </div>
                         ))}
@@ -529,7 +530,7 @@ const UserProfilePage: React.FC = () => {
                   );
                 })
               ) : (
-                <div className="text-center py-16 text-muted-foreground bg-muted/10 rounded-3xl border-2 border-dashed border-muted">
+                <div className="text-center py-16 text-muted-foreground rounded-2xl bg-muted">
                    <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-20" />
                    <p className="text-lg font-medium">No recommendations yet.</p>
                    <p className="text-sm">Be the first to celebrate {user.first_name}!</p>
@@ -540,7 +541,7 @@ const UserProfilePage: React.FC = () => {
         </div>
 
         <div className="space-y-8">
-           <h3 className="text-2xl font-black italic uppercase tracking-tighter">All Badges</h3>
+           <h3 className="text-heading font-semibold">All Badges</h3>
            <Card className="bg-card/30 border-none shadow-lg">
             <CardContent className="pt-6">
               <div className="grid grid-cols-2 gap-4">
@@ -551,7 +552,7 @@ const UserProfilePage: React.FC = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="col-span-2 text-center py-8 text-muted-foreground italic">
+                  <div className="col-span-2 text-center py-8 text-muted-foreground">
                     No badges earned yet.
                   </div>
                 )}
@@ -559,28 +560,28 @@ const UserProfilePage: React.FC = () => {
             </CardContent>
           </Card>
 
-          <h3 className="text-2xl font-black italic uppercase tracking-tighter">Information</h3>
+          <h3 className="text-heading font-semibold">Information</h3>
           <Card className="bg-card/30 border-none shadow-lg overflow-hidden">
             <div className="h-2 bg-primary/20" />
             <CardContent className="pt-6 space-y-6">
               <div className="flex justify-between items-center">
-                <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Generation Cohort</span>
+                <span className="text-small text-muted-foreground">Generation Cohort</span>
                 <span className="font-bold text-lg">{user.cohort_number}</span>
               </div>
               {user.project_group && (
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Project Team</span>
+                  <span className="text-small text-muted-foreground">Project Team</span>
                   <span className="font-bold text-lg">{user.project_group}</span>
                 </div>
               )}
                {user.genmate_group && (
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Genmate Group</span>
+                  <span className="text-small text-muted-foreground">Genmate Group</span>
                   <span className="font-bold text-lg">{user.genmate_group}</span>
                 </div>
               )}
                <div className="flex justify-between items-center">
-                <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">JSD ID</span>
+                <span className="text-small text-muted-foreground">JSD ID</span>
                 <span className="font-bold text-lg text-primary">#{user.jsd_number || "---"}</span>
               </div>
             </CardContent>

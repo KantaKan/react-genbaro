@@ -51,13 +51,13 @@ describe("AdminBoardPage", () => {
     const posts = await screen.findAllByRole("article");
     expect(boardService.getCohortPosts).toHaveBeenCalledWith(13);
     expect(within(posts[0]).getByText("Meme of the day")).toBeInTheDocument();
-    expect(within(posts[1]).getByText("2 replies")).toBeInTheDocument();
+    expect(within(posts[1]).getByText("View all 2 replies")).toBeInTheDocument();
   });
 
   it("opens replies and removes one after confirming", async () => {
     renderAdmin(<AdminBoardPage />, "/admin/board");
     const p1 = (await screen.findByText("Anyone stuck on useEffect?")).closest("article")!;
-    fireEvent.click(within(p1).getByRole("button", { name: "2 replies" }));
+    fireEvent.click(within(p1).getByRole("button", { name: "View all 2 replies" }));
     expect(within(p1).getByText("Me! The cleanup part")).toBeInTheDocument();
     fireEvent.click(within(p1).getByRole("button", { name: "Delete reply by นนท์" }));
     const ok = await screen.findByRole("button", { name: "Confirm" });
@@ -107,7 +107,7 @@ describe("AdminBoardPage", () => {
   it("replies to a post once", async () => {
     renderAdmin(<AdminBoardPage />, "/admin/board");
     const p1 = (await screen.findByText("Anyone stuck on useEffect?")).closest("article")!;
-    fireEvent.click(within(p1).getByRole("button", { name: "2 replies" }));
+    fireEvent.click(within(p1).getByRole("button", { name: "View all 2 replies" }));
     fireEvent.change(within(p1).getByLabelText("Reply to this post"), { target: { value: "Try the cleanup return" } });
     const send = within(p1).getByRole("button", { name: "Reply" });
     fireEvent.click(send);
@@ -127,7 +127,7 @@ describe("AdminBoardPage", () => {
     me("viewer");
     renderAdmin(<AdminBoardPage />, "/admin/board");
     const p1 = (await screen.findByText("Anyone stuck on useEffect?")).closest("article")!;
-    fireEvent.click(within(p1).getByRole("button", { name: "2 replies" }));
+    fireEvent.click(within(p1).getByRole("button", { name: "View all 2 replies" }));
     await waitFor(() => expect(within(p1).queryByLabelText("Reply to this post")).toBeNull());
     expect(within(p1).getByText("Me! The cleanup part")).toBeInTheDocument();
   });
@@ -136,7 +136,7 @@ describe("AdminBoardPage", () => {
     vi.mocked(adminApi.me).mockRejectedValue(new Error("offline"));
     renderAdmin(<AdminBoardPage />, "/admin/board");
     const p1 = (await screen.findByText("Anyone stuck on useEffect?")).closest("article")!;
-    fireEvent.click(within(p1).getByRole("button", { name: "2 replies" }));
+    fireEvent.click(within(p1).getByRole("button", { name: "View all 2 replies" }));
     expect(within(p1).queryByLabelText("Reply to this post")).toBeNull();
     expect(screen.queryByLabelText("Post to JSD13")).toBeNull();
     expect(screen.queryByRole("button", { name: /Delete post/ })).toBeNull();

@@ -271,7 +271,7 @@ export function ReflectionsPage() {
 
       {/* Row 1: tonight + this week */}
       <div className="l-card mt-4 grid grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_320px]">
-        <TonightCard dateLabel={dateLabel} nowSec={nowSec} sent={tonight} onSend={send} />
+        <TonightCard dateLabel={dateLabel} nowSec={nowSec} sent={tonight} onSend={send} paused={plant.paused} />
         <section aria-label="This week" className="border-t border-l-hair bg-l-sub/50 p-6 lg:border-l lg:border-t-0">
           <div className="flex items-baseline justify-between">
             <b className="text-title">This week</b>

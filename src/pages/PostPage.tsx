@@ -109,7 +109,7 @@ const PostCard: React.FC<{
         <div>
           <p className="font-semibold">{post.zoomName}</p>
           <p className="text-sm text-muted-foreground">
-            Cohort {post.cohort} - {new Date(post.createdAt).toLocaleString()}
+            JSD{post.cohort} · {new Date(post.createdAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" })}
           </p>
         </div>
       </CardHeader>
@@ -198,7 +198,7 @@ const CommentCard: React.FC<{
         <div>
           <p className="font-semibold">{comment.zoomName}</p>
           <p className="text-sm text-muted-foreground">
-            Cohort {comment.cohort} - {new Date(comment.createdAt).toLocaleString()}
+            {new Date(comment.createdAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" })}
           </p>
         </div>
       </CardHeader>

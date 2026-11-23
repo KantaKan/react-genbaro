@@ -15,7 +15,7 @@ const DOT: Record<DayCell["state"], string> = {
 
 /** Today's hero: your plant is your streak. */
 export function PlantCard({ plant }: { plant: ReturnType<typeof useMyPlant> }) {
-  const { nights, best, writtenToday, stage, nextStage, toNext, pct, week, appearance } = plant;
+  const { nights, best, writtenToday, stage, nextStage, toNext, pct, week, appearance, paused } = plant;
   return (
     <section className="l-card overflow-hidden p-0">
       <div className="flex items-stretch gap-4 p-[22px] pb-4">
@@ -54,8 +54,11 @@ export function PlantCard({ plant }: { plant: ReturnType<typeof useMyPlant> }) {
             </li>
           ))}
         </ol>
+        <span className="text-micro text-l-ink3">Counts Mon–Fri</span>
         <span className="flex-1" />
-        {writtenToday ? (
+        {paused ? (
+          <span className="text-small font-medium text-l-ink2">{paused === "weekend" ? "Weekend · streak paused" : "Holiday · streak paused"}</span>
+        ) : writtenToday ? (
           <span className="text-small font-medium text-l-green">Tonight's done</span>
         ) : (
           <Link to="/learner/reflections" className="rounded-full bg-l-ink px-3.5 py-1.5 text-small font-semibold text-l-card">

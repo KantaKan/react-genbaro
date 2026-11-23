@@ -55,8 +55,13 @@ export function useMyPlant() {
     [id, tier, streak.hasCurrentStreak, growth, me]
   );
 
+  const dow = new Date(`${today}T12:00:00Z`).getUTCDay();
+  // Streaks only count class days: a weekend or holiday night neither grows nor breaks it.
+  const paused: "weekend" | "holiday" | null = dow === 0 || dow === 6 ? "weekend" : holidays.has(today) ? "holiday" : null;
+
   return {
     ready: !!id && q.isSuccess,
+    paused,
     nights,
     best: streak.bestStreak,
     writtenToday: raw.some((r) => (r.day || r.date || "").slice(0, 10) === today),
