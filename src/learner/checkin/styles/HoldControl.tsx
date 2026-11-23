@@ -32,7 +32,7 @@ export default function HoldControl({ tone, disabled, busy, onComplete }: CheckI
       onPointerUp={stop}
       onPointerLeave={stop}
       onPointerCancel={stop}
-      className="relative grid h-[66px] w-full max-w-[320px] select-none place-items-center overflow-hidden rounded-[18px] bg-zinc-900 text-[15px] font-semibold text-white shadow-[0_14px_30px_-16px_rgba(0,0,0,.5)] transition-transform duration-300 active:scale-[.97] dark:bg-zinc-100 dark:text-zinc-900"
+      className="relative grid h-[66px] w-full max-w-[320px] select-none place-items-center overflow-hidden rounded-[18px] bg-zinc-900 text-title font-semibold text-white shadow-[0_14px_30px_-16px_rgba(0,0,0,.5)] transition-transform duration-300 active:scale-[.97] dark:bg-zinc-100 dark:text-zinc-900"
       style={{ touchAction: "none" }}
     >
       <span className="absolute inset-y-0 left-0" style={{ background: color, width: pressing ? "100%" : "0%", transition: pressing ? `width ${MS}ms linear` : "width .3s" }} />

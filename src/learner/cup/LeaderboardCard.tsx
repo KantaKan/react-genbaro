@@ -27,15 +27,15 @@ export function LeaderboardCard({ cup, now }: { cup: MyCup; now: Date }) {
             <Trophy className="h-5 w-5" strokeWidth={1.75} />
           </span>
           <div>
-            <h3 className="text-[15px] font-semibold">GenMate Cup · Week {cup.week_no}</h3>
-            <p className="mt-0.5 text-[12.5px] text-l-ink3">Group points from coding, soft skills, showing up and helping</p>
+            <h3 className="text-title font-semibold">GenMate Cup · Week {cup.week_no}</h3>
+            <p className="mt-0.5 text-small text-l-ink3">Group points from coding, soft skills, showing up and helping</p>
           </div>
         </div>
         <span className="whitespace-nowrap rounded-full bg-l-sub px-2.5 py-1 text-xs font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">{left}</span>
       </div>
 
       {empty ? (
-        <p className="mt-8 rounded-2xl bg-l-sub px-4 py-6 text-center text-[13px] text-l-ink2">No points yet this week. The first award puts a group on the podium.</p>
+        <p className="mt-8 rounded-2xl bg-l-sub px-4 py-6 text-center text-body text-l-ink2">No points yet this week. The first award puts a group on the podium.</p>
       ) : (
         <ol aria-label="Top 3" className="mt-6 grid grid-cols-[1fr_1.15fr_1fr] items-end gap-2.5">
           {podium.map((s, i) =>
@@ -65,8 +65,8 @@ export function LeaderboardCard({ cup, now }: { cup: MyCup; now: Date }) {
 
       {m.length > 0 && (
         <>
-          <h4 className="mb-2 mt-5 text-[12px] font-semibold uppercase tracking-[.08em] text-l-ink3">Moments</h4>
-          <ul className="flex flex-col gap-1.5 text-[13px] text-l-ink2">
+          <h4 className="mb-2 mt-5 text-small font-semibold uppercase tracking-[.08em] text-l-ink3">Moments</h4>
+          <ul className="flex flex-col gap-1.5 text-body text-l-ink2">
             {m.map((t) => (
               <li key={t} className="flex items-start gap-2">
                 <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" strokeWidth={1.75} />
@@ -79,8 +79,8 @@ export function LeaderboardCard({ cup, now }: { cup: MyCup; now: Date }) {
 
       {cup.wall_of_fame.length > 0 && (
         <>
-          <h4 className="mb-1.5 mt-5 text-[12px] font-semibold uppercase tracking-[.08em] text-l-ink3">Wall of fame</h4>
-          <ul aria-label="Wall of fame" className="text-[12.5px]">
+          <h4 className="mb-1.5 mt-5 text-small font-semibold uppercase tracking-[.08em] text-l-ink3">Wall of fame</h4>
+          <ul aria-label="Wall of fame" className="text-small">
             {cup.wall_of_fame.slice(0, 5).map((w) => (
               <li key={w.week_no} className="flex items-center gap-3 border-t border-l-hair py-1.5 first:border-t-0">
                 <span className="w-14 text-l-ink3">Week {w.week_no}</span>
@@ -92,8 +92,8 @@ export function LeaderboardCard({ cup, now }: { cup: MyCup; now: Date }) {
         </>
       )}
 
-      <h4 className="mb-2 mt-5 text-[12px] font-semibold uppercase tracking-[.08em] text-l-ink3">Winner gets, next week</h4>
-      <div className="grid grid-cols-2 gap-2 text-[12.5px] text-l-ink2">
+      <h4 className="mb-2 mt-5 text-small font-semibold uppercase tracking-[.08em] text-l-ink3">Winner gets, next week</h4>
+      <div className="grid grid-cols-2 gap-2 text-small text-l-ink2">
         {[
           [Crown, "Gold avatar frame"],
           [Sparkles, "Gold background"],

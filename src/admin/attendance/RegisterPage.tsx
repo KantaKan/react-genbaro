@@ -35,8 +35,8 @@ function Kpi({ label, value, delta, good, sub, warn }: { label: string; value: s
     <div className="rounded-2xl px-4 py-3.5 shadow-[0_0_0_1px_var(--l-hair)]">
       <small className="text-xs text-l-ink3">{label}</small>
       <b className={`mt-1 block text-2xl font-bold tabular-nums tracking-tight ${warn ? "text-amber-600" : ""}`}>{value}</b>
-      {delta && <em className={`not-italic text-[11.5px] ${good ? "text-emerald-600" : "text-amber-600"}`}>{delta}</em>}
-      {sub && <em className="not-italic text-[11.5px] text-l-ink3">{sub}</em>}
+      {delta && <em className={`not-italic text-small ${good ? "text-emerald-600" : "text-amber-600"}`}>{delta}</em>}
+      {sub && <em className="not-italic text-small text-l-ink3">{sub}</em>}
     </div>
   );
 }
@@ -50,7 +50,7 @@ function CellChip({ l, cell, date, session }: { l: RegisterLearner; cell: Sessio
         <button
           type="button"
           aria-label={`${dayLabel(date)} ${session}: ${STATUS_LABEL[cell.status]}`}
-          className={`grid h-6 w-[34px] place-items-center rounded-[7px] text-[10.5px] font-bold transition-transform hover:scale-110 ${statusChip(cell.status)}`}
+          className={`grid h-6 w-[34px] place-items-center rounded-[7px] text-micro font-bold transition-transform hover:scale-110 ${statusChip(cell.status)}`}
         >
           {GLYPH[cell.status] ?? ""}
         </button>
@@ -66,7 +66,7 @@ function CellChip({ l, cell, date, session }: { l: RegisterLearner; cell: Sessio
                 setOpen(false);
                 mark({ learner: l, cell, session, date, status: s });
               }}
-              className="flex w-full rounded-lg px-2.5 py-1.5 text-left text-[13px] hover:bg-l-sub"
+              className="flex w-full rounded-lg px-2.5 py-1.5 text-left text-body hover:bg-l-sub"
             >
               {t}
             </button>
@@ -129,7 +129,7 @@ export function RegisterPage() {
         <button type="button" aria-label="Next week" onClick={() => v && setWeek(shiftWeek(v.week, 1))} className="grid h-8 w-8 place-items-center rounded-[9px] shadow-[0_0_0_1px_var(--l-hair)]">
           <ChevronRight className="h-4 w-4" />
         </button>
-        <button type="button" onClick={exportSF} className="inline-flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-[12.5px] font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
+        <button type="button" onClick={exportSF} className="inline-flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-small font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
           <Download className="h-3.5 w-3.5" />
           Export for Salesforce
         </button>
@@ -143,9 +143,9 @@ export function RegisterPage() {
             <Kpi label="At 6+ leave days" value={String(v.kpis.at_six_plus)} sub={`${v.kpis.at_seven} at 7`} warn={v.kpis.at_six_plus > 0} />
           </div>
           <div className="mt-3.5 overflow-x-auto rounded-2xl shadow-[0_0_0_1px_var(--l-hair)]">
-            <table className="w-full border-separate border-spacing-0 text-[13px]">
+            <table className="w-full border-separate border-spacing-0 text-body">
               <thead>
-                <tr className="text-left text-[11.5px] text-l-ink3">
+                <tr className="text-left text-small text-l-ink3">
                   <th className="sticky left-0 z-[1] border-b border-l-hair bg-l-card px-3 py-2 font-medium">Learner</th>
                   {v.dates.map((dt) => (
                     <th key={dt} className="border-b border-l-hair px-2 py-2 font-medium">
@@ -175,7 +175,7 @@ export function RegisterPage() {
                       {v.dates.map((dt, i) =>
                         v.holidays.includes(dt) ? (
                           <td key={dt} className="border-b border-l-hair px-2 py-1.5">
-                            <span className="inline-grid h-6 w-[71px] place-items-center rounded-[7px] bg-[repeating-linear-gradient(135deg,var(--l-sub)_0_6px,transparent_6px_12px)] text-[10.5px] font-semibold text-l-ink3">Holiday</span>
+                            <span className="inline-grid h-6 w-[71px] place-items-center rounded-[7px] bg-[repeating-linear-gradient(135deg,var(--l-sub)_0_6px,transparent_6px_12px)] text-micro font-semibold text-l-ink3">Holiday</span>
                           </td>
                         ) : (
                           <td key={dt} className="border-b border-l-hair px-2 py-1.5">
@@ -196,7 +196,7 @@ export function RegisterPage() {
               </tbody>
             </table>
           </div>
-          <p className="mt-2.5 text-[11.5px] text-l-ink3">Click a cell to change it · every change is logged</p>
+          <p className="mt-2.5 text-small text-l-ink3">Click a cell to change it · every change is logged</p>
         </>
       )}
       {q.isLoading && <div className="mt-4 h-40 animate-pulse rounded-2xl bg-l-sub" />}

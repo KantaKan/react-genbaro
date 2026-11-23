@@ -59,11 +59,11 @@ export function CommandPalette({ open, onOpenChange, cohort }: { open: boolean; 
               if (e.key === "Enter") pick(items[i]);
             }}
             placeholder="Find a learner or a page…"
-            className="flex-1 bg-transparent text-[15px] outline-none placeholder:text-l-ink3"
+            className="flex-1 bg-transparent text-title outline-none placeholder:text-l-ink3"
           />
         </label>
         <ul role="listbox" aria-label="Results" className="max-h-[360px] overflow-y-auto p-1.5">
-          {items.length === 0 && <li className="px-3 py-6 text-center text-[13px] text-l-ink3">Nothing found</li>}
+          {items.length === 0 && <li className="px-3 py-6 text-center text-body text-l-ink3">Nothing found</li>}
           {items.map((x, k) => (
             <li
               key={x.id}
@@ -71,7 +71,7 @@ export function CommandPalette({ open, onOpenChange, cohort }: { open: boolean; 
               aria-selected={k === i}
               onMouseEnter={() => setI(k)}
               onClick={() => pick(x)}
-              className={`flex cursor-pointer items-center justify-between gap-3 rounded-[10px] px-3 py-2 text-[13.5px] ${k === i ? "bg-l-sub" : ""}`}
+              className={`flex cursor-pointer items-center justify-between gap-3 rounded-[10px] px-3 py-2 text-body ${k === i ? "bg-l-sub" : ""}`}
             >
               <span className="font-medium">{x.label}</span>
               <span className="truncate text-xs text-l-ink3">{x.sub}</span>

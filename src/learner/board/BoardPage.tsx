@@ -38,7 +38,7 @@ export function BoardPage() {
     () => (
       <div className="flex rounded-[10px] bg-l-sub p-[3px]">
         {(["latest", "popular"] as const).map((m) => (
-          <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)} className={`rounded-lg px-3 py-1 text-[12.5px] font-semibold capitalize ${mode === m ? "bg-l-card text-l-ink shadow-sm" : "text-l-ink2"}`}>
+          <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)} className={`rounded-lg px-3 py-1 text-small font-semibold capitalize ${mode === m ? "bg-l-card text-l-ink shadow-sm" : "text-l-ink2"}`}>
             {m}
           </button>
         ))}
@@ -90,7 +90,7 @@ export function BoardPage() {
             />
           </div>
           <div className="mt-2.5 flex justify-end">
-            <button type="button" onClick={post} disabled={!text.trim()} className="rounded-full bg-l-ink px-4 py-1.5 text-[13.5px] font-medium text-l-card disabled:opacity-40">
+            <button type="button" onClick={post} disabled={!text.trim()} className="rounded-full bg-l-ink px-4 py-1.5 text-body font-medium text-l-card disabled:opacity-40">
               Post
             </button>
           </div>
@@ -117,14 +117,14 @@ export function BoardPage() {
                     aria-label={`React with ${r.name}`}
                     aria-pressed={r.mine}
                     onClick={() => react(p, r.name)}
-                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[13px] tabular-nums transition ${r.mine ? "bg-indigo-50 font-semibold text-indigo-700 shadow-[0_0_0_1.5px_#6366f1] dark:bg-indigo-500/15 dark:text-indigo-300" : "bg-l-card shadow-[0_0_0_1px_var(--l-hair)]"} ${r.n === 0 && !r.mine ? "opacity-60 hover:opacity-100" : ""}`}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-body tabular-nums transition ${r.mine ? "bg-indigo-50 font-semibold text-indigo-700 shadow-[0_0_0_1.5px_#6366f1] dark:bg-indigo-500/15 dark:text-indigo-300" : "bg-l-card shadow-[0_0_0_1px_var(--l-hair)]"} ${r.n === 0 && !r.mine ? "opacity-60 hover:opacity-100" : ""}`}
                   >
                     <img src={r.url} alt="" className={`h-[18px] w-[18px] ${bump === `${p.id}:${r.name}` ? "animate-[l-bump_.5s]" : ""}`} onAnimationEnd={() => setBump(null)} />
                     {r.n > 0 && r.n}
                   </button>
                 ))}
                 <span className="flex-1" />
-                <Link to={`/talk-board/${p.id}`} className="inline-flex items-center gap-1 text-[12.5px] text-l-ink3 hover:text-l-ink">
+                <Link to={`/talk-board/${p.id}`} className="inline-flex items-center gap-1 text-small text-l-ink3 hover:text-l-ink">
                   <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
                   {p.comments?.length ?? 0} {(p.comments?.length ?? 0) === 1 ? "reply" : "replies"}
                 </Link>
@@ -136,8 +136,8 @@ export function BoardPage() {
         <style>{`@keyframes l-bump{40%{transform:scale(1.6) rotate(-10deg)}}`}</style>
       </div>
       <aside className="l-card p-[22px] lg:sticky lg:top-20">
-        <h5 className="mb-2.5 text-[12px] font-semibold uppercase tracking-[.08em] text-l-ink3">Board rules</h5>
-        <p className="text-[13px] leading-relaxed text-l-ink2">Be kind. No answers to graded exercises before the deadline. Memes are welcome, spam is not.</p>
+        <h5 className="mb-2.5 text-small font-semibold uppercase tracking-[.08em] text-l-ink3">Board rules</h5>
+        <p className="text-body leading-relaxed text-l-ink2">Be kind. No answers to graded exercises before the deadline. Memes are welcome, spam is not.</p>
       </aside>
     </div>
   );

@@ -73,7 +73,7 @@ export function MyProfilePage() {
               {me.project_group && <span className="rounded-full bg-l-sub px-2.5 py-0.5 text-xs font-semibold text-l-ink2">Project: {me.project_group}</span>}
             </div>
           </div>
-          <button type="button" onClick={() => setEditing("profile")} className="mb-1 rounded-full bg-l-card px-4 py-2 text-[13.5px] font-medium shadow-[0_0_0_1px_var(--l-hair)]">
+          <button type="button" onClick={() => setEditing("profile")} className="mb-1 rounded-full bg-l-card px-4 py-2 text-body font-medium shadow-[0_0_0_1px_var(--l-hair)]">
             Edit profile
           </button>
         </div>
@@ -95,11 +95,11 @@ export function MyProfilePage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <div className="flex flex-col gap-4 lg:col-span-7">
           <section className="l-card p-[22px]">
-            <h3 className="text-[15px] font-semibold">About me</h3>
+            <h3 className="text-title font-semibold">About me</h3>
             <p className="mt-2.5 leading-relaxed text-l-ink2">{me.bio || "Tell classmates a little about yourself. Tap Edit profile."}</p>
             <div className="mt-3.5 flex flex-wrap items-center gap-1.5">
               {mySkills.map((k) => (
-                <span key={k} className="inline-flex items-center gap-1 rounded-lg bg-l-sub px-2 py-0.5 text-[12px] font-medium text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
+                <span key={k} className="inline-flex items-center gap-1 rounded-lg bg-l-sub px-2 py-0.5 text-small font-medium text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
                   {k}
                   <button type="button" aria-label={`Remove ${k}`} onClick={() => saveSkills(mySkills.filter((x) => x !== k))}>
                     <X className="h-3 w-3" />
@@ -107,19 +107,19 @@ export function MyProfilePage() {
                 </span>
               ))}
               <span className="inline-flex items-center gap-1 rounded-lg px-1.5 shadow-[0_0_0_1px_var(--l-hair)]">
-                <input value={skill} onChange={(e) => setSkill(e.target.value)} placeholder="Add a skill" maxLength={24} className="w-24 bg-transparent py-0.5 text-[12px] outline-none" />
+                <input value={skill} onChange={(e) => setSkill(e.target.value)} placeholder="Add a skill" maxLength={24} className="w-24 bg-transparent py-0.5 text-small outline-none" />
                 <button type="button" aria-label="Add skill" disabled={!canAdd} onClick={() => (saveSkills([...mySkills, skill.trim()]), setSkill(""))} className="disabled:opacity-40">
                   <Plus className="h-3.5 w-3.5" />
                 </button>
               </span>
-              {mySkills.length >= MAX_SKILLS && <span className="text-[11.5px] text-l-ink3">Up to {MAX_SKILLS} skills</span>}
+              {mySkills.length >= MAX_SKILLS && <span className="text-small text-l-ink3">Up to {MAX_SKILLS} skills</span>}
             </div>
           </section>
           <BarometerStrip reflections={reflections.data ?? []} />
           <section className="l-card p-[22px]">
-            <h3 className="text-[15px] font-semibold">Recommendations</h3>
-            <p className="mt-0.5 text-[12.5px] text-l-ink3">What classmates and TAs say about working with you</p>
-            {(me.profile_comments ?? []).filter((c) => !c.parentId).length === 0 && <p className="mt-3 text-[13px] text-l-ink3">No recommendations yet.</p>}
+            <h3 className="text-title font-semibold">Recommendations</h3>
+            <p className="mt-0.5 text-small text-l-ink3">What classmates and TAs say about working with you</p>
+            {(me.profile_comments ?? []).filter((c) => !c.parentId).length === 0 && <p className="mt-3 text-body text-l-ink3">No recommendations yet.</p>}
             {(me.profile_comments ?? [])
               .filter((c) => !c.parentId)
               .slice(0, 5)
@@ -136,7 +136,7 @@ export function MyProfilePage() {
         </div>
         <div className="flex flex-col gap-4 lg:col-span-5">
           <section className="l-card p-[22px]">
-            <h3 className="text-[15px] font-semibold">Badges</h3>
+            <h3 className="text-title font-semibold">Badges</h3>
             <div className="mt-4 grid grid-cols-4 gap-x-2 gap-y-3.5">
               <Medal name={`${s?.streak ?? 0}-day streak`} sub="On time" color="#ea580c" glyph={String(s?.streak ?? 0)} />
               {(me.badges ?? []).map((b) => (
@@ -151,27 +151,27 @@ export function MyProfilePage() {
           <section className="l-card p-[22px]">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-[15px] font-semibold">Check-in style</h3>
-                <p className="mt-0.5 text-[12.5px] text-l-ink3">{s?.preferences?.checkin_random ? "Surprise me every day" : style?.name}</p>
+                <h3 className="text-title font-semibold">Check-in style</h3>
+                <p className="mt-0.5 text-small text-l-ink3">{s?.preferences?.checkin_random ? "Surprise me every day" : style?.name}</p>
               </div>
-              <button type="button" onClick={() => setEditing("style")} className="-m-2 rounded-lg p-2 text-[13px] font-medium text-l-ink2 hover:bg-l-sub">
+              <button type="button" onClick={() => setEditing("style")} className="-m-2 rounded-lg p-2 text-body font-medium text-l-ink2 hover:bg-l-sub">
                 Change ›
               </button>
             </div>
           </section>
           <section className="l-card p-[22px]">
-            <h3 className="text-[15px] font-semibold">Details</h3>
+            <h3 className="text-title font-semibold">Details</h3>
             {[
               ["Cohort", `JSD${me.cohort_number}`],
               ["Learner no.", `#${me.jsd_number ?? "–"}`],
               ["Zoom name", me.zoom_name ?? "–"],
             ].map(([k, v]) => (
-              <div key={k} className="flex justify-between border-t border-l-hair py-2.5 text-[13px] text-l-ink2 first:mt-2 first:border-t-0">
+              <div key={k} className="flex justify-between border-t border-l-hair py-2.5 text-body text-l-ink2 first:mt-2 first:border-t-0">
                 <span>{k}</span>
                 <b className="font-semibold text-l-ink">{v}</b>
               </div>
             ))}
-            <Link to="/learner/garden" className="mt-2 inline-block text-[13px] font-medium text-l-ink2 underline">
+            <Link to="/learner/garden" className="mt-2 inline-block text-body font-medium text-l-ink2 underline">
               My Genmate Garden plant ›
             </Link>
           </section>
@@ -204,21 +204,21 @@ function EditProfile({ me, onClose, onSaved }: { me: Person; onClose: () => void
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="learner rounded-[22px] border-0 bg-l-card text-l-ink">
         <DialogTitle>Edit profile</DialogTitle>
-        <label className="text-[12.5px] font-semibold text-l-ink2">
+        <label className="text-small font-semibold text-l-ink2">
           About me
           <textarea value={bio} onChange={(e) => setBio(e.target.value)} maxLength={500} className="mt-2 h-24 w-full resize-none rounded-xl bg-l-card px-3 py-2.5 font-normal text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]" />
         </label>
         {(["github", "linkedin", "instagram"] as const).map((k) => (
-          <label key={k} className="text-[12.5px] font-semibold capitalize text-l-ink2">
+          <label key={k} className="text-small font-semibold capitalize text-l-ink2">
             {k} URL
             <input value={links[k]} onChange={(e) => setLinks((l) => ({ ...l, [k]: e.target.value }))} className="mt-1.5 w-full rounded-xl bg-l-card px-3 py-2 font-normal text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]" />
           </label>
         ))}
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="rounded-full px-4 py-2 text-[13.5px] font-medium shadow-[0_0_0_1px_var(--l-hair)]">
+          <button type="button" onClick={onClose} className="rounded-full px-4 py-2 text-body font-medium shadow-[0_0_0_1px_var(--l-hair)]">
             Cancel
           </button>
-          <button type="button" onClick={save} className="rounded-full bg-l-ink px-4 py-2 text-[13.5px] font-medium text-l-card">
+          <button type="button" onClick={save} className="rounded-full bg-l-ink px-4 py-2 text-body font-medium text-l-card">
             Save
           </button>
         </div>

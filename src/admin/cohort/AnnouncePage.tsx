@@ -13,7 +13,7 @@ import { useSlackAvailable } from "../slack/useSlackAvailable";
 import { useStaff } from "../team/useStaff";
 
 type Audience = "everyone" | "groups" | "people";
-const field = "w-full rounded-xl bg-l-sub px-3 py-2.5 text-[13.5px] text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]";
+const field = "w-full rounded-xl bg-l-sub px-3 py-2.5 text-body text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]";
 const seg = (on: boolean) => `rounded-[7px] px-3 py-1 text-xs font-semibold ${on ? "bg-l-ink text-l-card" : "text-l-ink2"}`;
 
 export function AnnouncePage() {
@@ -84,7 +84,7 @@ export function AnnouncePage() {
     <div>
       <div className="grid gap-3.5 xl:grid-cols-[1.1fr_1fr]">
         <section className="rounded-2xl p-5 shadow-[0_0_0_1px_var(--l-hair)]">
-          <h4 className="text-[13px] font-semibold">New announcement</h4>
+          <h4 className="text-body font-semibold">New announcement</h4>
           <label className="mt-3 block text-xs font-semibold text-l-ink2">
             Title
             <input aria-label="Title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} className={`${field} mt-1.5 font-semibold`} />
@@ -128,9 +128,9 @@ export function AnnouncePage() {
           )}
           <div className="mt-3 flex flex-wrap items-center gap-2.5">
             <span className="w-16 text-xs text-l-ink3">When</span>
-            <input aria-label="Start time" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="rounded-xl bg-l-sub px-3 py-1.5 text-[13px] text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
+            <input aria-label="Start time" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="rounded-xl bg-l-sub px-3 py-1.5 text-body text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
             <span className="text-xs text-l-ink3">{when ? "" : "Now ·"} shows for</span>
-            <input aria-label="Days" type="number" min={1} max={60} value={days} onChange={(e) => setDays(Math.max(1, Number(e.target.value) || 1))} className="w-14 rounded-lg bg-l-sub px-2 py-1.5 text-[13px] shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
+            <input aria-label="Days" type="number" min={1} max={60} value={days} onChange={(e) => setDays(Math.max(1, Number(e.target.value) || 1))} className="w-14 rounded-lg bg-l-sub px-2 py-1.5 text-body shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
             <span className="text-xs text-l-ink3">days</span>
             {canSlack && (
               <label className="flex w-full items-center gap-2 pl-[74px] text-xs text-l-ink2">
@@ -139,33 +139,33 @@ export function AnnouncePage() {
               </label>
             )}
             <span className="flex-1" />
-            <button type="button" disabled={!ok} onClick={send} className="rounded-full bg-l-ink px-4 py-2 text-[13px] font-semibold text-l-card disabled:opacity-40">
+            <button type="button" disabled={!ok} onClick={send} className="rounded-full bg-l-ink px-4 py-2 text-body font-semibold text-l-card disabled:opacity-40">
               Send to {count} learner{count === 1 ? "" : "s"}
             </button>
           </div>
         </section>
         <section className="rounded-2xl p-5 shadow-[0_0_0_1px_var(--l-hair)]">
-          <h4 className="text-[13px] font-semibold">Preview on a learner's Today</h4>
+          <h4 className="text-body font-semibold">Preview on a learner's Today</h4>
           <div className="mt-3 flex items-start gap-3 rounded-2xl bg-gradient-to-b from-indigo-50 to-l-card p-3.5 shadow-[0_0_0_1px_var(--l-hair)] dark:from-indigo-500/15">
             <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px] bg-l-card shadow-[0_0_0_1px_var(--l-hair)]">
               <Megaphone className="h-4 w-4" strokeWidth={1.6} />
             </span>
             <div className="min-w-0">
               <b className="text-sm">{title || "Your title"}</b>
-              <p className="mt-0.5 whitespace-pre-wrap text-[13px] leading-relaxed text-l-ink2">{message || "Your message shows here."}</p>
-              <small className="text-[11.5px] text-l-ink3">Banner on every page until they close it</small>
+              <p className="mt-0.5 whitespace-pre-wrap text-body leading-relaxed text-l-ink2">{message || "Your message shows here."}</p>
+              <small className="text-small text-l-ink3">Banner on every page until they close it</small>
             </div>
           </div>
         </section>
       </div>
-      <h3 className="mb-2.5 mt-6 text-[15px] font-semibold">Sent</h3>
+      <h3 className="mb-2.5 mt-6 text-title font-semibold">Sent</h3>
       <section className="rounded-2xl px-4 py-1 shadow-[0_0_0_1px_var(--l-hair)]">
-        {list.length === 0 && <p className="py-4 text-[12.5px] text-l-ink3">Nothing sent yet.</p>}
+        {list.length === 0 && <p className="py-4 text-small text-l-ink3">Nothing sent yet.</p>}
         {list.map((n) => {
           const seen = ((n as unknown as { read_by_users?: string[] }).read_by_users ?? []).length;
           const live = n.is_active && new Date(n.end_date) > new Date();
           return (
-            <div key={n.id} className="grid grid-cols-[minmax(0,1.4fr)_90px_110px_auto] items-center gap-3 border-b border-l-hair py-3 text-[13px] last:border-0">
+            <div key={n.id} className="grid grid-cols-[minmax(0,1.4fr)_90px_110px_auto] items-center gap-3 border-b border-l-hair py-3 text-body last:border-0">
               <b className="truncate font-semibold">{n.title}</b>
               <span className="tabular-nums text-l-ink2">{`${seen} seen`}</span>
               <span className="text-xs text-l-ink3">{new Date(n.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Asia/Bangkok" })}</span>

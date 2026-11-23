@@ -199,10 +199,10 @@ export function CheckInCard({
       {celebrate > 0 && <Celebrate key={celebrate} />}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-[15px] font-semibold">
+          <h3 className="text-title font-semibold">
             {session === "morning" ? "Morning check-in" : "Afternoon check-in"}
           </h3>
-          <p className="mt-0.5 text-[12.5px] text-l-ink3">
+          <p className="mt-0.5 text-small text-l-ink3">
             On time until {fmtClock(w.late_after)}
           </p>
         </div>
@@ -214,7 +214,7 @@ export function CheckInCard({
                 bumpReroll(today, seed);
                 rerender((n) => n + 1);
               }}
-              className="rounded-full px-2.5 py-1 text-[12px] font-medium text-l-ink2 hover:bg-l-sub"
+              className="rounded-full px-2.5 py-1 text-small font-medium text-l-ink2 hover:bg-l-sub"
             >
               Reroll
             </button>
@@ -222,7 +222,7 @@ export function CheckInCard({
           <button
             type="button"
             onClick={onOpenPicker}
-            className="rounded-full bg-l-card px-3 py-1.5 text-[12.5px] font-medium shadow-[0_0_0_1px_var(--l-hair)] hover:shadow-[0_0_0_1px_var(--l-ink3)]"
+            className="rounded-full bg-l-card px-3 py-1.5 text-small font-medium shadow-[0_0_0_1px_var(--l-hair)] hover:shadow-[0_0_0_1px_var(--l-ink3)]"
           >
             {prefs.checkin_random ? "Random" : "Style"} · {meta.name}
           </button>
@@ -279,16 +279,16 @@ export function CheckInCard({
               background: `linear-gradient(90deg, #bbf7d0 0 ${latePos}%, #fde68a ${latePos}% 100%)`,
             }}
           />
-          <span className="absolute top-5 text-[11px] text-l-ink3">
+          <span className="absolute top-5 text-micro text-l-ink3">
             {fmtClock(w.open_at)}
           </span>
           <span
-            className="absolute top-5 -translate-x-1/2 text-[11px] text-l-ink3"
+            className="absolute top-5 -translate-x-1/2 text-micro text-l-ink3"
             style={{ left: `${latePos}%` }}
           >
             {fmtClock(w.late_after)}
           </span>
-          <span className="absolute right-0 top-5 text-[11px] text-l-ink3">
+          <span className="absolute right-0 top-5 text-micro text-l-ink3">
             {fmtClock(w.absent_after)}
           </span>
           <span
@@ -320,7 +320,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="text-xs text-l-ink3">{label}</div>
-      <div className="text-[17px] font-semibold tabular-nums tracking-tight">
+      <div className="text-heading font-semibold tabular-nums tracking-tight">
         {value}
       </div>
     </div>

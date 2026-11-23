@@ -55,7 +55,7 @@ export function LearnerShell({ children }: { children: ReactNode }) {
           <nav aria-label="Learner" className="flex flex-col gap-0.5">
             {sections.map((sec) => (
               <div key={sec}>
-                <div className="px-2.5 pb-1.5 pt-3.5 text-[11.5px] font-medium text-l-ink3">{sec}</div>
+                <div className="px-2.5 pb-1.5 pt-3.5 text-small font-medium text-l-ink3">{sec}</div>
                 {NAV.filter((n) => n.section === sec).map((n) => (
                   <NavLink key={n.to} to={n.to} end={n.end} className={linkCls}>
                     <n.icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
@@ -74,7 +74,7 @@ export function LearnerShell({ children }: { children: ReactNode }) {
           <div className={`${userRole === "admin" ? "mt-2" : "mt-auto"} flex items-center gap-2.5 rounded-xl p-2.5 shadow-[0_0_0_1px_var(--l-hair)]`}>
             <UserAvatar userId={userData?._id} name={nick.en} avatar={userData?.avatar} className="h-[34px] w-[34px] shrink-0" />
             <div className="min-w-0">
-              <div className="truncate text-[13px] font-semibold">{nick.th ? `${nick.en} · ${nick.th}` : nick.en}</div>
+              <div className="truncate text-body font-semibold">{nick.th ? `${nick.en} · ${nick.th}` : nick.en}</div>
               <div className="text-xs text-l-ink3">
                 #{userData?.jsd_number ?? "–"}
                 {userData?.genmate_group ? ` · Group ${userData.genmate_group}` : ""}
@@ -99,8 +99,8 @@ export function LearnerShell({ children }: { children: ReactNode }) {
           >
             {header && (
               <div className="flex min-w-0 items-baseline gap-2.5">
-                <span className="whitespace-nowrap text-[17px] font-semibold tracking-tight">{header.title}</span>
-                {header.context && <span className="truncate text-[13px] text-l-ink3">{header.context}</span>}
+                <span className="whitespace-nowrap text-heading font-semibold tracking-tight">{header.title}</span>
+                {header.context && <span className="truncate text-body text-l-ink3">{header.context}</span>}
               </div>
             )}
             <div className="ml-auto flex items-center gap-2">
@@ -122,7 +122,7 @@ export function LearnerShell({ children }: { children: ReactNode }) {
               to={t.to}
               end={t.end}
               className={({ isActive }) =>
-                cn("flex flex-col items-center gap-0.5 rounded-xl px-2.5 py-1.5 text-[10.5px]", isActive ? "bg-l-sub text-l-ink" : "text-l-ink3")
+                cn("flex flex-col items-center gap-0.5 rounded-xl px-2.5 py-1.5 text-micro", isActive ? "bg-l-sub text-l-ink" : "text-l-ink3")
               }
             >
               <t.icon className="h-[18px] w-[18px]" strokeWidth={1.5} />

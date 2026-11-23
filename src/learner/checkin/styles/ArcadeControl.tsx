@@ -30,13 +30,13 @@ export default function ArcadeControl({ tone, disabled, busy, onComplete }: Chec
         <span aria-hidden className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,rgba(0,0,0,.35)_0_1px,transparent_1px_3px)]" />
         {screenState === "title" && (
           <>
-            <div className="text-[16px] text-yellow-300 [text-shadow:3px_3px_0_#b91c1c]">BARO QUEST</div>
-            <div className="animate-pulse text-[10px]">{hint}</div>
+            <div className="text-heading text-yellow-300 [text-shadow:3px_3px_0_#b91c1c]">BARO QUEST</div>
+            <div className="animate-pulse text-micro">{hint}</div>
           </>
         )}
         {screenState === "loading" && (
           <>
-            <div className="text-[12px] text-yellow-300">PLAYER 1 READY</div>
+            <div className="text-small text-yellow-300">PLAYER 1 READY</div>
             <div className="flex gap-1">
               {Array.from({ length: 8 }, (_, i) => (
                 <i key={i} className="block h-4 w-4" style={{ background: i < bars ? "#4ade80" : "#14532d", boxShadow: i < bars ? "0 0 8px #4ade80" : "none" }} />
@@ -46,7 +46,7 @@ export default function ArcadeControl({ tone, disabled, busy, onComplete }: Chec
         )}
         {screenState === "clear" && (
           <>
-            <div className="text-[13px] text-green-400 [text-shadow:3px_3px_0_#14532d]">STAGE CLEAR!</div>
+            <div className="text-body text-green-400 [text-shadow:3px_3px_0_#14532d]">STAGE CLEAR!</div>
             <div className="text-[8px] text-yellow-300">{tone === "late" ? "+1 LATE · CONTINUE?" : "+1 STREAK"}</div>
           </>
         )}

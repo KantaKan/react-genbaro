@@ -29,26 +29,26 @@ function LeaveCard({ r, l, onReview }: { r: LeaveRequest; l?: TodayLearner; onRe
       <UserAvatar userId={r.user_id} name={n.en} avatar={l?.avatar} className="h-11 w-11" />
       <div className="min-w-0">
         <div className="flex flex-wrap items-baseline gap-x-2">
-          <b className="text-[14.5px] font-semibold">{n.th ? `${n.th} · ${n.en}` : n.en}</b>
+          <b className="text-title font-semibold">{n.th ? `${n.th} · ${n.en}` : n.en}</b>
           <span className="text-xs text-l-ink3">
             #{r.jsd_number} · {l?.genmate_group ? `Group ${l.genmate_group} · ` : ""}sent {ago(r.created_at)}
           </span>
         </div>
-        <div className="mt-0.5 text-[13px] font-semibold">{whenLine(r)}</div>
-        <p className="mt-2 whitespace-pre-wrap rounded-xl bg-l-sub px-3 py-2 text-[13px] leading-relaxed">{r.reason || "No reason given."}</p>
+        <div className="mt-0.5 text-body font-semibold">{whenLine(r)}</div>
+        <p className="mt-2 whitespace-pre-wrap rounded-xl bg-l-sub px-3 py-2 text-body leading-relaxed">{r.reason || "No reason given."}</p>
         <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs text-l-ink2">
           Leave used <LeaveMeter used={p.now} after={r.status === "pending" ? p.after : undefined} size="md" />
-          <b className="text-[13px] font-semibold text-l-ink">{r.status === "pending" ? `${p.now} → ${p.after}` : p.now}</b> of 8
+          <b className="text-body font-semibold text-l-ink">{r.status === "pending" ? `${p.now} → ${p.after}` : p.now}</b> of 8
           {r.status === "pending" && p.reachesLimit && <span className="rounded-full bg-red-50 px-2 py-0.5 font-semibold text-red-600 dark:bg-red-500/15">Reaches the limit</span>}
           {r.status === "pending" && !p.reachesLimit && p.after >= 6 && <span className="rounded-full bg-amber-50 px-2 py-0.5 font-semibold text-amber-700 dark:bg-amber-500/15">{p.after >= 7 ? "Final warning" : "2nd warning"}</span>}
         </div>
       </div>
       {r.status === "pending" ? (
         <div className="col-span-2 flex gap-1.5 md:col-span-1 md:flex-col">
-          <button type="button" onClick={() => onReview(r, "approved")} className="rounded-[11px] bg-l-ink px-[18px] py-2 text-[13px] font-semibold text-l-card">
+          <button type="button" onClick={() => onReview(r, "approved")} className="rounded-[11px] bg-l-ink px-[18px] py-2 text-body font-semibold text-l-card">
             Approve
           </button>
-          <button type="button" onClick={() => onReview(r, "rejected")} className="rounded-[11px] px-[18px] py-2 text-[13px] font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
+          <button type="button" onClick={() => onReview(r, "rejected")} className="rounded-[11px] px-[18px] py-2 text-body font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
             Decline
           </button>
         </div>
@@ -95,7 +95,7 @@ export function LeavePage() {
           aria-label="Note to the learner (optional)"
           placeholder="Note to the learner (optional)"
           onChange={(e) => (note.current = e.target.value)}
-          className="mt-2 h-20 w-full resize-none rounded-xl bg-l-sub px-3 py-2 text-[13px] text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none"
+          className="mt-2 h-20 w-full resize-none rounded-xl bg-l-sub px-3 py-2 text-body text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none"
         />
       ) : undefined
     );
@@ -117,7 +117,7 @@ export function LeavePage() {
           ))}
         </div>
         <span className="flex-1" />
-        <button type="button" onClick={() => setAdding(true)} className="inline-flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-[12.5px] font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
+        <button type="button" onClick={() => setAdding(true)} className="inline-flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-small font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
           <Plus className="h-3.5 w-3.5" />
           Add leave for a learner
         </button>
@@ -126,7 +126,7 @@ export function LeavePage() {
         {(list.data ?? []).map((r) => (
           <LeaveCard key={r._id} r={r} l={byId.get(r.user_id)} onReview={review} />
         ))}
-        {list.data && list.data.length === 0 && <p className="rounded-2xl bg-l-sub px-4 py-8 text-center text-[13px] text-l-ink3">{tab === "pending" ? "Nothing waiting. Nice." : "Nothing here yet."}</p>}
+        {list.data && list.data.length === 0 && <p className="rounded-2xl bg-l-sub px-4 py-8 text-center text-body text-l-ink3">{tab === "pending" ? "Nothing waiting. Nice." : "Nothing here yet."}</p>}
         {list.isLoading && <div className="h-32 animate-pulse rounded-[18px] bg-l-sub" />}
       </div>
       <CreateLeaveRequestDialog

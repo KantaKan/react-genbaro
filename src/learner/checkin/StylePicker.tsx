@@ -70,16 +70,16 @@ export function StylePicker({ open, onOpenChange, summary }: { open: boolean; on
         <div className="flex flex-col gap-2 px-6">
           <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-br from-orange-50 to-pink-50 px-4 py-3 dark:from-orange-500/10 dark:to-pink-500/10">
             <b className="text-2xl font-bold tracking-tight text-orange-600">{summary.streak}</b>
-            <span className="text-[13px] text-l-ink2">day on-time streak. Longer streaks unlock more styles.</span>
+            <span className="text-body text-l-ink2">day on-time streak. Longer streaks unlock more styles.</span>
           </div>
-          <label className="flex items-center justify-between gap-3 rounded-2xl px-1 py-2 text-[13.5px]">
+          <label className="flex items-center justify-between gap-3 rounded-2xl px-1 py-2 text-body">
             <span>
               <b className="block font-semibold">Surprise me every day</b>
-              <span className="text-[12px] text-l-ink3">A random unlocked style each morning, with one reroll</span>
+              <span className="text-small text-l-ink3">A random unlocked style each morning, with one reroll</span>
             </span>
             <Switch on={prefs.checkin_random} label="Surprise me every day" onChange={(v) => save({ checkin_random: v })} />
           </label>
-          <label className="flex items-center justify-between gap-3 px-1 pb-1 text-[13.5px]">
+          <label className="flex items-center justify-between gap-3 px-1 pb-1 text-body">
             <span className="font-semibold">Sound</span>
             <Switch
               on={sound}
@@ -95,7 +95,7 @@ export function StylePicker({ open, onOpenChange, summary }: { open: boolean; on
         <div className="flex flex-col gap-5 p-6 pt-3">
           {GROUPS.map(([g, title]) => (
             <section key={g}>
-              <h4 className="mb-2.5 text-[12px] font-semibold uppercase tracking-[.08em] text-l-ink3">{title}</h4>
+              <h4 className="mb-2.5 text-small font-semibold uppercase tracking-[.08em] text-l-ink3">{title}</h4>
               <div className="grid grid-cols-3 gap-2.5">
                 {STYLES.filter((m) => m.group === g).map((m) => {
                   const unlocked = styleUnlocked(m, summary.streak, summary.perfect_week, !!summary.champion);
@@ -114,11 +114,11 @@ export function StylePicker({ open, onOpenChange, summary }: { open: boolean; on
                       <span className={`mb-2 grid h-[70px] place-items-center rounded-xl bg-l-sub ${unlocked ? "" : "opacity-40 blur-[1px] grayscale"}`}>
                         <StyleThumb id={m.id} />
                       </span>
-                      <b className="block text-[12.5px] font-semibold">{m.name}</b>
-                      <small className="text-[11px] text-l-ink3">{m.sub}</small>
+                      <b className="block text-small font-semibold">{m.name}</b>
+                      <small className="text-micro text-l-ink3">{m.sub}</small>
                       {!unlocked && (
                         <span className="absolute inset-x-2 top-[52px] text-center">
-                          <span className="flex items-center justify-center gap-1 text-[10px] font-semibold">
+                          <span className="flex items-center justify-center gap-1 text-micro font-semibold">
                             <Lock className="h-2.5 w-2.5" />
                             {prog ? `${prog.have} / ${prog.need} days` : m.need === "champion" ? "Cup winners" : "Perfect week"}
                           </span>

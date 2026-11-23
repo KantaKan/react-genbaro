@@ -78,7 +78,7 @@ export default function CoffeeControl({ disabled, busy, onComplete }: CheckInCon
             ))}
         </svg>
       </button>
-      <p className="text-[13px] font-medium text-l-ink2">{label}</p>
+      <p className="text-body font-medium text-l-ink2">{label}</p>
     </div>
   );
 }

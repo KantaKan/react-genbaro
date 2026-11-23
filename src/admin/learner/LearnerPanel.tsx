@@ -67,10 +67,10 @@ export function LearnerPanel({
           className="h-[52px] w-[52px]"
         />
         <div className="min-w-0">
-          <b className="block text-[16.5px] font-semibold tracking-tight">
+          <b className="block text-heading font-semibold tracking-tight">
             {n.th ? `${n.th} · ${n.en}` : n.en}
           </b>
-          <small className="block text-[12.5px] text-l-ink3">
+          <small className="block text-small text-l-ink3">
             #{l.jsd_number} · Group {l.genmate_group || "–"} · {l.first_name}{" "}
             {l.last_name}
           </small>
@@ -96,10 +96,10 @@ export function LearnerPanel({
       </div>
 
       <section className="mt-3 rounded-[14px] bg-l-sub p-3.5 shadow-[0_0_0_1px_var(--l-hair)]">
-        <div className="text-[11.5px] text-l-ink3">
+        <div className="text-small text-l-ink3">
           {session === "morning" ? "Morning" : "Afternoon"} · today
         </div>
-        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[15px] font-semibold">
+        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-title font-semibold">
           <span
             className={`inline-flex items-center gap-1.5 ${statusTone(cell.status)}`}
           >
@@ -107,7 +107,7 @@ export function LearnerPanel({
             {STATUS_LABEL[cell.status]}
           </span>
           {cell.checked_in_at && (
-            <span className="text-[12.5px] font-normal text-l-ink2">
+            <span className="text-small font-normal text-l-ink2">
               checked in {hhmm(cell.checked_in_at)}
               {cell.style
                 ? ` · ${cell.style[0].toUpperCase()}${cell.style.slice(1)} style`
@@ -115,7 +115,7 @@ export function LearnerPanel({
             </span>
           )}
           {cell.marked_by === "system" && (
-            <span className="text-[12.5px] font-normal text-l-ink3">
+            <span className="text-small font-normal text-l-ink3">
               set automatically
             </span>
           )}
@@ -137,7 +137,7 @@ export function LearnerPanel({
           ))}
         </div>
         {!canMark && (
-          <p className="mt-2 text-[11.5px] text-l-ink3">
+          <p className="mt-2 text-small text-l-ink3">
             No class today, so nothing to mark.
           </p>
         )}
@@ -145,7 +145,7 @@ export function LearnerPanel({
 
       {!hideStats && (
         <>
-          <div className="mt-4 flex items-center justify-between text-[13px] text-l-ink2">
+          <div className="mt-4 flex items-center justify-between text-body text-l-ink2">
             <span>Leave used</span>
             <b
               className={`font-semibold ${l.leave_used >= 7 ? "text-red-600" : l.leave_used >= 6 ? "text-amber-600" : "text-l-ink"}`}
@@ -153,7 +153,7 @@ export function LearnerPanel({
           </div>
           <div className="mt-2">
             <LeaveMeter used={l.leave_used} size="md" />
-            <div className="mt-1 flex justify-between text-[10.5px] text-l-ink3">
+            <div className="mt-1 flex justify-between text-micro text-l-ink3">
               <span>0</span>
               <span>warn 4</span>
               <span>6</span>
@@ -170,13 +170,13 @@ export function LearnerPanel({
           ].map(([k, v]) => (
             <div
               key={k}
-              className="flex justify-between border-b border-l-hair py-2.5 text-[13px] text-l-ink2"
+              className="flex justify-between border-b border-l-hair py-2.5 text-body text-l-ink2"
             >
               <span>{k}</span>
               <b className="font-semibold text-l-ink">{v}</b>
             </div>
           ))}
-          <div className="flex items-center justify-between border-b border-l-hair py-2.5 text-[13px] text-l-ink2">
+          <div className="flex items-center justify-between border-b border-l-hair py-2.5 text-body text-l-ink2">
             <span>Mood last night</span>
             {zone ? (
               <b className="inline-flex items-center gap-1.5 font-semibold text-l-ink">
@@ -187,7 +187,7 @@ export function LearnerPanel({
               <span className="text-l-ink3">No reflection</span>
             )}
           </div>
-          <div className="mt-3.5 text-[11.5px] text-l-ink3">
+          <div className="mt-3.5 text-small text-l-ink3">
             Last 10 class days
           </div>
           <div className="mt-2 grid grid-cols-10 gap-[3px]">

@@ -73,9 +73,9 @@ export function GroupsPage() {
         onDrop={() => drag && move(drag, g)}
         className="rounded-2xl bg-l-card p-3 shadow-[0_0_0_1px_var(--l-hair)]"
       >
-        <h4 className="flex items-center gap-2 px-1 text-[13px] font-semibold">
+        <h4 className="flex items-center gap-2 px-1 text-body font-semibold">
           {g ? `Group ${g}` : "No group"}
-          <span className="text-[11px] font-medium text-l-ink3">{members.length}</span>
+          <span className="text-micro font-medium text-l-ink3">{members.length}</span>
         </h4>
         <ul className="mt-1.5 flex min-h-[48px] flex-col gap-0.5">
           {members.map((l) => {
@@ -87,16 +87,16 @@ export function GroupsPage() {
                 draggable
                 onDragStart={() => setDrag(l.id)}
                 onDragEnd={() => setDrag(null)}
-                className={`flex cursor-grab items-center gap-2 rounded-[10px] px-2 py-1.5 text-[12.5px] ${from ? "bg-indigo-50 shadow-[inset_0_0_0_1px_rgba(99,102,241,.3)] dark:bg-indigo-500/15" : "hover:bg-l-sub"}`}
+                className={`flex cursor-grab items-center gap-2 rounded-[10px] px-2 py-1.5 text-small ${from ? "bg-indigo-50 shadow-[inset_0_0_0_1px_rgba(99,102,241,.3)] dark:bg-indigo-500/15" : "hover:bg-l-sub"}`}
               >
                 <UserAvatar userId={l.id} name={n.en} avatar={l.avatar} className="h-6 w-6" />
                 <span className="min-w-0 flex-1 truncate">{n.th || n.en}</span>
-                {from && <small className="text-[11px] text-l-ink3">from {from}</small>}
+                {from && <small className="text-micro text-l-ink3">from {from}</small>}
                 <select
                   aria-label={`Move ${n.th || n.en} to`}
                   value={groupOf(l)}
                   onChange={(e) => move(l.id, e.target.value)}
-                  className="rounded-md bg-transparent text-[11.5px] text-l-ink3 outline-none focus:text-l-ink"
+                  className="rounded-md bg-transparent text-small text-l-ink3 outline-none focus:text-l-ink"
                 >
                   <option value="">–</option>
                   {LETTERS.slice(0, Math.max(10, groups.length + 1)).map((x) => (
@@ -120,17 +120,17 @@ export function GroupsPage() {
         <span className="flex-1" />
         <label className="flex items-center gap-1.5 text-xs text-l-ink2">
           Groups
-          <input type="number" min={2} max={26} value={shuffleN} onChange={(e) => setShuffleN(Math.max(2, Math.min(26, Number(e.target.value) || 2)))} className="w-14 rounded-lg bg-l-sub px-2 py-1 text-[13px] shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
+          <input type="number" min={2} max={26} value={shuffleN} onChange={(e) => setShuffleN(Math.max(2, Math.min(26, Number(e.target.value) || 2)))} className="w-14 rounded-lg bg-l-sub px-2 py-1 text-body shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
         </label>
-        <button type="button" onClick={doShuffle} className="inline-flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-[12.5px] font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
+        <button type="button" onClick={doShuffle} className="inline-flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
           <Shuffle className="h-3.5 w-3.5" /> Shuffle…
         </button>
         {changed.length > 0 && (
-          <button type="button" onClick={() => setMoves({})} className="rounded-[10px] px-3 py-1.5 text-[12.5px] font-semibold text-l-ink2">
+          <button type="button" onClick={() => setMoves({})} className="rounded-[10px] px-3 py-1.5 text-small font-semibold text-l-ink2">
             Undo all
           </button>
         )}
-        <button type="button" disabled={!changed.length} onClick={save} className="rounded-[10px] bg-l-ink px-3.5 py-1.5 text-[12.5px] font-semibold text-l-card disabled:opacity-40">
+        <button type="button" disabled={!changed.length} onClick={save} className="rounded-[10px] bg-l-ink px-3.5 py-1.5 text-small font-semibold text-l-card disabled:opacity-40">
           {changed.length ? `Save ${changed.length} change${changed.length === 1 ? "" : "s"}` : "Saved"}
         </button>
       </div>
