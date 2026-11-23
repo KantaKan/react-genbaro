@@ -15,6 +15,7 @@ import type { CohortInfo } from "../types";
 import { CommandPalette } from "./CommandPalette";
 import { NewCohortWizard } from "../cohort/NewCohortWizard";
 import { useCohort } from "./useCohort";
+import { PageErrorBoundary } from "@/components/PageErrorBoundary";
 import { adminApi } from "../api";
 import { wellbeingApi } from "../wellbeing";
 
@@ -239,7 +240,19 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </header>
             <div className="relative">
               <main className="min-w-0 px-6 pb-12 pt-5 transition-[margin] print:!mr-0 print:px-0 duration-[550ms] ease-[cubic-bezier(.32,.72,0,1)]" style={{ marginRight: panel ? 392 : 0 }}>
-                {children}
+                {cohort > 0 ? (
+                  <PageErrorBoundary>{children}</PageErrorBoundary>
+                ) : cohortList.isLoading || !userData ? (
+                  <div className="h-40 animate-pulse rounded-2xl bg-l-sub" />
+                ) : (
+                  <div className="py-16 text-center">
+                    <p className="text-[15px] font-semibold">No cohort to show yet</p>
+                    <p className="mt-1 text-[13px] text-l-ink3">Create one, or pick a cohort from the switcher.</p>
+                    <button type="button" onClick={() => setWizard(true)} className="mt-4 rounded-full bg-l-ink px-4 py-2 text-[13px] font-semibold text-l-card">
+                      New cohort
+                    </button>
+                  </div>
+                )}
               </main>
               <aside
                 aria-label="Details"

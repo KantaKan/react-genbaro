@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { PageErrorBoundary } from "@/components/PageErrorBoundary";
 import { Link, NavLink } from "react-router-dom";
 import { LogOut, Shield } from "lucide-react";
 import { useAuth } from "@/application/contexts/AuthContext";
@@ -109,7 +110,9 @@ export function LearnerShell({ children }: { children: ReactNode }) {
               <ModeToggle />
             </div>
           </header>
-          <main className="mx-auto max-w-[1240px] px-4 pb-32 pt-6 md:px-7 lg:pb-10">{children}</main>
+          <main className="mx-auto max-w-[1240px] px-4 pb-32 pt-6 md:px-7 lg:pb-10">
+            <PageErrorBoundary>{children}</PageErrorBoundary>
+          </main>
         </div>
 
         <nav

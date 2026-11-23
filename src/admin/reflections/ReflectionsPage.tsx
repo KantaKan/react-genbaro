@@ -14,8 +14,8 @@ const nick = (l: Pick<LearnerRef, "zoom_name" | "first_name">) => nicknames(l.zo
 const shortDay = (d: string) => new Date(`${d}T12:00:00+07:00`).toLocaleDateString("en-GB", { weekday: "narrow", day: "numeric", timeZone: "Asia/Bangkok" });
 
 /** Wraps watch words in <mark>. */
-function Marked({ text, words }: { text: string; words: string[] }) {
-  if (!words.length || !text) return <>{text}</>;
+function Marked({ text, words }: { text: string; words: string[] | null }) {
+  if (!words?.length || !text) return <>{text}</>;
   const re = new RegExp(`(${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "gi");
   return (
     <>
