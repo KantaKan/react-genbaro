@@ -86,18 +86,18 @@ describe("ReflectionsPage", () => {
     const first = renderPage();
     await screen.findByText("Lost on async errors");
     fireEvent.click(screen.getByRole("button", { name: "Calendar" }));
-    fireEvent.click(screen.getByRole("button", { name: /Rough nights/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Hard nights/ }));
     first.unmount();
 
     renderPage();
     await screen.findByText("November 2026");
     expect(screen.getByRole("button", { name: "Calendar" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: /Rough nights/ })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: /Hard nights/ })).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("filters to rough nights", async () => {
+  it("filters to hard nights", async () => {
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: /Rough nights · 1/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Hard nights · 1/ }));
     expect(screen.getByText("Lost on async errors")).toBeInTheDocument();
     expect(screen.queryByText(/Hooks lab went well/)).not.toBeInTheDocument();
   });

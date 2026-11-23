@@ -386,7 +386,7 @@ export function ReflectionsPage() {
           [
             ["all", "All nights"],
             ["reply", `TA replied · ${filterCount.reply}`],
-            ["rough", `Rough nights · ${filterCount.rough}`],
+            ["rough", `Hard nights · ${filterCount.rough}`],
           ] as [Filter, string][]
         ).map(([f, label]) => (
           <button

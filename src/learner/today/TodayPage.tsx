@@ -45,7 +45,7 @@ export function TodayPage() {
       <div className="flex flex-wrap items-end justify-between gap-5">
         <div>
           <h2 className="text-[28px] font-semibold tracking-tight">
-            {now < 12 * 3600 ? "Good morning" : "Good afternoon"}, {nick.en}
+            {now < 12 * 3600 ? "Good morning" : now < 17 * 3600 ? "Good afternoon" : "Good evening"}, {nick.en}
           </h2>
           <p className="mt-1 text-l-ink2">
             {dateLabel}
