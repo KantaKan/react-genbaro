@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "react-query";
 import { Link, useSearchParams } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
 import { api } from "../lib/api";
-import { getAuthToken } from "@/infrastructure/storage";
+import { getUserRole } from "@/infrastructure/storage";
+import { useUserData } from "@/UserDataContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { usePersistedState } from "@/hooks/use-persisted-state";
 import { SkeletonCard } from "@/components/loading-skeleton";
-import type { JWTPayload, User } from "@/domain/types";
+import type { User } from "@/domain/types";
 
 const COHORT_KEY = "baro:learner-directory:cohort";
 
@@ -50,21 +50,9 @@ export function AllUsers() {
     });
   };
 
-  const { currentCohort, isAdmin } = useMemo(() => {
-    try {
-      const token = getAuthToken();
-      if (token) {
-        const decoded = jwtDecode<JWTPayload>(token);
-        return {
-          currentCohort: decoded.cohort ?? null,
-          isAdmin: decoded.role === "admin"
-        };
-      }
-    } catch (e) {
-      console.error("Failed to decode token:", e);
-    }
-    return { currentCohort: null, isAdmin: false };
-  }, []);
+  const { userData } = useUserData();
+  const isAdmin = getUserRole() === "admin";
+  const currentCohort = userData?.cohort_number ?? null;
 
   // Fetch users with a high limit for admin to see everyone
   const { data: response, isLoading, error } = useQuery(

@@ -2,7 +2,9 @@ import axios from "axios";
 import { getAuthToken } from "../storage/token";
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:3000/",
+  // Same origin: Vercel (and Vite in dev) forward /api to the backend, so the httpOnly session
+  // cookie is first-party everywhere, including Safari.
+  baseURL: "/api/",
   withCredentials: true,
 });
 
