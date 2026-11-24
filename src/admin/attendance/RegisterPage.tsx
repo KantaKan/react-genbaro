@@ -1,28 +1,20 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "react-query";
-import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UserAvatar } from "@/components/user-avatar";
 import { nicknames } from "@/learner/lib/name";
 import { attendanceService } from "@/application/services/attendanceService";
-import type { AttendanceStatusType } from "@/domain/types/attendance";
 import { adminApi } from "../api";
 import { useAdminHeader } from "../shell/AdminShell";
 import { useCohort } from "../shell/useCohort";
-import { useMarkWithUndo } from "../learner/useMarkWithUndo";
-import type { RegisterKPIs, RegisterLearner, SessionCell } from "../types";
-import { STATUS_LABEL, statusChip } from "../ui/status";
+import type { RegisterKPIs } from "../types";
+import { CellChip } from "./CellChip";
+import { AttendanceTabs } from "./AttendanceTabs";
+import { matchLearner, sortLearners, type SortKey } from "./sortLearners";
 import { LeaveMeter } from "../ui/LeaveMeter";
 
-const GLYPH: Record<string, string> = { present: "✓", late: "L", absent: "A", absent_excused: "E", late_excused: "E", holiday: "–", no_class: "–", "": "" };
-const OPTIONS: [string, AttendanceStatusType][] = [
-  ["Present", "present"],
-  ["Late", "late"],
-  ["Excused", "absent_excused"],
-  ["Absent", "absent"],
-];
+
 const dayLabel = (d: string) => new Date(`${d}T12:00:00+07:00`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", timeZone: "Asia/Bangkok" });
 const shiftWeek = (w: string, n: number) => {
   const d = new Date(`${w}T12:00:00Z`);
@@ -41,41 +33,6 @@ function Kpi({ label, value, delta, good, sub, warn }: { label: string; value: s
   );
 }
 
-function CellChip({ l, cell, date, session }: { l: RegisterLearner; cell: SessionCell; date: string; session: "morning" | "afternoon" }) {
-  const [open, setOpen] = useState(false);
-  const mark = useMarkWithUndo();
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={`${dayLabel(date)} ${session}: ${STATUS_LABEL[cell.status]}`}
-          className={`grid h-6 w-[34px] place-items-center rounded-[7px] text-micro font-bold transition-transform hover:scale-110 ${statusChip(cell.status)}`}
-        >
-          {GLYPH[cell.status] ?? ""}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="learner w-40 rounded-xl border-0 bg-l-card p-1 text-l-ink shadow-[0_0_0_1px_var(--l-hair),0_12px_30px_-16px_rgba(0,0,0,.35)]">
-        <div role="menu" aria-label="Set status">
-          {OPTIONS.map(([t, s]) => (
-            <button
-              key={s}
-              role="menuitem"
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                mark({ learner: l, cell, session, date, status: s });
-              }}
-              className="flex w-full rounded-lg px-2.5 py-1.5 text-left text-body hover:bg-l-sub"
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
 
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 function deltas(k: RegisterKPIs, p: RegisterKPIs) {
@@ -91,10 +48,27 @@ function deltas(k: RegisterKPIs, p: RegisterKPIs) {
 export function RegisterPage() {
   const [cohort] = useCohort();
   const [week, setWeek] = useState<string | undefined>(undefined);
+  const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "name", dir: "asc" });
+  const [search, setSearch] = useState("");
+  const [group, setGroup] = useState("");
   const q = useQuery(["admin-register", cohort, week], () => adminApi.register(cohort, week), { keepPreviousData: true });
   const v = q.data;
   useAdminHeader({ title: "Attendance", context: `Register for JSD${cohort}` });
   const d = useMemo(() => (v ? deltas(v.kpis, v.previous) : null), [v]);
+  const groups = useMemo(() => [...new Set((v?.learners ?? []).map((l) => l.genmate_group).filter(Boolean))].sort(), [v]);
+  const rows = useMemo(
+    () => sortLearners((v?.learners ?? []).filter((l) => (!group || l.genmate_group === group) && matchLearner(l, search)), sort.key, sort.dir),
+    [v, group, search, sort]
+  );
+  // First click shows who needs attention: lowest week % first, most leave first.
+  const firstDir = (key: SortKey): "asc" | "desc" => (key === "leave" ? "desc" : "asc");
+  const sortBy = (key: SortKey) => setSort((s) => ({ key, dir: s.key === key ? (s.dir === "asc" ? "desc" : "asc") : firstDir(key) }));
+  const head = (key: SortKey, label: string) => (
+    <button type="button" onClick={() => sortBy(key)} aria-label={`Sort by ${label}`} className={`inline-flex items-center gap-1 font-medium hover:text-l-ink ${sort.key === key ? "text-l-ink" : ""}`}>
+      {label}
+      <span aria-hidden className="text-micro">{sort.key === key ? (sort.dir === "asc" ? "▲" : "▼") : "↕"}</span>
+    </button>
+  );
   const range = v ? `${new Date(`${v.dates[0]}T12:00:00+07:00`).toLocaleDateString("en-GB", { day: "numeric", timeZone: "Asia/Bangkok" })}–${new Date(`${v.dates[4]}T12:00:00+07:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Asia/Bangkok" })}` : "";
   const exportSF = async () => {
     if (!v) return;
@@ -112,15 +86,7 @@ export function RegisterPage() {
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
-        <div className="inline-flex rounded-[10px] bg-l-card p-[3px] shadow-[0_0_0_1px_var(--l-hair)]">
-          <span className="rounded-[7px] bg-l-ink px-3 py-1 text-xs font-semibold text-l-card">Register</span>
-          <Link to="/admin/attendance/calendar" className="rounded-[7px] px-3 py-1 text-xs font-semibold text-l-ink2">
-            Calendar
-          </Link>
-          <Link to="/admin/attendance/logs" className="rounded-[7px] px-3 py-1 text-xs font-semibold text-l-ink2">
-            Logs
-          </Link>
-        </div>
+        <AttendanceTabs />
         <span className="flex-1" />
         <button type="button" aria-label="Previous week" onClick={() => v && setWeek(shiftWeek(v.week, -1))} className="grid h-8 w-8 place-items-center rounded-[9px] shadow-[0_0_0_1px_var(--l-hair)]">
           <ChevronLeft className="h-4 w-4" />
@@ -142,22 +108,42 @@ export function RegisterPage() {
             <Kpi label="Absences" value={String(v.kpis.absences)} sub={`${v.kpis.excused} excused`} />
             <Kpi label="At 6+ leave days" value={String(v.kpis.at_six_plus)} sub={`${v.kpis.at_seven} at 7`} warn={v.kpis.at_six_plus > 0} />
           </div>
-          <div className="mt-3.5 overflow-x-auto rounded-2xl shadow-[0_0_0_1px_var(--l-hair)]">
+          <div className="mt-3.5 flex flex-wrap items-center gap-2">
+            <input
+              type="search"
+              aria-label="Find a learner"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Find a learner or number…"
+              className="w-56 rounded-[10px] bg-l-card px-3 py-1.5 text-body shadow-[0_0_0_1px_var(--l-hair)] outline-none focus:shadow-[0_0_0_1.5px_var(--l-ink)]"
+            />
+            <div className="flex flex-wrap gap-1" role="group" aria-label="Filter by group">
+              {["", ...groups].map((g) => (
+                <button key={g || "all"} type="button" aria-pressed={group === g} onClick={() => setGroup(g)} className={`rounded-full px-2.5 py-1 text-small font-semibold ${group === g ? "bg-l-ink text-l-card" : "text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)] hover:text-l-ink"}`}>
+                  {g ? `Group ${g}` : "All"}
+                </button>
+              ))}
+            </div>
+            <span className="ml-auto text-small text-l-ink3">{rows.length} of {v.learners.length}</span>
+          </div>
+          <div className="mt-2.5 overflow-x-auto rounded-2xl shadow-[0_0_0_1px_var(--l-hair)]">
             <table className="w-full border-separate border-spacing-0 text-body">
               <thead>
                 <tr className="text-left text-small text-l-ink3">
-                  <th className="sticky left-0 z-[1] border-b border-l-hair bg-l-card px-3 py-2 font-medium">Learner</th>
+                  <th className="sticky left-0 z-[1] border-b border-l-hair bg-l-card px-3 py-2 font-medium">
+                    {head("name", "Learner")} <span className="ml-2">{head("group", "Group")}</span>
+                  </th>
                   {v.dates.map((dt) => (
                     <th key={dt} className="border-b border-l-hair px-2 py-2 font-medium">
                       {dayLabel(dt)}
                     </th>
                   ))}
-                  <th className="border-b border-l-hair px-2 py-2 font-medium">Week</th>
-                  <th className="border-b border-l-hair px-2 py-2 font-medium">Leave</th>
+                  <th className="border-b border-l-hair px-2 py-2 font-medium">{head("week", "Week")}</th>
+                  <th className="border-b border-l-hair px-2 py-2 font-medium">{head("leave", "Leave")}</th>
                 </tr>
               </thead>
               <tbody>
-                {v.learners.map((l) => {
+                {rows.map((l) => {
                   const n = nicknames(l.zoom_name, l.first_name);
                   return (
                     <tr key={l.id} className="group hover:bg-l-sub">
@@ -196,6 +182,7 @@ export function RegisterPage() {
               </tbody>
             </table>
           </div>
+          {rows.length === 0 && <p className="mt-3 text-center text-body text-l-ink3">No one matches.</p>}
           <p className="mt-2.5 text-small text-l-ink3">Click a cell to change it · every change is logged</p>
         </>
       )}
