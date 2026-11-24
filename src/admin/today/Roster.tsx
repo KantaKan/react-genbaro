@@ -89,7 +89,7 @@ export function Roster({
                   return (
                     <tr key={l.id} onClick={() => onOpen(l.id)} aria-selected={sel} className={`group cursor-pointer transition-colors ${sel ? "bg-indigo-50 dark:bg-indigo-500/10" : "hover:bg-l-sub"}`}>
                       <td className={`border-b border-l-hair px-2.5 py-2 ${sel ? "shadow-[inset_3px_0_0_#4f46e5]" : ""}`} onClick={(e) => e.stopPropagation()}>
-                        <input type="checkbox" aria-label={`Select ${n.th || n.en}`} checked={picked.has(l.id)} onChange={() => onPick(l.id)} className="h-4 w-4 accent-zinc-900" />
+                        <input type="checkbox" aria-label={`Select ${n.th || n.en}`} checked={picked.has(l.id)} onChange={() => onPick(l.id)} />
                       </td>
                       <td className="border-b border-l-hair px-2.5 py-2">
                         <div className="flex items-center gap-2.5">
