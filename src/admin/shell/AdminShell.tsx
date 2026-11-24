@@ -15,6 +15,7 @@ import type { CohortInfo } from "../types";
 import { CommandPalette } from "./CommandPalette";
 import { NewCohortWizard } from "../cohort/NewCohortWizard";
 import { useCohort } from "./useCohort";
+import { ScrollFade } from "@/components/ScrollFade";
 import { PageErrorBoundary } from "@/components/PageErrorBoundary";
 import { adminApi } from "../api";
 import { wellbeingApi } from "../wellbeing";
@@ -177,7 +178,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={ctx}>
       <div className="learner flex min-h-screen bg-l-bg text-l-ink">
-        <aside className="sticky top-0 hidden h-screen w-[236px] shrink-0 flex-col gap-px overflow-y-auto px-2.5 py-3.5 lg:flex print:!hidden">
+        <aside className="sticky top-0 hidden h-screen w-[236px] shrink-0 flex-col gap-px overflow-hidden px-2.5 py-3.5 lg:flex print:!hidden">
           <div className="flex items-center gap-2.5 px-2 pb-3">
             <div className="grid h-[30px] w-[30px] place-items-center rounded-[9px] bg-l-ink text-body font-bold text-l-card">B</div>
             <div>
@@ -199,8 +200,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
               {picker(() => setPicking(false))}
             </PopoverContent>
           </Popover>
-          {navList}
-          <button type="button" onClick={logout} className="mt-auto flex items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-body font-medium text-l-ink2 hover:text-l-ink">
+          <ScrollFade className="-mx-1 px-1 pb-6">{navList}</ScrollFade>
+          <button type="button" onClick={logout} className="mt-1 flex items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-body font-medium text-l-ink2 hover:text-l-ink">
             <LogOut className="h-4 w-4" strokeWidth={1.5} />
             Log out
           </button>
