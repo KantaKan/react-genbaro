@@ -27,10 +27,10 @@ const view = (o: Partial<TodayView> = {}): TodayView => ({
   rules,
   counts: { morning: { on_time: 1, late: 1, leave: 0, absent: 0, not_yet: 2, total: 4 }, afternoon: { on_time: 0, late: 0, leave: 0, absent: 0, not_yet: 4, total: 4 } },
   learners: [
-    mkLearner({ id: "a", first_name: "Ajjima", zoom_name: "01_Ajjima(Theim/เถียม)", genmate_group: "I", morning: { status: "present", checked_in_at: "2026-11-23T02:02:00Z", record_id: "r1", marked_by: "self" } }),
-    mkLearner({ id: "b", first_name: "Ploy", zoom_name: "09_Ploy(Ploy/พลอย)", genmate_group: "I", morning: { status: "late", checked_in_at: "2026-11-23T02:31:00Z", record_id: "r2", marked_by: "self" } }),
-    mkLearner({ id: "c", first_name: "Chanon", zoom_name: "04_Chanon(Non/นนท์)", genmate_group: "B" }),
-    mkLearner({ id: "d", first_name: "Dear", zoom_name: "05_Dear(Dear/เดียร์)", genmate_group: "B" }),
+    mkLearner({ id: "a", jsd_number: "GEN13_01", first_name: "Ajjima", zoom_name: "01_Ajjima(Theim/เถียม)", genmate_group: "I", morning: { status: "present", checked_in_at: "2026-11-23T02:02:00Z", record_id: "r1", marked_by: "self" } }),
+    mkLearner({ id: "b", jsd_number: "GEN13_09", first_name: "Ploy", zoom_name: "09_Ploy(Ploy/พลอย)", genmate_group: "I", morning: { status: "late", checked_in_at: "2026-11-23T02:31:00Z", record_id: "r2", marked_by: "self" } }),
+    mkLearner({ id: "c", jsd_number: "GEN13_04", first_name: "Chanon", zoom_name: "04_Chanon(Non/นนท์)", genmate_group: "B" }),
+    mkLearner({ id: "d", jsd_number: "GEN13_05", first_name: "Dear", zoom_name: "05_Dear(Dear/เดียร์)", genmate_group: "B" }),
   ],
   ...o,
 });
@@ -65,6 +65,17 @@ describe("TodayPage", () => {
   it("shows how many checked in", async () => {
     renderPage();
     expect(await screen.findByLabelText("2 of 4 checked in")).toBeInTheDocument();
+  });
+
+  it("lists everyone by number when By number is picked, without group headers", async () => {
+    localStorage.removeItem("baro-today-roster");
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "By number" }));
+    const roster = screen.getByRole("table");
+    expect(within(roster).queryByText(/^Group I ·/)).toBeNull();
+    const order = within(roster).getAllByText(/#GEN13_\d+/).map((el) => el.textContent?.match(/GEN13_\d+/)?.[0]);
+    expect(order).toEqual(["GEN13_01", "GEN13_04", "GEN13_05", "GEN13_09"]);
+    localStorage.removeItem("baro-today-roster");
   });
 
   it("filters to who's not in yet", async () => {
