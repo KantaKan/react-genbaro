@@ -9,8 +9,8 @@ export function JustIn({ view, session }: { view: TodayView; session: Session })
     .sort((a, b) => (a[session].checked_in_at! < b[session].checked_in_at! ? 1 : -1))
     .slice(0, 6);
   return (
-    <section className="rounded-2xl p-4 shadow-[0_0_0_1px_var(--l-hair)]">
-      <h4 className="text-body font-semibold">Just checked in</h4>
+    <section className="rounded-2xl bg-l-card p-4 shadow-[0_0_0_1px_var(--l-hair)]">
+      <h4 className="flex items-center gap-2 text-body font-semibold">Just in{view.class_today && <span className="rounded-full bg-emerald-50 px-1.5 text-micro font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">live</span>}</h4>
       {ins.length === 0 && <p className="mt-3 text-small text-l-ink3">No check-ins yet.</p>}
       <ul className="mt-2 flex flex-col">
         {ins.map((l) => {

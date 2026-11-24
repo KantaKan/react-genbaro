@@ -111,8 +111,10 @@ export function TodayPage() {
   // By number: one list #1, #2, #3… ; by group: the server's order (grouped).
   const learners = useMemo(() => {
     const list = view?.learners ?? [];
-    return layout === "number" ? [...list].sort((a, b) => a.jsd_number.localeCompare(b.jsd_number, undefined, { numeric: true })) : list;
-  }, [view, layout]);
+    const sorted = layout === "number" ? [...list].sort((a, b) => a.jsd_number.localeCompare(b.jsd_number, undefined, { numeric: true })) : list;
+    // The roster pins who's not in yet on top; keep J/K in the same order.
+    return canMark ? [...sorted.filter((l) => !l[s].status), ...sorted.filter((l) => l[s].status)] : sorted;
+  }, [view, layout, canMark, s]);
   const dateLabel = view ? new Date(`${view.date}T12:00:00+07:00`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Bangkok" }) : "";
   const notYet = canMark ? learners.filter((l) => !l[s].status) : [];
   const ping = () =>
@@ -202,15 +204,16 @@ export function TodayPage() {
   if (!view) return <p className="text-sm text-l-ink3">Couldn't load today. Try again in a moment.</p>;
 
   return (
-    <div>
-      <SessionCard view={view} session={s} onSession={setSession} nowMin={nowMin} />
-      <div className="mt-3.5 grid grid-cols-1 gap-3.5 lg:grid-cols-2 2xl:grid-cols-3">
-        <LeaveMini requests={leaves.data ?? []} learners={learners} />
+    <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+      <aside aria-label="Live" className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:sticky xl:top-[70px] xl:order-2 xl:grid-cols-1">
+        <SessionCard view={view} session={s} onSession={setSession} nowMin={nowMin} />
         <JustIn view={view} session={s} />
+        <LeaveMini requests={leaves.data ?? []} learners={learners} />
         <SupportMini rows={support.data ?? []} />
-      </div>
+      </aside>
+      <div className="min-w-0 xl:order-1">
       {picked.size > 0 && (
-        <div className="sticky top-[70px] z-[5] mt-4 flex items-center gap-2 rounded-xl bg-l-ink px-3 py-2 text-small font-semibold text-l-card">
+        <div className="sticky top-[70px] z-[5] mb-3 flex items-center gap-2 rounded-xl bg-l-ink px-3 py-2 text-small font-semibold text-l-card">
           {picked.size} selected
           <span className="flex-1" />
           <button type="button" onClick={() => bulk("present", "Mark present")} className="rounded-lg bg-white/15 px-2.5 py-1">
@@ -237,6 +240,7 @@ export function TodayPage() {
         layout={layout}
         onLayout={chooseLayout}
       />
+      </div>
       {confirm.node}
     </div>
   );
