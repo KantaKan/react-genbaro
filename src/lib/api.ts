@@ -1,5 +1,5 @@
 export { api } from "../infrastructure/api";
-export { setAuthToken, removeAuthToken, getAuthToken, setAuthData, clearAllAuthData } from "../infrastructure/storage";
+export { removeAuthToken, getAuthToken, setAuthData, clearAllAuthData } from "../infrastructure/storage";
 
 export {
   authService,

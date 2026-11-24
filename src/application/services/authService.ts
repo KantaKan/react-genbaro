@@ -1,5 +1,5 @@
 import { api } from "../../infrastructure/api";
-import { setAuthData, clearAllAuthData } from "../../infrastructure/storage";
+import { setAuthData, clearAllAuthData, removeAuthToken } from "../../infrastructure/storage";
 import type {
   LoginCredentials,
   RegisterData,
@@ -9,22 +9,14 @@ import type {
 } from "../../domain/types";
 
 export const authService = {
-  async login(credentials: LoginCredentials): Promise<{ token: string; userId: string; role: UserRole }> {
+  /** The server answers with an httpOnly session cookie; the page only keeps role and userId. */
+  async login(credentials: LoginCredentials): Promise<{ userId: string; role: UserRole }> {
     const response = await api.post<LoginResponse>("/login", credentials);
-
-    if (response.data?.data?.token) {
-      const rawRole = response.data.data.role || "learner";
-      const role: UserRole = rawRole === "admin" ? "admin" : "learner";
-      const token = response.data.data.token;
-      const userId = response.data.data.userId;
-
-      setAuthData(token, role, userId);
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-      return { token, userId, role };
-    }
-
-    throw new Error("No token or userId in response");
+    const userId = response.data?.data?.userId;
+    if (!userId) throw new Error("No userId in response");
+    const role: UserRole = response.data.data.role === "admin" ? "admin" : "learner";
+    setAuthData(role, userId);
+    return { userId, role };
   },
 
   async register(userData: RegisterData) {
@@ -32,12 +24,12 @@ export const authService = {
     return response.data;
   },
 
-  async verifyToken(token: string): Promise<{ role: string; userId: string }> {
-    const response = await api.get<VerifyTokenResponse>("/api/verify-token", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  /** Checks the session cookie. An old stored token rides along once and is moved into the cookie. */
+  async verifyToken(): Promise<{ role: string; userId: string }> {
+    const response = await api.get<VerifyTokenResponse>("/api/verify-token");
 
     if (response.data.success === true) {
+      removeAuthToken();
       return {
         role: response.data.data.role,
         userId: response.data.data.userId,
@@ -49,7 +41,7 @@ export const authService = {
 
   logout(): void {
     clearAllAuthData();
-    delete api.defaults.headers.common["Authorization"];
+    api.post("/logout").catch(() => undefined);
   },
 };
 

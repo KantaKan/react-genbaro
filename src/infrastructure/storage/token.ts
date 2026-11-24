@@ -4,16 +4,13 @@ const AUTH_TOKEN_KEY = "authToken";
 const USER_ROLE_KEY = "userRole";
 const USER_ID_KEY = "userId";
 
+/** A token from before the httpOnly cookie. Only used once, to move that session into the cookie. */
 export const getAuthToken = (): string | undefined => {
   const fromLocalStorage = localStorage.getItem(AUTH_TOKEN_KEY);
   if (fromLocalStorage) return fromLocalStorage;
   return Cookies.get(AUTH_TOKEN_KEY);
 };
 
-export const setAuthToken = (token: string): void => {
-  Cookies.set(AUTH_TOKEN_KEY, token, { sameSite: "Lax" });
-  localStorage.setItem(AUTH_TOKEN_KEY, token);
-};
 
 export const removeAuthToken = (): void => {
   Cookies.remove(AUTH_TOKEN_KEY);
@@ -54,19 +51,9 @@ export const clearAllAuthData = (): void => {
   removeUserId();
 };
 
-export const setAuthData = (
-  token: string,
-  role: string,
-  userId: string,
-  options?: { secure?: boolean }
-): void => {
-  const isProduction = options?.secure ?? import.meta.env.MODE === "production";
-  const cookieOptions = { sameSite: isProduction ? "None" : "Lax", secure: isProduction } as const;
-
-  Cookies.set(AUTH_TOKEN_KEY, token, cookieOptions);
-  localStorage.setItem(AUTH_TOKEN_KEY, token);
-  Cookies.set(USER_ROLE_KEY, role, cookieOptions);
+/** Remembers who is signed in (not the token: that stays in the httpOnly cookie). */
+export const setAuthData = (role: string, userId: string): void => {
+  removeAuthToken();
   localStorage.setItem(USER_ROLE_KEY, role);
-  Cookies.set(USER_ID_KEY, userId, cookieOptions);
   localStorage.setItem(USER_ID_KEY, userId);
 };

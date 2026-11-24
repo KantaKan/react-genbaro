@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { jwtDecode } from "jwt-decode";
 
 import { userService } from "../services/userService";
-import { getAuthToken } from "../../infrastructure/storage";
-import type { UserData, UserDataContextType, JWTPayload } from "../../domain/types";
+import { getUserId } from "../../infrastructure/storage";
+import type { UserData, UserDataContextType } from "../../domain/types";
 
 const UserDataContext = createContext<UserDataContextType | undefined>(undefined);
 
@@ -14,8 +13,8 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
   const [userId, setUserId] = useState("");
 
   const fetchUserData = async () => {
-    const token = getAuthToken();
-    if (!token) {
+    const id = getUserId();
+    if (!id) {
       setUserData(null);
       setUserId("");
       setError(null);
@@ -27,15 +26,9 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
       setLoading(true);
       setError(null);
 
-      const decodedToken = jwtDecode<JWTPayload>(token);
-
-      if (!decodedToken.user_id) {
-        throw new Error("User ID not found in token");
-      }
-
-      const data = await userService.getUserById(decodedToken.user_id);
+      const data = await userService.getUserById(id);
       setUserData(data);
-      setUserId(decodedToken.user_id);
+      setUserId(id);
     } catch (error) {
       console.error("Error fetching user data:", error);
       setError(error instanceof Error ? error.message : "Failed to fetch user data");
@@ -61,7 +54,7 @@ const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "authToken" && !e.newValue) {
+      if (e.key === "userId" && !e.newValue) {
         clearUserData();
         setError("Session expired. Please log in again.");
       }

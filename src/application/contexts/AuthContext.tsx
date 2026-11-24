@@ -1,8 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
-import Cookies from "js-cookie";
 
 import { authService } from "../services/authService";
-import { getAuthToken, getUserRole, getUserId, setUserRole, setUserId } from "../../infrastructure/storage";
+import { clearAllAuthData, getAuthToken, getUserRole, getUserId, setUserRole, setUserId } from "../../infrastructure/storage";
 import { isUserRole, type UserRole, type AuthState } from "../../domain/types";
 
 type AuthContextType = AuthState & {
@@ -13,7 +12,8 @@ type AuthContextType = AuthState & {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => !!(getAuthToken()));
+  // The session itself is an httpOnly cookie the page can't see; userId (or an old token) says one may exist.
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!(getUserId() || getAuthToken()));
   const [userRole, setUserRoleState] = useState<UserRole | null>(() => {
     const saved = getUserRole();
     return saved && isUserRole(saved) ? saved : null;
@@ -25,10 +25,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const verifyToken = async () => {
       setLoading(true);
-      const token = getAuthToken();
-      if (token) {
+      if (getUserId() || getAuthToken()) {
         try {
-          const { role, userId: fetchedUserId } = await authService.verifyToken(token);
+          const { role, userId: fetchedUserId } = await authService.verifyToken();
 
           if (!isUserRole(role)) {
             throw new Error("Invalid role in response");
@@ -42,7 +41,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } catch (error) {
           const message = error instanceof Error ? error.message : "Token verification failed.";
           console.error("[AuthContext] Token verification failed:", message);
-          Cookies.remove("authToken");
+          clearAllAuthData();
           setIsAuthenticated(false);
           setUserRoleState(null);
           setUserIdState(null);
