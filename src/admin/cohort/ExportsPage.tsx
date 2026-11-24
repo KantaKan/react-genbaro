@@ -7,6 +7,7 @@ import { useAdminHeader } from "../shell/AdminShell";
 import { useCohort } from "../shell/useCohort";
 import { bkkToday } from "../today/time";
 import { cohortApi } from "./api";
+import { courseWeeks, fmt } from "./weeks";
 
 function save(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
@@ -29,6 +30,12 @@ export function ExportsPage() {
     if (!from && settings.data?.start_date) setFrom(settings.data.start_date);
   }, [settings.data, from]);
   useAdminHeader({ title: "Exports", context: `JSD${cohort}` });
+  const today = bkkToday();
+  const start = settings.data?.start_date ?? "";
+  const end = settings.data?.graduated_on && settings.data.graduated_on < today ? settings.data.graduated_on : today;
+  const weeks = courseWeeks(start, end);
+  const pick = (f: string, t: string) => (setFrom(f), setTo(t));
+  const picked = weeks.find((w) => w.from === from && w.to === to);
   const run = async (kind: "sf" | "att") => {
     if (busy || !from || !to) return;
     setBusy(kind);
@@ -54,13 +61,52 @@ export function ExportsPage() {
   );
   return (
     <div className="flex max-w-[760px] flex-col gap-3.5">
-      <section className="flex flex-wrap items-end gap-3 rounded-2xl p-5 shadow-[0_0_0_1px_var(--l-hair)]">
+      <section className="rounded-2xl p-5 shadow-[0_0_0_1px_var(--l-hair)]">
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-2 text-xs font-semibold text-l-ink2">
+            Week
+            <select
+              aria-label="Pick a week"
+              value={picked ? picked.from : ""}
+              onChange={(e) => {
+                const w = weeks.find((x) => x.from === e.target.value);
+                if (w) pick(w.from, w.to);
+              }}
+              className="rounded-xl bg-l-sub px-3 py-2 text-body font-normal text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none"
+            >
+              <option value="">{weeks.length ? "Choose a week…" : "Set the course start date first"}</option>
+              {weeks.map((w) => (
+                <option key={w.from} value={w.from}>
+                  Week {w.n} · {fmt(w.from)} – {fmt(w.to)}
+                </option>
+              ))}
+            </select>
+          </label>
+          {weeks[0] && (
+            <button type="button" onClick={() => pick(weeks[0].from, weeks[0].to)} className="rounded-full px-2.5 py-1 text-small font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)] hover:text-l-ink">
+              Latest week
+            </button>
+          )}
+          {weeks[1] && (
+            <button type="button" onClick={() => pick(weeks[1].from, weeks[1].to)} className="rounded-full px-2.5 py-1 text-small font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)] hover:text-l-ink">
+              Week before
+            </button>
+          )}
+          {start && (
+            <button type="button" onClick={() => pick(start, end)} className="rounded-full px-2.5 py-1 text-small font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)] hover:text-l-ink">
+              Whole course
+            </button>
+          )}
+        </div>
+        <p className="mt-2 text-small text-l-ink3">{from && to ? `Exports ${fmt(from)} – ${fmt(to)}${picked ? ` (Week ${picked.n})` : ""}.` : ""} Or set exact dates below.</p>
+      <div className="mt-3 flex flex-wrap items-end gap-3">
         {([["From", from, setFrom], ["To", to, setTo]] as const).map(([t, v, set]) => (
           <label key={t} className="flex flex-col gap-1.5 text-xs font-semibold text-l-ink2">
             {t}
             <input aria-label={t} type="date" value={v} onChange={(e) => set(e.target.value)} className="rounded-xl bg-l-sub px-3 py-2 text-body font-normal text-l-ink shadow-[0_0_0_1px_var(--l-hair)] outline-none" />
           </label>
         ))}
+      </div>
       </section>
       <div className="grid gap-3 sm:grid-cols-2">
         {card("sf", "Salesforce CSV", "The upload format the Program team uses")}
