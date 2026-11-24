@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { PageErrorBoundary } from "@/components/PageErrorBoundary";
+import { ScrollFade } from "@/components/ScrollFade";
 import { Link, NavLink } from "react-router-dom";
 import { LogOut, Shield } from "lucide-react";
 import { useAuth } from "@/application/contexts/AuthContext";
@@ -45,7 +46,7 @@ export function LearnerShell({ children }: { children: ReactNode }) {
   return (
     <HeaderCtx.Provider value={setHeader}>
       <div className="learner flex min-h-screen">
-        <aside className="sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col gap-0.5 border-r border-l-hair bg-l-card px-3 py-4 lg:flex">
+        <aside className="sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col gap-0.5 overflow-hidden border-r border-l-hair bg-l-card px-3 py-4 lg:flex">
           <div className="flex items-center gap-2.5 px-2 pb-3.5">
             <div className="grid h-[30px] w-[30px] place-items-center rounded-[9px] bg-gradient-to-br from-zinc-900 to-zinc-600 text-sm font-bold text-white">B</div>
             <div>
@@ -53,6 +54,7 @@ export function LearnerShell({ children }: { children: ReactNode }) {
               <div className="text-xs text-l-ink3">JSD{userData?.cohort_number ?? ""} · Learner</div>
             </div>
           </div>
+          <ScrollFade className="-mx-1 px-1 pb-6">
           <nav aria-label="Learner" className="flex flex-col gap-0.5">
             {sections.map((sec) => (
               <div key={sec}>
@@ -66,13 +68,14 @@ export function LearnerShell({ children }: { children: ReactNode }) {
               </div>
             ))}
           </nav>
+          </ScrollFade>
           {userRole === "admin" && (
-            <Link to="/admin" className="mt-auto flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-sm font-medium text-l-ink2 hover:bg-l-sub hover:text-l-ink">
+            <Link to="/admin" className="mt-1 flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-sm font-medium text-l-ink2 hover:bg-l-sub hover:text-l-ink">
               <Shield className="h-[18px] w-[18px]" strokeWidth={1.5} />
               Admin panel
             </Link>
           )}
-          <div className={`${userRole === "admin" ? "mt-2" : "mt-auto"} flex items-center gap-2.5 rounded-xl p-2.5 shadow-[0_0_0_1px_var(--l-hair)]`}>
+          <div className={`${userRole === "admin" ? "mt-2" : "mt-1"} flex items-center gap-2.5 rounded-xl p-2.5 shadow-[0_0_0_1px_var(--l-hair)]`}>
             <UserAvatar userId={userData?._id} name={nick.en} avatar={userData?.avatar} className="h-[34px] w-[34px] shrink-0" />
             <div className="min-w-0">
               <div className="truncate text-body font-semibold">{nick.th ? `${nick.en} · ${nick.th}` : nick.en}</div>
