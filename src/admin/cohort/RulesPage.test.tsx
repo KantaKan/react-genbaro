@@ -36,4 +36,14 @@ describe("RulesPage", () => {
     expect(s.checkin_region).toBe("thailand");
     expect(s.course_days).toBe(75);
   });
+
+  it("marks the cohort graduated today and saves it", async () => {
+    renderAdmin(<RulesPage />, "/admin/rules");
+    fireEvent.click(await screen.findByRole("button", { name: "Graduated today" }));
+    expect(screen.getByText(/has no class after/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Save rules" }));
+    await waitFor(() => expect(cohortApi.saveSettings).toHaveBeenCalledTimes(1));
+    const [, s] = vi.mocked(cohortApi.saveSettings).mock.calls[0];
+    expect(s.graduated_on).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
 });
