@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "react-query";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ import type { Session, TodayLearner, TodayView } from "../types";
 import { SessionCard } from "./SessionCard";
 import { LeaveMini } from "./LeaveMini";
 import { JustIn } from "./JustIn";
-import { Roster } from "./Roster";
+import { Roster, type RosterLayout } from "./Roster";
 import { SupportMini } from "./SupportMini";
 import { NotesTab } from "../learner/NotesTab";
 import { wellbeingApi } from "../wellbeing";
@@ -93,7 +93,26 @@ export function TodayPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stale, nowMin]);
   const canMark = !!view?.class_today;
-  const learners = view?.learners ?? [];
+  const [layout, setLayout] = useState<RosterLayout>(() => {
+    try {
+      return localStorage.getItem("baro-today-roster") === "number" ? "number" : "group";
+    } catch {
+      return "group";
+    }
+  });
+  const chooseLayout = (l: RosterLayout) => {
+    setLayout(l);
+    try {
+      localStorage.setItem("baro-today-roster", l);
+    } catch {
+      /* private mode */
+    }
+  };
+  // By number: one list #1, #2, #3… ; by group: the server's order (grouped).
+  const learners = useMemo(() => {
+    const list = view?.learners ?? [];
+    return layout === "number" ? [...list].sort((a, b) => a.jsd_number.localeCompare(b.jsd_number, undefined, { numeric: true })) : list;
+  }, [view, layout]);
   const dateLabel = view ? new Date(`${view.date}T12:00:00+07:00`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Bangkok" }) : "";
   const notYet = canMark ? learners.filter((l) => !l[s].status) : [];
   const ping = () =>
@@ -215,6 +234,8 @@ export function TodayPage() {
         onQuick={quick}
         canMark={canMark}
         supportIds={supportIds}
+        layout={layout}
+        onLayout={chooseLayout}
       />
       {confirm.node}
     </div>

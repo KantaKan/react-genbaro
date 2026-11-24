@@ -8,6 +8,7 @@ import { STATUS_LABEL, hhmm, statusTone } from "../ui/status";
 import { LeaveMeter } from "../ui/LeaveMeter";
 
 export type Filter = "all" | "not_yet" | "late" | "leave";
+export type RosterLayout = "group" | "number";
 const match = (l: TodayLearner, s: Session, f: Filter) => {
   const st = l[s].status;
   return f === "all" || (f === "not_yet" && !st) || (f === "late" && st === "late") || (f === "leave" && (st === "absent_excused" || st === "late_excused"));
@@ -23,6 +24,8 @@ export function Roster({
   onQuick,
   canMark,
   supportIds,
+  layout = "group",
+  onLayout,
 }: {
   learners: TodayLearner[];
   session: Session;
@@ -33,10 +36,13 @@ export function Roster({
   onQuick: (l: TodayLearner, status: "present" | "absent_excused") => void;
   canMark: boolean;
   supportIds?: Set<string>;
+  layout?: RosterLayout;
+  onLayout?: (l: RosterLayout) => void;
 }) {
   const [filter, setFilter] = useState<Filter>("all");
   const shown = useMemo(() => learners.filter((l) => match(l, session, filter)), [learners, session, filter]);
-  const groups = useMemo(() => [...new Set(shown.map((l) => l.genmate_group || "–"))], [shown]);
+  const byNumber = layout === "number";
+  const groups = useMemo(() => (byNumber ? ["*"] : [...new Set(shown.map((l) => l.genmate_group || "–"))]), [shown, byNumber]);
   const chips: [Filter, string][] = [
     ["all", "All"],
     ["not_yet", "Not yet"],
@@ -58,6 +64,15 @@ export function Roster({
             {t} <em className="not-italic text-micro text-l-ink3">{learners.filter((l) => match(l, session, k)).length}</em>
           </button>
         ))}
+        {onLayout && (
+          <div className="ml-auto inline-flex rounded-[10px] bg-l-sub p-[3px]" role="group" aria-label="Roster layout">
+            {(["group", "number"] as const).map((k) => (
+              <button key={k} type="button" aria-pressed={layout === k} onClick={() => onLayout(k)} className={`rounded-lg px-2.5 py-1 text-small font-semibold ${layout === k ? "bg-l-card text-l-ink shadow-sm" : "text-l-ink2"}`}>
+                {k === "group" ? "By group" : "By number"}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full border-separate border-spacing-0 text-body">
@@ -75,10 +90,10 @@ export function Roster({
           </thead>
           <tbody>
             {groups.map((g) => {
-              const rows = shown.filter((l) => (l.genmate_group || "–") === g);
+              const rows = byNumber ? shown : shown.filter((l) => (l.genmate_group || "–") === g);
               const all = learners.filter((l) => (l.genmate_group || "–") === g);
               return [
-                <tr key={`g-${g}`}>
+                !byNumber && <tr key={`g-${g}`}>
                   <td colSpan={8} className="border-b border-l-hair bg-l-sub px-2.5 py-1.5 text-small font-semibold text-l-ink3">
                     Group {g} · {all.filter((l) => l[session].status).length}/{all.length} in
                   </td>
@@ -96,7 +111,10 @@ export function Roster({
                           <UserAvatar userId={l.id} name={n.en} avatar={l.avatar} className="h-[30px] w-[30px]" />
                           <div>
                             <b className="whitespace-nowrap font-semibold">{n.th ? `${n.th} · ${n.en}` : n.en}</b>
-                            <small className="block text-xs text-l-ink3">#{l.jsd_number}</small>
+                            <small className="block text-xs text-l-ink3">
+                              #{l.jsd_number}
+                              {byNumber && l.genmate_group ? ` · Group ${l.genmate_group}` : ""}
+                            </small>
                           </div>
                         </div>
                       </td>
