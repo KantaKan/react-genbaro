@@ -67,23 +67,40 @@ describe("TodayPage", () => {
     expect(await screen.findByLabelText("2 of 4 checked in")).toBeInTheDocument();
   });
 
-  it("lists everyone by number when By number is picked, without group headers", async () => {
+  it("lists by number with who's not in yet pinned on top, without group headers", async () => {
     localStorage.removeItem("baro-today-roster");
     renderPage();
     fireEvent.click(await screen.findByRole("button", { name: "By number" }));
     const roster = screen.getByRole("table");
     expect(within(roster).queryByText(/^Group I ·/)).toBeNull();
     const order = within(roster).getAllByText(/#GEN13_\d+/).map((el) => el.textContent?.match(/GEN13_\d+/)?.[0]);
-    expect(order).toEqual(["GEN13_01", "GEN13_04", "GEN13_05", "GEN13_09"]);
+    expect(order).toEqual(["GEN13_04", "GEN13_05", "GEN13_01", "GEN13_09"]);
+    expect(within(roster).getByText(/^Needs you · 2/)).toBeInTheDocument();
     localStorage.removeItem("baro-today-roster");
   });
 
   it("filters to who's not in yet", async () => {
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: /^Not yet/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /^Needs you/ }));
     const roster = screen.getByRole("table");
     expect(within(roster).queryByText(/เถียม/)).toBeNull();
     expect(within(roster).getByText(/นนท์/)).toBeInTheDocument();
+  });
+
+  it("searches by name or number", async () => {
+    renderPage();
+    await screen.findByText(/นนท์ · Non/);
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search learners" }), { target: { value: "09" } });
+    const roster = screen.getByRole("table");
+    expect(within(roster).getByText(/พลอย · Ploy/)).toBeInTheDocument();
+    expect(within(roster).queryByText(/นนท์/)).toBeNull();
+  });
+
+  it("shows the countdown to late while check-in is open", async () => {
+    vi.setSystemTime(new Date("2026-11-23T01:45:00Z")); // 8:45 Bangkok
+    renderPage();
+    expect(await screen.findByText("30 min")).toBeInTheDocument();
+    expect(screen.getByText(/until late · 9:15/)).toBeInTheDocument();
   });
 
   it("opens and closes the side panel from a row", async () => {

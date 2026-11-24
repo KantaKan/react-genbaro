@@ -5,7 +5,7 @@ import type { SupportRow } from "../wellbeing";
 
 export function SupportMini({ rows }: { rows: SupportRow[] }) {
   return (
-    <section aria-label="Needs support" className="rounded-2xl p-4 shadow-[0_0_0_1px_var(--l-hair)]">
+    <section aria-label="Needs support" className="rounded-2xl bg-l-card p-4 shadow-[0_0_0_1px_var(--l-hair)]">
       <h4 className="flex items-center gap-2 text-body font-semibold">
         Needs support
         {rows.length > 0 && <span className="rounded-full bg-red-50 px-1.5 text-micro font-bold text-red-600 dark:bg-red-500/15">{rows.length}</span>}
