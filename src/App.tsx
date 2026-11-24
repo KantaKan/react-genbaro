@@ -38,6 +38,7 @@ const SpinWheelPage = lazy(() => import("./pages/SpinWheelPage"));
 const WeeklySummaryPage = lazy(() => import("./admin/reflections/WeeklySummaryPage").then((m) => ({ default: m.WeeklySummaryPage })));
 const AdminTodayPage = lazy(() => import("./admin/today/TodayPage").then((m) => ({ default: m.TodayPage })));
 const AdminRegisterPage = lazy(() => import("./admin/attendance/RegisterPage").then((m) => ({ default: m.RegisterPage })));
+const AdminMonthPage = lazy(() => import("./admin/attendance/MonthPage").then((m) => ({ default: m.MonthPage })));
 const AdminRulesPage = lazy(() => import("./admin/cohort/RulesPage").then((m) => ({ default: m.RulesPage })));
 const AdminHolidaysPage = lazy(() => import("./admin/cohort/HolidaysPage").then((m) => ({ default: m.HolidaysPage })));
 const AdminGroupsPage = lazy(() => import("./admin/cohort/GroupsPage").then((m) => ({ default: m.GroupsPage })));
@@ -61,8 +62,6 @@ const GenmateGardenPage = lazy(() => import("./pages/admin/GenmateGardenPage").t
 const AdminCohortFarmPage = lazy(() => import("./pages/admin/AdminCohortFarmPage").then((module) => ({ default: module.AdminCohortFarmPage })));
 const AttendanceShell = lazy(() => import("./components/attendance-shell").then((module) => ({ default: module.AttendanceShell })));
 const AttendanceAllStudentsView = lazy(() => import("./components/attendance-all-students-view").then((module) => ({ default: module.AttendanceAllStudentsView })));
-const AttendanceCalendarView = lazy(() => import("./components/attendance-calendar-view").then((module) => ({ default: module.AttendanceCalendarView })));
-const AttendanceLogsView = lazy(() => import("./components/attendance-logs-view").then((module) => ({ default: module.AttendanceLogsView })));
 const StudentAttendanceDetail = lazy(() => import("./pages/student-attendance-detail").then((module) => ({ default: module.StudentAttendanceDetail })));
 const CupAwardsPage = lazy(() => import("./pages/admin/CupAwardsPage"));
 const AdminNotificationManager = lazy(() => import("./components/admin-notification-manager"));
@@ -157,12 +156,13 @@ function AppContent() {
             <Route path="cohort-farm" element={<AdminCohortFarmPage />} />
             <Route path="weekly-summary" element={<WeeklySummaryPage />} />
             <Route path="attendance/register" element={<AdminRegisterPage />} />
+            <Route path="attendance/month" element={<AdminMonthPage />} />
             <Route path="attendance" element={<AttendanceShell />}>
               <Route index element={<Navigate to="register" replace />} />
               <Route path="code-dispatch" element={<Navigate to="/admin" replace />} />
               <Route path="all-students" element={<AttendanceAllStudentsView />} />
-              <Route path="calendar" element={<AttendanceCalendarView />} />
-              <Route path="logs" element={<AttendanceLogsView />} />
+              <Route path="calendar" element={<Navigate to="/admin/attendance/month" replace />} />
+              <Route path="logs" element={<Navigate to="/admin/activity" replace />} />
               <Route path="leave" element={<Navigate to="/admin/leave" replace />} />
             </Route>
             <Route path="attendance/student/:id" element={<StudentAttendanceDetail />} />
