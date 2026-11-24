@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { getThailandDateISO } from "@/utils/date-utils";
 import { useQuery, useQueryClient } from "react-query";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
@@ -119,6 +120,28 @@ export function RulesPage() {
             Leave allowance
             <span className="py-2 text-body font-normal text-l-ink">8 days · warnings at 4, 6, 7</span>
           </div>
+        </div>
+        <div className="mt-4 rounded-xl bg-l-sub px-3.5 py-3">
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="flex flex-col gap-1.5 text-xs font-semibold text-l-ink2">
+              Graduated · last class day
+              <input type="date" aria-label="Last class day" value={s.graduated_on ?? ""} onChange={(e) => setS({ ...s, graduated_on: e.target.value || undefined })} className={input} />
+            </label>
+            {s.graduated_on ? (
+              <button type="button" onClick={() => setS({ ...s, graduated_on: undefined })} className="rounded-full px-3 py-1.5 text-small font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
+                Still running
+              </button>
+            ) : (
+              <button type="button" onClick={() => setS({ ...s, graduated_on: getThailandDateISO() })} className="rounded-full px-3 py-1.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
+                Graduated today
+              </button>
+            )}
+          </div>
+          <p className="mt-2 text-small text-l-ink2">
+            {s.graduated_on
+              ? `JSD${cohort} has no class after ${s.graduated_on}: no check-in, no automatic absences and no "hasn't written" nudges. Their history stays.`
+              : "Set this when the cohort finishes, so Baro stops treating weekdays as class days for them."}
+          </p>
         </div>
         <h5 className="mt-4 text-xs font-semibold text-l-ink2">GenMate group chat links</h5>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">

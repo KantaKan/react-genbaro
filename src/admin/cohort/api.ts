@@ -8,6 +8,8 @@ export type CohortSettings = {
   group_chat_urls?: Record<string, string>;
   start_date?: string;
   course_days?: number;
+  /** Last class day (YYYY-MM-DD). After it the cohort has no class: no check-in, no absences, no nudges. */
+  graduated_on?: string;
   checkin_region?: "anywhere" | "thailand";
   flag_unusual?: boolean;
 };
