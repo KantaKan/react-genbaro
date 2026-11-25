@@ -136,6 +136,7 @@ export function TodayPage() {
 
   // Timing comes from this browser's clock, not the last response, so an all-day tab keeps up.
   const today = useQuery(["admin-today", cohort], () => adminApi.today(cohort), {
+    staleTime: 0,
     refetchInterval: (d) => (d ? liveInterval(d.rules, bkkMinutes(new Date()), d.class_today) : 60_000),
     refetchOnWindowFocus: true,
   });
