@@ -22,6 +22,7 @@ import { wellbeingApi } from "../wellbeing";
 import { Link } from "react-router-dom";
 import { bkkMinutes, bkkToday, currentSession, liveInterval } from "./time";
 import { setPanelSession, usePanelSession } from "./sessionStore";
+import { Loading } from "../ui/Loading";
 
 function useNowMin() {
   const [m, setM] = useState(() => bkkMinutes(new Date()));
@@ -200,7 +201,7 @@ export function TodayPage() {
       }
     });
 
-  if (today.isLoading) return <div className="h-[180px] animate-pulse rounded-[18px] bg-l-sub" />;
+  if (today.isLoading) return <Loading label="Loading today…" />;
   if (!view) return <p className="text-sm text-l-ink3">Couldn't load today. Try again in a moment.</p>;
 
   return (

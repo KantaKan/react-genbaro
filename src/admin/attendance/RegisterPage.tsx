@@ -13,6 +13,7 @@ import { CellChip } from "./CellChip";
 import { AttendanceTabs } from "./AttendanceTabs";
 import { matchLearner, sortLearners, type SortKey } from "./sortLearners";
 import { LeaveMeter } from "../ui/LeaveMeter";
+import { Loading } from "../ui/Loading";
 
 
 const dayLabel = (d: string) => new Date(`${d}T12:00:00+07:00`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", timeZone: "Asia/Bangkok" });
@@ -186,7 +187,8 @@ export function RegisterPage() {
           <p className="mt-2.5 text-small text-l-ink3">Click a cell to change it · every change is logged</p>
         </>
       )}
-      {q.isLoading && <div className="mt-4 h-40 animate-pulse rounded-2xl bg-l-sub" />}
+      {q.isLoading && <Loading label="Loading register…" className="mt-4" />}
+      {q.isError && <p className="mt-4 rounded-2xl bg-l-sub px-4 py-8 text-center text-body text-red-600">Couldn't load the register. Refresh to try again.</p>}
     </div>
   );
 }

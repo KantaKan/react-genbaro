@@ -9,6 +9,7 @@ import { useCohort } from "../shell/useCohort";
 import { wellbeingApi, type LearnerRow } from "../wellbeing";
 import { LeaveMeter } from "../ui/LeaveMeter";
 import { ZONE_BG, zoneLabel } from "../ui/zones";
+import { Loading } from "../ui/Loading";
 
 type Filter = "active" | "support" | "dropped";
 const dropped = (r: LearnerRow) => r.attendance_status === "dropout" || r.attendance_status === "dismissed";
@@ -111,7 +112,7 @@ export function LearnersPage() {
             })}
           </tbody>
         </table>
-        {list.isLoading && <div className="h-32 animate-pulse bg-l-sub" />}
+        {list.isLoading && <Loading label="Loading learners…" className="rounded-none" />}
         {list.isError && <p className="px-4 py-8 text-center text-body text-red-600">Couldn't load learners. Refresh to try again.</p>}
         {list.isSuccess && shown.length === 0 && <p className="px-4 py-8 text-center text-body text-l-ink3">No one matches.</p>}
       </div>
