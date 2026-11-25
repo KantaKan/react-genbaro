@@ -7,6 +7,7 @@ import { nicknames } from "@/learner/lib/name";
 import { useAdminHeader } from "../shell/AdminShell";
 import { useCohort } from "../shell/useCohort";
 import { wellbeingApi } from "../wellbeing";
+import { Loading } from "../ui/Loading";
 
 export function SupportPage() {
   const [cohort] = useCohort();
@@ -74,8 +75,9 @@ export function SupportPage() {
             </article>
           );
         })}
-        {list.isLoading && <div className="h-28 animate-pulse rounded-[18px] bg-l-sub" />}
-        {!list.isLoading && rows.length === 0 && <p className="rounded-2xl bg-l-sub px-4 py-8 text-center text-body text-l-ink3">Nobody needs extra support right now.</p>}
+        {list.isLoading && <Loading label="Loading who needs support…" />}
+        {list.isError && <p className="rounded-2xl bg-l-sub px-4 py-8 text-center text-body text-red-600">Couldn't load the support list. Refresh to try again.</p>}
+        {list.isSuccess && rows.length === 0 && <p className="rounded-2xl bg-l-sub px-4 py-8 text-center text-body text-l-ink3">Nobody needs extra support right now.</p>}
       </div>
     </div>
   );

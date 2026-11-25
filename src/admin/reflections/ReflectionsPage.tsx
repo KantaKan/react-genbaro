@@ -11,6 +11,7 @@ import { wellbeingApi, type Board, type Entry, type LearnerRef, type Zone } from
 
 import { ZONE_BG, zoneLabel } from "../ui/zones";
 import { getThailandDateISO } from "@/utils/date-utils";
+import { Loading } from "../ui/Loading";
 const nick = (l: Pick<LearnerRef, "zoom_name" | "first_name">) => nicknames(l.zoom_name, l.first_name);
 const shortDay = (d: string) => new Date(`${d}T12:00:00+07:00`).toLocaleDateString("en-GB", { weekday: "narrow", day: "numeric", timeZone: "Asia/Bangkok" });
 
@@ -207,7 +208,7 @@ export function ReflectionsPage() {
     });
   }, [b, q, filter]);
 
-  if (board.isLoading) return <div className="h-48 animate-pulse rounded-2xl bg-l-sub" />;
+  if (board.isLoading) return <Loading label="Loading reflections…" />;
   if (!b) return <p className="text-sm text-l-ink3">Couldn't load reflections.</p>;
   const night = new Date(`${b.date}T12:00:00+07:00`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Bangkok" });
   return (
