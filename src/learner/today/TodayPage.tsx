@@ -25,7 +25,7 @@ export function TodayPage() {
   const qc = useQueryClient();
   const [picker, setPicker] = useState(false);
   const { userData } = useUserData();
-  const summary = useQuery(["my-summary"], learnerApi.getSummary, { refetchInterval: 60_000 });
+  const summary = useQuery(["my-summary"], learnerApi.getSummary, { staleTime: 0, refetchInterval: 60_000 });
   const history = useQuery(["my-history", 14], () => learnerApi.getHistory(14));
   const cup = useCup();
   const reflections = useQuery(["my-reflections", userData?._id], () => learnerApi.getMyReflections(userData!._id), { enabled: !!userData?._id });

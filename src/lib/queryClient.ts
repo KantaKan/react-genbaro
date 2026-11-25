@@ -9,7 +9,9 @@ export const queryClient = new QueryClient({
   }),
   defaultOptions: {
     queries: {
-      retry: 2,
+      // Reuse data for 30s when moving between pages; live screens (check-in) opt out with staleTime: 0.
+      staleTime: 30_000,
+      retry: 1,
       refetchOnWindowFocus: false,
     },
   },
