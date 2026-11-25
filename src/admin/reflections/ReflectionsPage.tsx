@@ -11,7 +11,7 @@ import { wellbeingApi, type Board, type Entry, type LearnerRef, type Zone } from
 
 import { ZONE_BG, zoneLabel } from "../ui/zones";
 import { getThailandDateISO } from "@/utils/date-utils";
-import { Loading } from "../ui/Loading";
+import { Bone, LoadingHint } from "@/components/LoadingSkeleton";
 const nick = (l: Pick<LearnerRef, "zoom_name" | "first_name">) => nicknames(l.zoom_name, l.first_name);
 const shortDay = (d: string) => new Date(`${d}T12:00:00+07:00`).toLocaleDateString("en-GB", { weekday: "narrow", day: "numeric", timeZone: "Asia/Bangkok" });
 
@@ -208,7 +208,7 @@ export function ReflectionsPage() {
     });
   }, [b, q, filter]);
 
-  if (board.isLoading) return <Loading label="Loading reflections…" />;
+  if (board.isLoading) return <ReflectionsSkeleton />;
   if (!b) return <p className="text-sm text-l-ink3">Couldn't load reflections.</p>;
   const night = new Date(`${b.date}T12:00:00+07:00`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Bangkok" });
   return (
@@ -409,4 +409,56 @@ function repliedBy(e: Entry): string {
   }
   if (!who) return when ? `Already replied · ${when}` : "Already replied";
   return when ? `Replied by ${who} · ${when}` : `Replied by ${who}`;
+}
+
+function ReflectionsSkeleton() {
+  return (
+    <div>
+      <Bone className="h-[30px] w-[264px] rounded-[10px]" />
+      <div className="mt-3.5 grid gap-3.5 xl:grid-cols-[1.6fr_1fr]">
+        <section className="rounded-2xl p-4 shadow-[0_0_0_1px_var(--l-hair)]">
+          <div className="flex items-center">
+            <Bone className="h-4 w-32" />
+            <Bone className="ml-auto h-3 w-20" />
+          </div>
+          <Bone className="mt-4 h-24 w-full" />
+          <Bone className="mt-3 h-11 w-full rounded-xl" />
+        </section>
+        <section className="rounded-2xl p-4 shadow-[0_0_0_1px_var(--l-hair)]">
+          <Bone className="h-4 w-24" />
+          <Bone className="mt-3 h-2 w-full rounded-full" />
+          <Bone className="mb-2 mt-4 h-3 w-28" />
+          <div className="flex flex-wrap gap-1.5">
+            {Array.from({ length: 6 }, (_, i) => (
+              <Bone key={i} className="h-[30px] w-[30px] rounded-full" />
+            ))}
+          </div>
+          <Bone className="mb-2 mt-4 h-3 w-24" />
+          <div className="grid gap-2">
+            {Array.from({ length: 4 }, (_, i) => (
+              <Bone key={i} className="h-1.5 w-full rounded-full" />
+            ))}
+          </div>
+        </section>
+      </div>
+      <section className="mt-3.5 rounded-2xl p-4 shadow-[0_0_0_1px_var(--l-hair)]">
+        <Bone className="h-4 w-40" />
+        <div className="mt-2.5 grid gap-2.5 md:grid-cols-2">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="flex items-start gap-3 rounded-[14px] p-3 shadow-[0_0_0_1px_var(--l-hair)]">
+              <Bone className="h-[34px] w-[34px] shrink-0 rounded-full" />
+              <div className="grid flex-1 gap-1.5">
+                <Bone className="h-4 w-32" />
+                <Bone className="h-3 w-full" />
+                <Bone className="mt-1 h-1.5 w-[160px]" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+      <Bone className="mb-2.5 mt-6 h-5 w-28" />
+      <Bone className="h-48 w-full rounded-2xl" />
+      <LoadingHint label="Loading reflections" />
+    </div>
+  );
 }

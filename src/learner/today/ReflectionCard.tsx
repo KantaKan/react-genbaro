@@ -7,6 +7,7 @@ import { useReflections, type Reflection as HookReflection } from "@/hooks/use-r
 import type { Reflection } from "@/domain/types";
 import { reflectionZones } from "@/components/reflection-zones";
 import { BarometerFace, ZONES, type ZoneId } from "./BarometerFace";
+import { Bone } from "@/components/LoadingSkeleton";
 
 const OPENS = 16 * 3600 + 45 * 60;
 
@@ -109,6 +110,29 @@ export function ReflectionCard({
           )}
         </DialogContent>
       </Dialog>
+    </section>
+  );
+}
+
+export function ReflectionCardSkeleton() {
+  return (
+    <section className="l-card p-[22px]" aria-hidden>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+      <Bone className="h-5 w-36" />
+      <Bone className="mt-1.5 h-3.5 w-32" />
+        </div>
+        <Bone className="h-5 w-16" />
+      </div>
+      <Bone className="mt-4 h-7 w-52" />
+      <div className="mt-3.5 grid grid-cols-4 gap-2">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="flex flex-col items-center gap-2 px-1 pb-2.5 pt-3">
+            <Bone className="h-12 w-12 rounded-full" />
+            <Bone className="h-3 w-14" />
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

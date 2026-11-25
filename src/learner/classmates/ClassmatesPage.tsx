@@ -11,6 +11,7 @@ import { ClassmatePanel } from "./ClassmatePanel";
 import { AvatarEditor } from "../avatar/AvatarEditor";
 import { learnerApi } from "../api";
 import { useChampion } from "../cup/useChampion";
+import { Bone, LoadingHint } from "@/components/LoadingSkeleton";
 
 const GROUPS = ["All", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
 const SORTS: { id: NonNullable<PeopleQuery["sort"]>; label: string }[] = [
@@ -22,7 +23,7 @@ const SORTS: { id: NonNullable<PeopleQuery["sort"]>; label: string }[] = [
 export function ClassmatesPage() {
   const qc = useQueryClient();
   const { userData, refetchUserData } = useUserData();
-  const { list: data } = usePeople();
+  const { list: data, isLoading } = usePeople();
   const { isChampion } = useChampion();
   const summary = useQuery(["my-summary"], learnerApi.getSummary, { staleTime: 60_000 });
   const people = data.filter((p) => p.role !== "admin");
@@ -128,7 +129,28 @@ export function ClassmatesPage() {
         </div>
       </div>
 
-      {others.length === 0 ? (
+      {isLoading ? (
+        <div aria-hidden className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-3.5">
+          {Array.from({ length: 8 }, (_, i) => (
+            <div key={i} className="l-card flex flex-col gap-3 p-4">
+              <span className="flex items-center gap-3">
+                <Bone className="h-[52px] w-[52px] shrink-0 rounded-full" />
+                <span className="grid flex-1 gap-1.5">
+                  <Bone className="h-5 w-28" />
+                  <Bone className="h-3.5 w-20" />
+                </span>
+                <Bone className="h-5 w-6 self-start rounded-lg" />
+              </span>
+              <Bone className="h-[39px] w-full" />
+              <span className="flex gap-1.5">
+                <Bone className="h-6 w-14 rounded-full" />
+                <Bone className="h-6 w-16 rounded-full" />
+              </span>
+            </div>
+          ))}
+          <LoadingHint label="Loading classmates" />
+        </div>
+      ) : others.length === 0 ? (
         <div className="l-card p-12 text-center text-l-ink3">
           No one matches “{q}”. Try a skill like <b>React</b> or <b>Figma</b>.
         </div>

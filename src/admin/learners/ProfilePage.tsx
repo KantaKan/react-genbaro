@@ -10,6 +10,7 @@ import { useAdminHeader } from "../shell/AdminShell";
 import { wellbeingApi } from "../wellbeing";
 import { statusSolid } from "../ui/status";
 import { zoneLabel } from "../ui/zones";
+import { Bone, LoadingHint } from "@/components/LoadingSkeleton";
 
 const when = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Bangkok" });
 
@@ -41,7 +42,8 @@ export function ProfilePage() {
       busy.current = false;
     }
   };
-  if (q.isLoading) return <div className="h-40 animate-pulse rounded-2xl bg-l-sub" />;
+  if (q.isLoading) return <ProfileSkeleton />;
+  if (q.isError) return <p className="text-sm text-red-600">Couldn't load this learner. Refresh to try again.</p>;
   if (!o) return <p className="text-sm text-l-ink3">Learner not found.</p>;
   const kpis = [
     ["Attendance", `${(o.attendance_rate * 100).toFixed(1)}%`, ""],
@@ -163,6 +165,72 @@ export function ProfilePage() {
           </div>
         </section>
       </div>
+    </div>
+  );
+}
+
+function ProfileSkeleton() {
+  const card = "rounded-2xl p-4 shadow-[0_0_0_1px_var(--l-hair)]";
+  return (
+    <div>
+      <Bone className="h-[30px] w-[118px] rounded-[10px]" />
+      <section className="mt-3.5 flex flex-wrap items-center gap-5 rounded-[20px] bg-gradient-to-b from-l-sub to-l-card p-5 shadow-[0_0_0_1px_var(--l-hair)]">
+        <Bone className="h-[72px] w-[72px] rounded-full" />
+        <div className="grid min-w-[220px] flex-1 gap-2">
+          <Bone className="h-[26px] w-56" />
+          <Bone className="h-3.5 w-80 max-w-full" />
+        </div>
+        <div className="flex gap-6 border-l border-l-hair pl-5">
+          {["Attendance", "Leave", "Streak"].map((k) => (
+            <div key={k} className="grid gap-1.5">
+              <Bone className="h-3.5 w-14" />
+              <Bone className="h-[26px] w-16" />
+            </div>
+          ))}
+        </div>
+      </section>
+      <div className="mt-3.5 grid gap-3.5 lg:grid-cols-2">
+        <section className={card}>
+          <Bone className="h-4 w-24" />
+          <div className="mt-2.5 grid grid-cols-5 gap-1">
+            {Array.from({ length: 20 }, (_, i) => (
+              <Bone key={i} className="h-[34px] rounded" />
+            ))}
+          </div>
+          <Bone className="mt-2.5 h-3.5 w-64" />
+        </section>
+        <section className={card}>
+          <Bone className="h-4 w-36" />
+          <div className="mt-2.5 flex gap-1">
+            {Array.from({ length: 10 }, (_, i) => (
+              <span key={i} className="flex flex-1 flex-col items-center gap-1">
+                <Bone className="h-6 w-6 rounded-full" />
+                <Bone className="h-2.5 w-2" />
+              </span>
+            ))}
+          </div>
+          <Bone className="mt-3 h-[68px] w-full rounded-xl" />
+        </section>
+        <section className={card}>
+          <Bone className="h-4 w-20" />
+          <Bone className="mt-3 h-3 w-32" />
+          <Bone className="mt-1.5 h-3.5 w-full" />
+          <Bone className="mt-3 h-[70px] w-full rounded-xl" />
+          <Bone className="mt-2 h-[30px] w-24 rounded-full" />
+        </section>
+        <section className={card}>
+          <Bone className="h-4 w-24" />
+          <div className="mt-3 grid gap-2.5">
+            {["w-48", "w-40", "w-56"].map((w) => (
+              <div key={w} className="flex items-center gap-2.5">
+                <Bone className="h-4 w-4 shrink-0 rounded" />
+                <Bone className={`h-3.5 ${w}`} />
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+      <LoadingHint label="Loading learner" />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { AttendanceStatusType } from "@/domain/types";
 import type { WeekCell } from "../lib/week";
+import { Bone } from "@/components/LoadingSkeleton";
 
 const pill: Record<string, string> = {
   present: "bg-green-50 text-green-700 dark:bg-green-500/15 dark:text-green-300",
@@ -23,6 +24,27 @@ export function WeekCard({ cells }: { cells: WeekCell[] }) {
             <div className="mt-2.5 flex gap-1">
               <span className={`grid h-[22px] flex-1 place-items-center rounded-[7px] text-micro font-semibold ${cls(c.am)}`}>AM</span>
               <span className={`grid h-[22px] flex-1 place-items-center rounded-[7px] text-micro font-semibold ${cls(c.pm)}`}>PM</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function WeekCardSkeleton() {
+  return (
+    <section className="l-card p-[22px]" aria-hidden>
+      <Bone className="h-5 w-24" />
+      <Bone className="mt-1.5 h-3.5 w-56" />
+      <div className="mt-4 grid grid-cols-5 gap-2.5">
+        {Array.from({ length: 5 }, (_, i) => (
+          <div key={i} className="rounded-[14px] p-3 shadow-[0_0_0_1px_var(--l-hair)]">
+            <Bone className="h-3 w-8" />
+            <Bone className="mt-1.5 h-5 w-6" />
+            <div className="mt-2.5 flex gap-1">
+              <Bone className="h-[22px] flex-1 rounded-[7px]" />
+              <Bone className="h-[22px] flex-1 rounded-[7px]" />
             </div>
           </div>
         ))}

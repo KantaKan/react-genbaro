@@ -7,18 +7,19 @@ import { usePageHeader } from "../shell/LearnerShell";
 import { useCup } from "../cup/useChampion";
 import { LeaderboardCard } from "../cup/LeaderboardCard";
 import { YourGroupCard } from "../cup/YourGroupCard";
-import { CheckInCard } from "../checkin/CheckInCard";
+import { CheckInCard, CheckInCardSkeleton } from "../checkin/CheckInCard";
 import { StylePicker } from "../checkin/StylePicker";
 import { useState } from "react";
 import { useClock } from "../checkin/useClock";
 import { bangkokNow } from "../lib/time";
 import { nicknames } from "../lib/name";
 import { weekCells } from "../lib/week";
-import { ReflectionCard } from "./ReflectionCard";
-import { WeekCard } from "./WeekCard";
-import { LeaveCard } from "./LeaveCard";
+import { ReflectionCard, ReflectionCardSkeleton } from "./ReflectionCard";
+import { WeekCard, WeekCardSkeleton } from "./WeekCard";
+import { LeaveCard, LeaveCardSkeleton } from "./LeaveCard";
 import { BoardLatestCard } from "./BoardLatestCard";
-import { StreakBadgesCard } from "./StreakBadgesCard";
+import { StreakBadgesCard, StreakBadgesCardSkeleton } from "./StreakBadgesCard";
+import { LoadingHint } from "@/components/LoadingSkeleton";
 
 export function TodayPage() {
   const qc = useQueryClient();
@@ -72,17 +73,20 @@ export function TodayPage() {
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-12">
         <div className="flex flex-col gap-4 lg:col-span-7">
-          {s ? <CheckInCard summary={s} onCheckedIn={refresh} seed={userData?._id ?? "me"} onOpenPicker={() => setPicker(true)} /> : <div className="l-card h-[340px] animate-pulse" />}
-          <WeekCard cells={week} />
+          {s ? <CheckInCard summary={s} onCheckedIn={refresh} seed={userData?._id ?? "me"} onOpenPicker={() => setPicker(true)} /> : summary.isLoading ? <CheckInCardSkeleton /> : null}
+          {history.isLoading ? <WeekCardSkeleton /> : <WeekCard cells={week} />}
           <BoardLatestCard />
         </div>
         <div className="flex flex-col gap-4 lg:col-span-5">
           {plant.ready && <PlantCard plant={plant} />}
-          {userData?._id && (
+          {reflections.isLoading || !userData ? (
+            <ReflectionCardSkeleton />
+          ) : (
             <ReflectionCard userId={userData._id} reflections={reflections.data ?? []} nowSec={now} today={today} onSubmitted={() => qc.invalidateQueries(["my-reflections"])} />
           )}
-          {s && <StreakBadgesCard badges={userData?.badges ?? []} perfectWeek={s.perfect_week} weekOnTime={weekOnTime} />}
-          {s && <LeaveCard used={s.leave_used} allowance={s.leave_allowance} rate={s.attendance_rate} />}
+          {s ? <StreakBadgesCard badges={userData?.badges ?? []} perfectWeek={s.perfect_week} weekOnTime={weekOnTime} /> : summary.isLoading && <StreakBadgesCardSkeleton />}
+          {s ? <LeaveCard used={s.leave_used} allowance={s.leave_allowance} rate={s.attendance_rate} /> : summary.isLoading && <LeaveCardSkeleton />}
+          {(summary.isLoading || history.isLoading) && <LoadingHint label="Loading your day" />}
         </div>
         {cup.data && (
           <>

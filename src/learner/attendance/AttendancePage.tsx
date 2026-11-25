@@ -11,6 +11,7 @@ import { monthGrid, type Cell, type CellStatus } from "../lib/calendar";
 import { MonthCalendar } from "./MonthCalendar";
 import { RateRing } from "./RateRing";
 import { RequestLeaveSheet } from "./RequestLeaveSheet";
+import { Bone } from "@/components/LoadingSkeleton";
 
 const LABEL: Record<string, string> = {
   present: "Present", late: "Late", absent: "Absent", absent_excused: "Absent · Excused", late_excused: "Late · Excused",
@@ -74,7 +75,27 @@ export function AttendancePage() {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
       <section className="l-card p-[22px] lg:col-span-8">
-        <MonthCalendar title={`${MONTHS[ym.m]} ${ym.y}`} cells={cells} selected={sel?.date ?? null} onSelect={setSel} onPrev={() => shift(-1)} onNext={() => shift(1)} />
+        {history.isLoading ? (
+          <div aria-hidden>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <Bone className="h-5 w-36" />
+                <Bone className="mt-1.5 h-3.5 w-72 max-w-full" />
+              </div>
+              <div className="flex gap-1.5">
+                <Bone className="h-8 w-8 rounded-full" />
+                <Bone className="h-8 w-8 rounded-full" />
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-7 gap-1.5">
+              {Array.from({ length: 35 }, (_, i) => (
+                <Bone key={i} className="min-h-[64px] rounded-xl" />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <MonthCalendar title={`${MONTHS[ym.m]} ${ym.y}`} cells={cells} selected={sel?.date ?? null} onSelect={setSel} onPrev={() => shift(-1)} onNext={() => shift(1)} />
+        )}
         <div data-testid="day-detail" className="mt-3.5 min-h-[84px] rounded-[14px] bg-l-sub p-3.5 text-body leading-relaxed text-l-ink2">
           {!sel ? (
             "Pick a day to see its check-ins and any notes."
@@ -102,6 +123,16 @@ export function AttendancePage() {
       <div className="flex flex-col gap-4 lg:col-span-4">
         <section className="l-card p-[22px]">
           <h3 className="text-title font-semibold">Attendance rate</h3>
+          {summary.isLoading || history.isLoading ? (
+            <div className="mt-3.5 flex items-center gap-5" aria-hidden>
+              <Bone className="h-[110px] w-[110px] shrink-0 rounded-full" />
+              <div className="grid flex-1 gap-3 py-2">
+                {[0, 1, 2, 3].map((i) => (
+                  <Bone key={i} className="h-4" />
+                ))}
+              </div>
+            </div>
+          ) : (
           <div className="mt-3.5 flex items-center gap-5">
             <RateRing rate={s?.attendance_rate ?? 0} />
             <div className="flex-1 text-body text-l-ink2">
@@ -113,11 +144,20 @@ export function AttendancePage() {
               ))}
             </div>
           </div>
+          )}
         </section>
 
         <section className="l-card p-[22px]">
           <h3 className="text-title font-semibold">Leave &amp; lates</h3>
           <p className="mt-0.5 text-small text-l-ink3">Up to {s?.leave_allowance ?? 8} days across the whole course</p>
+          {summary.isLoading ? (
+            <div aria-hidden>
+              <Bone className="mt-3.5 h-10 w-48" />
+              <Bone className="mt-3 h-3 w-full rounded" />
+              <Bone className="mt-1.5 h-8 w-full" />
+            </div>
+          ) : (
+          <>
           <div className="mt-3.5 flex items-baseline gap-1.5">
             <b className="text-4xl font-semibold tabular-nums tracking-tighter">{s?.leave_used ?? 0}</b>
             <span className="text-l-ink3">
@@ -138,12 +178,25 @@ export function AttendancePage() {
               </span>
             ))}
           </div>
+          </>
+          )}
         </section>
 
         <section className="l-card p-[22px]">
           <h3 className="text-title font-semibold">My requests</h3>
           <div className="mt-2.5">
-            {(leaves.data ?? []).length === 0 && <p className="text-body text-l-ink3">No requests yet.</p>}
+            {leaves.isLoading &&
+              [0, 1].map((i) => (
+                <div key={i} aria-hidden className="flex items-center gap-3 border-t border-l-hair py-3 first:border-t-0">
+                  <Bone className="h-[50px] w-[46px] shrink-0 rounded-[10px]" />
+                  <div className="grid flex-1 gap-1.5">
+                    <Bone className="h-4 w-36" />
+                    <Bone className="h-3 w-24" />
+                  </div>
+                  <Bone className="h-5 w-16 rounded-full" />
+                </div>
+              ))}
+            {leaves.isSuccess && leaves.data.length === 0 && <p className="text-body text-l-ink3">No requests yet.</p>}
             {(leaves.data ?? [])
               .slice()
               .sort((a, b) => (b.date > a.date ? 1 : -1))

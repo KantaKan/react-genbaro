@@ -10,6 +10,7 @@ import { nicknames } from "../lib/name";
 import { usePeople } from "../lib/usePeople";
 import type { Person } from "../lib/people";
 import { PostThread } from "./PostThread";
+import { Bone, LoadingHint } from "@/components/LoadingSkeleton";
 
 export function rankPosts(list: BoardPost[], mode: "latest" | "popular"): BoardPost[] {
   const score = (p: BoardPost) => (p.reactions?.length ?? 0) + (p.comments?.length ?? 0);
@@ -28,7 +29,7 @@ export function BoardPage() {
   const qc = useQueryClient();
   const { userData } = useUserData();
   const { byId } = usePeople();
-  const { data = [] } = useQuery(["board-posts"], () => boardService.getPosts(), { staleTime: 30_000 });
+  const { data = [], isLoading } = useQuery(["board-posts"], () => boardService.getPosts(), { staleTime: 30_000 });
   const [mode, setMode] = useState<"latest" | "popular">("latest");
   const [text, setText] = useState("");
   const [bump, setBump] = useState<string | null>(null);
@@ -142,7 +143,27 @@ export function BoardPage() {
             </article>
           );
         })}
-        {data.length === 0 && <div className="l-card p-10 text-center text-l-ink3">No posts yet. Start the conversation.</div>}
+        {isLoading &&
+          ["w-full", "w-4/5", "w-2/3"].map((w) => (
+            <div key={w} aria-hidden className="l-card p-[22px]">
+              <div className="flex items-center gap-2.5">
+                <Bone className="h-[38px] w-[38px] shrink-0 rounded-full" />
+                <div className="grid flex-1 gap-1.5">
+                  <Bone className="h-4 w-28" />
+                  <Bone className="h-3 w-16" />
+                </div>
+              </div>
+              <Bone className={`mt-3.5 h-4 ${w}`} />
+              <Bone className="mt-2 h-4 w-1/2" />
+              <div className="mt-3.5 flex gap-1.5">
+                {[0, 1, 2].map((i) => (
+                  <Bone key={i} className="h-[30px] w-14 rounded-full" />
+                ))}
+              </div>
+            </div>
+          ))}
+        {isLoading && <LoadingHint label="Loading posts" />}
+        {!isLoading && data.length === 0 && <div className="l-card p-10 text-center text-l-ink3">No posts yet. Start the conversation.</div>}
         <style>{`@keyframes l-bump{40%{transform:scale(1.6) rotate(-10deg)}}`}</style>
       </div>
       <aside className="l-card p-[22px] lg:sticky lg:top-20">

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { Badge } from "@/domain/types";
 import { Medal } from "./Medal";
+import { Bone } from "@/components/LoadingSkeleton";
 
 const MAX = 8; // two rows of four
 
@@ -33,6 +34,23 @@ export function StreakBadgesCard({ badges, perfectWeek, weekOnTime }: { badges: 
           />
         ))}
         {!perfectWeek && shown.length < MAX && <Medal name="Perfect week" sub={`${weekOnTime} of 5 days`} locked progress={Math.min(1, weekOnTime / 5)} />}
+      </div>
+    </section>
+  );
+}
+
+export function StreakBadgesCardSkeleton() {
+  return (
+    <section className="l-card p-[22px]" aria-hidden>
+      <Bone className="h-5 w-20" />
+      <Bone className="mt-1.5 h-3.5 w-36" />
+      <div className="mt-[18px] grid grid-cols-4 gap-x-1.5 gap-y-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="flex flex-col items-center gap-1.5">
+            <Bone className="h-14 w-14 rounded-full" />
+            <Bone className="h-3 w-12" />
+          </div>
+        ))}
       </div>
     </section>
   );

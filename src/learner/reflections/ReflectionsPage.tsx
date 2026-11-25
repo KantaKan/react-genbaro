@@ -28,6 +28,7 @@ import { TonightCard } from "./TonightCard";
 import { useMyPlant } from "../lib/useMyPlant";
 import { SeedlingPlant } from "@/components/streak-components";
 import { CalendarView, JournalView, dayLabel } from "./views";
+import { Bone, LoadingHint } from "@/components/LoadingSkeleton";
 
 type View = "journal" | "calendar";
 interface Prefs {
@@ -297,6 +298,20 @@ export function ReflectionsPage() {
       </div>
 
       {/* Row 2: how am I doing */}
+      {reflectionsQ.isLoading ? (
+        <div className="mt-3.5 grid grid-cols-1 gap-3.5 md:grid-cols-3" aria-hidden>
+          {["w-40", "w-36", "w-44"].map((w) => (
+            <section key={w} className="l-card flex items-start gap-3.5 p-[18px] px-5">
+              <Bone className="h-12 w-12 shrink-0 rounded-xl" />
+              <div className="grid min-w-0 flex-1 gap-1.5">
+                <Bone className={`h-5 ${w}`} />
+                <Bone className="h-3.5 w-full" />
+                <Bone className="mt-1.5 h-[5px] w-full rounded-full" />
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : (
       <div className="mt-3.5 grid grid-cols-1 gap-3.5 md:grid-cols-3">
         <section className="l-card flex items-start gap-3.5 p-[18px] px-5">
           <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-green-50 text-l-green dark:bg-green-950/40">
@@ -368,6 +383,7 @@ export function ReflectionsPage() {
           </div>
         </section>
       </div>
+      )}
 
       {/* Toolbar */}
       <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -406,7 +422,23 @@ export function ReflectionsPage() {
 
       <div className="mt-3.5">
         {reflectionsQ.isLoading ? (
-          <div className="l-card h-[240px] max-w-[900px] animate-pulse" />
+          <div className="flex max-w-[900px] flex-col gap-2.5" aria-hidden>
+            <div className="flex items-center gap-2.5 px-1 pb-0.5 pt-3">
+              <Bone className="h-5 w-16" />
+              <Bone className="h-3.5 w-28" />
+              <span className="h-px flex-1 bg-l-hair" />
+            </div>
+            {["w-3/4", "w-2/3", "w-1/2", "w-3/5"].map((w) => (
+              <div key={w} className="l-card flex items-center gap-3.5 py-3 pl-0 pr-4">
+                <span className="flex w-[72px] shrink-0 justify-center sm:w-[84px]">
+                  <Bone className="h-6 w-12" />
+                </span>
+                <Bone className="h-7 w-7 shrink-0 rounded-full" />
+                <Bone className={`h-4 ${w}`} />
+              </div>
+            ))}
+            <LoadingHint label="Loading your reflections" />
+          </div>
         ) : prefs.view === "journal" ? (
           <JournalView nights={nights} filter={prefs.filter} open={open} onToggle={toggle} weeksShown={weeksShown} onMore={() => setWeeksShown((w) => w + 3)} course={courseInfo} focus={focus} unseen={unseenIds} />
         ) : (

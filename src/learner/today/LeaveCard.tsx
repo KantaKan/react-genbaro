@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Bone } from "@/components/LoadingSkeleton";
 
 export function LeaveCard({ used, allowance, rate }: { used: number; allowance: number; rate: number }) {
   return (
@@ -29,6 +30,27 @@ export function LeaveCard({ used, allowance, rate }: { used: number; allowance: 
       <div className="mt-3.5 flex justify-between border-t border-l-hair pt-2.5 text-body text-l-ink2">
         <span>Attendance rate</span>
         <b className="font-semibold tabular-nums text-l-ink">{(rate * 100).toFixed(1)}%</b>
+      </div>
+    </section>
+  );
+}
+
+export function LeaveCardSkeleton() {
+  return (
+    <section className="l-card p-[22px]" aria-hidden>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+      <Bone className="h-5 w-32" />
+      <Bone className="mt-1.5 h-3.5 w-52" />
+        </div>
+        <Bone className="h-8 w-[118px] rounded-full" />
+      </div>
+      <Bone className="mt-5 h-10 w-44" />
+      <Bone className="mt-3 h-2.5 w-full rounded" />
+      <Bone className="mt-2 h-2.5 w-full" />
+      <div className="mt-3.5 flex justify-between border-t border-l-hair pt-2.5">
+        <Bone className="h-4 w-28" />
+        <Bone className="h-4 w-12" />
       </div>
     </section>
   );

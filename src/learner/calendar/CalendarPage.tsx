@@ -8,6 +8,7 @@ import { learnerApi } from "../api";
 import { usePageHeader } from "../shell/LearnerShell";
 import { bangkokNow } from "../lib/time";
 import { defaultDay, durationLabel, hoursByType, momentAt, pickWeek, upcoming } from "./logic";
+import { Bone, LoadingHint } from "@/components/LoadingSkeleton";
 
 const card = "rounded-2xl bg-l-card p-5 shadow-[0_0_0_1px_var(--l-hair)]";
 const dayShort = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", timeZone: "UTC" });
@@ -30,7 +31,7 @@ export function CalendarPage() {
   }, []);
   usePageHeader({ title: "Schedule", context: `JSD${userData?.cohort_number ?? ""}` });
 
-  if (q.isLoading) return <div className="h-64 animate-pulse rounded-2xl bg-l-sub" />;
+  if (q.isLoading) return <CalendarSkeleton />;
   if (q.isError || !q.data) {
     return (
       <section className={`${card} text-center`}>
@@ -218,6 +219,52 @@ export function CalendarPage() {
           </section>
         )}
       </div>
+    </div>
+  );
+}
+
+function CalendarSkeleton() {
+  return (
+    <div>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]" aria-hidden>
+        <section className={card}>
+          <div className="flex items-center gap-2.5">
+            <Bone className="h-8 w-8 rounded-[9px]" />
+            <Bone className="h-6 w-48" />
+            <Bone className="h-8 w-8 rounded-[9px]" />
+          </div>
+          <div className="-mx-1 mt-4 flex gap-1.5 px-1 pb-1.5 pt-1">
+            {Array.from({ length: 5 }, (_, i) => (
+              <Bone key={i} className="h-[62px] min-w-[64px] flex-1 rounded-xl" />
+            ))}
+          </div>
+          <div className="mt-4">
+            {["w-40", "w-56", "w-24", "w-48", "w-36"].map((w) => (
+              <div key={w} className="flex gap-3 border-b border-l-hair py-3 last:border-0">
+                <Bone className="h-4 w-11 shrink-0" />
+                <div className="grid flex-1 gap-1.5">
+                  <Bone className={`h-5 ${w}`} />
+                  <Bone className="h-3 w-28" />
+                </div>
+                <Bone className="h-3 w-10 shrink-0" />
+              </div>
+            ))}
+          </div>
+        </section>
+        <div className="flex flex-col gap-4">
+          <section className={card}>
+            <Bone className="h-5 w-12 rounded-full" />
+            <Bone className="mt-2 h-6 w-48" />
+            <Bone className="mt-2 h-4 w-28" />
+          </section>
+          <section className={card}>
+            <Bone className="h-5 w-16 rounded-full" />
+            <Bone className="mt-2 h-6 w-40" />
+            <Bone className="mt-2 h-4 w-32" />
+          </section>
+        </div>
+      </div>
+      <LoadingHint label="Loading your schedule" />
     </div>
   );
 }
