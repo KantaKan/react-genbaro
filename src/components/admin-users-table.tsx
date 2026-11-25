@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, FileSpreadsheet, MessageSquare, Award, Eye, Filter, Calendar, Trash2, User as UserIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { useConfig } from "@/hooks/use-config";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

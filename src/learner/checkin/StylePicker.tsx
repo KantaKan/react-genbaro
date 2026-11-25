@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "react-query";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { Lock } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { learnerApi, LearnerApiError } from "../api";

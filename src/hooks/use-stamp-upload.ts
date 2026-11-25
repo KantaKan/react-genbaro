@@ -1,4 +1,4 @@
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { useMutation, useQueryClient } from "react-query";
 import { createStamp } from "@/lib/api";
 import { fireConfetti, fireMilestoneConfetti } from "@/lib/confetti";

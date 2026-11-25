@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { manualMarkAttendance, deleteAttendanceRecord } from "@/lib/api";
 import type { AttendanceStatusType } from "@/domain/types";
 import { Sun, Sunset } from "lucide-react";

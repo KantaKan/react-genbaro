@@ -5,7 +5,7 @@ import { StylePicker } from "./StylePicker";
 import { learnerApi } from "../api";
 import type { MySummary } from "../types";
 
-vi.mock("react-toastify", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
+vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 vi.mock("../api", async (orig) => {
   const real = await orig<typeof import("../api")>();
   return { ...real, learnerApi: { ...real.learnerApi, savePreferences: vi.fn().mockResolvedValue({}) } };

@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { AxiosError, type AxiosResponse } from "axios";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useReflections, type Reflection } from "./use-reflections";
 
-vi.mock("react-toastify", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/lib/api", () => ({ api: { post: vi.fn(), get: vi.fn().mockResolvedValue({ data: { data: [] } }), delete: vi.fn() } }));
 
 const input = { user_id: "u1", date: new Date().toISOString(), reflection: { tech_sessions: { happy: "a", improve: "" }, non_tech_sessions: { happy: "", improve: "" }, barometer: "Comfort Zone" } } as unknown as Reflection;

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { useAuth } from "@/AuthContext";
 import { useUserData } from "@/application/contexts/UserDataContext";
 import { addCommentReaction, addReaction, createComment, deleteComment, getPost, removeCommentReaction, removeReaction } from "@/lib/api";

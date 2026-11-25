@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Lock, X } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { UserAvatar } from "@/components/user-avatar";
 import { userService } from "@/application/services/userService";

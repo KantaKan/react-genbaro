@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { adminCreateLeaveRequest, type LeaveRequest, type AdminCreateLeaveRequestPayload } from "@/lib/api";
 import { UserPlus, Clock, Sun, Sunset } from "lucide-react";
 

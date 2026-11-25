@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Download, Loader2, Upload } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { uploadPoster } from "@/lib/api";

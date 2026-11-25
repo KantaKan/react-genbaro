@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link2, Edit3, Check, X, AlertCircle, ArrowUpDown, UserMinus, UserX, UserCheck } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { attendanceService } from "@/application/services/attendanceService";
 import {
   Select,

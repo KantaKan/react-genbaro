@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { getCohort, getHolidays, deleteHoliday, type User, type Holiday } from "@/lib/api";
 import { RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { AttendanceFlipDigit } from "./attendance/attendance-flip-digit";

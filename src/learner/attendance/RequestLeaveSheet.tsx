@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "react-query";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { learnerApi } from "../api";
 import { leaveImpact, toLeavePayload, type LeaveKind, type LeavePart } from "../lib/leave";

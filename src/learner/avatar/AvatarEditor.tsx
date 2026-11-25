@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { Lock, Shuffle } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { UserAvatar } from "@/components/user-avatar";

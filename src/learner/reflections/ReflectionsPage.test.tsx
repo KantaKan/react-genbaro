@@ -20,7 +20,7 @@ vi.mock("@/application/services/giftBoxService", () => ({ giftBoxService: { reco
 vi.mock("@/lib/api", () => ({ api: { get: vi.fn().mockResolvedValue({ data: { data: { _id: "u1", growth_points: 0, care_energy_log: [] } } }) } }));
 
 const toastError = vi.fn();
-vi.mock("react-toastify", () => ({ toast: { success: vi.fn(), error: (m: string) => toastError(m) } }));
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: (m: string) => toastError(m) } }));
 
 const r = (day: string, barometer: string, happy: string, reply = ""): Reflection => ({
   _id: `r${day.slice(8)}`,

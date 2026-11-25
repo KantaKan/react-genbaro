@@ -7,7 +7,7 @@ import { learnerApi } from "../api";
 
 vi.mock("../cup/api", () => ({ cupApi: { me: vi.fn().mockResolvedValue({ champion_group: "F", my_medals: [{ week: "2026-08-24", week_no: 8 }], standings: [] }) } }));
 vi.mock("@blobatar/react/gaze", () => ({ useGaze: () => ({ ref: vi.fn() }) }));
-vi.mock("react-toastify", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/UserDataContext", () => ({
   useUserData: () => ({
     userData: { _id: "me", first_name: "Aphiradee", zoom_name: "03_Aphiradee(Black/แบล็ค)", jsd_number: "03", genmate_group: "F", cohort_number: 13, bio: "Ex-accountant", skills: ["React", "Figma", "Go", "SQL", "CSS"], badges: [], profile_comments: [] },

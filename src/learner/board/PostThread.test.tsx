@@ -5,7 +5,7 @@ import type { BoardComment } from "@/lib/board";
 import { PostThread } from "./PostThread";
 
 vi.mock("@/components/user-avatar", () => ({ UserAvatar: () => <span /> }));
-vi.mock("react-toastify", () => ({ toast: { error: vi.fn() } }));
+vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
 
 const c = (id: string, content: string, at: string): BoardComment => ({ id, userId: id, zoomName: id, cohort: 9, content, reactions: [], createdAt: at });
 const replies = [c("b", "second", "2026-11-24T02:00:00Z"), c("a", "first", "2026-11-24T01:00:00Z"), c("z", "newest", "2026-11-24T03:00:00Z")];

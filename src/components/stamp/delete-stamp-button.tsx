@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { useMutation, useQueryClient } from "react-query";
 
 import { Button } from "@/components/ui/button";

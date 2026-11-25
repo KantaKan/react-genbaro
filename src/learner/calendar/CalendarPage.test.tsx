@@ -9,7 +9,7 @@ import type { CalWeek, LearnerCalendar, Session } from "@/calendar/types";
 
 vi.mock("@/components/mode-toggle", () => ({ ModeToggle: () => null }));
 vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout: vi.fn(), userRole: "learner" }) }));
-vi.mock("react-toastify", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/UserDataContext", () => ({ useUserData: () => ({ userData: { _id: "u1", first_name: "A", zoom_name: "03_A(Black/แบล็ค)", cohort_number: 13 }, loading: false }) }));
 vi.mock("../api", async (orig) => {
   const real = await orig<typeof import("../api")>();
