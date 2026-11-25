@@ -15,7 +15,7 @@ vi.mock("../cup/api", () => ({ cupApi: { me: vi.fn().mockResolvedValue({ champio
 vi.mock("@blobatar/react/gaze", () => ({ useGaze: () => ({ ref: vi.fn() }) }));
 vi.mock("@/components/mode-toggle", () => ({ ModeToggle: () => null }));
 vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout: vi.fn(), userRole: "learner" }) }));
-vi.mock("react-toastify", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/UserDataContext", () => ({
   useUserData: () => ({ userData: { _id: "me", first_name: "Aphiradee", zoom_name: "03_Aphiradee(Black/แบล็ค)", genmate_group: "F", cohort_number: 13 }, loading: false, refetchUserData: vi.fn() }),
 }));

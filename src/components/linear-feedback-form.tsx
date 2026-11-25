@@ -19,7 +19,7 @@ import {
   CheckCircle2,
   AlertTriangle 
 } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { unansweredQuestions } from "./reflection-answers";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";

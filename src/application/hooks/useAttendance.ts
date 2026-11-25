@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "react-query";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { attendanceService } from "../services";
 import type {
   AttendanceSession,

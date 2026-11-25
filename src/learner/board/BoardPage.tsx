@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "react-query";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { useUserData } from "@/UserDataContext";
 import { boardService } from "@/application/services/boardService";
 import { UserAvatar } from "@/components/user-avatar";

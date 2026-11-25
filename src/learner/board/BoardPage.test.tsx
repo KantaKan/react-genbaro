@@ -7,7 +7,7 @@ import { boardService } from "@/application/services/boardService";
 import type { BoardPost } from "@/lib/board";
 
 vi.mock("@blobatar/react/gaze", () => ({ useGaze: () => ({ ref: vi.fn() }) }));
-vi.mock("react-toastify", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("../api", () => ({ learnerApi: { getCohortPeople: vi.fn().mockResolvedValue([{ _id: "u", first_name: "Ajjima", avatar: { style: "lorelei", seed: "q", bg: "e0e7ff" } }]) } }));
 vi.mock("@/UserDataContext", () => ({ useUserData: () => ({ userData: { _id: "me", first_name: "A", zoom_name: "03_A(Black/แบล็ค)", cohort_number: 13 }, loading: false }) }));
 const post = (id: string, reactions: number, comments: number, createdAt: string): BoardPost =>

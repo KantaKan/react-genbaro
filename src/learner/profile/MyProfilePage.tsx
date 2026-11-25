@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "react-query";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { Pencil, Plus, X } from "lucide-react";
 import { useUserData } from "@/UserDataContext";
 import { UserAvatar } from "@/components/user-avatar";

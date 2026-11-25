@@ -21,7 +21,7 @@ import { useAuth } from "@/AuthContext";
 import { safeUrl } from "@/learner/lib/usePeople";
 import { useUserData } from "@/application/contexts/UserDataContext";
 import { getUserById, addProfileComment, addProfileReaction, updateUserPersonalDetails, deleteProfileComment, updateUser } from "@/application/services/userService";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import type { User } from "@/domain/types";
 
 // Helper to generate a unique, deterministic gradient based on a string (user ID)

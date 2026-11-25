@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "react-query";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { Sprout, MessageCircle } from "lucide-react";
 import { useUserData } from "@/UserDataContext";

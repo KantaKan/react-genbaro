@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeEach, onTestFinished } from "vitest";
 import { render, screen, fireEvent, waitFor, within, act } from "@testing-library/react";
 import { AvatarEditor } from "./AvatarEditor";
 import { learnerApi, LearnerApiError } from "../api";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 vi.mock("@blobatar/react/gaze", () => ({ useGaze: () => ({ ref: vi.fn() }) }));
-vi.mock("react-toastify", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
+vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 vi.mock("../api", async (orig) => {
   const real = await orig<typeof import("../api")>();
   return { ...real, learnerApi: { ...real.learnerApi, savePreferences: vi.fn().mockResolvedValue({}) } };

@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { Camera, Check } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { StampPreviewDialog } from "@/components/stamp/stamp-preview-dialog";

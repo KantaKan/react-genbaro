@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode } from "react";
 import { MessageCircle } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { UserAvatar } from "@/components/user-avatar";
 import { decodeHtmlEntities, type BoardComment } from "@/lib/board";
 import { nicknames } from "../lib/name";

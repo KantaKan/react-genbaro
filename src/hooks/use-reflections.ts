@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { AxiosError } from "axios";
 import type { Reflection, ReflectionData, TechSession, NonTechSession } from "@/domain/types/user";
 
