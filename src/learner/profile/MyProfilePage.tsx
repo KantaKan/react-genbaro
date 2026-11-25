@@ -19,6 +19,7 @@ import { styleById } from "../checkin/styles/registry";
 import { BarometerStrip } from "./BarometerStrip";
 import { usePeople } from "../lib/usePeople";
 import { useChampion } from "../cup/useChampion";
+import { Bone } from "@/components/LoadingSkeleton";
 
 const MAX_SKILLS = 5;
 
@@ -81,14 +82,14 @@ export function MyProfilePage() {
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
           {[
-            ["Plant streak", plant.ready ? (plant.nights > 0 ? `${plant.nights} ${plant.nights === 1 ? "night" : "nights"}` : "Resting") : "–", plant.nights ? "text-l-green" : ""],
-            ["Attendance", s ? `${(s.attendance_rate * 100).toFixed(1)}%` : "–", ""],
-            ["Reflections", `${reflections.data?.length ?? 0}`, ""],
-            ["Badges", `${me.badges?.length ?? 0}`, ""],
-          ].map(([k, v, c]) => (
-            <div key={k} className="rounded-2xl bg-l-sub px-4 py-3.5 shadow-[0_0_0_1px_var(--l-hair)]">
+            ["Plant streak", plant.ready ? (plant.nights > 0 ? `${plant.nights} ${plant.nights === 1 ? "night" : "nights"}` : "Resting") : "–", plant.nights ? "text-l-green" : "", !plant.ready],
+            ["Attendance", s ? `${(s.attendance_rate * 100).toFixed(1)}%` : "–", "", summary.isLoading],
+            ["Reflections", `${reflections.data?.length ?? 0}`, "", reflections.isLoading],
+            ["Badges", `${me.badges?.length ?? 0}`, "", false],
+          ].map(([k, v, c, loading]) => (
+            <div key={String(k)} className="rounded-2xl bg-l-sub px-4 py-3.5 shadow-[0_0_0_1px_var(--l-hair)]">
               <small className="block text-xs text-l-ink3">{k}</small>
-              <b className={`text-2xl font-semibold tabular-nums tracking-tight ${c}`}>{v}</b>
+              {loading ? <Bone className="mt-1 h-7 w-16 bg-l-card" /> : <b className={`text-2xl font-semibold tabular-nums tracking-tight ${c}`}>{v}</b>}
             </div>
           ))}
         </div>
@@ -117,7 +118,15 @@ export function MyProfilePage() {
               {mySkills.length >= MAX_SKILLS && <span className="text-small text-l-ink3">Up to {MAX_SKILLS} skills</span>}
             </div>
           </section>
-          <BarometerStrip reflections={reflections.data ?? []} />
+          {reflections.isLoading ? (
+            <section aria-hidden className="l-card p-[22px]">
+              <Bone className="h-5 w-48" />
+              <Bone className="mt-1.5 h-3.5 w-72 max-w-full" />
+              <Bone className="mt-4 h-16 w-full" />
+            </section>
+          ) : (
+            <BarometerStrip reflections={reflections.data ?? []} />
+          )}
           <section className="l-card p-[22px]">
             <h3 className="text-title font-semibold">Recommendations</h3>
             <p className="mt-0.5 text-small text-l-ink3">What classmates and TAs say about working with you</p>

@@ -22,7 +22,7 @@ import { wellbeingApi } from "../wellbeing";
 import { Link } from "react-router-dom";
 import { bkkMinutes, bkkToday, currentSession, liveInterval } from "./time";
 import { setPanelSession, usePanelSession } from "./sessionStore";
-import { Loading } from "../ui/Loading";
+import { Bone, LoadingHint, SkeletonRows } from "@/components/LoadingSkeleton";
 
 function useNowMin() {
   const [m, setM] = useState(() => bkkMinutes(new Date()));
@@ -59,6 +59,63 @@ function PanelFor({ id, cohort, onMove }: { id: string; cohort: number; onMove: 
       <Link to={`/admin/learners/${l.id}`} className="mt-4 block rounded-[11px] py-2 text-center text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
         Full profile
       </Link>
+    </div>
+  );
+}
+
+function TodaySkeleton() {
+  return (
+    <div>
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <aside className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:order-2 xl:grid-cols-1">
+          <section className="rounded-[18px] bg-gradient-to-b from-l-sub to-l-card p-4 shadow-[0_0_0_1px_var(--l-hair)]">
+            <div className="flex items-center justify-between gap-2">
+              <Bone className="h-5 w-36" />
+              <Bone className="h-6 w-[136px] rounded-[10px]" />
+            </div>
+            <div className="mt-3 flex items-center gap-4">
+              <Bone className="h-[84px] w-[84px] shrink-0 rounded-full" />
+              <div className="grid gap-2">
+                <Bone className="h-[26px] w-24" />
+                <Bone className="h-3.5 w-36" />
+              </div>
+            </div>
+            <Bone className="mt-4 h-[5px] w-full rounded-full" />
+            <div className="mt-7 grid grid-cols-2 gap-x-4 gap-y-2">
+              {Array.from({ length: 4 }, (_, i) => (
+                <Bone key={i} className="h-3.5" />
+              ))}
+            </div>
+          </section>
+          {["w-16", "w-24", "w-28"].map((w) => (
+            <section key={w} className="rounded-2xl bg-l-card p-4 shadow-[0_0_0_1px_var(--l-hair)]">
+              <Bone className={`h-4 ${w}`} />
+              <div className="mt-3 grid gap-2.5">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="flex items-center gap-2.5">
+                    <Bone className="h-6 w-6 shrink-0 rounded-full" />
+                    <Bone className="h-3.5 flex-1" />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </aside>
+        <div className="min-w-0 xl:order-1">
+          <div className="mb-2.5 flex flex-wrap items-center gap-2">
+            <Bone className="h-[34px] w-72 rounded-[11px]" />
+            <Bone className="h-[30px] w-48 rounded-[9px]" />
+          </div>
+          <div className="overflow-hidden rounded-[18px] bg-l-card shadow-[0_0_0_1px_var(--l-hair)]">
+            <table className="w-full border-separate border-spacing-0 text-body">
+              <tbody>
+                <SkeletonRows cols={["check", "person", "chips", "text", "meter", "text", "actions"]} rows={10} />
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <LoadingHint label="Loading today" />
     </div>
   );
 }
@@ -201,7 +258,7 @@ export function TodayPage() {
       }
     });
 
-  if (today.isLoading) return <Loading label="Loading today…" />;
+  if (today.isLoading) return <TodaySkeleton />;
   if (!view) return <p className="text-sm text-l-ink3">Couldn't load today. Try again in a moment.</p>;
 
   return (

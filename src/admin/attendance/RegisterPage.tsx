@@ -13,7 +13,7 @@ import { CellChip } from "./CellChip";
 import { AttendanceTabs } from "./AttendanceTabs";
 import { matchLearner, sortLearners, type SortKey } from "./sortLearners";
 import { LeaveMeter } from "../ui/LeaveMeter";
-import { Loading } from "../ui/Loading";
+import { Bone, LoadingHint, SkeletonRows } from "@/components/LoadingSkeleton";
 
 
 const dayLabel = (d: string) => new Date(`${d}T12:00:00+07:00`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", timeZone: "Asia/Bangkok" });
@@ -187,7 +187,33 @@ export function RegisterPage() {
           <p className="mt-2.5 text-small text-l-ink3">Click a cell to change it · every change is logged</p>
         </>
       )}
-      {q.isLoading && <Loading label="Loading register…" className="mt-4" />}
+      {q.isLoading && (
+        <div>
+          <div className="mt-3.5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {["w-32", "w-24", "w-20", "w-28"].map((w) => (
+              <div key={w} className="rounded-2xl px-4 py-3.5 shadow-[0_0_0_1px_var(--l-hair)]">
+                <Bone className={`h-3 ${w}`} />
+                <Bone className="mt-2 h-7 w-16" />
+                <Bone className="mt-1.5 h-3 w-20" />
+              </div>
+            ))}
+          </div>
+          <div className="mt-3.5 flex flex-wrap items-center gap-2">
+            <Bone className="h-[34px] w-56 rounded-[10px]" />
+            {[0, 1, 2, 3, 4].map((i) => (
+              <Bone key={i} className="h-7 w-11 rounded-full" />
+            ))}
+          </div>
+          <div className="mt-2.5 overflow-hidden rounded-2xl shadow-[0_0_0_1px_var(--l-hair)]">
+            <table className="w-full border-separate border-spacing-0 text-body">
+              <tbody>
+                <SkeletonRows cols={["person", "day", "day", "day", "day", "day", "text", "meter"]} rows={10} />
+              </tbody>
+            </table>
+          </div>
+          <LoadingHint label="Loading register" />
+        </div>
+      )}
       {q.isError && <p className="mt-4 rounded-2xl bg-l-sub px-4 py-8 text-center text-body text-red-600">Couldn't load the register. Refresh to try again.</p>}
     </div>
   );

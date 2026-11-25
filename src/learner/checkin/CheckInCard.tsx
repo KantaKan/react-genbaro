@@ -19,6 +19,7 @@ import { Celebrate } from "./Celebrate";
 import { pickLine } from "./lines";
 import { play } from "./sound";
 import type { CheckInControlProps } from "./types";
+import { Bone } from "@/components/LoadingSkeleton";
 
 const lazyCache = new Map<StyleId, ComponentType<CheckInControlProps>>();
 function controlFor(id: StyleId): ComponentType<CheckInControlProps> {
@@ -324,5 +325,31 @@ function Stat({ label, value }: { label: string; value: string }) {
         {value}
       </div>
     </div>
+  );
+}
+
+export function CheckInCardSkeleton() {
+  return (
+    <section className="l-card relative p-[22px]" aria-hidden>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+      <Bone className="h-5 w-40" />
+      <Bone className="mt-1.5 h-3.5 w-44" />
+        </div>
+        <Bone className="h-8 w-[88px] rounded-full" />
+      </div>
+      <Bone className="mt-5 h-7 w-64 max-w-full" />
+      <Bone className="mt-2 h-4 w-80 max-w-full" />
+      <Bone className="mt-5 h-[66px] w-full max-w-[380px] rounded-full" />
+      <Bone className="mt-8 h-1.5 w-full rounded-full" />
+      <div className="mt-5 grid grid-cols-3 gap-2.5 border-t border-l-hair pt-4">
+        {[0, 1, 2].map((i) => (
+          <div key={i}>
+            <Bone className="h-3 w-20" />
+            <Bone className="mt-1.5 h-6 w-16" />
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }

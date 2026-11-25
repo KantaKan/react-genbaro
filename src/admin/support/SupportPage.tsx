@@ -7,7 +7,7 @@ import { nicknames } from "@/learner/lib/name";
 import { useAdminHeader } from "../shell/AdminShell";
 import { useCohort } from "../shell/useCohort";
 import { wellbeingApi } from "../wellbeing";
-import { Loading } from "../ui/Loading";
+import { Bone, LoadingHint } from "@/components/LoadingSkeleton";
 
 export function SupportPage() {
   const [cohort] = useCohort();
@@ -75,7 +75,27 @@ export function SupportPage() {
             </article>
           );
         })}
-        {list.isLoading && <Loading label="Loading who needs support…" />}
+        {list.isLoading && (
+          <>
+            {["w-40", "w-32", "w-44"].map((w) => (
+              <div key={w} aria-hidden className="grid grid-cols-[auto_minmax(0,1fr)] gap-4 rounded-[18px] px-[18px] py-4 shadow-[0_0_0_1px_var(--l-hair)] md:grid-cols-[auto_minmax(0,1fr)_auto]">
+                <Bone className="h-11 w-11 rounded-full" />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <Bone className={`h-5 ${w}`} />
+                    <Bone className="h-3 w-24" />
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <Bone className="h-6 w-28 rounded-full" />
+                    <Bone className="h-6 w-36 rounded-full" />
+                  </div>
+                </div>
+                <Bone className="col-span-2 h-9 w-[118px] self-center rounded-[11px] md:col-span-1" />
+              </div>
+            ))}
+            <LoadingHint label="Loading who needs support" />
+          </>
+        )}
         {list.isError && <p className="rounded-2xl bg-l-sub px-4 py-8 text-center text-body text-red-600">Couldn't load the support list. Refresh to try again.</p>}
         {list.isSuccess && rows.length === 0 && <p className="rounded-2xl bg-l-sub px-4 py-8 text-center text-body text-l-ink3">Nobody needs extra support right now.</p>}
       </div>
