@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import type { AttendanceStatusType } from "@/domain/types/attendance";
 import { nicknames } from "@/learner/lib/name";
 import { adminApi } from "../api";
-import type { Session, SessionCell } from "../types";
+import type { Session, SessionCell, TodayView } from "../types";
 import { STATUS_LABEL } from "../ui/status";
 import { bkkToday } from "../today/time";
 
@@ -22,6 +22,19 @@ export function useMarkWithUndo() {
     qc.invalidateQueries(["admin-today"]);
     qc.invalidateQueries(["admin-register"]);
   };
+  // Show the mark on the Today board right away; the refetch after the save brings the server's version.
+  const showNow = (learnerId: string, session: Session, status: AttendanceStatusType) => {
+    const saved = qc.getQueriesData<TodayView>(["admin-today"]);
+    qc.cancelQueries(["admin-today"]);
+    for (const [key, view] of saved) {
+      if (!view) continue;
+      qc.setQueryData<TodayView>(key, {
+        ...view,
+        learners: view.learners.map((l) => (l.id === learnerId ? { ...l, [session]: { ...l[session], status, marked_by: "admin" } } : l)),
+      });
+    }
+    return () => saved.forEach(([key, view]) => qc.setQueryData(key, view));
+  };
   return async ({ learner, session, date, status, live }: { learner: Who; cell?: SessionCell; session: Session; date: string; status: AttendanceStatusType; live?: boolean }) => {
     if (live && date !== bkkToday()) {
       toast.error("This board is from an earlier day. Refreshing…");
@@ -32,6 +45,7 @@ export function useMarkWithUndo() {
     if (busy.current.has(key)) return;
     busy.current.add(key);
     const name = nicknames(learner.zoom_name, learner.first_name);
+    const rollback = live ? showNow(learner.id, session, status) : () => {};
     try {
       const { record, previous } = await adminApi.mark({ user_id: learner.id, date, session, status });
       refresh();
@@ -50,6 +64,7 @@ export function useMarkWithUndo() {
         },
       });
     } catch (e) {
+      rollback();
       toast.error(e instanceof Error ? e.message : "Couldn't save");
     } finally {
       busy.current.delete(key);

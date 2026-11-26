@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { AdminShell } from "../shell/AdminShell";
 import { TodayPage } from "./TodayPage";
 import { adminApi } from "../api";
+import { toast } from "sonner";
 import { wellbeingApi } from "../wellbeing";
 import { slackApi } from "../slack/api";
 import { mkLearner } from "../learner/fixtures";
@@ -127,6 +128,25 @@ describe("TodayPage", () => {
     fireEvent.click(b);
     await waitFor(() => expect(adminApi.mark).toHaveBeenCalledTimes(1));
     expect(adminApi.mark).toHaveBeenCalledWith({ user_id: "c", date: "2026-11-23", session: "morning", status: "present" });
+  });
+
+  it("shows a quick mark right away, before the server answers", async () => {
+    vi.mocked(adminApi.mark).mockReset().mockReturnValue(new Promise(() => {}));
+    renderPage();
+    const row = (await screen.findByText(/นนท์ · Non/)).closest("tr")!;
+    fireEvent.click(within(row).getByRole("button", { name: "Present" }));
+    const roster = screen.getByRole("table");
+    await waitFor(() => expect(within(roster).getByText(/^Needs you · 1/)).toBeInTheDocument());
+    expect(within((await screen.findByText(/นนท์ · Non/)).closest("tr")!).queryByRole("button", { name: "Present" })).toBeNull();
+  });
+
+  it("puts the row back when the quick mark fails", async () => {
+    vi.mocked(adminApi.mark).mockReset().mockRejectedValue(new Error("Network down"));
+    renderPage();
+    const row = (await screen.findByText(/นนท์ · Non/)).closest("tr")!;
+    fireEvent.click(within(row).getByRole("button", { name: "Present" }));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Network down"));
+    expect(within((await screen.findByText(/นนท์ · Non/)).closest("tr")!).getByRole("button", { name: "Present" })).toBeInTheDocument();
   });
 
   it("bulk marks the selected learners after confirming", async () => {

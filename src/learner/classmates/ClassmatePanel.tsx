@@ -108,6 +108,7 @@ export function ClassmatePanel({ person, isMe, onClose, onEditAvatar }: { person
                 </div>
               </div>
             ))}
+          {full.isError && <p className="text-body text-l-ink3">Couldn't load recommendations. Close and open the profile to try again.</p>}
           {full.data && recs.length === 0 && <p className="text-body text-l-ink3">No recommendations yet.</p>}
           {recs.map((c) => (
             <div key={c.id ?? c._id} className="flex gap-2.5 border-t border-l-hair py-2.5 first:border-t-0">

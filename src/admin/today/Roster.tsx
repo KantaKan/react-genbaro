@@ -128,10 +128,10 @@ export function Roster({
             {supportIds?.has(l.id) && <span className="mr-0.5 rounded-full bg-red-50 px-2 py-0.5 text-micro font-semibold text-red-600 dark:bg-red-500/15">Support</span>}
             {canMark && !l[session].status && (
               <>
-                <button type="button" onClick={() => onQuick(l, "present")} className="rounded-[7px] bg-emerald-50 px-2 py-0.5 text-small font-semibold text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-300">
+                <button type="button" onClick={() => onQuick(l, "present")} className="rounded-[7px] bg-emerald-50 px-2 py-0.5 text-small font-semibold text-emerald-700 transition duration-150 hover:bg-emerald-100 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:bg-emerald-500/15 dark:text-emerald-300 dark:hover:bg-emerald-500/30 dark:hover:text-emerald-200">
                   Present
                 </button>
-                <button type="button" onClick={() => onQuick(l, "absent_excused")} className="rounded-[7px] bg-l-card px-2 py-0.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)] hover:bg-l-sub">
+                <button type="button" onClick={() => onQuick(l, "absent_excused")} className="rounded-[7px] bg-l-card px-2 py-0.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)] transition duration-150 hover:bg-l-sub hover:shadow-[0_0_0_1px_var(--l-ink3)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-l-ink3 dark:hover:bg-white/10">
                   Excuse
                 </button>
               </>
