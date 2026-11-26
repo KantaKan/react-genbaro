@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "react-query";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ChevronLeft, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
 import { BarometerFace, type ZoneId } from "@/learner/today/BarometerFace";
 import { nicknames } from "@/learner/lib/name";
@@ -11,6 +11,9 @@ import { wellbeingApi } from "../wellbeing";
 import { statusSolid } from "../ui/status";
 import { zoneLabel } from "../ui/zones";
 import { Bone, LoadingHint } from "@/components/LoadingSkeleton";
+import { KpiBoxes } from "./profile/KpiBoxes";
+import { BadgeTiles } from "./profile/BadgeTiles";
+import { useLearnerKeys } from "./profile/useLearnerKeys";
 
 const when = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Bangkok" });
 
@@ -24,6 +27,7 @@ export function ProfilePage() {
   const o = q.data;
   const n = nicknames(o?.learner.zoom_name, o?.learner.first_name ?? "");
   useAdminHeader({ title: "Learner", context: o ? `${n.th || n.en} · #${o.learner.jsd_number}` : "" });
+  useLearnerKeys(o?.neighbors?.prev ?? null, o?.neighbors?.next ?? null);
   const refresh = () => {
     qc.invalidateQueries(["admin-overview", id]);
     qc.invalidateQueries(["admin-support"]);
@@ -45,23 +49,39 @@ export function ProfilePage() {
   if (q.isLoading) return <ProfileSkeleton />;
   if (q.isError) return <p className="text-sm text-red-600">Couldn't load this learner. Refresh to try again.</p>;
   if (!o) return <p className="text-sm text-l-ink3">Learner not found.</p>;
-  const kpis = [
-    ["Attendance", `${(o.attendance_rate * 100).toFixed(1)}%`, ""],
-    ["Leave", `${o.leave_used} / 8`, o.leave_used >= 7 ? "text-red-600" : o.leave_used >= 6 ? "text-amber-600" : ""],
-    ["Streak", String(o.streak), ""],
-  ];
+  const nb = o.neighbors;
+  const navBtn = "grid h-8 w-8 place-items-center rounded-[10px] text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)] hover:text-l-ink";
   return (
     <div>
-      <Link to="/admin/learners" className="inline-flex items-center gap-1 rounded-[10px] px-2.5 py-1.5 text-small font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
-        <ChevronLeft className="h-3.5 w-3.5" /> All learners
-      </Link>
+      <div className="flex items-center gap-2">
+        <Link to="/admin/learners" className="inline-flex items-center gap-1 rounded-[10px] px-2.5 py-1.5 text-small font-semibold text-l-ink2 shadow-[0_0_0_1px_var(--l-hair)]">
+          <ChevronLeft className="h-3.5 w-3.5" /> All learners
+        </Link>
+        {nb && nb.total > 0 && (
+          <>
+            <span className="ml-auto text-small tabular-nums text-l-ink3">{`${nb.index + 1} of ${nb.total}`}</span>
+            {nb.prev ? (
+              <Link to={`/admin/learners/${nb.prev}`} aria-label="Previous learner (K)" title="Previous learner (K)" className={navBtn}>
+                <ChevronLeft className="h-4 w-4" />
+              </Link>
+            ) : null}
+            {nb.next ? (
+              <Link to={`/admin/learners/${nb.next}`} aria-label="Next learner (J)" title="Next learner (J)" className={navBtn}>
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            ) : null}
+          </>
+        )}
+      </div>
       <section className="mt-3.5 flex flex-wrap items-center gap-5 rounded-[20px] bg-gradient-to-b from-l-sub to-l-card p-5 shadow-[0_0_0_1px_var(--l-hair)]">
         <UserAvatar userId={o.learner.id} name={n.en} avatar={o.learner.avatar} className="h-[72px] w-[72px]" />
         <div className="min-w-[220px] flex-1">
           <h2 className="text-[22px] font-semibold tracking-tight">{n.th ? `${n.th} · ${o.learner.first_name} ${o.learner.last_name?.slice(0, 1) ?? ""}.` : o.learner.first_name}</h2>
           <p className="mt-0.5 text-small text-l-ink3">
-            #{o.learner.jsd_number} · Group {o.learner.genmate_group || "–"} · {o.learner.email} · joined {when(o.learner.created_at)}
+            #{o.learner.jsd_number} · Group {o.learner.genmate_group || "–"} · JSD{o.learner.cohort_number} · joined {when(o.learner.created_at)}
           </p>
+          <p className="text-small text-l-ink3">{o.learner.email}</p>
+          <BadgeTiles badges={o.badges ?? []} userId={o.learner.id} />
           {o.reasons.length > 0 && (
             <div className="mt-2.5 flex flex-wrap gap-1.5">
               {o.reasons.map((r) => (
@@ -79,14 +99,7 @@ export function ProfilePage() {
             </div>
           )}
         </div>
-        <div className="flex gap-6 border-l border-l-hair pl-5">
-          {kpis.map(([k, v, c]) => (
-            <div key={k}>
-              <small className="text-small text-l-ink3">{k}</small>
-              <b className={`block text-[22px] font-bold tabular-nums tracking-tight ${c}`}>{v}</b>
-            </div>
-          ))}
-        </div>
+        <KpiBoxes o={o} />
       </section>
 
       <div className="mt-3.5 grid gap-3.5 lg:grid-cols-2">

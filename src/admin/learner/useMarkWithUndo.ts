@@ -8,7 +8,7 @@ import type { Session, SessionCell, TodayView } from "../types";
 import { STATUS_LABEL } from "../ui/status";
 import { bkkToday } from "../today/time";
 
-type Who = { id: string; first_name: string; zoom_name: string };
+export type Who = { id: string; first_name: string; zoom_name: string };
 
 /**
  * Marks one session, then offers Undo. Undo uses what the server says was there before
@@ -21,6 +21,7 @@ export function useMarkWithUndo() {
   const refresh = () => {
     qc.invalidateQueries(["admin-today"]);
     qc.invalidateQueries(["admin-register"]);
+    qc.invalidateQueries(["admin-overview"]);
   };
   // Show the mark on the Today board right away; the refetch after the save brings the server's version.
   const showNow = (learnerId: string, session: Session, status: AttendanceStatusType) => {
