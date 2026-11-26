@@ -2,7 +2,6 @@ import { api } from "../../infrastructure/api";
 import { setAuthData, clearAllAuthData, removeAuthToken } from "../../infrastructure/storage";
 import type {
   LoginCredentials,
-  RegisterData,
   LoginResponse,
   VerifyTokenResponse,
   UserRole,
@@ -17,11 +16,6 @@ export const authService = {
     const role: UserRole = response.data.data.role === "admin" ? "admin" : "learner";
     setAuthData(role, userId);
     return { userId, role };
-  },
-
-  async register(userData: RegisterData) {
-    const response = await api.post("/register", userData);
-    return response.data;
   },
 
   /** Checks the session cookie. An old stored token rides along once and is moved into the cookie. */

@@ -17,18 +17,6 @@ export interface LoginCredentials {
   password: string;
 }
 
-export interface RegisterData {
-  first_name: string;
-  last_name: string;
-  email: string;
-  password: string;
-  cohort_number: string;
-  jsd_number: string;
-  project_group?: string;
-  genmate_group?: string;
-  zoom_name?: string;
-}
-
 export interface VerifyTokenResponse {
   success: boolean;
   message: string;
