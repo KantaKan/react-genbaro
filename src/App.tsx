@@ -7,7 +7,6 @@ import { queryClient } from "./lib/queryClient";
 import { ThemeProvider } from "./components/theme-provider";
 import { IslandToaster } from "./components/IslandToaster";
 import { Login } from "./components/auth/login";
-import { SignUp } from "./components/auth/signup";
 import { AuthProvider, useAuth } from "./application/contexts/AuthContext";
 import UserDataProvider from "./application/contexts/UserDataContext";
 import { AdminLayout } from "./routes/layouts/AdminLayout";
@@ -71,7 +70,7 @@ const StartupStoryPage = lazy(() => import("./pages/StartupStoryPage"));
 
 function AppContent() {
   const { isAuthenticated, error } = useAuth();
-  const { handleLogin, handleSignUp, homeRoute } = useAuthActions();
+  const { handleLogin, homeRoute } = useAuthActions();
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -92,40 +91,6 @@ function AppContent() {
             }
           />
           <Route path="/invite/:token" element={<InvitePage />} />
-          <Route
-            path="/signupxdd"
-            element={
-              !isAuthenticated ? (
-                <SignUp
-                  onSignUp={async (
-                    first_name,
-                    last_name,
-                    email,
-                    password,
-                    cohort_number,
-                    jsd_number,
-                    project_group,
-                    genmate_group,
-                    zoom_name
-                  ) =>
-                    handleSignUp({
-                      first_name,
-                      last_name,
-                      email,
-                      password,
-                      cohort_number,
-                      jsd_number,
-                      project_group,
-                      genmate_group,
-                      zoom_name,
-                    })
-                  }
-                />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
 
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminTodayPage />} />

@@ -1,20 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../application/contexts/AuthContext";
 import { useUserData } from "../../application/contexts/UserDataContext";
-import { api } from "../../infrastructure/api";
 import { getHomeRoute } from "../../routes/getHomeRoute";
-
-type SignUpArgs = {
-  first_name: string;
-  last_name: string;
-  email: string;
-  password: string;
-  cohort_number: number;
-  jsd_number: string;
-  project_group: string;
-  genmate_group: string;
-  zoom_name: string;
-};
 
 export function useAuthActions() {
   const { isAuthenticated, userRole, login } = useAuth();
@@ -31,21 +18,8 @@ export function useAuthActions() {
     }
   };
 
-  const handleSignUp = async (args: SignUpArgs) => {
-    try {
-      const response = await api.post("register", args);
-      if (response.data.token) {
-        navigate("/login");
-        return;
-      }
-      throw new Error("Invalid response from server");
-    } catch (err: unknown) {
-      console.error("Sign-up error:", err);
-    }
-  };
-
   const homeRoute = getHomeRoute(isAuthenticated, userRole);
 
-  return { handleLogin, handleSignUp, homeRoute };
+  return { handleLogin, homeRoute };
 }
 
