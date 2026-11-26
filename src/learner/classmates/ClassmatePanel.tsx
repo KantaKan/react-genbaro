@@ -1,8 +1,10 @@
 import { useRef, useState } from "react";
+import { useQuery } from "react-query";
 import { Lock, X } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { UserAvatar } from "@/components/user-avatar";
+import { Bone } from "@/components/LoadingSkeleton";
 import { userService } from "@/application/services/userService";
 import { nicknames } from "../lib/name";
 import type { Person } from "../lib/people";
@@ -18,6 +20,7 @@ export function ClassmatePanel({ person, isMe, onClose, onEditAvatar }: { person
   const sending = useRef(false);
   const { byId } = usePeople();
   const { isChampion } = useChampion();
+  const full = useQuery(["person", person?._id], () => userService.getUserById(person!._id), { enabled: !!person, staleTime: 60_000 });
   if (!person) return null;
   const n = nicknames(person.zoom_name, person.first_name);
   const send = async () => {
@@ -34,7 +37,8 @@ export function ClassmatePanel({ person, isMe, onClose, onEditAvatar }: { person
       sending.current = false;
     }
   };
-  const recs = (person.profile_comments ?? []).filter((c) => !c.parentId).slice(0, 3);
+  const comments = full.data?.profile_comments ?? [];
+  const recs = comments.filter((c) => !c.parentId).slice(0, 3);
   const raw = person.social_links ?? {};
   const links = { github: safeUrl(raw.github), linkedin: safeUrl(raw.linkedin), instagram: safeUrl(raw.instagram) };
   return (
@@ -93,8 +97,18 @@ export function ClassmatePanel({ person, isMe, onClose, onEditAvatar }: { person
           ) : (
             <p className="text-body text-l-ink3">No badges yet.</p>
           )}
-          <h4 className="mb-1 mt-[22px] text-small font-semibold uppercase tracking-[.08em] text-l-ink3">Recommendations · {person.profile_comments?.length ?? 0}</h4>
-          {recs.length === 0 && <p className="text-body text-l-ink3">No recommendations yet.</p>}
+          <h4 className="mb-1 mt-[22px] text-small font-semibold uppercase tracking-[.08em] text-l-ink3">Recommendations{full.data ? ` · ${comments.length}` : ""}</h4>
+          {full.isLoading &&
+            [0, 1].map((i) => (
+              <div key={i} aria-hidden className="flex gap-2.5 border-t border-l-hair py-2.5 first:border-t-0">
+                <Bone className="h-[30px] w-[30px] shrink-0 rounded-full" />
+                <div className="grid flex-1 gap-1.5">
+                  <Bone className="h-4 w-3/4" />
+                  <Bone className="h-3 w-20" />
+                </div>
+              </div>
+            ))}
+          {full.data && recs.length === 0 && <p className="text-body text-l-ink3">No recommendations yet.</p>}
           {recs.map((c) => (
             <div key={c.id ?? c._id} className="flex gap-2.5 border-t border-l-hair py-2.5 first:border-t-0">
               <UserAvatar userId={c.userId} name={c.zoomName} avatar={byId.get(c.userId)?.avatar} className="h-[30px] w-[30px]" />
