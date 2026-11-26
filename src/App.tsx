@@ -17,7 +17,6 @@ import { useAuthActions } from "./features/auth/useAuthActions";
 
 const AdminTablePage = lazy(() => import("./components/AdminTablePage").then((module) => ({ default: module.AdminTablePage })));
 const AdminUsersPage = lazy(() => import("./pages/admin-users-page").then((module) => ({ default: module.AdminUsersPage })));
-const UserReflectionsPage = lazy(() => import("./pages/UserReflectionsPage"));
 const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
 const DirectoryRoute = lazy(() => import("./learner/classmates/DirectoryRoute"));
 const BoardPage = lazy(() => import("./learner/board/BoardPage").then((module) => ({ default: module.BoardPage })));
@@ -45,6 +44,7 @@ const AdminAnnouncePage = lazy(() => import("./admin/cohort/AnnouncePage").then(
 const AdminSupportPage = lazy(() => import("./admin/support/SupportPage").then((m) => ({ default: m.SupportPage })));
 const AdminLearnersPage = lazy(() => import("./admin/learners/LearnersPage").then((m) => ({ default: m.LearnersPage })));
 const AdminProfilePage = lazy(() => import("./admin/learners/ProfilePage").then((m) => ({ default: m.ProfilePage })));
+const AdminTableRedirect = lazy(() => import("./admin/learners/ProfilePage").then((m) => ({ default: m.TableRedirect })));
 const AdminReflectionsPage = lazy(() => import("./admin/reflections/ReflectionsPage").then((m) => ({ default: m.ReflectionsPage })));
 const AdminLeavePage = lazy(() => import("./admin/leave/LeavePage").then((m) => ({ default: m.LeavePage })));
 const AdminBoardPage = lazy(() => import("./admin/board/BoardPage").then((m) => ({ default: m.AdminBoardPage })));
@@ -113,7 +113,7 @@ function AppContent() {
             <Route path="learners/:id" element={<AdminProfilePage />} />
             <Route path="leave-requests" element={<Navigate to="/admin/leave" replace />} />
             <Route path="table" element={<AdminTablePage />} />
-            <Route path="table/:id" element={<UserReflectionsPage />} />
+            <Route path="table/:id" element={<AdminTableRedirect />} />
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="garden" element={<GenmateGardenPage />} />
             <Route path="cohort-farm" element={<AdminCohortFarmPage />} />
