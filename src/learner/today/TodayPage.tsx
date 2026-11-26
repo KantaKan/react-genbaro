@@ -3,13 +3,14 @@ import { PlantCard } from "./PlantCard";
 import { useMyPlant } from "../lib/useMyPlant";
 import { useUserData } from "@/UserDataContext";
 import { learnerApi } from "../api";
+import type { MySummary } from "../types";
 import { usePageHeader } from "../shell/LearnerShell";
 import { useCup } from "../cup/useChampion";
 import { LeaderboardCard } from "../cup/LeaderboardCard";
 import { YourGroupCard } from "../cup/YourGroupCard";
 import { CheckInCard, CheckInCardSkeleton } from "../checkin/CheckInCard";
 import { StylePicker } from "../checkin/StylePicker";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useClock } from "../checkin/useClock";
 import { bangkokNow } from "../lib/time";
 import { nicknames } from "../lib/name";
@@ -48,9 +49,11 @@ export function TodayPage() {
     setTourOpen(false);
     setTourDone(true);
     if (s?.preferences.tour_seen === false) {
-      learnerApi.savePreferences({ tour_seen: true }).then(() => qc.invalidateQueries(["my-summary"]), () => {});
+      qc.setQueryData<MySummary | undefined>(["my-summary"], (o) => o && { ...o, preferences: { ...o.preferences, tour_seen: true } });
+      learnerApi.savePreferences({ tour_seen: true }).catch(() => {});
     }
   };
+  const steps = useMemo(() => (s ? tourSteps(s.rules) : []), [s?.rules]);
   const week = weekCells(history.data ?? [], today);
   const weekOnTime = week.filter((c) => c.am === "present" && (c.pm === "present" || (c.isToday && c.pm === null))).length;
   const refresh = () => {
@@ -123,7 +126,7 @@ export function TodayPage() {
         )}
       </div>
       {s && <StylePicker open={picker} onOpenChange={setPicker} summary={s} />}
-      {s && (firstVisit || tourOpen) && <Tour steps={tourSteps(s.rules)} onClose={closeTour} />}
+      {s && (firstVisit || tourOpen) && <Tour steps={steps} onClose={closeTour} />}
     </div>
   );
 }

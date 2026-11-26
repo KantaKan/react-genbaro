@@ -146,6 +146,29 @@ describe("TodayPage", () => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 
+    it("stays closed when the learner comes back to Today after a failed save", async () => {
+      setBkk(10, 0);
+      vi.mocked(learnerApi.savePreferences).mockRejectedValueOnce(new Error("offline"));
+      vi.mocked(learnerApi.getSummary).mockResolvedValue({ ...base, preferences: { ...base.preferences, tour_seen: false } });
+      const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      const tree = () => (
+        <QueryClientProvider client={client}>
+          <MemoryRouter>
+            <TodayPage />
+          </MemoryRouter>
+        </QueryClientProvider>
+      );
+      const first = render(tree());
+      await screen.findByRole("dialog", { name: "เช็คชื่อทุกเช้าและบ่าย" });
+      fireEvent.keyDown(window, { key: "Escape" });
+      first.unmount();
+      vi.mocked(learnerApi.getSummary).mockRejectedValue(new Error("offline"));
+      render(tree());
+      await screen.findByRole("button", { name: "วิธีใช้" });
+      await new Promise((r) => setTimeout(r, 50));
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
     it("closes even when saving fails", async () => {
       setBkk(10, 0);
       vi.mocked(learnerApi.savePreferences).mockRejectedValueOnce(new Error("offline"));

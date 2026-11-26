@@ -25,7 +25,7 @@ function target(name: string, visible = true) {
 }
 
 afterEach(() => {
-  document.querySelectorAll("[data-tour]").forEach((el) => el.remove());
+  document.querySelectorAll("body > [data-tour]").forEach((el) => el.remove());
 });
 
 describe("tourSteps", () => {
@@ -91,5 +91,60 @@ describe("Tour", () => {
     el.getBoundingClientRect = () => ({ top: 300, left: 20, width: 200, height: 80, bottom: 380, right: 220, x: 20, y: 300, toJSON: () => ({}) });
     act(() => { window.dispatchEvent(new Event("scroll")); });
     expect(spot.style.top).toBe("292px");
+  });
+
+  it("keeps the learner theme on the panel, not on the full-screen overlay", () => {
+    target("a");
+    render(<Tour steps={steps} onClose={vi.fn()} />);
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.className).toContain("learner");
+    expect(dialog.parentElement!.className).not.toContain("learner");
+  });
+
+  it("moves focus into the dialog", () => {
+    target("a");
+    render(<Tour steps={steps} onClose={vi.fn()} />);
+    expect(document.activeElement).toBe(screen.getByRole("dialog"));
+  });
+
+  it("scrolls only when the step changes, not on re-render", () => {
+    const el = target("a");
+    const onClose = vi.fn();
+    const { rerender } = render(<Tour steps={steps} onClose={onClose} />);
+    rerender(<Tour steps={[...steps]} onClose={onClose} />);
+    expect(el.scrollIntoView).toHaveBeenCalledTimes(1);
+  });
+
+  it("moves on when the current target disappears on resize", () => {
+    const a = target("a");
+    target("b");
+    render(<Tour steps={steps} onClose={vi.fn()} />);
+    a.getClientRects = () => [] as unknown as DOMRectList;
+    act(() => { window.dispatchEvent(new Event("resize")); });
+    expect(screen.getByRole("dialog", { name: "Step B" })).toBeInTheDocument();
+  });
+
+  it("anchors the panel above a target near the bottom by its bottom edge", () => {
+    const el = target("a");
+    el.getBoundingClientRect = () => ({ top: 700, left: 20, width: 200, height: 60, bottom: 760, right: 220, x: 20, y: 700, toJSON: () => ({}) });
+    render(<Tour steps={steps} onClose={vi.fn()} />);
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.style.bottom).toBe(`${window.innerHeight - 700 + 20}px`);
+    expect(dialog.style.top).toBe("");
+  });
+
+  it("finds targets that mount in the same render as the tour", () => {
+    const onClose = vi.fn();
+    function Page() {
+      return (
+        <>
+          <div data-tour="a" ref={(el) => { if (el) { el.getClientRects = () => [{}] as unknown as DOMRectList; el.scrollIntoView = vi.fn(); } }} />
+          <Tour steps={steps} onClose={onClose} />
+        </>
+      );
+    }
+    render(<Page />);
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog", { name: "Step A" })).toBeInTheDocument();
   });
 });
