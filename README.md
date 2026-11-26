@@ -61,7 +61,7 @@ npm run preview    # preview the production build
 | Script | Description |
 |--------|-------------|
 | `npm run dev` | Start the development server |
-| `npm run build` | Build for production (also catches CSS errors the type check misses) |
+| `npm run build` | Type check, then build for production (Vercel runs this, so a type error blocks the deploy) |
 | `npm run typecheck` | `tsc -b`, no emit |
 | `npm run lint` | ESLint |
 | `npm run test` | Vitest in watch mode |
