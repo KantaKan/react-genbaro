@@ -55,7 +55,7 @@ export function LearnerShell({ children }: { children: ReactNode }) {
             </div>
           </div>
           <ScrollFade className="-mx-1 px-1 pb-6">
-          <nav aria-label="Learner" className="flex flex-col gap-0.5">
+          <nav aria-label="Learner" data-tour="nav" className="flex flex-col gap-0.5">
             {sections.map((sec) => (
               <div key={sec}>
                 <div className="px-2.5 pb-1.5 pt-3.5 text-small font-medium text-l-ink3">{sec}</div>
@@ -120,6 +120,7 @@ export function LearnerShell({ children }: { children: ReactNode }) {
 
         <nav
           aria-label="Mobile"
+          data-tour="nav"
           className="fixed inset-x-3 bottom-3 z-20 flex justify-around rounded-[20px] bg-[color-mix(in_srgb,var(--l-card)_88%,transparent)] p-1.5 shadow-[var(--l-shadow)] backdrop-blur-md lg:hidden"
         >
           {TABS.map((t) => (
