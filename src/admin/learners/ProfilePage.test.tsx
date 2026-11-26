@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { renderAdmin } from "../test-setup";
-import { ProfilePage } from "./ProfilePage";
+import { ProfilePage, TableRedirect } from "./ProfilePage";
+import { render } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { wellbeingApi, type Overview } from "../wellbeing";
 import { adminApi } from "../api";
 
@@ -120,5 +122,17 @@ describe("ProfilePage", () => {
     fireEvent.click(await screen.findByRole("button", { name: /Wed 25 afternoon/ }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Late" }));
     await waitFor(() => expect(adminApi.mark).toHaveBeenCalledWith(expect.objectContaining({ user_id: "u1", date: "2026-11-25", session: "afternoon", status: "late" })));
+  });
+
+  it("sends the old reflections table link to the learner page", () => {
+    render(
+      <MemoryRouter initialEntries={["/admin/table/u1"]}>
+        <Routes>
+          <Route path="/admin/table/:id" element={<TableRedirect />} />
+          <Route path="/admin/learners/:id" element={<p>learner page</p>} />
+        </Routes>
+      </MemoryRouter>
+    );
+    expect(screen.getByText("learner page")).toBeInTheDocument();
   });
 });

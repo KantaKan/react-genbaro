@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
@@ -182,6 +182,11 @@ export function ProfilePage() {
   );
 }
 
+export function TableRedirect() {
+  const { id = "" } = useParams();
+  return <Navigate to={`/admin/learners/${id}`} replace />;
+}
+
 function ProfileSkeleton() {
   const card = "rounded-2xl p-4 shadow-[0_0_0_1px_var(--l-hair)]";
   return (
@@ -192,56 +197,37 @@ function ProfileSkeleton() {
         <div className="grid min-w-[220px] flex-1 gap-2">
           <Bone className="h-[26px] w-56" />
           <Bone className="h-3.5 w-80 max-w-full" />
+          <Bone className="h-[26px] w-40 rounded-lg" />
         </div>
-        <div className="flex gap-6 border-l border-l-hair pl-5">
-          {["Attendance", "Leave", "Streak"].map((k) => (
-            <div key={k} className="grid gap-1.5">
-              <Bone className="h-3.5 w-14" />
-              <Bone className="h-[26px] w-16" />
-            </div>
+        <div className="flex flex-wrap gap-2.5">
+          {[0, 1, 2, 3].map((k) => (
+            <Bone key={k} className="h-[78px] w-[104px] rounded-[14px]" />
           ))}
         </div>
       </section>
-      <div className="mt-3.5 grid gap-3.5 lg:grid-cols-2">
+      <Bone className="mt-3.5 h-[74px] w-full rounded-2xl" />
+      <div className="mt-3.5 grid items-start gap-3.5 lg:grid-cols-[minmax(0,1fr)_296px]">
         <section className={card}>
-          <Bone className="h-4 w-24" />
-          <div className="mt-2.5 grid grid-cols-5 gap-1">
-            {Array.from({ length: 20 }, (_, i) => (
-              <Bone key={i} className="h-[34px] rounded" />
-            ))}
-          </div>
-          <Bone className="mt-2.5 h-3.5 w-64" />
-        </section>
-        <section className={card}>
-          <Bone className="h-4 w-36" />
-          <div className="mt-2.5 flex gap-1">
-            {Array.from({ length: 10 }, (_, i) => (
-              <span key={i} className="flex flex-1 flex-col items-center gap-1">
-                <Bone className="h-6 w-6 rounded-full" />
-                <Bone className="h-2.5 w-2" />
-              </span>
-            ))}
-          </div>
-          <Bone className="mt-3 h-[68px] w-full rounded-xl" />
-        </section>
-        <section className={card}>
-          <Bone className="h-4 w-20" />
-          <Bone className="mt-3 h-3 w-32" />
-          <Bone className="mt-1.5 h-3.5 w-full" />
-          <Bone className="mt-3 h-[70px] w-full rounded-xl" />
-          <Bone className="mt-2 h-[30px] w-24 rounded-full" />
-        </section>
-        <section className={card}>
-          <Bone className="h-4 w-24" />
-          <div className="mt-3 grid gap-2.5">
-            {["w-48", "w-40", "w-56"].map((w) => (
-              <div key={w} className="flex items-center gap-2.5">
-                <Bone className="h-4 w-4 shrink-0 rounded" />
-                <Bone className={`h-3.5 ${w}`} />
+          <Bone className="h-6 w-72 max-w-full rounded-full" />
+          {[0, 1, 2, 3].map((k) => (
+            <div key={k} className="mt-4 grid grid-cols-[64px_88px_minmax(0,1fr)] gap-4">
+              <Bone className="h-4 w-12" />
+              <div className="grid gap-1">
+                <Bone className="h-[22px] w-16 rounded-[7px]" />
+                <Bone className="h-[22px] w-16 rounded-[7px]" />
               </div>
-            ))}
-          </div>
+              <div className="grid gap-2">
+                <Bone className="h-4 w-40" />
+                <Bone className="h-12 w-full rounded-[10px]" />
+              </div>
+            </div>
+          ))}
         </section>
+        <div className="grid gap-3.5">
+          {["h-24", "h-28", "h-32"].map((h) => (
+            <Bone key={h} className={`${h} w-full rounded-2xl`} />
+          ))}
+        </div>
       </div>
       <LoadingHint label="Loading learner" />
     </div>
