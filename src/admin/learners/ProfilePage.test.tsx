@@ -3,13 +3,14 @@ import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { renderAdmin } from "../test-setup";
 import { ProfilePage } from "./ProfilePage";
 import { wellbeingApi, type Overview } from "../wellbeing";
+import { adminApi } from "../api";
 
 vi.mock("@blobatar/react/gaze", () => ({ useGaze: () => ({ ref: vi.fn() }) }));
 vi.mock("@/components/mode-toggle", () => ({ ModeToggle: () => null }));
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() }), Toaster: () => null }));
 vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout: vi.fn(), userRole: "admin" }) }));
 vi.mock("@/UserDataContext", () => ({ useUserData: () => ({ userData: { _id: "me", first_name: "Kan", cohort_number: 13 }, loading: false }) }));
-vi.mock("../api", () => ({ adminApi: { leaves: vi.fn().mockResolvedValue([]) } }));
+vi.mock("../api", () => ({ adminApi: { leaves: vi.fn().mockResolvedValue([]), mark: vi.fn().mockResolvedValue({ record: { _id: "x" }, previous: null }) } }));
 vi.mock("../wellbeing", async (orig) => ({ ...(await orig<object>()), wellbeingApi: { overview: vi.fn(), reply: vi.fn(), addNote: vi.fn(), addStep: vi.fn(), setStep: vi.fn(), deleteStep: vi.fn(), ack: vi.fn() } }));
 
 const ov: Overview = {
@@ -47,12 +48,12 @@ describe("ProfilePage", () => {
   });
   const go = () => renderAdmin(<ProfilePage />, "/admin/learners/u1", "/admin/learners/:id");
 
-  it("shows the header, reasons, notes and quote", async () => {
+  it("shows the header, reasons, notes and the latest class day", async () => {
     go();
     expect(await screen.findByRole("heading", { name: /มิ้นท์ · Kanokwan/ })).toBeInTheDocument();
     expect(screen.getByText("Leave 7/8")).toBeInTheDocument();
     expect(screen.getByText("Paired with Fah")).toBeInTheDocument();
-    expect(screen.getByText(/I feel lost/)).toBeInTheDocument();
+    expect(screen.getByText("React Query is confusing")).toBeInTheDocument();
   });
 
   it("adds a note once", async () => {
@@ -89,5 +90,35 @@ describe("ProfilePage", () => {
     expect(wellbeingApi.overview).not.toHaveBeenCalledWith("u2");
     fireEvent.keyDown(window, { key: "j" });
     await waitFor(() => expect(wellbeingApi.overview).toHaveBeenCalledWith("u2"));
+  });
+
+  it("shows a class day with times, the struggle first, and replies with cmd+enter", async () => {
+    vi.mocked(wellbeingApi.reply).mockReset().mockResolvedValue(undefined);
+    go();
+    expect(await screen.findByText("React Query is confusing")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Thu 26 afternoon/ })).toHaveTextContent("13:24");
+    expect(screen.getByText("useEffect cleanup")).not.toBeVisible();
+    const box = screen.getByLabelText(/Reply to/);
+    fireEvent.change(box, { target: { value: "Let's pair tomorrow" } });
+    fireEvent.keyDown(box, { key: "Enter", metaKey: true });
+    await waitFor(() => expect(wellbeingApi.reply).toHaveBeenCalledWith("u1", "r26", "Let's pair tomorrow"));
+  });
+
+  it("saves a reply draft as a note and filters to missing days", async () => {
+    go();
+    const box = await screen.findByLabelText(/Reply to/);
+    fireEvent.change(box, { target: { value: "Check sleep" } });
+    fireEvent.click(screen.getByRole("button", { name: "+ Save as TA note" }));
+    await waitFor(() => expect(wellbeingApi.addNote).toHaveBeenCalledWith("u1", "Check sleep"));
+    fireEvent.click(screen.getByRole("button", { name: /^Missing/ }));
+    expect(screen.queryByText("React Query is confusing")).not.toBeInTheDocument();
+    expect(screen.getByText("No reflection")).toBeInTheDocument();
+  });
+
+  it("marks attendance from a day chip", async () => {
+    go();
+    fireEvent.click(await screen.findByRole("button", { name: /Wed 25 afternoon/ }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Late" }));
+    await waitFor(() => expect(adminApi.mark).toHaveBeenCalledWith(expect.objectContaining({ user_id: "u1", date: "2026-11-25", session: "afternoon", status: "late" })));
   });
 });
