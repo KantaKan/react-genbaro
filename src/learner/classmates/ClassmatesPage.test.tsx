@@ -9,7 +9,7 @@ import { userService } from "@/application/services/userService";
 const { people } = vi.hoisted(() => ({ people: [
       { _id: "me", first_name: "Aphiradee", zoom_name: "03_Aphiradee(Black/แบล็ค)", jsd_number: "03", genmate_group: "F", cohort_number: 13, role: "learner" },
       { _id: "u2", first_name: "Mint", zoom_name: "22_Mint(Mint/มิ้นท์)", jsd_number: "22", genmate_group: "F", cohort_number: 13, role: "learner", bio: "Loves CSS", skills: ["CSS"], avatar: { style: "lorelei", seed: "m", bg: "fce7f3" } },
-      { _id: "u3", first_name: "Ajjima", zoom_name: "01_Ajjima(Theim/เถียม)", jsd_number: "01", genmate_group: "I", cohort_number: 13, role: "learner", attendance_status: "dropout", social_links: { github: "javascript:alert(1)", linkedin: "https://linkedin.com/in/x" }, profile_comments: [{ id: "c1", userId: "u2", zoomName: "22_Mint(Mint/มิ้นท์)", content: "Great at CSS", createdAt: "2026-09-01" }] },
+      { _id: "u3", first_name: "Ajjima", zoom_name: "01_Ajjima(Theim/เถียม)", jsd_number: "01", genmate_group: "I", cohort_number: 13, role: "learner", attendance_status: "dropout", social_links: { github: "javascript:alert(1)", linkedin: "https://linkedin.com/in/x" } },
     ] }));
 vi.mock("../cup/api", () => ({ cupApi: { me: vi.fn().mockResolvedValue({ champion_group: "I", my_medals: [], standings: [] }) } }));
 vi.mock("@blobatar/react/gaze", () => ({ useGaze: () => ({ ref: vi.fn() }) }));
@@ -24,6 +24,11 @@ vi.mock("@/application/services/userService", () => ({
   userService: {
     getAllUsers: vi.fn(),
     addProfileComment: vi.fn().mockResolvedValue(undefined),
+    getUserById: vi.fn().mockImplementation(async (id: string) =>
+      id === "u3"
+        ? { _id: "u3", profile_comments: [{ id: "c1", userId: "u2", zoomName: "22_Mint(Mint/มิ้นท์)", content: "Great at CSS", createdAt: "2026-09-01" }] }
+        : { _id: id, profile_comments: [] }
+    ),
   },
 }));
 
@@ -65,8 +70,17 @@ describe("ClassmatesPage", () => {
     const panel = await screen.findByRole("dialog");
     expect(within(panel).queryByText("GitHub")).toBeNull();
     expect(within(panel).getByText("LinkedIn").closest("a")).toHaveAttribute("href", "https://linkedin.com/in/x");
-    const rec = within(panel).getByText("Great at CSS").closest("div")!.parentElement!;
+    const rec = (await within(panel).findByText("Great at CSS")).closest("div")!.parentElement!;
     expect(rec.querySelector("img[data-avatar='dicebear']")).not.toBeNull();
+  });
+
+  it("fetches the classmate's recommendations when the panel opens", async () => {
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: /Open เถียม/ }));
+    const panel = await screen.findByRole("dialog");
+    expect(await within(panel).findByText("Great at CSS")).toBeInTheDocument();
+    expect(within(panel).getByText(/Recommendations · 1/)).toBeInTheDocument();
+    expect(userService.getUserById).toHaveBeenCalledWith("u3");
   });
 
   it("frames last week's Cup champions", async () => {
