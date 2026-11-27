@@ -45,6 +45,7 @@ const ov: Overview = {
 
 describe("ProfilePage", () => {
   beforeEach(() => {
+    HTMLElement.prototype.scrollIntoView = vi.fn();
     vi.mocked(wellbeingApi.overview).mockResolvedValue(ov);
     vi.mocked(wellbeingApi.addNote).mockReset().mockResolvedValue({ id: "n2" } as never);
     vi.mocked(wellbeingApi.setStep).mockReset().mockResolvedValue(undefined);

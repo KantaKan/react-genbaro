@@ -53,7 +53,8 @@ export function TodayPage() {
       learnerApi.savePreferences({ tour_seen: true }).catch(() => {});
     }
   };
-  const steps = useMemo(() => (s ? tourSteps(s.rules) : []), [s?.rules]);
+  const rules = s?.rules;
+  const steps = useMemo(() => (rules ? tourSteps(rules) : []), [rules]);
   const week = weekCells(history.data ?? [], today);
   const weekOnTime = week.filter((c) => c.am === "present" && (c.pm === "present" || (c.isToday && c.pm === null))).length;
   const refresh = () => {
