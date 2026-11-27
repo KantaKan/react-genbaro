@@ -95,12 +95,21 @@ function useSpeech(staff: StartupDev[], phase: Phase) {
   const [lines, setLines] = useState<[string, string][]>([]);
   useEffect(() => {
     if (staff.length === 0) return;
+    const timers = new Set<number>();
+    const later = (fn: () => void, ms: number) => {
+      const t = window.setTimeout(() => {
+        timers.delete(t);
+        fn();
+      }, ms);
+      timers.add(t);
+    };
     const say = () => {
       const dev = staff[Math.floor(Math.random() * staff.length)];
-      const show = (id: string, line: string, delay = 0) => window.setTimeout(() => {
-        setLines((prev) => [...prev.filter(([who]) => who !== id), [id, line] as [string, string]].slice(-2));
-        window.setTimeout(() => setLines((prev) => prev.filter(([who, text]) => who !== id || text !== line)), 2400);
-      }, delay);
+      const show = (id: string, line: string, delay = 0) =>
+        later(() => {
+          setLines((prev) => [...prev.filter(([who]) => who !== id), [id, line] as [string, string]].slice(-2));
+          later(() => setLines((prev) => prev.filter(([who, text]) => who !== id || text !== line)), 2400);
+        }, delay);
       if (isSassy(dev) && Math.random() < 0.45) {
         const sass = sassLine(dev, staff);
         show(dev.id, sass.text);
@@ -113,7 +122,10 @@ function useSpeech(staff: StartupDev[], phase: Phase) {
     };
     say();
     const id = window.setInterval(say, phase === "idle" ? 2600 : 1100);
-    return () => window.clearInterval(id);
+    return () => {
+      window.clearInterval(id);
+      timers.forEach((t) => window.clearTimeout(t));
+    };
   }, [staff, phase]);
   return Object.fromEntries(lines);
 }
