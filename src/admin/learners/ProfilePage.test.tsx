@@ -170,4 +170,19 @@ describe("ProfilePage", () => {
     );
     expect(screen.getByText("learner page")).toBeInTheDocument();
   });
+
+  it("Reply next clears the filter so the row shows", async () => {
+    go();
+    await screen.findByText("React Query is confusing");
+    fireEvent.click(screen.getByRole("button", { name: /^Missing/ }));
+    expect(screen.queryByText("React Query is confusing")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Reply next/ }));
+    expect(await screen.findByText("React Query is confusing")).toBeInTheDocument();
+  });
+
+  it("shows weekdays without class as no class in the strip", async () => {
+    const { container } = go();
+    await screen.findByText("React Query is confusing");
+    expect(container.querySelector('[data-strip] [title$="No class"]')).not.toBeNull();
+  });
 });

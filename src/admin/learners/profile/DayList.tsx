@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { BarometerFace, type ZoneId } from "@/learner/today/BarometerFace";
 import type { Who } from "../../learner/useMarkWithUndo";
 import type { OverviewDay } from "../../wellbeing";
 import { DayRow } from "./DayRow";
 import { isMissing, isRough, isUnreplied, matches, weeksOf } from "./days";
 
-type Filter = "all" | "unreplied" | "rough" | "missing";
-const TESTS: Record<Exclude<Filter, "all">, (d: OverviewDay) => boolean> = { unreplied: isUnreplied, rough: isRough, missing: isMissing };
+export type Filter = "all" | "unreplied" | "rough" | "missing";
+
 
 const editable = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName));
 
@@ -14,25 +14,35 @@ export function DayList({
   days,
   who,
   today,
+  reflOpen,
   open,
   onToggle,
+  filter,
+  setFilter,
+  q,
+  setQ,
   onNote,
   onStep,
 }: {
   days: OverviewDay[];
   who: Who;
   today: string;
+  reflOpen: boolean;
   open: Set<string>;
+  filter: Filter;
+  setFilter: (f: Filter) => void;
+  q: string;
+  setQ: (q: string) => void;
   onToggle: (week: string) => void;
   onNote: (t: string) => Promise<unknown>;
   onStep: (t: string) => Promise<unknown>;
 }) {
-  const [filter, setFilter] = useState<Filter>("all");
-  const [q, setQ] = useState("");
+  const missing = (d: OverviewDay) => isMissing(d, today, reflOpen);
+  const tests: Record<Exclude<Filter, "all">, (d: OverviewDay) => boolean> = { unreplied: isUnreplied, rough: isRough, missing };
   const search = useRef<HTMLInputElement>(null);
   const weeks = useMemo(() => weeksOf(days), [days]);
   const narrowed = filter !== "all" || q.trim() !== "";
-  const keep = (d: OverviewDay) => (filter === "all" || TESTS[filter](d)) && (!q.trim() || matches(d, q));
+  const keep = (d: OverviewDay) => (filter === "all" || tests[filter](d)) && (!q.trim() || matches(d, q));
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -49,7 +59,7 @@ export function DayList({
     ["all", "All", null],
     ["unreplied", "Not replied", days.filter(isUnreplied).length],
     ["rough", "Rough", days.filter(isRough).length],
-    ["missing", "Missing", days.filter(isMissing).length],
+    ["missing", "Missing", days.filter(missing).length],
   ];
 
   return (
@@ -90,7 +100,7 @@ export function DayList({
           <div key={w.key}>
             <div className="sticky top-0 z-[1] flex items-center gap-2 bg-l-card px-2 pb-1.5 pt-3">
               <b className="text-small font-semibold">{w.label}</b>
-              <span className={`text-small ${rough && !expanded ? "font-medium text-red-600" : "text-l-ink3"}`}>
+              <span className={`text-small ${rough && !expanded ? "font-medium text-red-600 dark:text-red-400" : "text-l-ink3"}`}>
                 {w.range}
                 {!expanded && (rough ? " · rough week" : pending ? ` · ${pending} not replied` : " · all replied")}
               </span>
@@ -105,7 +115,7 @@ export function DayList({
                 </button>
               )}
             </div>
-            {expanded && rows.map((d) => <DayRow key={d.date} day={d} who={who} today={today} onNote={onNote} onStep={onStep} />)}
+            {expanded && rows.map((d) => <DayRow key={d.date} day={d} who={who} today={today} reflOpen={reflOpen} onNote={onNote} onStep={onStep} />)}
           </div>
         );
       })}

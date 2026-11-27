@@ -1,9 +1,10 @@
 import type { Overview } from "../../wellbeing";
+import { classDays as countable } from "./days";
 
 const box = "min-w-[104px] rounded-[14px] bg-l-card px-3.5 py-2.5 shadow-[0_0_0_1px_var(--l-hair)]";
 
-export function KpiBoxes({ o }: { o: Overview }) {
-  const classDays = o.days.filter((d) => !d.extra);
+export function KpiBoxes({ o, today, open }: { o: Overview; today: string; open: boolean }) {
+  const classDays = countable(o.days, today, open);
   const sent = classDays.filter((d) => d.reflection).length;
   const unreplied = o.days.filter((d) => d.reflection && !d.reflection.reply).length;
   const fill = o.leave_used >= 7 ? "bg-red-500" : o.leave_used >= 6 ? "bg-amber-500" : "bg-l-ink2";
@@ -19,7 +20,7 @@ export function KpiBoxes({ o }: { o: Overview }) {
       </div>
       <div className={box}>
         <small className="block text-small text-l-ink3">Absent · leave · late</small>
-        <b className={`block text-[22px] font-bold leading-tight tracking-tight ${o.leave_used >= 7 ? "text-red-600" : o.leave_used >= 6 ? "text-amber-600" : ""}`}>
+        <b className={`block text-[22px] font-bold leading-tight tracking-tight ${o.leave_used >= 7 ? "text-red-600 dark:text-red-400" : o.leave_used >= 6 ? "text-amber-600 dark:text-amber-400" : ""}`}>
           {o.leave_used}
           <span className="ml-0.5 text-small font-medium text-l-ink3">/ 8</span>
         </b>
