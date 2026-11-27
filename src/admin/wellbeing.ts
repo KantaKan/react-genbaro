@@ -43,10 +43,11 @@ export type Overview = {
   cohort_attendance: number;
   badges: OverviewBadge[];
   neighbors: { prev: string | null; next: string | null; index: number; total: number };
+  plant?: { palette?: string; species?: string; pot?: string; leaf?: string; flower?: string; stem?: string };
 };
-export type SessionAt = { status: AttendanceStatusType; at: string };
+export type SessionAt = { status: AttendanceStatusType; at: string; marked_by?: "self" | "admin" | "system" | "" };
 export type DayReflection = { id: string; zone: Zone; sent_at: string; tech_happy: string; tech_improve: string; nontech_happy: string; nontech_improve: string; reply: string; reply_name: string; reply_at: string | null };
-export type OverviewDay = { date: string; morning: SessionAt | null; afternoon: SessionAt | null; reflection: DayReflection | null };
+export type OverviewDay = { date: string; extra?: boolean; morning: SessionAt | null; afternoon: SessionAt | null; reflection: DayReflection | null };
 export type OverviewBadge = { id?: string; name: string; emoji: string; image_url?: string; color?: string; style?: string; awarded_at: string };
 export type SupportRow = { learner: LearnerRef; reasons: Reason[]; open_items: number; done_items: number; owner: string };
 

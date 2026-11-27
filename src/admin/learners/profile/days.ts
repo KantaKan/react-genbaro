@@ -38,7 +38,7 @@ export function weeksOf(days: OverviewDay[]): Week[] {
 
 export const isRough = (d: OverviewDay) => d.reflection?.zone === "panic" || d.reflection?.zone === "stretch-overwhelmed";
 export const isUnreplied = (d: OverviewDay) => !!d.reflection && !d.reflection.reply;
-export const isMissing = (d: OverviewDay) => !d.reflection;
+export const isMissing = (d: OverviewDay) => !d.extra && !d.reflection;
 
 export function matches(d: OverviewDay, q: string): boolean {
   const r = d.reflection;
