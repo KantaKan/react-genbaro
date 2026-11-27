@@ -14,6 +14,10 @@ vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout:
 vi.mock("@/UserDataContext", () => ({ useUserData: () => ({ userData: { _id: "me", first_name: "Kan", cohort_number: 13 }, loading: false }) }));
 vi.mock("@/components/create-leave-request-dialog", () => ({ CreateLeaveRequestDialog: () => null }));
 vi.mock("../api", () => ({ adminApi: { leaves: vi.fn(), today: vi.fn(), reviewLeave: vi.fn() } }));
+vi.mock("../wellbeing", async (o) => {
+  const real = await o<typeof import("../wellbeing")>();
+  return { ...real, wellbeingApi: { ...real.wellbeingApi, support: vi.fn().mockResolvedValue([]) } };
+});
 
 const req = { _id: "L1", user_id: "u1", jsd_number: "07", first_name: "Kanokwan", last_name: "S", cohort_number: 13, type: "full_day", date: "2026-11-27", reason: "Sick, fever since last night. Will rest and watch the recording.", status: "pending", created_at: "2026-11-23T01:12:00Z" };
 

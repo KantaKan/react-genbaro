@@ -18,7 +18,7 @@ vi.mock("../api", async (orig) => {
   const real = await orig<typeof import("../api")>();
   return {
     ...real,
-    learnerApi: { ...real.learnerApi, getSummary: vi.fn(), getHistory: vi.fn(), getMyLeaves: vi.fn(), requestLeave: vi.fn() },
+    learnerApi: { ...real.learnerApi, getMyReflections: vi.fn().mockResolvedValue([]), getSummary: vi.fn(), getHistory: vi.fn(), getMyLeaves: vi.fn(), requestLeave: vi.fn() },
   };
 });
 

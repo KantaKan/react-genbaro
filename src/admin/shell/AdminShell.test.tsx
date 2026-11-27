@@ -8,6 +8,10 @@ vi.mock("@/components/mode-toggle", () => ({ ModeToggle: () => null }));
 vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout: vi.fn(), userRole: "admin" }) }));
 vi.mock("@/UserDataContext", () => ({ useUserData: () => ({ userData: { _id: "me", first_name: "Kan", cohort_number: 13 }, loading: false }) }));
 vi.mock("../api", () => ({ adminApi: { today: vi.fn().mockResolvedValue({ learners: [] }), leaves: vi.fn().mockResolvedValue([]) } }));
+vi.mock("../wellbeing", async (o) => {
+  const real = await o<typeof import("../wellbeing")>();
+  return { ...real, wellbeingApi: { ...real.wellbeingApi, support: vi.fn().mockResolvedValue([]) } };
+});
 
 let panel: ReturnType<typeof useSidePanel>;
 function Page() {
