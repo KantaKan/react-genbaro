@@ -1,5 +1,6 @@
 import type { AttendanceStatusType } from "@/domain/types/attendance";
-import { statusSolid } from "../../ui/status";
+import { STATUS_LABEL, statusSolid } from "../../ui/status";
+import { zoneLabel } from "../../ui/zones";
 import type { Overview, OverviewDay } from "../../wellbeing";
 import { mondayOf } from "./days";
 
@@ -33,8 +34,8 @@ export function CourseStrip({ o, today, onPick }: { o: Overview; today: string; 
     if (!d) return <i key={date} className={`block h-2.5 rounded-[2px] bg-l-sub ${ring}`} />;
     const status = dayStatus(d);
     const bg = kind === "att" ? (status ? statusSolid(status) : "bg-l-sub") : d.reflection?.zone ? (MOOD[d.reflection.zone] ?? "bg-l-sub") : "shadow-[inset_0_0_0_1px_var(--l-hair)]";
-    const label = kind === "att" ? `${date}: ${status || "no check-in"}` : `${date}: ${d.reflection?.zone || "no reflection"}`;
-    return <button key={date} type="button" aria-label={label} title={label} onClick={() => onPick(date)} className={`block h-2.5 rounded-[2px] hover:opacity-75 ${bg} ${ring}`} />;
+    const label = kind === "att" ? `${date}: ${status ? STATUS_LABEL[status] : "No check-in"}` : `${date}: ${d.reflection ? zoneLabel(d.reflection.zone) : "No reflection"}`;
+    return <button key={date} type="button" tabIndex={-1} title={label} onClick={() => onPick(date)} className={`block h-2.5 rounded-[2px] hover:opacity-75 ${bg} ${ring}`} />;
   };
 
   const row = (kind: "att" | "mood") => (
@@ -48,7 +49,7 @@ export function CourseStrip({ o, today, onPick }: { o: Overview; today: string; 
   );
 
   return (
-    <section className="mt-3.5 rounded-2xl px-4 py-3 shadow-[0_0_0_1px_var(--l-hair)]">
+    <section data-strip aria-hidden className="mt-3.5 rounded-2xl px-4 py-3 shadow-[0_0_0_1px_var(--l-hair)]">
       <div className="grid grid-cols-[60px_minmax(0,1fr)] items-center gap-x-3 gap-y-1.5">
         <span className="text-small text-l-ink3">Check-in</span>
         {row("att")}

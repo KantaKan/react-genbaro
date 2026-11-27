@@ -10,7 +10,11 @@ import { wellbeingApi } from "../wellbeing";
 import { Bone, LoadingHint } from "@/components/LoadingSkeleton";
 import { KpiBoxes } from "./profile/KpiBoxes";
 import { BadgeTiles } from "./profile/BadgeTiles";
-import { useLearnerKeys } from "./profile/useLearnerKeys";
+import { AwardCareEnergyButton } from "@/components/award-care-energy-button";
+import { AdminCosmeticGrantDialog } from "@/components/admin-cosmetic-grant-dialog";
+import { AdminGiftBoxDialog } from "@/components/admin-gift-box-dialog";
+import { AdminCharacterDialog } from "@/components/character/AdminCharacterDialog";
+import { AdminPlantOverrideButton } from "@/components/admin-plant-override-button";
 import { CourseStrip } from "./profile/CourseStrip";
 import { DayList } from "./profile/DayList";
 import { isUnreplied, mondayOf, weeksOf } from "./profile/days";
@@ -19,6 +23,10 @@ const when = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { weekda
 
 export function ProfilePage() {
   const { id = "" } = useParams();
+  return <LearnerProfile key={id} id={id} />;
+}
+
+function LearnerProfile({ id }: { id: string }) {
   const qc = useQueryClient();
   const q = useQuery(["admin-overview", id], () => wellbeingApi.overview(id), { enabled: !!id });
   const [note, setNote] = useState("");
@@ -27,7 +35,6 @@ export function ProfilePage() {
   const o = q.data;
   const n = nicknames(o?.learner.zoom_name, o?.learner.first_name ?? "");
   useAdminHeader({ title: "Learner", context: o ? `${n.th || n.en} · #${o.learner.jsd_number}` : "" });
-  useLearnerKeys(o?.neighbors?.prev ?? null, o?.neighbors?.next ?? null);
   const [openWeeks, setOpenWeeks] = useState<Set<string>>(new Set());
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
   const pick = (date: string) => {
@@ -56,6 +63,7 @@ export function ProfilePage() {
   if (q.isError) return <p className="text-sm text-red-600">Couldn't load this learner. Refresh to try again.</p>;
   if (!o) return <p className="text-sm text-l-ink3">Learner not found.</p>;
   const nb = o.neighbors;
+  const fullName = `${o.learner.first_name} ${o.learner.last_name ?? ""}`.trim();
   const who = { id: o.learner.id, first_name: o.learner.first_name, zoom_name: o.learner.zoom_name };
   const days = o.days ?? [];
   const unreplied = days.filter(isUnreplied).length;
@@ -74,12 +82,12 @@ export function ProfilePage() {
           <>
             <span className="ml-auto text-small tabular-nums text-l-ink3">{`${nb.index + 1} of ${nb.total}`}</span>
             {nb.prev ? (
-              <Link to={`/admin/learners/${nb.prev}`} aria-label="Previous learner (K)" title="Previous learner (K)" className={navBtn}>
+              <Link to={`/admin/learners/${nb.prev}`} aria-label="Previous learner" title="Previous learner" className={navBtn}>
                 <ChevronLeft className="h-4 w-4" />
               </Link>
             ) : null}
             {nb.next ? (
-              <Link to={`/admin/learners/${nb.next}`} aria-label="Next learner (J)" title="Next learner (J)" className={navBtn}>
+              <Link to={`/admin/learners/${nb.next}`} aria-label="Next learner" title="Next learner" className={navBtn}>
                 <ChevronRight className="h-4 w-4" />
               </Link>
             ) : null}
@@ -97,6 +105,13 @@ export function ProfilePage() {
           <BadgeTiles badges={o.badges ?? []} userId={o.learner.id} />
         </div>
         <KpiBoxes o={o} />
+        <div className="flex w-full flex-wrap gap-2 border-t border-l-hair pt-4">
+          <AwardCareEnergyButton userId={o.learner.id} onCareEnergyAwarded={refresh} />
+          <AdminCosmeticGrantDialog userId={o.learner.id} learnerName={fullName} />
+          <AdminGiftBoxDialog userId={o.learner.id} learnerName={fullName} />
+          <AdminCharacterDialog userId={o.learner.id} learnerName={fullName} />
+          <AdminPlantOverrideButton userId={o.learner.id} current={o.plant ?? {}} onSaved={refresh} />
+        </div>
       </section>
 
       <CourseStrip o={o} today={today} onPick={pick} />

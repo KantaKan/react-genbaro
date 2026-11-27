@@ -3,7 +3,8 @@ import type { Overview } from "../../wellbeing";
 const box = "min-w-[104px] rounded-[14px] bg-l-card px-3.5 py-2.5 shadow-[0_0_0_1px_var(--l-hair)]";
 
 export function KpiBoxes({ o }: { o: Overview }) {
-  const sent = o.days.filter((d) => d.reflection).length;
+  const classDays = o.days.filter((d) => !d.extra);
+  const sent = classDays.filter((d) => d.reflection).length;
   const unreplied = o.days.filter((d) => d.reflection && !d.reflection.reply).length;
   const fill = o.leave_used >= 7 ? "bg-red-500" : o.leave_used >= 6 ? "bg-amber-500" : "bg-l-ink2";
   return (
@@ -40,7 +41,7 @@ export function KpiBoxes({ o }: { o: Overview }) {
         <small className="block text-small text-l-ink3">Reflections</small>
         <b className="block text-[22px] font-bold leading-tight tracking-tight">
           {sent}
-          <span className="ml-0.5 text-small font-medium text-l-ink3">/ {o.days.length}</span>
+          <span className="ml-0.5 text-small font-medium text-l-ink3">/ {classDays.length}</span>
         </b>
         <small className="text-small text-l-ink3">{unreplied ? `${unreplied} not replied` : "All replied"}</small>
       </div>

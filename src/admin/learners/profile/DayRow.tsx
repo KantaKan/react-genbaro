@@ -20,7 +20,7 @@ function Chip({ who, date, session, s }: { who: Who; date: string; session: "mor
       label={
         <>
           {session === "morning" ? "AM" : "PM"}
-          {s?.at && s.status !== "absent" && <span className="font-medium opacity-80">{time(s.at)}</span>}
+          {s?.at && s.marked_by === "self" && !s.at.startsWith("0001") && <span className="font-medium opacity-80">{time(s.at)}</span>}
         </>
       }
     />
@@ -53,10 +53,15 @@ export function DayRow({ day, who, today, onNote, onStep }: { day: OverviewDay; 
       <div>
         <b className="text-body font-semibold">{dayName(day.date)}</b>
         {day.date === today && <div className="text-small text-l-ink3">Today</div>}
+        {day.extra && <div className="text-small text-l-ink3">No class</div>}
       </div>
       <div className="flex flex-col items-start gap-1">
-        <Chip who={who} date={day.date} session="morning" s={day.morning} />
-        <Chip who={who} date={day.date} session="afternoon" s={day.afternoon} />
+        {!day.extra && (
+          <>
+            <Chip who={who} date={day.date} session="morning" s={day.morning} />
+            <Chip who={who} date={day.date} session="afternoon" s={day.afternoon} />
+          </>
+        )}
       </div>
       {!r ? (
         <div className="flex items-center gap-2 pt-0.5">
