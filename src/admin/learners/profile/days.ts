@@ -28,17 +28,28 @@ export function weeksOf(days: OverviewDay[]): Week[] {
     by.set(k, [...(by.get(k) ?? []), d]);
   }
   const keys = [...by.keys()].sort();
+  const start = keys.length ? utc(keys[0]).getTime() : 0;
   return keys
-    .map((k, i) => {
+    .map((k) => {
       const list = [...by.get(k)!].sort((a, b) => b.date.localeCompare(a.date));
-      return { key: k, label: `Week ${i + 1}`, range: range(k, list), days: list };
+      return { key: k, label: `Week ${Math.round((utc(k).getTime() - start) / (7 * 864e5)) + 1}`, range: range(k, list), days: list };
     })
     .reverse();
 }
 
 export const isRough = (d: OverviewDay) => d.reflection?.zone === "panic" || d.reflection?.zone === "stretch-overwhelmed";
 export const isUnreplied = (d: OverviewDay) => !!d.reflection && !d.reflection.reply;
-export const isMissing = (d: OverviewDay) => !d.extra && !d.reflection;
+/** Today has no reflection yet before reflections open at 16:45; that is not missing. */
+export const isMissing = (d: OverviewDay, today = "", open = true) => !d.extra && !d.reflection && !(d.date === today && !open);
+
+/** Class days that count toward "sent / class days". */
+export const classDays = (days: OverviewDay[], today: string, open: boolean) => days.filter((d) => !d.extra && !(d.date === today && !open && !d.reflection));
+
+/** Reflections open at 16:45 Bangkok time. */
+export function reflectionsOpen(now = new Date()) {
+  const [h, m] = now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Bangkok" }).split(":").map(Number);
+  return h * 60 + m >= 16 * 60 + 45;
+}
 
 export function matches(d: OverviewDay, q: string): boolean {
   const r = d.reflection;

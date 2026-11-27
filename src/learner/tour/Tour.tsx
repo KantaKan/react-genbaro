@@ -57,7 +57,10 @@ export function Tour({ steps, onClose }: { steps: TourStep[]; onClose: () => voi
 
   useLayoutEffect(() => {
     if (index < 0) return;
-    findTarget(stepsRef.current[index].target)?.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+    const el = findTarget(stepsRef.current[index].target);
+    if (!el) return;
+    const tall = el.getBoundingClientRect().height > window.innerHeight * 0.6;
+    el.scrollIntoView({ block: tall ? "start" : "center", behavior: reduce ? "auto" : "smooth" });
   }, [index, reduce]);
 
   useLayoutEffect(() => {
@@ -98,6 +101,25 @@ export function Tour({ steps, onClose }: { steps: TourStep[]; onClose: () => voi
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Tab") {
+        const p = panel.current;
+        const buttons = p ? Array.from(p.querySelectorAll<HTMLElement>("button")) : [];
+        if (!p || buttons.length === 0) return;
+        const first = buttons[0];
+        const lastBtn = buttons[buttons.length - 1];
+        const active = document.activeElement;
+        if (!p.contains(active)) {
+          e.preventDefault();
+          first.focus();
+        } else if (!e.shiftKey && active === lastBtn) {
+          e.preventDefault();
+          first.focus();
+        } else if (e.shiftKey && (active === first || active === p)) {
+          e.preventDefault();
+          lastBtn.focus();
+        }
+        return;
+      }
       if (e.key === "Enter" && e.target instanceof HTMLButtonElement) return;
       if (e.key === "Escape") close();
       else if (e.key === "ArrowRight" || e.key === "Enter") go(1);
@@ -109,6 +131,8 @@ export function Tour({ steps, onClose }: { steps: TourStep[]; onClose: () => voi
 
   if (index < 0 || !rect) return null;
   const step = steps[index];
+  const onPage = steps.filter((x) => findTarget(x.target));
+  const position = onPage.indexOf(step) + 1;
   const last = nextIndex(steps, index + 1, 1) === -1;
   const vw = window.innerWidth;
   const vh = window.innerHeight;
@@ -135,7 +159,14 @@ export function Tour({ steps, onClose }: { steps: TourStep[]; onClose: () => voi
         className="learner fixed rounded-2xl bg-l-card p-4 text-l-ink shadow-[var(--l-shadow)] outline-none"
         style={{ ...place, left: `${left}px`, width: `${width}px` }}
       >
-        <div className="text-small text-l-ink3">{`${index + 1} จาก ${steps.length}`}</div>
+        <div className="flex items-center justify-between text-small text-l-ink3">
+          <span>{`${position} จาก ${onPage.length}`}</span>
+          <span className="flex gap-1" aria-hidden>
+            {onPage.map((x) => (
+              <i key={x.target} data-testid="tour-dot" className={`block h-1.5 w-1.5 rounded-full ${x === step ? "bg-l-ink" : "bg-l-hair"}`} />
+            ))}
+          </span>
+        </div>
         <h2 id="tour-title" className="mt-1 text-heading font-semibold">{step.title}</h2>
         <p className="mt-1.5 text-body leading-relaxed text-l-ink2">{step.body}</p>
         <div className="mt-4 flex items-center justify-between">

@@ -16,8 +16,8 @@ import { AdminGiftBoxDialog } from "@/components/admin-gift-box-dialog";
 import { AdminCharacterDialog } from "@/components/character/AdminCharacterDialog";
 import { AdminPlantOverrideButton } from "@/components/admin-plant-override-button";
 import { CourseStrip } from "./profile/CourseStrip";
-import { DayList } from "./profile/DayList";
-import { isUnreplied, mondayOf, weeksOf } from "./profile/days";
+import { DayList, type Filter } from "./profile/DayList";
+import { isUnreplied, mondayOf, reflectionsOpen, weeksOf } from "./profile/days";
 
 const when = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Bangkok" });
 
@@ -37,7 +37,12 @@ function LearnerProfile({ id }: { id: string }) {
   useAdminHeader({ title: "Learner", context: o ? `${n.th || n.en} · #${o.learner.jsd_number}` : "" });
   const [openWeeks, setOpenWeeks] = useState<Set<string>>(new Set());
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" });
+  const reflOpen = reflectionsOpen();
+  const [filter, setFilter] = useState<Filter>("all");
+  const [query, setQuery] = useState("");
   const pick = (date: string) => {
+    setFilter("all");
+    setQuery("");
     setOpenWeeks((s) => new Set(s).add(mondayOf(date)));
     requestAnimationFrame(() => document.getElementById(`day-${date}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
   };
@@ -104,7 +109,7 @@ function LearnerProfile({ id }: { id: string }) {
           <p className="text-small text-l-ink3">{o.learner.email}</p>
           <BadgeTiles badges={o.badges ?? []} userId={o.learner.id} />
         </div>
-        <KpiBoxes o={o} />
+        <KpiBoxes o={o} today={today} open={reflOpen} />
         <div className="flex w-full flex-wrap gap-2 border-t border-l-hair pt-4">
           <AwardCareEnergyButton userId={o.learner.id} onCareEnergyAwarded={refresh} />
           <AdminCosmeticGrantDialog userId={o.learner.id} learnerName={fullName} />
@@ -122,7 +127,12 @@ function LearnerProfile({ id }: { id: string }) {
             days={days}
             who={who}
             today={today}
+            reflOpen={reflOpen}
             open={openWeeks}
+            filter={filter}
+            setFilter={setFilter}
+            q={query}
+            setQ={setQuery}
             onToggle={(w) => setOpenWeeks((s) => { const x = new Set(s); if (x.has(w)) x.delete(w); else x.add(w); return x; })}
             onNote={(t) => wellbeingApi.addNote(o.learner.id, t).then(refresh)}
             onStep={(t) => wellbeingApi.addStep(o.learner.id, t).then(refresh)}

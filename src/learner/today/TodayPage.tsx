@@ -53,7 +53,8 @@ export function TodayPage() {
       learnerApi.savePreferences({ tour_seen: true }).catch(() => {});
     }
   };
-  const steps = useMemo(() => (s ? tourSteps(s.rules) : []), [s?.rules]);
+  const rules = s?.rules;
+  const steps = useMemo(() => (rules ? tourSteps(rules) : []), [rules]);
   const week = weekCells(history.data ?? [], today);
   const weekOnTime = week.filter((c) => c.am === "present" && (c.pm === "present" || (c.isToday && c.pm === null))).length;
   const refresh = () => {
@@ -97,13 +98,13 @@ export function TodayPage() {
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-12">
         <div className="flex flex-col gap-4 lg:col-span-7">
-          <div data-tour="checkin" className="empty:hidden">{s ? <CheckInCard summary={s} onCheckedIn={refresh} seed={userData?._id ?? "me"} onOpenPicker={() => setPicker(true)} /> : summary.isLoading ? <CheckInCardSkeleton /> : null}</div>
-          <div data-tour="week">{history.isLoading ? <WeekCardSkeleton /> : <WeekCard cells={week} />}</div>
+          <div data-tour="checkin" className="empty:hidden scroll-mt-20">{s ? <CheckInCard summary={s} onCheckedIn={refresh} seed={userData?._id ?? "me"} onOpenPicker={() => setPicker(true)} /> : summary.isLoading ? <CheckInCardSkeleton /> : null}</div>
+          <div data-tour="week" className="scroll-mt-20">{history.isLoading ? <WeekCardSkeleton /> : <WeekCard cells={week} />}</div>
           <BoardLatestCard />
         </div>
         <div className="flex flex-col gap-4 lg:col-span-5">
-          <div data-tour="plant" className="empty:hidden">{plant.ready && <PlantCard plant={plant} />}</div>
-          <div data-tour="reflection">
+          <div data-tour="plant" className="empty:hidden scroll-mt-20">{plant.ready && <PlantCard plant={plant} />}</div>
+          <div data-tour="reflection" className="scroll-mt-20">
             {reflections.isLoading || !userData ? (
               <ReflectionCardSkeleton />
             ) : (
@@ -111,7 +112,7 @@ export function TodayPage() {
             )}
           </div>
           {s ? <StreakBadgesCard badges={userData?.badges ?? []} perfectWeek={s.perfect_week} weekOnTime={weekOnTime} /> : summary.isLoading && <StreakBadgesCardSkeleton />}
-          <div data-tour="leave" className="empty:hidden">{s ? <LeaveCard used={s.leave_used} allowance={s.leave_allowance} rate={s.attendance_rate} /> : summary.isLoading && <LeaveCardSkeleton />}</div>
+          <div data-tour="leave" className="empty:hidden scroll-mt-20">{s ? <LeaveCard used={s.leave_used} allowance={s.leave_allowance} rate={s.attendance_rate} /> : summary.isLoading && <LeaveCardSkeleton />}</div>
           {(summary.isLoading || history.isLoading) && <LoadingHint label="Loading your day" />}
         </div>
         {cup.data && (

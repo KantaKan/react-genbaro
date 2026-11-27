@@ -27,7 +27,7 @@ function Chip({ who, date, session, s }: { who: Who; date: string; session: "mor
   );
 }
 
-export function DayRow({ day, who, today, onNote, onStep }: { day: OverviewDay; who: Who; today: string; onNote: (text: string) => Promise<unknown>; onStep: (text: string) => Promise<unknown> }) {
+export function DayRow({ day, who, today, reflOpen = true, onNote, onStep }: { day: OverviewDay; who: Who; today: string; reflOpen?: boolean; onNote: (text: string) => Promise<unknown>; onStep: (text: string) => Promise<unknown> }) {
   const qc = useQueryClient();
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -66,7 +66,7 @@ export function DayRow({ day, who, today, onNote, onStep }: { day: OverviewDay; 
       {!r ? (
         <div className="flex items-center gap-2 pt-0.5">
           <i className="block h-5 w-5 rounded-full shadow-[inset_0_0_0_1.5px_var(--l-hair)]" />
-          <span className="text-small text-l-ink3">No reflection</span>
+          <span className="text-small text-l-ink3">{day.date === today && !reflOpen ? "Reflections open at 16:45" : "No reflection"}</span>
         </div>
       ) : (
         <div className="min-w-0">

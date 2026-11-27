@@ -147,4 +147,35 @@ describe("Tour", () => {
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByRole("dialog", { name: "Step A" })).toBeInTheDocument();
   });
+
+  it("counts only the steps that are on the page", () => {
+    target("a"); target("c");
+    render(<Tour steps={steps} onClose={vi.fn()} />);
+    expect(screen.getByText("1 จาก 2")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "ถัดไป" }));
+    expect(screen.getByText("2 จาก 2")).toBeInTheDocument();
+    expect(screen.getAllByTestId("tour-dot")).toHaveLength(2);
+  });
+
+  it("keeps Tab inside the panel", () => {
+    target("a");
+    const outside = document.createElement("button");
+    document.body.appendChild(outside);
+    render(<Tour steps={steps} onClose={vi.fn()} />);
+    outside.focus();
+    fireEvent.keyDown(outside, { key: "Tab" });
+    expect(screen.getByRole("dialog").contains(document.activeElement)).toBe(true);
+    const next = screen.getByRole("button", { name: "เริ่มใช้งาน" });
+    next.focus();
+    fireEvent.keyDown(next, { key: "Tab" });
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "ข้าม" }));
+    outside.remove();
+  });
+
+  it("scrolls a tall card to its top", () => {
+    const el = target("a");
+    el.getBoundingClientRect = () => ({ top: 100, left: 20, width: 200, height: 900, bottom: 1000, right: 220, x: 20, y: 100, toJSON: () => ({}) });
+    render(<Tour steps={steps} onClose={vi.fn()} />);
+    expect(el.scrollIntoView).toHaveBeenCalledWith(expect.objectContaining({ block: "start" }));
+  });
 });

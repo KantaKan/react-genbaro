@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { weeksOf, isRough, isUnreplied, isMissing, matches } from "./days";
+import { weeksOf, isRough, isUnreplied, isMissing, matches, classDays } from "./days";
 import type { OverviewDay } from "../../wellbeing";
 
 const r = (zone: string, reply = "", improve = "") => ({ id: "r", zone, sent_at: "", tech_happy: "", tech_improve: improve, nontech_happy: "", nontech_improve: "", reply, reply_name: "", reply_at: null }) as OverviewDay["reflection"];
@@ -20,5 +20,17 @@ describe("days helpers", () => {
     expect(isMissing(day("d"))).toBe(true);
     expect(matches(day("d", r("comfort", "", "React Query")), "react")).toBe(true);
     expect(matches(day("d", r("comfort", "", "React Query")), "zod")).toBe(false);
+  });
+
+  it("numbers weeks by calendar week, so a week with no class keeps its number", () => {
+    const w = weeksOf([day("2026-11-02"), day("2026-11-16")]);
+    expect(w.map((x) => x.label)).toEqual(["Week 3", "Week 1"]);
+  });
+  it("does not count today as missing before reflections open", () => {
+    const t = day("2026-11-26");
+    expect(isMissing(t, "2026-11-26", false)).toBe(false);
+    expect(isMissing(t, "2026-11-26", true)).toBe(true);
+    expect(classDays([day("2026-11-25"), t], "2026-11-26", false)).toHaveLength(1);
+    expect(classDays([day("2026-11-25"), t, { ...day("2026-11-22"), extra: true }], "2026-11-26", true)).toHaveLength(2);
   });
 });
