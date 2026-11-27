@@ -20,6 +20,7 @@ vi.mock("@/components/linear-feedback-form", () => ({
   default: ({ initialData }: { initialData?: { comfortLevel: string } }) => <div>form:{initialData?.comfortLevel}</div>,
 }));
 vi.mock("@/application/services/boardService", () => ({ getPosts: vi.fn().mockResolvedValue([]) }));
+vi.mock("../cup/api", () => ({ cupApi: { me: vi.fn().mockResolvedValue(null) } }));
 vi.mock("../api", async (orig) => {
   const real = await orig<typeof import("../api")>();
   return { ...real, learnerApi: { ...real.learnerApi, getSummary: vi.fn(), getHistory: vi.fn().mockResolvedValue([]), savePreferences: vi.fn().mockResolvedValue({}), getMyReflections: vi.fn().mockResolvedValue([{ _id: "r1", user_id: "u1", date: "2026-09-07T10:00:00Z", day: "2026-09-07", reflection: { barometer: "Comfort Zone", tech_sessions: {}, non_tech_sessions: {} } }]) } };

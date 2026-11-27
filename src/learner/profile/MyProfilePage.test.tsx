@@ -32,6 +32,7 @@ vi.mock("../api", async (orig) => {
     ...real,
     learnerApi: {
       ...real.learnerApi,
+      getCohortPeople: vi.fn().mockResolvedValue([]),
       getSummary: vi.fn().mockResolvedValue({ streak: 12, attendance_rate: 0.971, perfect_week: false, leave_used: 2, leave_allowance: 8, preferences: { checkin_style: "cat", checkin_random: false } }),
       getMyReflections: vi.fn().mockResolvedValue(refl),
       savePreferences: vi.fn().mockResolvedValue({}),

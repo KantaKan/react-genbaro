@@ -13,6 +13,10 @@ vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn() }), To
 vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout: vi.fn(), userRole: "admin" }) }));
 vi.mock("@/UserDataContext", () => ({ useUserData: () => ({ userData: { _id: "me", first_name: "Kan", cohort_number: 13 }, loading: false }) }));
 vi.mock("../api", () => ({ adminApi: { register: vi.fn(), leaves: vi.fn().mockResolvedValue([]), mark: vi.fn() } }));
+vi.mock("../wellbeing", async (o) => {
+  const real = await o<typeof import("../wellbeing")>();
+  return { ...real, wellbeingApi: { ...real.wellbeingApi, support: vi.fn().mockResolvedValue([]) } };
+});
 vi.mock("@/application/services/attendanceService", () => ({ attendanceService: { exportSalesforceCSV: vi.fn() } }));
 
 const cell = (status = "", rid?: string) => ({ status, checked_in_at: null, record_id: rid }) as never;

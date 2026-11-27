@@ -13,7 +13,7 @@ vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/UserDataContext", () => ({ useUserData: () => ({ userData: { _id: "u1", first_name: "A", zoom_name: "03_A(Black/แบล็ค)", cohort_number: 13 }, loading: false }) }));
 vi.mock("../api", async (orig) => {
   const real = await orig<typeof import("../api")>();
-  return { ...real, learnerApi: { ...real.learnerApi, getCalendar: vi.fn() } };
+  return { ...real, learnerApi: { ...real.learnerApi, getMyReflections: vi.fn().mockResolvedValue([]), getCalendar: vi.fn() } };
 });
 
 const s = (start: string, end: string, title: string, o: Partial<Session> = {}): Session => ({ start, end, code: "", title, subtitle: "", facilitators: ["Kan"], type: "technical", kind: "session", ...o });
