@@ -23,7 +23,7 @@ describe("AnnouncePage", () => {
     vi.mocked(slackApi.available).mockResolvedValue({ connected: false });
     vi.mocked(wellbeingApi.learners).mockResolvedValue([L("a", "B"), L("b", "C"), L("c", "D"), L("d", "B")]);
     vi.mocked(notificationService.getAllNotifications).mockResolvedValue([
-      { id: "n1", title: "Holiday Wednesday", message: "m", is_active: true, priority: "important", start_date: "2026-11-20T00:00:00Z", end_date: "2026-11-27T00:00:00Z", created_at: "2026-11-20T00:00:00Z", read_by_users: ["x", "y"] } as never,
+      { id: "n1", title: "Holiday Wednesday", message: "m", is_active: true, priority: "important", start_date: "2026-11-20T00:00:00Z", end_date: "2099-01-01T00:00:00Z", created_at: "2026-11-20T00:00:00Z", read_by_users: ["x", "y"] } as never,
     ]);
     vi.mocked(notificationService.createNotification).mockReset().mockResolvedValue({} as never);
     vi.mocked(notificationService.toggleNotificationActive).mockReset().mockResolvedValue(undefined);
