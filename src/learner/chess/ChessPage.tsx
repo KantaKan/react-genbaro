@@ -116,7 +116,7 @@ export function ChessPage() {
   const wide = useWide();
   const [layout, setLayout] = useLayout(me);
   const [pending, setPending] = useState("");
-  const view = game.data;
+  const view = useMemo(() => game.data && { ...game.data, proposals: game.data.proposals ?? [] }, [game.data]);
   const fen = view?.game?.fen;
   useEffect(() => setPending(""), [fen]);
 
@@ -156,7 +156,10 @@ export function ChessPage() {
 
   const g = view.game;
   const canAct = view.my_side === g.turn.side;
-  const refresh = () => qc.invalidateQueries(["chess"]);
+  const refresh = () => {
+    qc.invalidateQueries(["chess"]);
+    qc.invalidateQueries(["chess-me"]);
+  };
   const props: LayoutProps = {
     view,
     me,
@@ -166,6 +169,7 @@ export function ChessPage() {
     onPick: canAct ? (p) => setPending(p.uci) : undefined,
     board: (size) => (
       <Board
+        key={g.fen}
         fen={g.fen}
         orientation={view.my_side || "white"}
         onMove={canAct ? setPending : undefined}

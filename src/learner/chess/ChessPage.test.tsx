@@ -89,11 +89,22 @@ describe("ChessPage", () => {
     await waitFor(() => expect(chessApi.move).toHaveBeenCalledWith("d2d4"));
   });
 
+  it("survives a null proposal list and shows a failed vote", async () => {
+    vi.mocked(chessApi.current).mockResolvedValueOnce(view({ proposals: null as never }));
+    const { unmount } = setup();
+    expect(await screen.findByLabelText("e2 white pawn")).toBeInTheDocument();
+    unmount();
+    vi.mocked(chessApi.vote).mockRejectedValueOnce(new Error("that proposal is from an earlier turn"));
+    setup();
+    fireEvent.click((await screen.findAllByLabelText("เห็นด้วยกับ d4"))[0]);
+    expect((await screen.findAllByText("that proposal is from an earlier turn")).length).toBeGreaterThan(0);
+  });
+
   it("keeps the board read-only for the other side", async () => {
     me = "b1";
     vi.mocked(chessApi.current).mockResolvedValue(view({ my_side: "black", proposals: [] }));
     setup();
-    expect(await screen.findByLabelText("e2 white pawn")).toBeDisabled();
+    expect(await screen.findByLabelText("e2 white pawn")).toHaveAttribute("aria-disabled", "true");
     expect(screen.getAllByText(/ข้อเสนอของแต่ละทีมเห็นได้เฉพาะในทีม/).length).toBeGreaterThan(0);
   });
 

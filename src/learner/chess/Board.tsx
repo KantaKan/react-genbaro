@@ -45,7 +45,7 @@ export function Board({ fen, orientation = "white", onMove, lastMove, proposals 
   return (
     <div style={{ position: "relative", width: size, maxWidth: "100%" }}>
       <div
-        role="grid"
+        role="group"
         aria-label="Chess board"
         style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", aspectRatio: "1", borderRadius: 10, overflow: "hidden", boxShadow: "0 0 0 1px var(--l-hair)", containerType: "inline-size" }}
       >
@@ -65,7 +65,7 @@ export function Board({ fen, orientation = "white", onMove, lastMove, proposals 
                 aria-label={p ? `${sq} ${p.color === "w" ? "white" : "black"} ${NAME[p.type]}` : sq}
                 aria-pressed={sq === from}
                 onClick={() => click(sq)}
-                disabled={!onMove}
+                aria-disabled={!onMove}
                 style={{
                   all: "unset",
                   display: "grid",
@@ -98,6 +98,7 @@ export function Board({ fen, orientation = "white", onMove, lastMove, proposals 
               key={t}
               type="button"
               aria-label={`Promote to ${NAME[t]}`}
+              autoFocus={t === "q"}
               onClick={() => {
                 onMove?.(promo + t);
                 setPromo(null);

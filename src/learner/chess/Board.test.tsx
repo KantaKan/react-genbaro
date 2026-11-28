@@ -39,6 +39,6 @@ describe("Board", () => {
     const squares = document.querySelectorAll("[data-square]");
     expect(squares[0].getAttribute("data-square")).toBe("h1");
     expect(squares[63].getAttribute("data-square")).toBe("a8");
-    expect(sq("e2")).toBeDisabled();
+    expect(sq("e2")).toHaveAttribute("aria-disabled", "true");
   });
 });

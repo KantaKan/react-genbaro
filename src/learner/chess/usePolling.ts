@@ -13,13 +13,12 @@ export function useChessMessages(room: Room, gameId: string | undefined, cohort?
   const [messages, setMessages] = useState<ChessMessage[]>([]);
   const last = useRef("");
 
+  /** Merges messages in time order. Only polls move the cursor, so a posted message can't skip ones sent just before it. */
   const add = useCallback((more: ChessMessage[]) => {
     if (!more.length) return;
     setMessages((prev) => {
       const seen = new Set(prev.map((m) => m.id));
-      const next = [...prev, ...more.filter((m) => !seen.has(m.id))];
-      last.current = next[next.length - 1]?.id ?? "";
-      return next;
+      return [...prev, ...more.filter((m) => !seen.has(m.id))].sort((a, b) => (a.at === b.at ? (a.id < b.id ? -1 : 1) : a.at < b.at ? -1 : 1));
     });
   }, []);
 
@@ -30,7 +29,11 @@ export function useChessMessages(room: Room, gameId: string | undefined, cohort?
     let alive = true;
     const poll = () => {
       if (document.hidden) return;
-      chessApi.messages(room, last.current, cohort).then((m) => alive && add(m), () => {});
+      chessApi.messages(room, last.current, cohort).then((m) => {
+        if (!alive || !m.length) return;
+        last.current = m[m.length - 1].id;
+        add(m);
+      }, () => {});
     };
     poll();
     const id = setInterval(poll, 10_000);
