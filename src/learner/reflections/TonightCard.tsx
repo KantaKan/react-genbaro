@@ -3,7 +3,7 @@ import { Lock } from "lucide-react";
 import { BarometerFace, ZONES, type ZoneId } from "../today/BarometerFace";
 import { answersComplete, type Answers, type Night } from "./model";
 
-export const OPENS_AT = 16 * 3600 + 45 * 60;
+export const OPENS_AT = 16 * 3600 + 30 * 60;
 
 const QUESTIONS: { key: keyof Answers; label: string; hint: string }[] = [
   { key: "th", label: "Tech · what went well?", hint: "e.g. useEffect cleanup finally clicked" },
@@ -109,7 +109,7 @@ export function TonightCard({
           <div className="mt-3.5 flex flex-wrap items-center gap-3">
             <span className="flex-1 text-small text-l-ink3" aria-live="polite">
               {!open
-                ? "Tonight's reflection has closed. It opens again at 16:45. Your answers are still here."
+                ? "Tonight's reflection has closed. It opens again at 16:30. Your answers are still here."
                 : ready
                   ? "All four answered. Ready to send."
                   : `${filled} of 4 answered. Answer all four to send.`}
@@ -150,7 +150,7 @@ export function TonightCard({
           ) : (
             <div className="mt-3.5 flex items-center gap-2.5 rounded-[14px] bg-l-sub px-3.5 py-3 text-body text-l-ink2">
               <Lock className="h-4 w-4" strokeWidth={1.5} />
-              <span>{`Opens at 16:45 · ${countdown}.`}</span>
+              <span>{`Opens at 16:30 · ${countdown}.`}</span>
             </div>
           )}
         </>

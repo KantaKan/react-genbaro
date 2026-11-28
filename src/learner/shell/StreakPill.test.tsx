@@ -5,7 +5,7 @@ describe("streakPill", () => {
   it("celebrates once tonight's reflection is in", () => {
     expect(streakPill({ streak: 12, writtenToday: true, open: true })).toEqual({ count: 12, text: "12-night streak", tone: "done" });
   });
-  it("nudges after 16:45 when tonight's is still missing", () => {
+  it("nudges after 16:30 when tonight's is still missing", () => {
     expect(streakPill({ streak: 12, writtenToday: false, open: true })).toEqual({ count: 12, text: "12 nights · write tonight to keep it", tone: "due" });
   });
   it("stays calm before reflections open", () => {

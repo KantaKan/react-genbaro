@@ -66,7 +66,7 @@ export function DayRow({ day, who, today, reflOpen = true, onNote, onStep }: { d
       {!r ? (
         <div className="flex items-center gap-2 pt-0.5">
           <i className="block h-5 w-5 rounded-full shadow-[inset_0_0_0_1.5px_var(--l-hair)]" />
-          <span className="text-small text-l-ink3">{day.date === today && !reflOpen ? "Reflections open at 16:45" : "No reflection"}</span>
+          <span className="text-small text-l-ink3">{day.date === today && !reflOpen ? "Reflections open at 16:30" : "No reflection"}</span>
         </div>
       ) : (
         <div className="min-w-0">

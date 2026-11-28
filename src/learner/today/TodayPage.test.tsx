@@ -83,15 +83,15 @@ describe("TodayPage", () => {
     expect(screen.getByText("Week 11 of 15")).toBeInTheDocument();
   });
 
-  it("keeps the reflection locked before 16:45", async () => {
+  it("keeps the reflection locked before 16:30", async () => {
     setBkk(10, 0);
     vi.mocked(learnerApi.getSummary).mockResolvedValue(base);
     renderPage();
-    expect(await screen.findByText(/Opens at 16:45/)).toBeInTheDocument();
+    expect(await screen.findByText(/Opens at 16:30/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Comfort/ })).toBeDisabled();
   });
 
-  it("opens the reflection form with the picked zone after 16:45", async () => {
+  it("opens the reflection form with the picked zone after 16:30", async () => {
     setBkk(17, 0);
     vi.mocked(learnerApi.getSummary).mockResolvedValue(base);
     renderPage();

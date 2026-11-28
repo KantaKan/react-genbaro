@@ -2,9 +2,9 @@ import { Link } from "react-router-dom";
 import { Sprout } from "lucide-react";
 import { SeedlingPlant } from "@/components/streak-components";
 import { useClock } from "../checkin/useClock";
+import { OPENS_AT } from "../reflections/TonightCard";
 import { useMyPlant } from "../lib/useMyPlant";
 
-const OPENS = 16 * 3600 + 45 * 60;
 
 export type PillTone = "done" | "due" | "calm";
 
@@ -27,7 +27,7 @@ export function StreakPill() {
   const plant = useMyPlant();
   const now = useClock(60_000);
   if (!plant.ready) return null;
-  const pill = streakPill({ streak: plant.nights, writtenToday: plant.writtenToday, open: now >= OPENS });
+  const pill = streakPill({ streak: plant.nights, writtenToday: plant.writtenToday, open: now >= OPENS_AT });
 
   return (
     <Link
