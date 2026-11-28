@@ -1,4 +1,4 @@
-import { CalendarRange, FileBarChart, Slack, KeyRound, HeartHandshake, CalendarOff, Download, SlidersHorizontal, UsersRound, BookOpen, CalendarCheck, CalendarDays, ClipboardCheck, Gamepad2, History, Megaphone, MessageCircle, Smile, Sprout, Sun, Trophy, Users, Wrench, type LucideIcon } from "lucide-react";
+import { CalendarRange, Crown, FileBarChart, Slack, KeyRound, HeartHandshake, CalendarOff, Download, SlidersHorizontal, UsersRound, BookOpen, CalendarCheck, CalendarDays, ClipboardCheck, Gamepad2, History, Megaphone, MessageCircle, Smile, Sprout, Sun, Trophy, Users, Wrench, type LucideIcon } from "lucide-react";
 import type { Capability } from "../team/perm";
 
 export type AdminSection = "Daily" | "Learners" | "Engage" | "Play" | "Cohort";
@@ -30,6 +30,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { label: "Garden & Cohort field", to: "/admin/garden", icon: Sprout, section: "Play" },
   { label: "Baro Characters", to: "/character", icon: Smile, section: "Play" },
   { label: "Showcase & Startup Story", to: "/showcase-lawn", icon: Gamepad2, section: "Play" },
+  { label: "Team chess", to: "/admin/chess", icon: Crown, section: "Play", cap: "cohort_admin" },
   { label: "Tools · spin wheel", to: "/tools", icon: Wrench, section: "Play" },
   { label: "Check-in rules", to: "/admin/rules", icon: SlidersHorizontal, section: "Cohort", cap: "cohort_admin" },
   { label: "Calendar", to: "/admin/calendar", icon: CalendarRange, section: "Cohort" },
