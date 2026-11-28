@@ -10,7 +10,7 @@ export function ProtectedRoute({
   children: React.ReactNode;
   allowedRoles: UserRole[];
 }) {
-  const { isAuthenticated, userRole, mustChangePassword, passwordChanged } = useAuth();
+  const { isAuthenticated, userRole, mustChangePassword, passwordChanged, logout } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -29,6 +29,9 @@ export function ProtectedRoute({
           <div className="mt-6">
             <ChangePasswordForm onDone={passwordChanged} currentLabel="รหัสผ่านปัจจุบัน" />
           </div>
+          <button type="button" onClick={logout} className="mt-4 text-sm text-muted-foreground underline">
+            ออกจากระบบ
+          </button>
         </div>
       </main>
     );

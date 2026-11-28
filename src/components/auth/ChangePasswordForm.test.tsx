@@ -38,6 +38,6 @@ describe("ChangePasswordForm", () => {
     render(<ChangePasswordForm onDone={vi.fn()} />);
     fill("nope", "mynewpass1", "mynewpass1");
     fireEvent.click(screen.getByRole("button", { name: "บันทึกรหัสผ่าน" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("current password is wrong");
+    expect(await screen.findByRole("alert")).toHaveTextContent("รหัสผ่านปัจจุบันไม่ถูกต้อง");
   });
 });

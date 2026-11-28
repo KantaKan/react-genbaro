@@ -16,6 +16,7 @@ import { AdminGiftBoxDialog } from "@/components/admin-gift-box-dialog";
 import { AdminCharacterDialog } from "@/components/character/AdminCharacterDialog";
 import { AdminPlantOverrideButton } from "@/components/admin-plant-override-button";
 import { ResetPasswordButton } from "./profile/ResetPasswordButton";
+import { useStaff } from "../team/useStaff";
 import { CourseStrip } from "./profile/CourseStrip";
 import { DayList, type Filter } from "./profile/DayList";
 import { isUnreplied, mondayOf, reflectionsOpen, weeksOf } from "./profile/days";
@@ -29,6 +30,7 @@ export function ProfilePage() {
 
 function LearnerProfile({ id }: { id: string }) {
   const qc = useQueryClient();
+  const staffMe = useStaff();
   const q = useQuery(["admin-overview", id], () => wellbeingApi.overview(id), { enabled: !!id });
   const [note, setNote] = useState("");
   const [step, setStep] = useState("");
@@ -117,7 +119,7 @@ function LearnerProfile({ id }: { id: string }) {
           <AdminGiftBoxDialog userId={o.learner.id} learnerName={fullName} />
           <AdminCharacterDialog userId={o.learner.id} learnerName={fullName} />
           <AdminPlantOverrideButton userId={o.learner.id} current={o.plant ?? {}} onSaved={refresh} />
-          <ResetPasswordButton userId={o.learner.id} name={n.en || o.learner.first_name} />
+          {staffMe.known && staffMe.can("care") && <ResetPasswordButton userId={o.learner.id} name={n.en || o.learner.first_name} />}
         </div>
       </section>
 

@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { ProtectedRoute } from "./ProtectedRoute";
 
-const auth = { isAuthenticated: true, userRole: "learner", mustChangePassword: true, passwordChanged: vi.fn() };
+const auth = { isAuthenticated: true, userRole: "learner", mustChangePassword: true, passwordChanged: vi.fn(), logout: vi.fn() };
 vi.mock("../AuthContext", () => ({ useAuth: () => auth }));
 vi.mock("@/application/services/authService", () => ({ authService: { changePassword: vi.fn() } }));
 
@@ -12,6 +12,8 @@ describe("ProtectedRoute", () => {
     render(<MemoryRouter><ProtectedRoute allowedRoles={["learner"]}><p>the app</p></ProtectedRoute></MemoryRouter>);
     expect(screen.getByRole("heading", { name: "ตั้งรหัสผ่านใหม่" })).toBeInTheDocument();
     expect(screen.queryByText("the app")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "ออกจากระบบ" }));
+    expect(auth.logout).toHaveBeenCalled();
   });
 
   it("shows the app when no change is needed", () => {

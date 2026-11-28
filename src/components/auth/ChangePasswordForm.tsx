@@ -3,6 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authService } from "@/application/services/authService";
 
+const THAI: Record<string, string> = {
+  "current password is wrong": "รหัสผ่านปัจจุบันไม่ถูกต้อง",
+  "new password must be at least 8 characters": "รหัสผ่านใหม่ต้องมีอย่างน้อย 8 ตัวอักษร",
+  "new password must be at most 72 bytes": "รหัสผ่านใหม่ยาวเกินไป",
+  "new password must be different from the current one": "รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสเดิม",
+};
+
 export function ChangePasswordForm({ onDone, currentLabel = "รหัสผ่านปัจจุบัน" }: { onDone: () => void; currentLabel?: string }) {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -22,7 +29,8 @@ export function ChangePasswordForm({ onDone, currentLabel = "รหัสผ่�
       await authService.changePassword(current, next);
       onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't change the password.");
+      const msg = err instanceof Error ? err.message : "";
+      setError(THAI[msg] ?? (msg || "เปลี่ยนรหัสผ่านไม่สำเร็จ ลองอีกครั้ง"));
     } finally {
       setSaving(false);
     }
