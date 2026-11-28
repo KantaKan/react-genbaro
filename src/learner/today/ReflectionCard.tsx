@@ -8,6 +8,7 @@ import type { Reflection } from "@/domain/types";
 import { reflectionZones } from "@/components/reflection-zones";
 import { BarometerFace, ZONES, type ZoneId } from "./BarometerFace";
 import { Bone } from "@/components/LoadingSkeleton";
+import { learnerApi } from "../api";
 
 const OPENS = 16 * 3600 + 45 * 60;
 
@@ -26,12 +27,16 @@ export function ReflectionCard({
 }) {
   const { addReflection } = useReflections(userId, reflections as unknown as HookReflection[]);
   const [picked, setPicked] = useState<ZoneId | null>(null);
+  const [editing, setEditing] = useState(false);
+  const weekday = new Date(`${today}T12:00:00Z`).getUTCDay();
+  const weekend = weekday === 0 || weekday === 6;
   const open = nowSec >= OPENS;
   const todays = reflections.find((r) => (r.day || r.date || "").slice(0, 10) === today);
   const zoneOf = (label: string) => reflectionZones.find((z) => z.label.toLowerCase() === label.toLowerCase())?.id as ZoneId | undefined;
   const sentZone = todays ? zoneOf(todays.reflection.barometer) : undefined;
   const latest = [...reflections].filter((r) => r !== todays).sort((a, b) => (b.date > a.date ? 1 : -1))[0];
   const left = Math.max(0, OPENS - nowSec);
+  const canEdit = !!todays?._id && !todays.admin_feedback;
 
   return (
     <section className="l-card p-[22px]">
@@ -48,13 +53,22 @@ export function ReflectionCard({
       {todays && sentZone ? (
         <div className="mt-4 flex items-center gap-3.5 rounded-2xl p-3.5" style={{ background: ZONES.find((z) => z.id === sentZone)?.soft }}>
           <BarometerFace zone={sentZone} size={52} />
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="text-title font-semibold text-zinc-900">Sent. Thanks for reflecting today.</div>
             <div className="mt-0.5 text-small text-zinc-600">
               {todays.reflection.barometer}.{" "}
-              {sentZone === "stretch-overwhelmed" || sentZone === "panic" ? "A TA will reach out. You don't have to figure it out alone." : "See you tomorrow."}
+              {sentZone === "stretch-overwhelmed" || sentZone === "panic"
+                ? "A TA will reach out. You don't have to figure it out alone."
+                : weekend
+                  ? "บันทึกแล้ว วันนี้ไม่นับ streak นะ"
+                  : "See you tomorrow."}
             </div>
           </div>
+          {canEdit && (
+            <button type="button" onClick={() => setEditing(true)} className="shrink-0 rounded-lg px-2.5 py-1.5 text-small font-semibold text-zinc-700 underline-offset-2 hover:underline">
+              แก้ไข
+            </button>
+          )}
         </div>
       ) : (
         <>
@@ -82,6 +96,7 @@ export function ReflectionCard({
               Last time: <b className="font-semibold text-l-ink">{latest.reflection.barometer}</b>
             </div>
           )}
+          {weekend && <p className="mt-3.5 text-small text-l-ink3">วันเสาร์-อาทิตย์เขียนได้ แต่ไม่นับ streak 🔥</p>}
           {!open && (
             <div className="mt-4 flex items-center gap-2.5 rounded-[14px] bg-l-sub px-3.5 py-3 text-body text-l-ink2">
               <Lock className="h-4 w-4" strokeWidth={1.5} />
@@ -104,6 +119,34 @@ export function ReflectionCard({
               }}
               onSuccess={() => {
                 setPicked(null);
+                onSubmitted();
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editing} onOpenChange={setEditing}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[900px]">
+          <DialogHeader>
+            <DialogTitle>แก้ไข reflection วันนี้</DialogTitle>
+          </DialogHeader>
+          {editing && todays && (
+            <FeedbackForm
+              initialData={{
+                comfortLevel: sentZone ?? "",
+                categoryInputs: {
+                  "tech-happy": todays.reflection.tech_sessions?.happy ?? "",
+                  "tech-improve": todays.reflection.tech_sessions?.improve ?? "",
+                  "non-tech-happy": todays.reflection.non_tech_sessions?.happy ?? "",
+                  "non-tech-improve": todays.reflection.non_tech_sessions?.improve ?? "",
+                },
+              }}
+              onSubmit={async (r: Reflection) => {
+                await learnerApi.editReflection(todays._id!, r.reflection);
+              }}
+              onSuccess={() => {
+                setEditing(false);
                 onSubmitted();
               }}
             />

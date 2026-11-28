@@ -34,6 +34,8 @@ export const learnerApi = {
   getCohortPeople: () => call<{ users: Person[] }>(api.get("/users?limit=1000")).then((d) => d.users ?? []),
   getMyLeaves: () => call<LeaveRequest[]>(api.get("/leave-requests/my")),
   requestLeave: (p: CreateLeaveRequestPayload) => call<LeaveRequest>(api.post("/leave-requests", p)),
+  /** Today's own reflection, until a TA replies. */
+  editReflection: (id: string, reflection: Reflection["reflection"]) => call<unknown>(api.put(`/users/me/reflections/${id}`, reflection)),
   savePreferences: (p: Partial<{ checkin_style: string; checkin_random: boolean; avatar: AvatarConfig; skills: string[]; tour_seen: boolean }>) =>
     call<Record<string, unknown>>(api.put("/users/me/preferences", p)),
 };
