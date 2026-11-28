@@ -20,6 +20,7 @@ import { BarometerStrip } from "./BarometerStrip";
 import { usePeople } from "../lib/usePeople";
 import { useChampion } from "../cup/useChampion";
 import { Bone } from "@/components/LoadingSkeleton";
+import { ChangePasswordForm } from "@/components/auth/ChangePasswordForm";
 
 const MAX_SKILLS = 5;
 
@@ -34,6 +35,7 @@ export function MyProfilePage() {
   const [skill, setSkill] = useState("");
   const [skills, setSkills] = useState<string[] | null>(null);
   const [editing, setEditing] = useState<"avatar" | "profile" | "style" | null>(null);
+  const [pwOpen, setPwOpen] = useState(false);
   usePageHeader({ title: "My profile", context: "Classmates see your bio, skills, avatar and badges" });
   const n = useMemo(() => nicknames(me?.zoom_name, me?.first_name ?? ""), [me]);
   const plant = useMyPlant();
@@ -184,6 +186,23 @@ export function MyProfilePage() {
             <Link to="/learner/garden" className="mt-2 inline-block text-body font-medium text-l-ink2 underline">
               My Genmate Garden plant ›
             </Link>
+          </section>
+          <section className="l-card p-[22px]">
+            <h3 className="text-title font-semibold">เปลี่ยนรหัสผ่าน</h3>
+            {pwOpen ? (
+              <div className="mt-3">
+                <ChangePasswordForm
+                  onDone={() => {
+                    setPwOpen(false);
+                    toast.success("เปลี่ยนรหัสผ่านแล้ว");
+                  }}
+                />
+              </div>
+            ) : (
+              <button type="button" onClick={() => setPwOpen(true)} className="mt-2 text-body font-medium text-l-ink2 underline">
+                เปลี่ยนรหัสผ่าน ›
+              </button>
+            )}
           </section>
         </div>
       </div>

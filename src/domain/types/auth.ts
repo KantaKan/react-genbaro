@@ -23,6 +23,7 @@ export interface VerifyTokenResponse {
   data: {
     role: string;
     userId: string;
+    must_change_password?: boolean;
   };
 }
 
@@ -33,6 +34,7 @@ export interface LoginResponse {
     token: string;
     userId: string;
     role: UserRole;
+    must_change_password?: boolean;
   };
 }
 

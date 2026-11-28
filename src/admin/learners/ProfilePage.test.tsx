@@ -12,7 +12,7 @@ vi.mock("@/components/mode-toggle", () => ({ ModeToggle: () => null }));
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() }), Toaster: () => null }));
 vi.mock("@/application/contexts/AuthContext", () => ({ useAuth: () => ({ logout: vi.fn(), userRole: "admin" }) }));
 vi.mock("@/UserDataContext", () => ({ useUserData: () => ({ userData: { _id: "me", first_name: "Kan", cohort_number: 13 }, loading: false }) }));
-vi.mock("../api", () => ({ adminApi: { leaves: vi.fn().mockResolvedValue([]), mark: vi.fn().mockResolvedValue({ record: { _id: "x" }, previous: null }) } }));
+vi.mock("../api", () => ({ adminApi: { leaves: vi.fn().mockResolvedValue([]), mark: vi.fn().mockResolvedValue({ record: { _id: "x" }, previous: null }), me: vi.fn().mockResolvedValue({ id: "me", first_name: "Kan", staff_role: "ta", cohorts: [], groups: [] }) } }));
 vi.mock("../wellbeing", async (orig) => ({ ...(await orig<object>()), wellbeingApi: { overview: vi.fn(), reply: vi.fn(), addNote: vi.fn(), addStep: vi.fn(), setStep: vi.fn(), deleteStep: vi.fn(), ack: vi.fn() } }));
 
 const ov: Overview = {
@@ -185,5 +185,16 @@ describe("ProfilePage", () => {
     const { container } = go();
     await screen.findByText("React Query is confusing");
     expect(container.querySelector('[data-strip] [title$="No class"]')).not.toBeNull();
+  });
+
+  it("shows Reset password to TAs but not to viewers", async () => {
+    const { unmount } = go();
+    expect(await screen.findByRole("button", { name: "Reset password" })).toBeInTheDocument();
+    unmount();
+    vi.mocked(adminApi.me).mockResolvedValue({ id: "me", first_name: "Kan", staff_role: "viewer", cohorts: [], groups: [] });
+    go();
+    await screen.findByText("React Query is confusing");
+    await new Promise((r) => setTimeout(r, 30));
+    expect(screen.queryByRole("button", { name: "Reset password" })).not.toBeInTheDocument();
   });
 });
