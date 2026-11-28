@@ -268,6 +268,9 @@ export function ReflectionsPage() {
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-[28px] font-semibold tracking-tight">Your reflections</h2>
         {course && course.week_number > 0 && <span className="text-body text-l-ink3">{`Week ${course.week_number} of ${course.total_weeks}`}</span>}
+        <button type="button" onClick={() => window.print()} className="ml-auto rounded-lg px-3 py-1.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)] print:hidden">
+          บันทึกเป็น PDF
+        </button>
       </div>
 
       {/* Row 1: tonight + this week */}

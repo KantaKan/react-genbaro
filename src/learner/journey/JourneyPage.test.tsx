@@ -9,6 +9,7 @@ import type { Journey } from "./types";
 vi.mock("../api", () => ({ learnerApi: { getJourney: vi.fn(), savePreferences: vi.fn() } }));
 vi.mock("../cup/api", () => ({ cupApi: { me: vi.fn().mockResolvedValue({ my_medals: [] }) } }));
 vi.mock("../shell/LearnerShell", () => ({ usePageHeader: () => undefined }));
+vi.mock("./exportSlide", () => ({ savePng: vi.fn().mockResolvedValue(undefined), sharePng: vi.fn(), canShareFiles: () => false }));
 
 const story: Journey = {
   unlocked: true, name: "Fern", cohort: "13", first_day: "2026-09-01", last_day: "2026-12-18", weeks: 16, class_days: 76, written: 72,
@@ -17,7 +18,7 @@ const story: Journey = {
   hardest_week: { number: 11, from: "2026-11-09", to: "2026-11-13", zones: ["stretch-overwhelmed", "panic", "", "comfort", "comfort"] },
   darkest_night: { date: "2026-11-11", zone: "panic", text: "รู้สึกตามเพื่อนไม่ทัน", reply: "", reply_name: "" },
   comeback: { length: 23, after_darkest: true }, attendance_rate: null, badges: 7, ta_replies: 0,
-  quote: { reflection_id: "r1", date: "2026-12-12", text: "deploy ครั้งแรก" }, quote_options: [],
+  quote: { reflection_id: "r1", date: "2026-12-12", text: "deploy ครั้งแรก" }, quote_options: [{ reflection_id: "r1", date: "2026-12-12", text: "deploy ครั้งแรก" }, { reflection_id: "r2", date: "2026-10-01", text: "เข้าใจ React แล้ว" }],
 };
 
 const renderPage = () =>
@@ -63,5 +64,27 @@ describe("JourneyPage", () => {
     fireEvent.keyDown(window, { key: "ArrowRight" });
     expect(screen.queryByText("มาเรียน")).not.toBeInTheDocument();
     expect(screen.getByText("badges")).toBeInTheDocument();
+  });
+
+  it("saves the slide as an image and hides Share where files can't be shared", async () => {
+    const { savePng } = await import("./exportSlide");
+    vi.mocked(learnerApi.getJourney).mockResolvedValue(story);
+    renderPage();
+    await screen.findByText(/เรียนจบแล้ว/);
+    fireEvent.click(screen.getByRole("button", { name: "บันทึกรูป" }));
+    expect(savePng).toHaveBeenCalledWith(expect.any(HTMLElement), "journey-1.png");
+    expect(screen.queryByRole("button", { name: "แชร์" })).not.toBeInTheDocument();
+  });
+
+  it("lets the learner pick another sentence for the closing slide", async () => {
+    vi.mocked(learnerApi.getJourney).mockResolvedValue(story);
+    vi.mocked(learnerApi.savePreferences).mockResolvedValue({});
+    renderPage();
+    await screen.findByText(/เรียนจบแล้ว/);
+    for (let i = 0; i < 7; i++) fireEvent.keyDown(window, { key: "ArrowRight" });
+    fireEvent.click(screen.getByRole("button", { name: "เปลี่ยนประโยค" }));
+    fireEvent.click(screen.getByRole("button", { name: /เข้าใจ React แล้ว/ }));
+    expect(learnerApi.savePreferences).toHaveBeenCalledWith({ journey_quote: "r2" });
+    expect(await screen.findByText(/"เข้าใจ React แล้ว"/)).toBeInTheDocument();
   });
 });

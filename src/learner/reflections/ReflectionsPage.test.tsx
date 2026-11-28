@@ -205,4 +205,11 @@ describe("ReflectionsPage", () => {
     const bubble = screen.getByText("Let's pair at 9:30").closest("div")!;
     expect(within(bubble).getByText("Kan")).toBeInTheDocument();
   });
+
+  it("prints the reflections as a PDF", async () => {
+    const print = vi.spyOn(window, "print").mockImplementation(() => undefined);
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "บันทึกเป็น PDF" }));
+    expect(print).toHaveBeenCalled();
+  });
 });

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "react-query";
+import { useQuery, useQueryClient } from "react-query";
+import { toast } from "sonner";
 import { learnerApi } from "../api";
 import { cupApi } from "../cup/api";
 import { usePageHeader } from "../shell/LearnerShell";
 import { slidesFor } from "./slideOrder";
 import { SlideBody } from "./slides";
-import type { Extras } from "./types";
+import type { Extras, Quote } from "./types";
+import { canShareFiles, savePng, sharePng } from "./exportSlide";
 
 const HIDE_KEY = "journey-hide-night";
 
@@ -24,10 +26,15 @@ export function JourneyPage() {
   const [hideNight, setHideNight] = useState(readHidden);
   const [index, setIndex] = useState(0);
   const slideRef = useRef<HTMLDivElement>(null);
+  const qc = useQueryClient();
+  const [picking, setPicking] = useState(false);
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [busy, setBusy] = useState(false);
+  const shareable = useMemo(canShareFiles, []);
 
   const extras: Extras = { cupMedals: cup.data?.my_medals?.length ?? 0, baroName: null, hideNight };
-  const j = journey.data;
-  const slides = useMemo(() => (j ? slidesFor(j, extras) : []), [j, extras.cupMedals, extras.hideNight]); // eslint-disable-line react-hooks/exhaustive-deps
+  const j = journey.data && quote ? { ...journey.data, quote } : journey.data;
+  const slides = j ? slidesFor(j, extras) : [];
   const at = Math.min(index, Math.max(slides.length - 1, 0));
   const go = (d: number) => setIndex((i) => Math.max(0, Math.min(slides.length - 1, Math.min(i, slides.length - 1) + d)));
 
@@ -47,6 +54,25 @@ export function JourneyPage() {
     } catch {
       /* private mode: hiding still works for this visit */
     }
+  };
+
+  const exportSlide = async (how: "save" | "share") => {
+    if (!slideRef.current || busy) return;
+    setBusy(true);
+    const name = `journey-${at + 1}.png`;
+    try {
+      await (how === "save" ? savePng : sharePng)(slideRef.current, name);
+    } catch (e) {
+      if (!(e instanceof DOMException && e.name === "AbortError")) toast.error("บันทึกรูปไม่สำเร็จ ลองอีกครั้ง");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const choose = (q: Quote) => {
+    setQuote(q);
+    setPicking(false);
+    learnerApi.savePreferences({ journey_quote: q.reflection_id }).then(() => qc.invalidateQueries(["journey"]), () => toast.error("บันทึกประโยคไม่สำเร็จ"));
   };
 
   if (journey.isLoading) return <div className="mx-auto aspect-[9/16] w-full max-w-[380px] animate-pulse rounded-[28px] bg-l-sub" />;
@@ -77,6 +103,34 @@ export function JourneyPage() {
           ))}
         </div>
       </div>
+      <div className="mt-3 flex gap-2">
+        <button type="button" disabled={busy} onClick={() => exportSlide("save")} className="flex-1 rounded-xl bg-l-ink py-2.5 text-body font-semibold text-l-card disabled:opacity-50">
+          บันทึกรูป
+        </button>
+        {shareable && (
+          <button type="button" disabled={busy} onClick={() => exportSlide("share")} className="flex-1 rounded-xl py-2.5 text-body font-semibold shadow-[0_0_0_1px_var(--l-hair)] disabled:opacity-50">
+            แชร์
+          </button>
+        )}
+      </div>
+      {slides[at] === "closing" && (j.quote_options?.length ?? 0) > 1 && (
+        <div className="mt-3">
+          <button type="button" onClick={() => setPicking((p) => !p)} className="text-small font-semibold text-l-ink2 underline">
+            เปลี่ยนประโยค
+          </button>
+          {picking && (
+            <ul className="mt-2 grid max-h-72 gap-1.5 overflow-y-auto">
+              {(j.quote_options ?? []).map((q) => (
+                <li key={q.reflection_id}>
+                  <button type="button" onClick={() => choose(q)} className="w-full rounded-xl px-3 py-2 text-left text-body shadow-[0_0_0_1px_var(--l-hair)] hover:bg-l-sub">
+                    {q.text}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
       <div className="mt-3 flex items-center justify-between text-small text-l-ink3">
         <button type="button" onClick={() => go(-1)} disabled={at === 0} className="rounded-lg px-3 py-1.5 disabled:opacity-40">
           ‹ ก่อนหน้า

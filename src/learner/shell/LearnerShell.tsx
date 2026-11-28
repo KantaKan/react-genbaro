@@ -46,7 +46,7 @@ export function LearnerShell({ children }: { children: ReactNode }) {
   return (
     <HeaderCtx.Provider value={setHeader}>
       <div className="learner flex min-h-screen">
-        <aside className="sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col gap-0.5 overflow-hidden border-r border-l-hair bg-l-card px-3 py-4 lg:flex">
+        <aside className="sticky top-0 hidden print:!hidden h-screen w-[248px] shrink-0 flex-col gap-0.5 overflow-hidden border-r border-l-hair bg-l-card px-3 py-4 lg:flex">
           <div className="flex items-center gap-2.5 px-2 pb-3.5">
             <div className="grid h-[30px] w-[30px] place-items-center rounded-[9px] bg-gradient-to-br from-zinc-900 to-zinc-600 text-sm font-bold text-white">B</div>
             <div>
@@ -99,7 +99,7 @@ export function LearnerShell({ children }: { children: ReactNode }) {
         <div className="min-w-0 flex-1">
           <header
             role="banner"
-            className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-l-hair bg-[color-mix(in_srgb,var(--l-bg)_82%,transparent)] px-4 backdrop-blur-md md:px-7"
+            className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b print:hidden border-l-hair bg-[color-mix(in_srgb,var(--l-bg)_82%,transparent)] px-4 backdrop-blur-md md:px-7"
           >
             {header && (
               <div className="flex min-w-0 items-baseline gap-2.5">
@@ -121,7 +121,7 @@ export function LearnerShell({ children }: { children: ReactNode }) {
         <nav
           aria-label="Mobile"
           data-tour="nav"
-          className="fixed inset-x-3 bottom-3 z-20 flex justify-around rounded-[20px] bg-[color-mix(in_srgb,var(--l-card)_88%,transparent)] p-1.5 shadow-[var(--l-shadow)] backdrop-blur-md lg:hidden"
+          className="fixed inset-x-3 bottom-3 z-20 flex justify-around print:hidden rounded-[20px] bg-[color-mix(in_srgb,var(--l-card)_88%,transparent)] p-1.5 shadow-[var(--l-shadow)] backdrop-blur-md lg:hidden"
         >
           {TABS.map((t) => (
             <NavLink
