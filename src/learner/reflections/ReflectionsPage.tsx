@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import type { Reflection, User } from "@/domain/types";
 import { learnerApi } from "../api";
 import { usePageHeader } from "../shell/LearnerShell";
+import { PrintJournal } from "./PrintJournal";
 import { useClock } from "../checkin/useClock";
 import { bangkokNow } from "../lib/time";
 import { BarometerFace, ZONES, type ZoneId } from "../today/BarometerFace";
@@ -95,6 +96,20 @@ export function ReflectionsPage() {
   usePageHeader({ title: "Reflections", context: course && course.week_number > 0 ? `Week ${course.week_number} of ${course.total_weeks}` : undefined });
 
   const nights = useMemo(() => toNights(raw), [raw]);
+  const [printing, setPrinting] = useState(false);
+  useEffect(() => {
+    const on = () => setPrinting(true);
+    const off = () => setPrinting(false);
+    window.addEventListener("beforeprint", on);
+    window.addEventListener("afterprint", off);
+    return () => {
+      window.removeEventListener("beforeprint", on);
+      window.removeEventListener("afterprint", off);
+    };
+  }, []);
+  useEffect(() => {
+    if (printing) window.print();
+  }, [printing]);
   const tonight = nights.find((n) => n.day === today);
   const protectedDates = useMemo(
     () => new Set((meQ.data?.care_energy_log ?? []).filter((e) => e.kind === "protect" && e.relatedDate).map((e) => e.relatedDate as string)),
@@ -268,8 +283,13 @@ export function ReflectionsPage() {
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-[28px] font-semibold tracking-tight">Your reflections</h2>
         {course && course.week_number > 0 && <span className="text-body text-l-ink3">{`Week ${course.week_number} of ${course.total_weeks}`}</span>}
+        <button type="button" onClick={() => setPrinting(true)} className="ml-auto rounded-lg px-3 py-1.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)] print:hidden">
+          บันทึกเป็น PDF
+        </button>
       </div>
 
+      {printing && <PrintJournal nights={nights} />}
+      <div className="print:hidden">
       {/* Row 1: tonight + this week */}
       <div className="l-card mt-4 grid grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_320px]">
         <TonightCard dateLabel={dateLabel} nowSec={nowSec} sent={tonight} onSend={send} paused={plant.paused} />
@@ -458,6 +478,7 @@ export function ReflectionsPage() {
             unseen={unseenIds}
           />
         )}
+      </div>
       </div>
 
       <Dialog open={celebrate !== null} onOpenChange={(o) => !o && setCelebrate(null)}>

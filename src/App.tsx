@@ -67,6 +67,7 @@ const PlantVisualQaPage = lazy(() => import("./pages/PlantVisualQaPage"));
 const BaroCharacterPage = lazy(() => import("./pages/BaroCharacterPage"));
 const ShowcaseLawnPage = lazy(() => import("./pages/ShowcaseLawnPage"));
 const StartupStoryPage = lazy(() => import("./pages/StartupStoryPage"));
+const JourneyPage = lazy(() => import("./learner/journey/JourneyPage").then((m) => ({ default: m.JourneyPage })));
 
 function AppContent() {
   const { isAuthenticated, error } = useAuth();
@@ -137,6 +138,7 @@ function AppContent() {
           <Route path="/learner" element={<LearnerLayout />}>
             <Route index element={<TodayPage />} />
             <Route path="reflections" element={<ReflectionsPage />} />
+            <Route path="journey" element={<JourneyPage />} />
             <Route path="calendar" element={<LearnerCalendarPage />} />
             <Route path="attendance" element={<AttendancePage />} />
             <Route path="directory" element={<DirectoryRoute />} />
