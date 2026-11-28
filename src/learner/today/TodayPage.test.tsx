@@ -23,7 +23,7 @@ vi.mock("@/application/services/boardService", () => ({ getPosts: vi.fn().mockRe
 vi.mock("../cup/api", () => ({ cupApi: { me: vi.fn().mockResolvedValue(null) } }));
 vi.mock("../api", async (orig) => {
   const real = await orig<typeof import("../api")>();
-  return { ...real, learnerApi: { ...real.learnerApi, getSummary: vi.fn(), getHistory: vi.fn().mockResolvedValue([]), savePreferences: vi.fn().mockResolvedValue({}), getMyReflections: vi.fn().mockResolvedValue([{ _id: "r1", user_id: "u1", date: "2026-09-07T10:00:00Z", day: "2026-09-07", reflection: { barometer: "Comfort Zone", tech_sessions: {}, non_tech_sessions: {} } }]) } };
+  return { ...real, learnerApi: { ...real.learnerApi, getSummary: vi.fn(), getHistory: vi.fn().mockResolvedValue([]), savePreferences: vi.fn().mockResolvedValue({}), getJourney: vi.fn().mockResolvedValue({ unlocked: false }), getMyReflections: vi.fn().mockResolvedValue([{ _id: "r1", user_id: "u1", date: "2026-09-07T10:00:00Z", day: "2026-09-07", reflection: { barometer: "Comfort Zone", tech_sessions: {}, non_tech_sessions: {} } }]) } };
 });
 
 const base: MySummary = {
@@ -179,5 +179,22 @@ describe("TodayPage", () => {
       fireEvent.keyDown(window, { key: "Escape" });
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
+  });
+
+  it("invites the learner to their journey once it is unlocked", async () => {
+    setBkk(10, 0);
+    vi.mocked(learnerApi.getSummary).mockResolvedValue(base);
+    vi.mocked(learnerApi.getJourney).mockResolvedValueOnce({ unlocked: true });
+    renderPage();
+    expect(await screen.findByRole("link", { name: /Journey ของคุณพร้อมแล้ว/ })).toHaveAttribute("href", "/learner/journey");
+  });
+
+  it("shows no journey card before graduation", async () => {
+    setBkk(10, 0);
+    vi.mocked(learnerApi.getSummary).mockResolvedValue(base);
+    renderPage();
+    await screen.findByText(/Good morning/);
+    await new Promise((r) => setTimeout(r, 30));
+    expect(screen.queryByRole("link", { name: /Journey ของคุณพร้อมแล้ว/ })).not.toBeInTheDocument();
   });
 });

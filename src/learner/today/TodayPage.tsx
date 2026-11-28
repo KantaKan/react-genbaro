@@ -21,6 +21,7 @@ import { LeaveCard, LeaveCardSkeleton } from "./LeaveCard";
 import { BoardLatestCard } from "./BoardLatestCard";
 import { StreakBadgesCard, StreakBadgesCardSkeleton } from "./StreakBadgesCard";
 import { LoadingHint } from "@/components/LoadingSkeleton";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/application/contexts/AuthContext";
 import { Tour } from "../tour/Tour";
 import { tourSteps } from "../tour/steps";
@@ -31,6 +32,7 @@ export function TodayPage() {
   const { userData } = useUserData();
   const summary = useQuery(["my-summary"], learnerApi.getSummary, { staleTime: 0, refetchInterval: 60_000 });
   const history = useQuery(["my-history", 14], () => learnerApi.getHistory(14));
+  const journey = useQuery(["journey"], learnerApi.getJourney, { staleTime: 5 * 60_000, retry: false });
   const cup = useCup();
   const reflections = useQuery(["my-reflections", userData?._id], () => learnerApi.getMyReflections(userData!._id), { enabled: !!userData?._id });
   const now = useClock(30_000);
@@ -96,6 +98,17 @@ export function TodayPage() {
         )}
       </div>
 
+      {journey.data?.unlocked && (
+        <Link to="/learner/journey" className="mt-6 flex items-center justify-between gap-4 rounded-[20px] bg-[#1e3d2c] px-5 py-4 text-[#e8f7ee] transition-transform active:scale-[0.99]">
+          <span>
+            <b className="block text-title font-semibold">Journey ของคุณพร้อมแล้ว</b>
+            <span className="text-small opacity-80">ย้อนดูทั้งคอร์ส แล้วแชร์ได้เลย</span>
+          </span>
+          <span className="text-title" aria-hidden>
+            ›
+          </span>
+        </Link>
+      )}
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-12">
         <div className="flex flex-col gap-4 lg:col-span-7">
           <div data-tour="checkin" className="empty:hidden scroll-mt-20">{s ? <CheckInCard summary={s} onCheckedIn={refresh} seed={userData?._id ?? "me"} onOpenPicker={() => setPicker(true)} /> : summary.isLoading ? <CheckInCardSkeleton /> : null}</div>

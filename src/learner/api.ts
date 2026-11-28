@@ -1,5 +1,6 @@
 import { api } from "@/infrastructure/api";
 import type { AttendanceRecord, CreateLeaveRequestPayload, LeaveRequest, Reflection } from "@/domain/types";
+import type { Journey } from "./journey/types";
 import type { MySummary } from "./types";
 import type { LearnerCalendar } from "@/calendar/types";
 import type { AvatarConfig } from "./avatar/types";
@@ -36,6 +37,7 @@ export const learnerApi = {
   requestLeave: (p: CreateLeaveRequestPayload) => call<LeaveRequest>(api.post("/leave-requests", p)),
   /** Today's own reflection, until a TA replies. */
   editReflection: (id: string, reflection: Reflection["reflection"]) => call<unknown>(api.put(`/users/me/reflections/${id}`, reflection)),
-  savePreferences: (p: Partial<{ checkin_style: string; checkin_random: boolean; avatar: AvatarConfig; skills: string[]; tour_seen: boolean }>) =>
+  getJourney: () => call<Journey>(api.get("/users/me/journey")),
+  savePreferences: (p: Partial<{ checkin_style: string; checkin_random: boolean; avatar: AvatarConfig; skills: string[]; tour_seen: boolean; journey_quote: string }>) =>
     call<Record<string, unknown>>(api.put("/users/me/preferences", p)),
 };
