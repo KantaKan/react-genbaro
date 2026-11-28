@@ -1,22 +1,31 @@
 import { toPng } from "html-to-image";
 
 const skip = (n: HTMLElement) => !(n instanceof HTMLElement && n.dataset?.noCapture !== undefined);
+const OPTIONS = { pixelRatio: 3, filter: skip, cacheBust: true, skipFonts: true };
+const isIOS = () => /iP(hone|ad|od)/.test(navigator.userAgent);
 
-async function png(node: HTMLElement) {
-  // Thai glyphs come from web fonts; capture before they load and the image falls back to a system font.
-  await document.fonts?.ready;
-  return toPng(node, { pixelRatio: 3, filter: skip, cacheBust: true });
+/** A PNG data URL of the slide. iOS Safari often drops images or fonts on the first pass, so it captures twice there. */
+async function capture(node: HTMLElement) {
+  if (isIOS()) await toPng(node, OPTIONS);
+  return toPng(node, OPTIONS);
 }
 
-export async function savePng(node: HTMLElement, name: string) {
+/** Start capturing as soon as a slide shows, so a later tap can share before Safari's user-gesture window closes. */
+export function preparePng(node: HTMLElement): Promise<string> {
+  const p = capture(node);
+  p.catch(() => undefined);
+  return p;
+}
+
+export async function savePng(node: HTMLElement, name: string, ready?: Promise<string> | null) {
   const a = document.createElement("a");
-  a.href = await png(node);
+  a.href = await (ready ?? capture(node));
   a.download = name;
   a.click();
 }
 
-export async function sharePng(node: HTMLElement, name: string) {
-  const blob = await (await fetch(await png(node))).blob();
+export async function sharePng(node: HTMLElement, name: string, ready?: Promise<string> | null) {
+  const blob = await (await fetch(await (ready ?? capture(node)))).blob();
   await navigator.share({ files: [new File([blob], name, { type: "image/png" })] });
 }
 

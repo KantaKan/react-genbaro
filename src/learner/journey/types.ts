@@ -18,7 +18,7 @@ export interface Journey {
   grid?: { date: string; zone: ZoneKey | "" | null }[] | null;
   zone_counts?: Partial<Record<ZoneKey, number>> | null;
   main_zone?: ZoneKey | "";
-  hardest_week?: { number: number; from: string; to: string; zones: (ZoneKey | "")[] } | null;
+  hardest_week?: { number: number; from: string; to: string; zones: (ZoneKey | "" | null)[] } | null;
   darkest_night?: { date: string; zone: ZoneKey | ""; text: string; reply: string; reply_name: string } | null;
   comeback?: { length: number; after_darkest: boolean } | null;
   attendance_rate?: number | null;

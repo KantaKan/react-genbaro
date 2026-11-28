@@ -9,13 +9,14 @@ import type { Journey } from "./types";
 vi.mock("../api", () => ({ learnerApi: { getJourney: vi.fn(), savePreferences: vi.fn() } }));
 vi.mock("../cup/api", () => ({ cupApi: { me: vi.fn().mockResolvedValue({ my_medals: [] }) } }));
 vi.mock("../shell/LearnerShell", () => ({ usePageHeader: () => undefined }));
-vi.mock("./exportSlide", () => ({ savePng: vi.fn().mockResolvedValue(undefined), sharePng: vi.fn(), canShareFiles: () => false }));
+vi.mock("@/UserDataContext", () => ({ useUserData: () => ({ userData: { _id: "u1", first_name: "Somchai", zoom_name: "12_Somchai(Fern/เฟิร์น)" } }) }));
+vi.mock("./exportSlide", () => ({ savePng: vi.fn().mockResolvedValue(undefined), sharePng: vi.fn(), canShareFiles: () => false, preparePng: vi.fn().mockResolvedValue("data:x") }));
 
 const story: Journey = {
   unlocked: true, name: "Fern", cohort: "13", first_day: "2026-09-01", last_day: "2026-12-18", weeks: 16, class_days: 76, written: 72,
   grid: [{ date: "2026-09-01", zone: "comfort" }, { date: "2026-09-02", zone: null }],
   zone_counts: { comfort: 38, "stretch-enjoying": 21, "stretch-overwhelmed": 10, panic: 3 }, main_zone: "comfort",
-  hardest_week: { number: 11, from: "2026-11-09", to: "2026-11-13", zones: ["stretch-overwhelmed", "panic", "", "comfort", "comfort"] },
+  hardest_week: { number: 11, from: "2026-11-09", to: "2026-11-13", zones: ["stretch-overwhelmed", "panic", "", null, "comfort"] },
   darkest_night: { date: "2026-11-11", zone: "panic", text: "รู้สึกตามเพื่อนไม่ทัน", reply: "", reply_name: "" },
   comeback: { length: 23, after_darkest: true }, attendance_rate: null, badges: 7, ta_replies: 0,
   quote: { reflection_id: "r1", date: "2026-12-12", text: "deploy ครั้งแรก" }, quote_options: [{ reflection_id: "r1", date: "2026-12-12", text: "deploy ครั้งแรก" }, { reflection_id: "r2", date: "2026-10-01", text: "เข้าใจ React แล้ว" }],
@@ -43,6 +44,7 @@ describe("JourneyPage", () => {
     vi.mocked(learnerApi.getJourney).mockResolvedValue(story);
     renderPage();
     expect(await screen.findByText(/Fern/)).toBeInTheDocument();
+    expect(screen.queryByText(/Somchai/)).not.toBeInTheDocument();
     expect(screen.getByText(/เรียนจบแล้ว/)).toBeInTheDocument();
     fireEvent.keyDown(window, { key: "ArrowRight" });
     expect(screen.getByText("คืนที่คุณเขียนถึงตัวเอง")).toBeInTheDocument();
@@ -60,7 +62,8 @@ describe("JourneyPage", () => {
     for (let i = 0; i < 4; i++) fireEvent.keyDown(window, { key: "ArrowRight" });
     fireEvent.click(screen.getByRole("button", { name: "ซ่อนหน้านี้" }));
     expect(screen.queryByText(/รู้สึกตามเพื่อนไม่ทัน/)).not.toBeInTheDocument();
-    expect(localStorage.getItem("journey-hide-night")).toBe("1");
+    expect(localStorage.getItem("journey-hide-night:u1")).toBe("1");
+    expect(screen.getByRole("button", { name: "แสดงคืนที่หนักที่สุดอีกครั้ง" })).toBeInTheDocument();
     fireEvent.keyDown(window, { key: "ArrowRight" });
     expect(screen.queryByText("มาเรียน")).not.toBeInTheDocument();
     expect(screen.getByText("badges")).toBeInTheDocument();
@@ -72,7 +75,7 @@ describe("JourneyPage", () => {
     renderPage();
     await screen.findByText(/เรียนจบแล้ว/);
     fireEvent.click(screen.getByRole("button", { name: "บันทึกรูป" }));
-    expect(savePng).toHaveBeenCalledWith(expect.any(HTMLElement), "journey-1.png");
+    expect(savePng).toHaveBeenCalledWith(expect.any(HTMLElement), "journey-1.png", null);
     expect(screen.queryByRole("button", { name: "แชร์" })).not.toBeInTheDocument();
   });
 
@@ -86,5 +89,23 @@ describe("JourneyPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /เข้าใจ React แล้ว/ }));
     expect(learnerApi.savePreferences).toHaveBeenCalledWith({ journey_quote: "r2" });
     expect(await screen.findByText(/"เข้าใจ React แล้ว"/)).toBeInTheDocument();
+  });
+
+  it("cleans the TA's Zoom name on the darkest-night slide", async () => {
+    vi.mocked(learnerApi.getJourney).mockResolvedValue({ ...story, darkest_night: { ...story.darkest_night!, reply: "พรุ่งนี้มานั่งทำด้วยกันนะ", reply_name: "00_Kan(Kan/กัน)" } });
+    renderPage();
+    await screen.findByText(/เรียนจบแล้ว/);
+    for (let i = 0; i < 4; i++) fireEvent.keyDown(window, { key: "ArrowRight" });
+    expect(screen.getByText("TA Kan ตอบ")).toBeInTheDocument();
+  });
+
+  it("shrinks a long closing sentence and keeps the progress bar out of the image", async () => {
+    vi.mocked(learnerApi.getJourney).mockResolvedValue({ ...story, quote: { reflection_id: "r1", date: "2026-12-12", text: "ยาว ".repeat(60) } });
+    const { container } = renderPage();
+    await screen.findByText(/เรียนจบแล้ว/);
+    expect(container.querySelector("[data-journey-progress]")).toHaveAttribute("data-no-capture");
+    for (let i = 0; i < 7; i++) fireEvent.keyDown(window, { key: "ArrowRight" });
+    const q = screen.getByText(/ยาว ยาว/);
+    expect(parseFloat(q.style.fontSize)).toBeLessThan(20);
   });
 });

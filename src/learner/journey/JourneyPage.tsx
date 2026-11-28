@@ -7,13 +7,15 @@ import { usePageHeader } from "../shell/LearnerShell";
 import { slidesFor } from "./slideOrder";
 import { SlideBody } from "./slides";
 import type { Extras, Quote } from "./types";
-import { canShareFiles, savePng, sharePng } from "./exportSlide";
+import { canShareFiles, preparePng, savePng, sharePng } from "./exportSlide";
+import { useUserData } from "@/UserDataContext";
+import { nicknames } from "../lib/name";
 
-const HIDE_KEY = "journey-hide-night";
+const hideKey = (userId: string) => `journey-hide-night:${userId}`;
 
-function readHidden() {
+function readHidden(key: string) {
   try {
-    return localStorage.getItem(HIDE_KEY) === "1";
+    return localStorage.getItem(key) === "1";
   } catch {
     return false;
   }
@@ -23,7 +25,10 @@ export function JourneyPage() {
   usePageHeader({ title: "Journey" });
   const journey = useQuery(["journey"], learnerApi.getJourney, { staleTime: 5 * 60_000 });
   const cup = useQuery(["my-cup"], cupApi.me, { retry: false });
-  const [hideNight, setHideNight] = useState(readHidden);
+  const { userData } = useUserData();
+  const key = hideKey(userData?._id ?? "me");
+  const [hideNight, setHideNight] = useState(() => readHidden(key));
+  const ready = useRef<Promise<string> | null>(null);
   const [index, setIndex] = useState(0);
   const slideRef = useRef<HTMLDivElement>(null);
   const qc = useQueryClient();
@@ -33,7 +38,8 @@ export function JourneyPage() {
   const shareable = useMemo(canShareFiles, []);
 
   const extras: Extras = { cupMedals: cup.data?.my_medals?.length ?? 0, baroName: null, hideNight };
-  const j = journey.data && quote ? { ...journey.data, quote } : journey.data;
+  const nick = nicknames(userData?.zoom_name, journey.data?.name ?? "");
+  const j = journey.data ? { ...journey.data, ...(quote ? { quote } : {}), name: nick.en || nick.th || journey.data.name } : undefined;
   const slides = j ? slidesFor(j, extras) : [];
   const at = Math.min(index, Math.max(slides.length - 1, 0));
   const go = (d: number) => setIndex((i) => Math.max(0, Math.min(slides.length - 1, Math.min(i, slides.length - 1) + d)));
@@ -47,21 +53,32 @@ export function JourneyPage() {
     return () => window.removeEventListener("keydown", onKey);
   });
 
-  const hide = () => {
-    setHideNight(true);
+  const setHidden = (on: boolean) => {
+    setHideNight(on);
     try {
-      localStorage.setItem(HIDE_KEY, "1");
+      if (on) localStorage.setItem(key, "1");
+      else localStorage.removeItem(key);
     } catch {
-      /* private mode: hiding still works for this visit */
+      /* private mode: the choice still holds for this visit */
     }
   };
+  const hide = () => setHidden(true);
+
+  const shown = slides[at];
+  useEffect(() => {
+    ready.current = null;
+    const t = window.setTimeout(() => {
+      if (slideRef.current) ready.current = preparePng(slideRef.current);
+    }, 400);
+    return () => window.clearTimeout(t);
+  }, [shown, quote]);
 
   const exportSlide = async (how: "save" | "share") => {
     if (!slideRef.current || busy) return;
     setBusy(true);
     const name = `journey-${at + 1}.png`;
     try {
-      await (how === "save" ? savePng : sharePng)(slideRef.current, name);
+      await (how === "save" ? savePng : sharePng)(slideRef.current, name, ready.current);
     } catch (e) {
       if (!(e instanceof DOMException && e.name === "AbortError")) toast.error("บันทึกรูปไม่สำเร็จ ลองอีกครั้ง");
     } finally {
@@ -85,6 +102,7 @@ export function JourneyPage() {
       </div>
     );
 
+  const darkSlide = shown === "cover" || shown === "comeback" || (shown === "zone" && j.main_zone === "comfort");
   return (
     <div className="mx-auto w-full max-w-[380px]">
       <div
@@ -97,9 +115,9 @@ export function JourneyPage() {
         className="relative aspect-[9/16] w-full cursor-pointer select-none overflow-hidden rounded-[28px] font-sans"
       >
         <SlideBody id={slides[at]} j={j} x={extras} onHideNight={hide} />
-        <div className="pointer-events-none absolute inset-x-4 top-3 flex gap-1" aria-hidden>
+        <div data-journey-progress data-no-capture className="pointer-events-none absolute inset-x-4 top-3 flex gap-1" aria-hidden>
           {slides.map((s, i) => (
-            <i key={s} className="block h-[3px] flex-1 rounded-full bg-current" style={{ opacity: i <= at ? 0.9 : 0.25, color: "rgb(0 0 0 / .6)" }} />
+            <i key={s} className="block h-[3px] flex-1 rounded-full bg-current" style={{ opacity: i <= at ? 0.9 : 0.3, color: darkSlide ? "#fff" : "#000" }} />
           ))}
         </div>
       </div>
@@ -113,6 +131,11 @@ export function JourneyPage() {
           </button>
         )}
       </div>
+      {hideNight && j.darkest_night && (
+        <button type="button" onClick={() => setHidden(false)} className="mt-3 text-small font-semibold text-l-ink2 underline">
+          แสดงคืนที่หนักที่สุดอีกครั้ง
+        </button>
+      )}
       {slides[at] === "closing" && (j.quote_options?.length ?? 0) > 1 && (
         <div className="mt-3">
           <button type="button" onClick={() => setPicking((p) => !p)} className="text-small font-semibold text-l-ink2 underline">

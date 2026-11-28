@@ -253,7 +253,7 @@ export interface Answers {
 export const answersComplete = (a: Answers) => [a.th, a.ti, a.sh, a.si].every((s) => s.trim() !== "");
 
 /** A replier's nickname from their Zoom name ("00_Kan(Kan/กัน)" → "Kan", "05_Neeti(นีติ)" → "นีติ", "07_Ploy" → "Ploy"). */
-function replierName(raw: string | undefined): string {
+export function replierName(raw: string | undefined): string {
   const name = (raw ?? "").trim();
   if (!name) return "";
   const bare = name.replace(/^\d+_/, "");

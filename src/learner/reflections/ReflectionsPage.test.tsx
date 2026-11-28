@@ -206,10 +206,17 @@ describe("ReflectionsPage", () => {
     expect(within(bubble).getByText("Kan")).toBeInTheDocument();
   });
 
-  it("prints the reflections as a PDF", async () => {
+  it("prints every night with its TA reply, old weeks included", async () => {
     const print = vi.spyOn(window, "print").mockImplementation(() => undefined);
+    reflections = [r("2026-09-01", "Comfort Zone", "first week happy", "TA said hello"), r("2026-11-18", "Comfort Zone", "recent happy")];
     renderPage();
     fireEvent.click(await screen.findByRole("button", { name: "บันทึกเป็น PDF" }));
+    const sheet = await screen.findByTestId("print-journal");
+    expect(within(sheet).getByText("first week happy")).toBeInTheDocument();
+    expect(within(sheet).getByText(/TA said hello/)).toBeInTheDocument();
+    expect(within(sheet).getByText("recent happy")).toBeInTheDocument();
     expect(print).toHaveBeenCalled();
+    fireEvent(window, new Event("afterprint"));
+    expect(screen.queryByTestId("print-journal")).not.toBeInTheDocument();
   });
 });
