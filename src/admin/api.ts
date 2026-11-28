@@ -6,6 +6,7 @@ import type { PreviousRecord, RegisterView, Session, TodayView, StaffMe, CohortI
 const data = async <T,>(p: Promise<{ data: { data: T } }>): Promise<T> => (await p).data.data;
 
 export const adminApi = {
+  resetPassword: async (id: string) => (await data<{ temporary_password: string }>(api.post(`/admin/users/${id}/reset-password`))).temporary_password,
   me: () => data<StaffMe>(api.get("/admin/me")),
   cohorts: () => data<CohortInfo[]>(api.get("/admin/cohorts")),
   today: (cohort: number) => data<TodayView>(api.get(`/admin/today?cohort=${cohort}`)),

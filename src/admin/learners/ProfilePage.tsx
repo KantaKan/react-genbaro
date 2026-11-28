@@ -15,6 +15,7 @@ import { AdminCosmeticGrantDialog } from "@/components/admin-cosmetic-grant-dial
 import { AdminGiftBoxDialog } from "@/components/admin-gift-box-dialog";
 import { AdminCharacterDialog } from "@/components/character/AdminCharacterDialog";
 import { AdminPlantOverrideButton } from "@/components/admin-plant-override-button";
+import { ResetPasswordButton } from "./profile/ResetPasswordButton";
 import { CourseStrip } from "./profile/CourseStrip";
 import { DayList, type Filter } from "./profile/DayList";
 import { isUnreplied, mondayOf, reflectionsOpen, weeksOf } from "./profile/days";
@@ -116,6 +117,7 @@ function LearnerProfile({ id }: { id: string }) {
           <AdminGiftBoxDialog userId={o.learner.id} learnerName={fullName} />
           <AdminCharacterDialog userId={o.learner.id} learnerName={fullName} />
           <AdminPlantOverrideButton userId={o.learner.id} current={o.plant ?? {}} onSaved={refresh} />
+          <ResetPasswordButton userId={o.learner.id} name={n.en || o.learner.first_name} />
         </div>
       </section>
 

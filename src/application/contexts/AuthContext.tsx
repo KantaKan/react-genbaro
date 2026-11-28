@@ -7,6 +7,8 @@ import { isUserRole, type UserRole, type AuthState } from "../../domain/types";
 type AuthContextType = AuthState & {
   login: (email: string, password: string) => Promise<UserRole>;
   logout: () => void;
+  mustChangePassword: boolean;
+  passwordChanged: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -20,6 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   });
   const [userId, setUserIdState] = useState<string | null>(() => getUserId() ?? null);
   const [error, setError] = useState<string | null>(null);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,7 +30,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(true);
       if (getUserId() || getAuthToken()) {
         try {
-          const { role, userId: fetchedUserId } = await authService.verifyToken();
+          const { role, userId: fetchedUserId, mustChangePassword: must } = await authService.verifyToken();
 
           if (!isUserRole(role)) {
             throw new Error("Invalid role in response");
@@ -36,6 +39,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setIsAuthenticated(true);
           setUserRoleState(role);
           setUserIdState(fetchedUserId);
+          setMustChangePassword(must);
           setUserRole(role);
           setUserId(fetchedUserId);
         } catch (error) {
@@ -58,7 +62,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (email: string, password: string): Promise<UserRole> => {
     try {
-      const { role, userId } = await authService.login({ email, password });
+      const { role, userId, mustChangePassword: must } = await authService.login({ email, password });
+      setMustChangePassword(must);
       setIsAuthenticated(true);
       setUserRoleState(role);
       setUserIdState(userId);
@@ -77,6 +82,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUserRoleState(null);
     setUserIdState(null);
     setError(null);
+    setMustChangePassword(false);
   };
 
   const value: AuthContextType = {
@@ -87,6 +93,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     loading,
     login,
     logout,
+    mustChangePassword,
+    passwordChanged: () => setMustChangePassword(false),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
