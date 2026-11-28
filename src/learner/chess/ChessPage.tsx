@@ -104,9 +104,9 @@ function MoveBar({ view, uci, onDone, onCancel }: { view: ChessView; uci: string
   );
 }
 
-export function ChessPage() {
+export function ChessPage({ cohort: forCohort }: { cohort?: number } = {}) {
   const [params] = useSearchParams();
-  const cohort = Number(params.get("cohort")) || undefined;
+  const cohort = forCohort ?? (Number(params.get("cohort")) || undefined);
   const { userData } = useUserData();
   const { userRole } = useAuth();
   const me = userData?._id ?? "";

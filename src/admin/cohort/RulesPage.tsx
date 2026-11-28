@@ -6,37 +6,6 @@ import { Switch } from "@/components/ui/switch";
 import { useAdminHeader } from "../shell/AdminShell";
 import { useCohort } from "../shell/useCohort";
 import { cohortApi, type CohortSettings } from "./api";
-import { chessApi } from "@/learner/chess/api";
-import { Link } from "react-router-dom";
-
-function ChessEnd({ cohort }: { cohort: number }) {
-  const [sure, setSure] = useState(false);
-  const end = async () => {
-    try {
-      await chessApi.end(cohort);
-      toast.success("Game ended as a draw. A new one starts within a minute.");
-    } catch {
-      toast.error("Couldn't end the game");
-    } finally {
-      setSure(false);
-    }
-  };
-  return sure ? (
-    <span className="flex gap-1.5">
-      <button type="button" onClick={end} className="rounded-full bg-red-600 px-3 py-1.5 text-small font-semibold text-white">
-        End as a draw
-      </button>
-      <button type="button" onClick={() => setSure(false)} className="rounded-full px-3 py-1.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
-        Keep playing
-      </button>
-    </span>
-  ) : (
-    <button type="button" onClick={() => setSure(true)} className="rounded-full px-3 py-1.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
-      End this game
-    </button>
-  );
-}
-
 type Clock = { h: number; m: number };
 const toStr = (c: Clock) => `${String(c.h).padStart(2, "0")}:${String(c.m).padStart(2, "0")}`;
 const toClock = (s: string): Clock => {
@@ -188,24 +157,6 @@ export function RulesPage() {
             </label>
           ))}
         </div>
-      </section>
-
-      <section className={box}>
-        <label className="flex items-center gap-3">
-          <span className="flex-1">
-            <b className="block text-body font-semibold">Team chess</b>
-            <small className="text-xs text-l-ink3">One slow game for the whole cohort, white vs black by GenMate group. A random teammate moves each turn, 4 working hours (09:00–21:00) to play.</small>
-          </span>
-          <Switch checked={!!s.chess_enabled} onCheckedChange={(v) => setS({ ...s, chess_enabled: v })} aria-label="Team chess" />
-        </label>
-        {q.data?.chess_enabled && (
-          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-l-hair pt-3">
-            <Link to={`/learner/chess?cohort=${cohort}`} className="rounded-full px-3 py-1.5 text-small font-semibold shadow-[0_0_0_1px_var(--l-hair)]">
-              Watch the board
-            </Link>
-            <ChessEnd cohort={cohort} />
-          </div>
-        )}
       </section>
 
       <div className="flex items-center gap-2">

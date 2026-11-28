@@ -35,6 +35,7 @@ const WeeklySummaryPage = lazy(() => import("./admin/reflections/WeeklySummaryPa
 const AdminTodayPage = lazy(() => import("./admin/today/TodayPage").then((m) => ({ default: m.TodayPage })));
 const AdminRegisterPage = lazy(() => import("./admin/attendance/RegisterPage").then((m) => ({ default: m.RegisterPage })));
 const AdminMonthPage = lazy(() => import("./admin/attendance/MonthPage").then((m) => ({ default: m.MonthPage })));
+const AdminChessPage = lazy(() => import("./admin/cohort/ChessAdminPage").then((m) => ({ default: m.ChessAdminPage })));
 const AdminRulesPage = lazy(() => import("./admin/cohort/RulesPage").then((m) => ({ default: m.RulesPage })));
 const AdminHolidaysPage = lazy(() => import("./admin/cohort/HolidaysPage").then((m) => ({ default: m.HolidaysPage })));
 const AdminGroupsPage = lazy(() => import("./admin/cohort/GroupsPage").then((m) => ({ default: m.GroupsPage })));
@@ -102,6 +103,7 @@ function AppContent() {
             <Route path="learners" element={<AdminLearnersPage />} />
             <Route path="support" element={<AdminSupportPage />} />
             <Route path="rules" element={<AdminRulesPage />} />
+            <Route path="chess" element={<AdminChessPage />} />
             <Route path="holidays" element={<AdminHolidaysPage />} />
             <Route path="groups" element={<AdminGroupsPage />} />
             <Route path="exports" element={<AdminExportsPage />} />

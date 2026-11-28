@@ -3,7 +3,6 @@ import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { renderAdmin } from "../test-setup";
 import { RulesPage } from "./RulesPage";
 import { cohortApi } from "./api";
-import { chessApi } from "@/learner/chess/api";
 
 vi.mock("@blobatar/react/gaze", () => ({ useGaze: () => ({ ref: vi.fn() }) }));
 vi.mock("@/components/mode-toggle", () => ({ ModeToggle: () => null }));
@@ -46,22 +45,5 @@ describe("RulesPage", () => {
     await waitFor(() => expect(cohortApi.saveSettings).toHaveBeenCalledTimes(1));
     const [, s] = vi.mocked(cohortApi.saveSettings).mock.calls[0];
     expect(s.graduated_on).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-  });
-
-  it("turns team chess on", async () => {
-    renderAdmin(<RulesPage />, "/admin/rules");
-    fireEvent.click(await screen.findByRole("switch", { name: "Team chess" }));
-    fireEvent.click(screen.getByRole("button", { name: "Save rules" }));
-    await waitFor(() => expect(cohortApi.saveSettings).toHaveBeenCalledTimes(1));
-    expect(vi.mocked(cohortApi.saveSettings).mock.calls[0][1].chess_enabled).toBe(true);
-  });
-
-  it("ends a running game after a second click", async () => {
-    vi.mocked(cohortApi.settings).mockResolvedValue({ cohort_number: 13, rules, allowed_networks: [], chess_enabled: true });
-    renderAdmin(<RulesPage />, "/admin/rules");
-    fireEvent.click(await screen.findByRole("button", { name: "End this game" }));
-    expect(chessApi.end).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "End as a draw" }));
-    await waitFor(() => expect(chessApi.end).toHaveBeenCalledWith(13));
   });
 });
