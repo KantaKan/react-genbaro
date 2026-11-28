@@ -28,7 +28,7 @@ export function BarometerStrip({ reflections }: { reflections: Reflection[] }) {
         </div>
       </div>
       {days.length === 0 ? (
-        <p className="mt-4 text-body text-l-ink3">No reflections yet. Your first one opens at 16:45.</p>
+        <p className="mt-4 text-body text-l-ink3">No reflections yet. Your first one opens at 16:30.</p>
       ) : (
         <>
           <div data-testid="barometer-strip" className="mt-4 flex flex-wrap gap-[3px]">

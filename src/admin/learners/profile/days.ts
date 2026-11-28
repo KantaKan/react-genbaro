@@ -1,3 +1,4 @@
+import { OPENS_AT } from "@/learner/reflections/TonightCard";
 import type { OverviewDay } from "../../wellbeing";
 
 export type Week = { key: string; label: string; range: string; days: OverviewDay[] };
@@ -39,16 +40,16 @@ export function weeksOf(days: OverviewDay[]): Week[] {
 
 export const isRough = (d: OverviewDay) => d.reflection?.zone === "panic" || d.reflection?.zone === "stretch-overwhelmed";
 export const isUnreplied = (d: OverviewDay) => !!d.reflection && !d.reflection.reply;
-/** Today has no reflection yet before reflections open at 16:45; that is not missing. */
+/** Today has no reflection yet before reflections open at 16:30; that is not missing. */
 export const isMissing = (d: OverviewDay, today = "", open = true) => !d.extra && !d.reflection && !(d.date === today && !open);
 
 /** Class days that count toward "sent / class days". */
 export const classDays = (days: OverviewDay[], today: string, open: boolean) => days.filter((d) => !d.extra && !(d.date === today && !open && !d.reflection));
 
-/** Reflections open at 16:45 Bangkok time. */
+/** Reflections open at 16:30 Bangkok time. */
 export function reflectionsOpen(now = new Date()) {
   const [h, m] = now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Bangkok" }).split(":").map(Number);
-  return h * 60 + m >= 16 * 60 + 45;
+  return h * 3600 + m * 60 >= OPENS_AT;
 }
 
 export function matches(d: OverviewDay, q: string): boolean {

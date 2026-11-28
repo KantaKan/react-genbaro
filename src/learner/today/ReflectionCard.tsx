@@ -8,9 +8,9 @@ import type { Reflection } from "@/domain/types";
 import { reflectionZones } from "@/components/reflection-zones";
 import { BarometerFace, ZONES, type ZoneId } from "./BarometerFace";
 import { Bone } from "@/components/LoadingSkeleton";
+import { OPENS_AT } from "../reflections/TonightCard";
 import { learnerApi } from "../api";
 
-const OPENS = 16 * 3600 + 45 * 60;
 
 export function ReflectionCard({
   userId,
@@ -30,12 +30,12 @@ export function ReflectionCard({
   const [editing, setEditing] = useState(false);
   const weekday = new Date(`${today}T12:00:00Z`).getUTCDay();
   const weekend = weekday === 0 || weekday === 6;
-  const open = nowSec >= OPENS;
+  const open = nowSec >= OPENS_AT;
   const todays = reflections.find((r) => (r.day || r.date || "").slice(0, 10) === today);
   const zoneOf = (label: string) => reflectionZones.find((z) => z.label.toLowerCase() === label.toLowerCase())?.id as ZoneId | undefined;
   const sentZone = todays ? zoneOf(todays.reflection.barometer) : undefined;
   const latest = [...reflections].filter((r) => r !== todays).sort((a, b) => (b.date > a.date ? 1 : -1))[0];
-  const left = Math.max(0, OPENS - nowSec);
+  const left = Math.max(0, OPENS_AT - nowSec);
   const canEdit = !!todays?._id && !todays.admin_feedback;
 
   return (
@@ -100,7 +100,7 @@ export function ReflectionCard({
           {!open && (
             <div className="mt-4 flex items-center gap-2.5 rounded-[14px] bg-l-sub px-3.5 py-3 text-body text-l-ink2">
               <Lock className="h-4 w-4" strokeWidth={1.5} />
-              <span>{`Opens at 16:45 · in ${Math.floor(left / 3600)}h ${Math.ceil((left % 3600) / 60)}m. We'll remind you on Slack.`}</span>
+              <span>{`Opens at 16:30 · in ${Math.floor(left / 3600)}h ${Math.ceil((left % 3600) / 60)}m. We'll remind you on Slack.`}</span>
             </div>
           )}
         </>
