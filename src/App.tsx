@@ -67,6 +67,7 @@ const PlantVisualQaPage = lazy(() => import("./pages/PlantVisualQaPage"));
 const BaroCharacterPage = lazy(() => import("./pages/BaroCharacterPage"));
 const ShowcaseLawnPage = lazy(() => import("./pages/ShowcaseLawnPage"));
 const StartupStoryPage = lazy(() => import("./pages/StartupStoryPage"));
+const ChessPage = lazy(() => import("./learner/chess/ChessPage").then((m) => ({ default: m.ChessPage })));
 const JourneyPage = lazy(() => import("./learner/journey/JourneyPage").then((m) => ({ default: m.JourneyPage })));
 
 function AppContent() {
@@ -139,6 +140,7 @@ function AppContent() {
             <Route index element={<TodayPage />} />
             <Route path="reflections" element={<ReflectionsPage />} />
             <Route path="journey" element={<JourneyPage />} />
+            <Route path="chess" element={<ChessPage />} />
             <Route path="calendar" element={<LearnerCalendarPage />} />
             <Route path="attendance" element={<AttendancePage />} />
             <Route path="directory" element={<DirectoryRoute />} />

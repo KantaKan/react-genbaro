@@ -12,6 +12,8 @@ export type CohortSettings = {
   graduated_on?: string;
   checkin_region?: "anywhere" | "thailand";
   flag_unusual?: boolean;
+  /** Runs the cohort's team chess game. */
+  chess_enabled?: boolean;
 };
 export type Activity = { id: string; actor_name: string; actor_role: string; action: string; detail: string; status: number; at: string; targets?: string[]; facts?: Record<string, string> };
 

@@ -19,6 +19,7 @@ import { ReflectionCard, ReflectionCardSkeleton } from "./ReflectionCard";
 import { WeekCard, WeekCardSkeleton } from "./WeekCard";
 import { LeaveCard, LeaveCardSkeleton } from "./LeaveCard";
 import { BoardLatestCard } from "./BoardLatestCard";
+import { ChessTurnCard } from "../chess/ChessNav";
 import { StreakBadgesCard, StreakBadgesCardSkeleton } from "./StreakBadgesCard";
 import { LoadingHint } from "@/components/LoadingSkeleton";
 import { Link } from "react-router-dom";
@@ -113,6 +114,7 @@ export function TodayPage() {
         <div className="flex flex-col gap-4 lg:col-span-7">
           <div data-tour="checkin" className="empty:hidden scroll-mt-20">{s ? <CheckInCard summary={s} onCheckedIn={refresh} seed={userData?._id ?? "me"} onOpenPicker={() => setPicker(true)} /> : summary.isLoading ? <CheckInCardSkeleton /> : null}</div>
           <div data-tour="week" className="scroll-mt-20">{history.isLoading ? <WeekCardSkeleton /> : <WeekCard cells={week} />}</div>
+          <ChessTurnCard />
           <BoardLatestCard />
         </div>
         <div className="flex flex-col gap-4 lg:col-span-5">
