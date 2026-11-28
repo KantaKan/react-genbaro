@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { LearnerShell, usePageHeader } from "./LearnerShell";
 
 vi.mock("@/components/mode-toggle", () => ({ ModeToggle: () => null }));
+vi.mock("../chess/ChessNav", () => ({ useChessMe: () => ({ data: { enabled: true, my_turn: true } }) }));
 vi.mock("./StreakPill", () => ({ StreakPill: () => <a href="/learner/reflections">streak pill</a> }));
 const logout = vi.fn();
 let role = "learner";
@@ -37,6 +38,8 @@ describe("LearnerShell", () => {
     for (const label of ["Today", "Schedule", "Attendance", "My profile", "Classmates", "Talk Board"]) {
       expect(nav).toHaveTextContent(label);
     }
+    expect(nav).toHaveTextContent("หมากรุก");
+    expect(screen.getByLabelText("ถึงตาคุณ")).toBeInTheDocument();
     const active = screen.getAllByRole("link", { name: /Attendance/ }).find((a) => a.getAttribute("aria-current") === "page");
     expect(active).toBeTruthy();
     expect(screen.getByText("Black · แบล็ค")).toBeInTheDocument();

@@ -11,6 +11,7 @@ import { NAV, TABS } from "./nav";
 import { nicknames } from "../lib/name";
 import { UserAvatar } from "@/components/user-avatar";
 import { StreakPill } from "./StreakPill";
+import { useChessMe } from "../chess/ChessNav";
 
 export interface PageHeader {
   title: string;
@@ -42,6 +43,7 @@ export function LearnerShell({ children }: { children: ReactNode }) {
   const { logout, userRole } = useAuth();
   const nick = useMemo(() => nicknames(userData?.zoom_name, userData?.first_name ?? ""), [userData]);
   const sections = ["Learning", "Community", "Play"] as const;
+  const chess = useChessMe().data;
 
   return (
     <HeaderCtx.Provider value={setHeader}>
@@ -59,10 +61,11 @@ export function LearnerShell({ children }: { children: ReactNode }) {
             {sections.map((sec) => (
               <div key={sec}>
                 <div className="px-2.5 pb-1.5 pt-3.5 text-small font-medium text-l-ink3">{sec}</div>
-                {NAV.filter((n) => n.section === sec).map((n) => (
+                {NAV.filter((n) => n.section === sec && (n.to !== "/learner/chess" || chess?.enabled)).map((n) => (
                   <NavLink key={n.to} to={n.to} end={n.end} className={linkCls}>
                     <n.icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
                     {n.label}
+                    {n.to === "/learner/chess" && chess?.my_turn && <span aria-label="ถึงตาคุณ" className="ml-auto h-2 w-2 rounded-full bg-amber-500" />}
                   </NavLink>
                 ))}
               </div>
